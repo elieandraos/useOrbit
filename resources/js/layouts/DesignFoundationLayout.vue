@@ -6,6 +6,7 @@ const page = usePage();
 const navItems = [
     { label: 'Button', href: '/design-foundation/button' },
     { label: 'Badge', href: '/design-foundation/badge' },
+    { label: 'Input', href: '/design-foundation/input' },
 ];
 </script>
 
