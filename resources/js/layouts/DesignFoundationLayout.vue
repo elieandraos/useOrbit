@@ -3,7 +3,10 @@ import { Link, usePage } from '@inertiajs/vue3';
 
 const page = usePage();
 
-const navItems = [{ label: 'Button', href: '/design-foundation/button' }];
+const navItems = [
+    { label: 'Button', href: '/design-foundation/button' },
+    { label: 'Badge', href: '/design-foundation/badge' },
+];
 </script>
 
 <template>
