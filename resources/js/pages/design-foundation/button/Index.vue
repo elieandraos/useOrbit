@@ -5,7 +5,9 @@ import { codeToHtml } from 'shiki';
 import { onMounted, ref } from 'vue';
 import DesignFoundationLayout from '@/layouts/DesignFoundationLayout.vue';
 import Button from '@/components/ui/button/Button.vue';
+import Spinner from '@/components/ui/spinner/Spinner.vue';
 import disabledCode from './snippets/disabled.md?raw';
+import loadingCode from './snippets/loading.md?raw';
 import fullWidthCode from './snippets/full-width.md?raw';
 import leadingSlotCode from './snippets/leading-slot.md?raw';
 import sizesCode from './snippets/sizes.md?raw';
@@ -23,6 +25,7 @@ const sections = [
     { id: 'trailing-slot', label: 'Trailing slot' },
     { id: 'full-width', label: 'Full width' },
     { id: 'disabled', label: 'Disabled' },
+    { id: 'loading', label: 'Loading' },
 ];
 
 const views = ref<Record<string, ViewMode>>(Object.fromEntries(sections.map((s) => [s.id, 'preview'])));
@@ -34,9 +37,12 @@ const codeSnippets: Record<string, string> = {
     'trailing-slot': trailingSlotCode,
     'full-width': fullWidthCode,
     disabled: disabledCode,
+    loading: loadingCode,
 };
 
 const highlighted = ref<Record<string, string>>({});
+
+const isLoading = ref(false);
 
 onMounted(async () => {
     const entries = await Promise.all(
@@ -126,6 +132,15 @@ onMounted(async () => {
                     <Button variant="secondary" disabled>Secondary</Button>
                     <Button variant="ghost" disabled>Ghost</Button>
                     <Button variant="destructive" disabled>Destructive</Button>
+                </div>
+
+                <div v-else-if="section.id === 'loading'">
+                    <Button :disabled="isLoading" @click="isLoading = !isLoading">
+                        <template v-if="isLoading" #leading>
+                            <Spinner />
+                        </template>
+                        {{ isLoading ? 'Saving...' : 'Save changes' }}
+                    </Button>
                 </div>
             </div>
 
