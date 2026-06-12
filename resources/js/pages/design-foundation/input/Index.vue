@@ -119,7 +119,7 @@ const vModelValue = ref('');
             <!-- Code panel -->
             <div
                 v-else
-                class="rounded-lg overflow-hidden border border-border text-sm h-[300px] overflow-y-auto [&>pre]:!m-0 [&>pre]:h-full [&>pre]:p-5 [&>pre]:leading-relaxed"
+                class="rounded-lg overflow-hidden border border-border text-sm h-[300px] overflow-y-auto [&>pre]:!m-0 [&>pre]:min-h-full [&>pre]:p-5 [&>pre]:leading-relaxed"
                 v-html="highlighted[section.id] ?? ''"
             />
         </div>
