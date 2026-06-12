@@ -8,6 +8,7 @@ const navItems = [
     { label: 'Badge', href: '/design-foundation/badge' },
     { label: 'Input', href: '/design-foundation/input' },
     { label: 'Textarea', href: '/design-foundation/textarea' },
+    { label: 'Select', href: '/design-foundation/select' },
 ];
 </script>
 
