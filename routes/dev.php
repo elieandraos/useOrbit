@@ -9,4 +9,5 @@ if (app()->environment('local')) {
     Route::get('/design-foundation/input', fn () => inertia('design-foundation/input/Index'))->name('design-foundation.input');
     Route::get('/design-foundation/textarea', fn () => inertia('design-foundation/textarea/Index'))->name('design-foundation.textarea');
     Route::get('/design-foundation/select', fn () => inertia('design-foundation/select/Index'))->name('design-foundation.select');
+    Route::get('/design-foundation/label', fn () => inertia('design-foundation/label/Index'))->name('design-foundation.label');
 }
