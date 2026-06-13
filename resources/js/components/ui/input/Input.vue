@@ -53,7 +53,7 @@ const wrapperClass = computed(() =>
       v-bind="$attrs"
       v-model="modelValue"
       :disabled="disabled"
-      class="flex-1 min-w-0 bg-transparent outline-none placeholder:text-tertiary text-primary"
+      class="flex-1 min-w-0 h-full bg-transparent outline-none placeholder:text-tertiary text-primary"
     />
     <slot name="trailing" />
   </div>
