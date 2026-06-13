@@ -36,7 +36,7 @@ defineExpose({
 const wrapperClass = computed(() =>
   cn(
     "flex items-center w-full rounded-[10px] border border-border bg-transparent transition-[color,box-shadow]",
-    "focus-within:border-accent focus-within:ring-[3px] focus-within:ring-accent-ring",
+    "focus-within:ring-[3px] focus-within:ring-accent-ring",
     "[&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0 [&_svg]:text-tertiary",
     props.size === "sm" ? "h-7 px-2 gap-1.5 text-xs" : "h-9 px-3 gap-2 text-sm",
     props.disabled && "opacity-50 cursor-not-allowed pointer-events-none",
