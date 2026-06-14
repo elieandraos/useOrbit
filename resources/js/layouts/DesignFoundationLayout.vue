@@ -12,6 +12,7 @@ const navItems = [
     { label: 'Label', href: '/design-foundation/label' },
     { label: 'Checkbox', href: '/design-foundation/checkbox' },
     { label: 'Avatar', href: '/design-foundation/avatar' },
+    { label: 'Separator', href: '/design-foundation/separator' },
 ];
 </script>
 

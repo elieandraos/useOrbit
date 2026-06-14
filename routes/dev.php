@@ -12,4 +12,5 @@ if (app()->environment('local')) {
     Route::get('/design-foundation/label', fn () => inertia('design-foundation/label/Index'))->name('design-foundation.label');
     Route::get('/design-foundation/checkbox', fn () => inertia('design-foundation/checkbox/Index'))->name('design-foundation.checkbox');
     Route::get('/design-foundation/avatar', fn () => inertia('design-foundation/avatar/Index'))->name('design-foundation.avatar');
+    Route::get('/design-foundation/separator', fn () => inertia('design-foundation/separator/Index'))->name('design-foundation.separator');
 }
