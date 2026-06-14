@@ -4,9 +4,11 @@ import { codeToHtml } from 'shiki';
 import { onMounted, ref } from 'vue';
 import DesignFoundationLayout from '@/layouts/DesignFoundationLayout.vue';
 import Textarea from '@/components/ui/textarea/Textarea.vue';
+import Label from '@/components/ui/label/Label.vue';
 import autoGrowCode from './snippets/auto-grow.md?raw';
 import disabledCode from './snippets/disabled.md?raw';
 import reactivityCode from './snippets/reactivity.md?raw';
+import withLabelCode from './snippets/with-label.md?raw';
 
 defineOptions({ layout: DesignFoundationLayout });
 
@@ -16,6 +18,7 @@ const sections = [
     { id: 'auto-grow', label: 'Auto-grow vs fixed height' },
     { id: 'disabled', label: 'Disabled' },
     { id: 'reactivity', label: 'Reactivity' },
+    { id: 'with-label', label: 'Pairing with label' },
 ];
 
 const views = ref<Record<string, ViewMode>>(Object.fromEntries(sections.map((s) => [s.id, 'preview'])));
@@ -24,6 +27,7 @@ const codeSnippets: Record<string, string> = {
     'auto-grow': autoGrowCode,
     disabled: disabledCode,
     reactivity: reactivityCode,
+    'with-label': withLabelCode,
 };
 
 const highlighted = ref<Record<string, string>>({});
@@ -94,6 +98,11 @@ const vModelValue = ref('');
                 <div v-else-if="section.id === 'reactivity'" class="flex flex-col gap-3 max-w-sm">
                     <Textarea v-model="vModelValue" placeholder="Type something..." />
                     <p class="text-sm text-secondary">Value: {{ vModelValue }}</p>
+                </div>
+
+                <div v-else-if="section.id === 'with-label'" class="flex flex-col gap-1.5 max-w-sm">
+                    <Label for="bio">Bio</Label>
+                    <Textarea id="bio" placeholder="Tell us about yourself..." />
                 </div>
             </div>
 

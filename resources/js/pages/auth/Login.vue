@@ -54,7 +54,6 @@ const remember = ref(false);
                     required
                     autofocus
                     :tabindex="1"
-                    autocomplete="email"
                     placeholder="email@example.com"
                 />
                 <InputError :message="errors.email" />

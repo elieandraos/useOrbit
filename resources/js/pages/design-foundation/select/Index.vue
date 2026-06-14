@@ -4,9 +4,11 @@ import { codeToHtml } from 'shiki';
 import { onMounted, ref } from 'vue';
 import DesignFoundationLayout from '@/layouts/DesignFoundationLayout.vue';
 import Select from '@/components/ui/select/Select.vue';
+import Label from '@/components/ui/label/Label.vue';
 import sizesCode from './snippets/sizes.md?raw';
 import disabledCode from './snippets/disabled.md?raw';
 import reactivityCode from './snippets/reactivity.md?raw';
+import withLabelCode from './snippets/with-label.md?raw';
 
 defineOptions({ layout: DesignFoundationLayout });
 
@@ -16,6 +18,7 @@ const sections = [
     { id: 'sizes', label: 'Sizes' },
     { id: 'disabled', label: 'Disabled' },
     { id: 'reactivity', label: 'Reactivity' },
+    { id: 'with-label', label: 'Pairing with label' },
 ];
 
 const views = ref<Record<string, ViewMode>>(Object.fromEntries(sections.map((s) => [s.id, 'preview'])));
@@ -24,6 +27,7 @@ const codeSnippets: Record<string, string> = {
     sizes: sizesCode,
     disabled: disabledCode,
     reactivity: reactivityCode,
+    'with-label': withLabelCode,
 };
 
 const highlighted = ref<Record<string, string>>({});
@@ -107,6 +111,15 @@ const selected = ref('');
                         <option value="cherry">Cherry</option>
                     </Select>
                     <p class="text-sm text-secondary">Value: {{ selected }}</p>
+                </div>
+
+                <div v-else-if="section.id === 'with-label'" class="flex flex-col gap-1.5 max-w-sm">
+                    <Label for="fruit">Fruit</Label>
+                    <Select id="fruit" placeholder="Pick a fruit">
+                        <option value="apple">Apple</option>
+                        <option value="banana">Banana</option>
+                        <option value="cherry">Cherry</option>
+                    </Select>
                 </div>
             </div>
 
