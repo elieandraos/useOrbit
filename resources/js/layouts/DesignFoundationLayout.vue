@@ -10,6 +10,7 @@ const navItems = [
     { label: 'Textarea', href: '/design-foundation/textarea' },
     { label: 'Select', href: '/design-foundation/select' },
     { label: 'Label', href: '/design-foundation/label' },
+    { label: 'Checkbox', href: '/design-foundation/checkbox' },
 ];
 </script>
 

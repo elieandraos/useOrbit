@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import TextLink from '@/components/TextLink.vue';
@@ -23,6 +24,8 @@ defineProps<{
     status?: string;
     canResetPassword: boolean;
 }>();
+
+const remember = ref(false);
 </script>
 
 <template>
@@ -81,8 +84,8 @@ defineProps<{
             </div>
 
             <div class="flex items-center justify-between">
-                <Label for="remember" class="flex items-center space-x-3">
-                    <Checkbox id="remember" name="remember" :tabindex="3" />
+                <Label class="flex items-center space-x-3">
+                    <Checkbox id="remember" name="remember" v-model="remember" :tabindex="3" />
                     <span>Remember me</span>
                 </Label>
             </div>

@@ -10,4 +10,5 @@ if (app()->environment('local')) {
     Route::get('/design-foundation/textarea', fn () => inertia('design-foundation/textarea/Index'))->name('design-foundation.textarea');
     Route::get('/design-foundation/select', fn () => inertia('design-foundation/select/Index'))->name('design-foundation.select');
     Route::get('/design-foundation/label', fn () => inertia('design-foundation/label/Index'))->name('design-foundation.label');
+    Route::get('/design-foundation/checkbox', fn () => inertia('design-foundation/checkbox/Index'))->name('design-foundation.checkbox');
 }
