@@ -34,7 +34,7 @@ const modelValue = useVModel(props, "modelValue", emits, {
 const wrapperClass = computed(() =>
     cn(
         "relative flex items-center w-full rounded-[10px] border border-border bg-transparent transition-[color,box-shadow]",
-        "focus-within:border-accent focus-within:ring-[3px] focus-within:ring-accent-ring",
+        "focus-within:ring-[3px] focus-within:ring-accent-ring",
         props.size === "sm" ? "h-7 text-xs" : "h-9 text-sm",
         props.disabled && "opacity-50 cursor-not-allowed pointer-events-none",
         props.class,

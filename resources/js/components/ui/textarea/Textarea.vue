@@ -38,7 +38,7 @@ const textareaClass = computed(() =>
     "w-full rounded-[10px] border border-border bg-transparent px-3 py-2 text-sm",
     "outline-none placeholder:text-tertiary text-primary",
     "transition-[color,box-shadow]",
-    "focus:border-accent focus:ring-[3px] focus:ring-accent-ring",
+    "focus:ring-[3px] focus:ring-accent-ring",
     props.autoGrow ? "[field-sizing:content] resize-none" : "resize-y",
     props.disabled && "opacity-50 cursor-not-allowed pointer-events-none",
     props.class,
