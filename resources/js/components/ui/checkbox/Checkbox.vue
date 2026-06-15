@@ -1,35 +1,66 @@
 <script setup lang="ts">
-import type { CheckboxRootEmits, CheckboxRootProps } from "reka-ui"
-import type { HTMLAttributes } from "vue"
-import { Check } from "@lucide/vue"
-import { reactiveOmit } from "@vueuse/core"
-import { CheckboxIndicator, CheckboxRoot, useForwardPropsEmits } from "reka-ui"
-import { cn } from "@/lib/utils"
+import type { HTMLAttributes } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { Check } from '@lucide/vue'
+import { cn } from '@/lib/utils'
 
-const props = defineProps<CheckboxRootProps & { class?: HTMLAttributes["class"] }>()
-const emits = defineEmits<CheckboxRootEmits>()
+interface Props {
+    modelValue?: boolean
+    disabled?: boolean
+    id?: string
+    name?: string
+    tabindex?: number
+    class?: HTMLAttributes['class']
+}
 
-const delegatedProps = reactiveOmit(props, "class")
+const props = defineProps<Props>()
 
-const forwarded = useForwardPropsEmits(delegatedProps, emits)
+const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>()
+
+const internalChecked = ref(props.modelValue ?? false)
+
+watch(
+    () => props.modelValue,
+    (val) => {
+        if (val !== undefined) {
+            internalChecked.value = val
+        }
+    },
+)
+
+const isChecked = computed(() => (props.modelValue !== undefined ? props.modelValue : internalChecked.value))
+
+function toggle() {
+    if (props.disabled) return
+    internalChecked.value = !internalChecked.value
+    emit('update:modelValue', internalChecked.value)
+}
 </script>
 
 <template>
-  <CheckboxRoot
-    v-slot="slotProps"
-    data-slot="checkbox"
-    v-bind="forwarded"
-    :class="
-      cn('peer border-input data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground data-[state=checked]:border-primary focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive size-4 shrink-0 rounded-[4px] border shadow-xs transition-shadow outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
-         props.class)"
-  >
-    <CheckboxIndicator
-      data-slot="checkbox-indicator"
-      class="grid place-content-center text-current transition-none"
-    >
-      <slot v-bind="slotProps">
-        <Check class="size-3.5" />
-      </slot>
-    </CheckboxIndicator>
-  </CheckboxRoot>
+    <span data-slot="checkbox" :class="cn('relative inline-flex size-4 shrink-0', props.class)">
+        <input
+            type="checkbox"
+            :id="id"
+            :name="name"
+            :checked="isChecked"
+            :disabled="disabled"
+            :tabindex="tabindex"
+            class="peer absolute inset-0 size-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+            @change="toggle"
+        />
+        <span
+            aria-hidden="true"
+            :class="
+                cn(
+                    'size-4 rounded-[4px] border inline-flex items-center justify-center transition-colors pointer-events-none',
+                    'peer-focus-visible:ring-[3px] peer-focus-visible:ring-indigo-500/30',
+                    isChecked ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-background border-input',
+                    disabled && 'opacity-50',
+                )
+            "
+        >
+            <Check v-if="isChecked" class="size-3.5" :stroke-width="3" />
+        </span>
+    </span>
 </template>

@@ -12,6 +12,7 @@ createInertiaApp({
     layout: (name) => {
         switch (true) {
             case name === 'Welcome':
+            case name.startsWith('design-foundation/'):
                 return null;
             case name.startsWith('auth/'):
                 return AuthLayout;
@@ -24,7 +25,7 @@ createInertiaApp({
     progress: {
         color: '#4B5563',
     },
-});
+})
 
 // This will set light / dark mode on page load...
 initializeTheme();

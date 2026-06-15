@@ -15,8 +15,7 @@ const showPassword = ref(false);
 const inputRef = useTemplateRef('inputRef');
 
 defineExpose({
-    $el: inputRef,
-    focus: () => inputRef.value?.$el?.focus(),
+    focus: () => inputRef.value?.focus(),
 });
 </script>
 
