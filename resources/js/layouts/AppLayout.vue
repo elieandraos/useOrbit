@@ -1,14 +1,21 @@
 <script setup lang="ts">
-import AppLayout from '@/layouts/app/AppSidebarLayout.vue';
+import AppContent from '@/components/AppContent.vue';
+import AppShell from '@/components/AppShell.vue';
+import AppTopNav from '@/components/AppTopNav.vue';
+import { Toaster } from '@/components/ui/sonner';
 import type { BreadcrumbItem } from '@/types';
 
-const { breadcrumbs = [] } = defineProps<{
+defineProps<{
     breadcrumbs?: BreadcrumbItem[];
 }>();
 </script>
 
 <template>
-    <AppLayout :breadcrumbs="breadcrumbs">
-        <slot />
-    </AppLayout>
+    <AppShell>
+        <AppTopNav />
+        <AppContent>
+            <slot />
+        </AppContent>
+        <Toaster />
+    </AppShell>
 </template>
