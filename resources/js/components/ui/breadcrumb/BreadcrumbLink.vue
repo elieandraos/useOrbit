@@ -1,21 +1,35 @@
 <script lang="ts" setup>
-import type { PrimitiveProps } from "reka-ui"
+import type { InertiaLinkProps } from "@inertiajs/vue3"
 import type { HTMLAttributes } from "vue"
-import { Primitive } from "reka-ui"
-import { cn } from "@/lib/utils"
+import { Link } from "@inertiajs/vue3"
+import { computed } from "vue"
+import { cn, toUrl } from "@/lib/utils"
 
-const props = withDefaults(defineProps<PrimitiveProps & { class?: HTMLAttributes["class"] }>(), {
-  as: "a",
-})
+const props = defineProps<{
+  href: NonNullable<InertiaLinkProps["href"]>
+  class?: HTMLAttributes["class"]
+}>()
+
+const isExternal = computed(() => toUrl(props.href).startsWith("http"))
 </script>
 
 <template>
-  <Primitive
+  <a
+    v-if="isExternal"
     data-slot="breadcrumb-link"
-    :as="as"
-    :as-child="asChild"
+    :href="toUrl(href)"
+    target="_blank"
+    rel="noopener noreferrer"
     :class="cn('hover:text-foreground transition-colors', props.class)"
   >
     <slot />
-  </Primitive>
+  </a>
+  <Link
+    v-else
+    data-slot="breadcrumb-link"
+    :href="href"
+    :class="cn('hover:text-foreground transition-colors', props.class)"
+  >
+    <slot />
+  </Link>
 </template>

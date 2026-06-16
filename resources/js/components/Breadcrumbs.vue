@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -26,9 +25,9 @@ defineProps<Props>();
                         <BreadcrumbPage>{{ item.title }}</BreadcrumbPage>
                     </template>
                     <template v-else>
-                        <BreadcrumbLink as-child>
-                            <Link :href="item.href">{{ item.title }}</Link>
-                        </BreadcrumbLink>
+                        <BreadcrumbLink :href="item.href">{{
+                            item.title
+                        }}</BreadcrumbLink>
                     </template>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator v-if="index !== breadcrumbs.length - 1" />
