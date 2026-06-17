@@ -8,14 +8,17 @@ import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { edit } from '@/routes/profile';
+import { Tab, Tabs } from '@/components/ui/tabs';
+import { edit as editAppearance } from '@/routes/appearance';
+import { edit as editProfile } from '@/routes/profile';
+import { edit as editSecurity } from '@/routes/security';
 
 defineOptions({
     layout: {
         breadcrumbs: [
             {
                 title: 'Profile settings',
-                href: edit(),
+                href: editProfile(),
             },
         ],
     },
@@ -28,56 +31,71 @@ const user = computed(() => page.props.auth.user);
 <template>
     <Head title="Profile settings" />
 
-    <h1 class="sr-only">Profile settings</h1>
-
-    <div class="flex flex-col space-y-6">
+    <div>
         <Heading
-            variant="small"
-            title="Profile"
-            description="Update your name and email address"
+            title="Settings"
+            description="Manage your profile and account settings"
         />
 
-        <Form
-            v-bind="ProfileController.update.form()"
-            class="space-y-6"
-            v-slot="{ errors, processing }"
-        >
-            <div class="grid gap-2">
-                <Label for="name">Name</Label>
-                <Input
-                    id="name"
-                    class="mt-1 block w-full"
-                    name="name"
-                    :default-value="user.name"
-                    required
-                    autocomplete="name"
-                    placeholder="Full name"
-                />
-                <InputError class="mt-2" :message="errors.name" />
-            </div>
+        <Tabs>
+            <Tab :href="editProfile()">Profile</Tab>
+            <Tab :href="editSecurity()">Security</Tab>
+            <Tab :href="editAppearance()">Appearance</Tab>
+        </Tabs>
 
-            <div class="grid gap-2">
-                <Label for="email">Email address</Label>
-                <Input
-                    id="email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    name="email"
-                    :default-value="user.email"
-                    required
-                    autocomplete="username"
-                    placeholder="Email address"
-                />
-                <InputError class="mt-2" :message="errors.email" />
-            </div>
+        <section class="max-w-xl space-y-12 py-8">
+            <h1 class="sr-only">Profile settings</h1>
 
-            <div class="flex items-center gap-4">
-                <Button :disabled="processing" data-test="update-profile-button"
-                    >Save</Button
+            <div class="flex flex-col space-y-6">
+                <Heading
+                    variant="small"
+                    title="Profile"
+                    description="Update your name and email address"
+                />
+
+                <Form
+                    v-bind="ProfileController.update.form()"
+                    class="space-y-6"
+                    v-slot="{ errors, processing }"
                 >
-            </div>
-        </Form>
-    </div>
+                    <div class="grid gap-2">
+                        <Label for="name">Name</Label>
+                        <Input
+                            id="name"
+                            class="mt-1 block w-full"
+                            name="name"
+                            :default-value="user.name"
+                            required
+                            placeholder="Full name"
+                        />
+                        <InputError class="mt-2" :message="errors.name" />
+                    </div>
 
-    <DeleteUser />
+                    <div class="grid gap-2">
+                        <Label for="email">Email address</Label>
+                        <Input
+                            id="email"
+                            type="email"
+                            class="mt-1 block w-full"
+                            name="email"
+                            :default-value="user.email"
+                            required
+                            placeholder="Email address"
+                        />
+                        <InputError class="mt-2" :message="errors.email" />
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <Button
+                            :disabled="processing"
+                            data-test="update-profile-button"
+                            >Save</Button
+                        >
+                    </div>
+                </Form>
+            </div>
+
+            <DeleteUser />
+        </section>
+    </div>
 </template>

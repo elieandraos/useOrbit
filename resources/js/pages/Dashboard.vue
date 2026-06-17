@@ -17,7 +17,7 @@ defineOptions({
 <template>
     <Head title="Dashboard" />
 
-    <div class="flex flex-1 flex-col gap-4 p-8">
+    <div class="flex flex-1 flex-col gap-4">
         <div class="grid auto-rows-min gap-4 md:grid-cols-3">
             <div
                 class="aspect-video rounded-[12px] border border-border bg-surface"
