@@ -14,4 +14,5 @@ if (app()->environment('local')) {
     Route::get('/design-foundation/avatar', fn () => inertia('design-foundation/avatar/Index'))->name('design-foundation.avatar');
     Route::get('/design-foundation/separator', fn () => inertia('design-foundation/separator/Index'))->name('design-foundation.separator');
     Route::get('/design-foundation/drop-menu', fn () => inertia('design-foundation/drop-menu/Index'))->name('design-foundation.drop-menu');
+    Route::get('/design-foundation/dialog', fn () => inertia('design-foundation/dialog/Index'))->name('design-foundation.dialog');
 }

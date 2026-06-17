@@ -14,6 +14,7 @@ const navItems = [
     { label: 'Avatar', href: '/design-foundation/avatar' },
     { label: 'Separator', href: '/design-foundation/separator' },
     { label: 'DropMenu', href: '/design-foundation/drop-menu' },
+    { label: 'Dialog', href: '/design-foundation/dialog' },
 ];
 </script>
 
