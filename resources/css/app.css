@@ -110,8 +110,8 @@
 
 :root {
     /* ── Meridian: Backgrounds ──────────────────────────────────── */
-    --app: oklch(1 0 0);
-    --surface: oklch(0.99 0 0);
+    --app: oklch(0.98 0 0);
+    --surface: oklch(1 0 0);
     --sunken: oklch(0.97 0.004 247);
     --sidebar: oklch(0.985 0.002 247);
 

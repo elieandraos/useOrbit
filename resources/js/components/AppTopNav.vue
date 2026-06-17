@@ -39,7 +39,7 @@ onBeforeUnmount(() =>
 
 <template>
     <header
-        class="flex h-14 items-center border-b border-border bg-surface px-6"
+        class="flex h-14 items-center border-b border-border bg-surface px-8"
     >
         <Link :href="dashboard()" class="flex items-center">
             <AppLogo />
