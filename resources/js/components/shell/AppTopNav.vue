@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import AppLogo from '@/components/AppLogo.vue';
+import AppLogo from '@/components/shell/AppLogo.vue';
 import { Avatar } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import UserInfo from '@/components/UserInfo.vue';
+import UserInfo from '@/components/shell/UserInfo.vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { dashboard, logout } from '@/routes';
 import { edit } from '@/routes/profile';

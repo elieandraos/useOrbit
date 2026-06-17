@@ -2,7 +2,7 @@
 import { Link, router } from '@inertiajs/vue3';
 import { LogOut, Settings } from '@lucide/vue';
 import { Separator } from '@/components/ui/separator';
-import UserInfo from '@/components/UserInfo.vue';
+import UserInfo from '@/components/shell/UserInfo.vue';
 import { logout } from '@/routes';
 import { edit } from '@/routes/profile';
 import type { User } from '@/types';
