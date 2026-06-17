@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { ChevronDown } from '@lucide/vue';
+import { computed } from 'vue';
 import AppLogo from '@/components/shell/AppLogo.vue';
-import { Avatar } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
 import UserInfo from '@/components/shell/UserInfo.vue';
+import { Avatar } from '@/components/ui/avatar';
+import { DropMenu, DropMenuItem } from '@/components/ui/drop-menu';
+import { Separator } from '@/components/ui/separator';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { dashboard, logout } from '@/routes';
 import { edit } from '@/routes/profile';
@@ -13,28 +15,6 @@ const page = usePage();
 const user = computed(() => page.props.auth.user);
 
 const { isCurrentOrParentUrl } = useCurrentUrl();
-
-const menuOpen = ref(false);
-const menuRef = ref<HTMLElement | null>(null);
-
-function toggleMenu() {
-    menuOpen.value = !menuOpen.value;
-}
-
-function closeMenu() {
-    menuOpen.value = false;
-}
-
-function handleClickOutside(event: MouseEvent) {
-    if (menuRef.value && !menuRef.value.contains(event.target as Node)) {
-        closeMenu();
-    }
-}
-
-onMounted(() => document.addEventListener('click', handleClickOutside));
-onBeforeUnmount(() =>
-    document.removeEventListener('click', handleClickOutside),
-);
 </script>
 
 <template>
@@ -59,47 +39,35 @@ onBeforeUnmount(() =>
             </Link>
         </nav>
 
-        <div ref="menuRef" class="relative ml-auto">
-            <button
-                type="button"
-                class="flex items-center gap-2 rounded-pill p-1 transition-colors hover:bg-sunken"
-                @click="toggleMenu"
-            >
-                <Avatar
-                    :name="user.name"
-                    :src="user.avatar ?? undefined"
-                    size="sm"
-                />
-            </button>
+        <DropMenu class="ml-auto">
+            <template #trigger>
+                <button
+                    type="button"
+                    class="flex items-center gap-2 rounded-pill p-1 transition-colors hover:bg-sunken"
+                >
+                    <Avatar
+                        :name="user.name"
+                        :src="user.avatar ?? undefined"
+                        size="sm"
+                    />
+                    <ChevronDown class="size-3.5 text-secondary" />
+                </button>
+            </template>
 
-            <div
-                v-if="menuOpen"
-                class="absolute top-[calc(100%+6px)] right-0 z-20 min-w-[220px] rounded-[10px] border border-border bg-surface p-1 shadow-lg"
-            >
-                <div
-                    class="flex items-center gap-2 px-2 py-1.5 text-left text-sm"
-                >
-                    <UserInfo :user="user" :show-email="true" />
-                </div>
-                <Separator class="my-1" />
-                <Link
-                    :href="edit()"
-                    class="flex items-center rounded-[6px] px-2 py-1.5 text-sm text-primary hover:bg-sunken"
-                    @click="closeMenu"
-                >
-                    Settings
-                </Link>
-                <Separator class="my-1" />
-                <Link
-                    :href="logout()"
-                    method="post"
-                    as="button"
-                    class="flex w-full items-center rounded-[6px] px-2 py-1.5 text-left text-sm text-secondary hover:bg-sunken"
-                    data-test="logout-button"
-                >
-                    Log out
-                </Link>
+            <div class="flex items-center gap-2 px-2 py-1.5 text-sm">
+                <UserInfo :user="user" :show-email="true" />
             </div>
-        </div>
+            <Separator class="my-1" />
+            <DropMenuItem :href="edit()">Settings</DropMenuItem>
+            <Separator class="my-1" />
+            <DropMenuItem
+                :href="logout()"
+                method="post"
+                as="button"
+                data-test="logout-button"
+            >
+                Log out
+            </DropMenuItem>
+        </DropMenu>
     </header>
 </template>
