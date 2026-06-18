@@ -7,9 +7,7 @@ type Props = {
     showEmail?: boolean;
 };
 
-const { user, showEmail } = withDefaults(defineProps<Props>(), {
-    showEmail: false,
-});
+const { user, showEmail = false } = defineProps<Props>();
 </script>
 
 <template>
