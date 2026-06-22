@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\Role;
+use App\Enums\OrganizationRole;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -26,7 +26,7 @@ class Organization extends Model
     public function owner(): ?User
     {
         /** @var User|null $owner */
-        $owner = $this->users()->wherePivot('role', Role::Owner->value)->first();
+        $owner = $this->users()->wherePivot('role', OrganizationRole::Owner->value)->first();
 
         return $owner;
     }
