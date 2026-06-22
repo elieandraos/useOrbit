@@ -5,7 +5,9 @@ namespace App\Models;
 use App\Enums\ClientStatus;
 use App\Enums\Gender;
 use App\Enums\LeadSource;
+use Database\Factories\ClientFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -18,7 +20,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 ])]
 class Client extends Model
 {
-    use SoftDeletes;
+    /** @use HasFactory<ClientFactory> */
+    use HasFactory, SoftDeletes;
 
     public function getRouteKeyName(): string
     {
