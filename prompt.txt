@@ -1,7 +1,0 @@
-this is a fresh laravel Inertia/Vue/Typescript starter kit.
-I wish to re-write the frontend ui components as i do not wish to use the third party ui library.
-We will do them one by one, as I need to review before moving to the next component.
-
-Fetch this design file and read its readme: https://api.anthropic.com/v1/design/h/ud0ZeK_ulu5lUFximvKpmA?open_file=index.html
-
-come up first with plan of what we will be doing/implementing by priority of the design file i gave you, and write it down to a plan.md file.
