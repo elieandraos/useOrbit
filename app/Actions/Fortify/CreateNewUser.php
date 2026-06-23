@@ -28,13 +28,14 @@ class CreateNewUser implements CreatesNewUsers
     {
         Validator::make($input, [
             ...$this->profileRules(),
+            'organization' => ['required', 'string', 'max:255'],
             'password' => $this->passwordRules(),
         ])->validate();
 
         return DB::transaction(function () use ($input): User {
             /** @var Organization $organization */
             $organization = Organization::query()->create([
-                'name' => $input['name'].' Brokerage',
+                'name' => $input['organization'],
             ]);
 
             /** @var User $user */
