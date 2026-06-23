@@ -11,8 +11,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 
 /**
+ * @property int $id
+ * @property string $name
+ * @property string $email
+ * @property string $password
+ * @property Carbon|null $email_verified_at
  * @property int|null $current_organization_id
  */
 #[Fillable(['name', 'email', 'password', 'current_organization_id'])]

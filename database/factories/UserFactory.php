@@ -2,6 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Enums\OrganizationMemberStatus;
+use App\Enums\OrganizationRole;
+use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -45,7 +48,25 @@ class UserFactory extends Factory
     }
 
     /**
+     * Indicate that the user belongs to an active organization.
+     */
+    public function withOrganization(): static
+    {
+        return $this->afterCreating(function (User $user) {
+            $organization = Organization::factory()->create();
+            $user->organizations()->attach($organization, [
+                'role' => OrganizationRole::Member->value,
+                'status' => OrganizationMemberStatus::Active->value,
+            ]);
+            $user->update(['current_organization_id' => $organization->id]);
+        });
+    }
+
+    /**
      * Indicate that the model has two-factor authentication configured.
      */
-    public function withTwoFactor(): static {}
+    public function withTwoFactor(): static
+    {
+        return $this->state([]);
+    }
 }
