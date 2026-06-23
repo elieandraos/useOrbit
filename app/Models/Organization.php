@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * @property int $id
  * @property string $name
+ * @property OrganizationMember $pivot
  */
 #[Fillable(['name'])]
 class Organization extends Model
@@ -28,6 +29,7 @@ class Organization extends Model
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class)
+            ->using(OrganizationMember::class)
             ->withPivot('role', 'status')
             ->withTimestamps();
     }
