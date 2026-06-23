@@ -9,7 +9,8 @@ test('authenticated user with no current_organization_id is redirected', functio
 
     $this->actingAs($user)
         ->get(route('dashboard'))
-        ->assertRedirect(route('home'));
+        ->assertRedirect(route('home'))
+        ->assertSessionHas('error', 'You are not associated with any organization.');
 });
 
 test('authenticated user with suspended membership is redirected', function () {
@@ -19,7 +20,8 @@ test('authenticated user with suspended membership is redirected', function () {
 
     $this->actingAs($user)
         ->get(route('dashboard'))
-        ->assertRedirect(route('home'));
+        ->assertRedirect(route('home'))
+        ->assertSessionHas('error', 'Your membership in this organization is not active.');
 });
 
 test('authenticated user with invited membership is redirected', function () {
@@ -29,7 +31,8 @@ test('authenticated user with invited membership is redirected', function () {
 
     $this->actingAs($user)
         ->get(route('dashboard'))
-        ->assertRedirect(route('home'));
+        ->assertRedirect(route('home'))
+        ->assertSessionHas('error', 'Your membership in this organization is not active.');
 });
 
 test('authenticated user with active membership passes through', function () {
