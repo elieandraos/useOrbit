@@ -20,7 +20,7 @@ class CreateNewUser implements CreatesNewUsers
     /**
      * Validate and create a newly registered user.
      *
-     * @param  array<string, string>  $input
+     * @param  array{organization: string, name: string, email: string, password: string, password_confirmation: string}  $input
      *
      * @throws ValidationException
      */
