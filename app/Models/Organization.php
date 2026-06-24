@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Enums\OrganizationRole;
@@ -16,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property OrganizationMember $pivot
  */
 #[Fillable(['name'])]
-class Organization extends Model
+final class Organization extends Model
 {
     /** @use HasFactory<OrganizationFactory> */
     use HasFactory;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\Pivot;
@@ -8,4 +10,4 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
  * @property string $role
  * @property string $status
  */
-class OrganizationMember extends Pivot {}
+final class OrganizationMember extends Pivot {}

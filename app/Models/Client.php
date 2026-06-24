@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Enums\ClientStatus;
@@ -18,7 +20,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'city', 'state', 'country_id', 'emergency_contact_name', 'emergency_contact_relationship',
     'emergency_contact_phone', 'enrollment_date', 'lead_source', 'status', 'created_by', 'updated_by',
 ])]
-class Client extends Model
+final class Client extends Model
 {
     /** @use HasFactory<ClientFactory> */
     use HasFactory, SoftDeletes;
