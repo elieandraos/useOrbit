@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\OrganizationMemberStatus;
+use App\Enums\OrganizationRole;
 use App\Models\Organization;
 use App\Models\User;
 use Laravel\Fortify\Features;
@@ -29,6 +31,10 @@ test('new users can register', function () {
     /** @var User $user */
     $user = auth()->user();
     $organization = Organization::query()->where('name', 'Test Company')->first();
+    $pivot = $user->organizations()->first()->pivot;
+
     expect($organization)->not->toBeNull()
-        ->and($user->current_organization_id)->toBe($organization->id);
+        ->and($user->current_organization_id)->toBe($organization->id)
+        ->and($pivot->role)->toBe(OrganizationRole::Owner->value)
+        ->and($pivot->status)->toBe(OrganizationMemberStatus::Active->value);
 });
