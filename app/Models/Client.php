@@ -1,0 +1,61 @@
+<?php
+
+namespace App\Models;
+
+use App\Enums\ClientStatus;
+use App\Enums\Gender;
+use App\Enums\LeadSource;
+use Database\Factories\ClientFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+#[Fillable([
+    'organization_id', 'slug', 'first_name', 'middle_name', 'last_name', 'mothers_name',
+    'date_of_birth', 'gender', 'photo', 'phone', 'email', 'street', 'building_floor',
+    'city', 'state', 'country_id', 'emergency_contact_name', 'emergency_contact_relationship',
+    'emergency_contact_phone', 'enrollment_date', 'lead_source', 'status', 'created_by', 'updated_by',
+])]
+class Client extends Model
+{
+    /** @use HasFactory<ClientFactory> */
+    use HasFactory, SoftDeletes;
+
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'date_of_birth' => 'date',
+            'enrollment_date' => 'date',
+            'gender' => Gender::class,
+            'lead_source' => LeadSource::class,
+            'status' => ClientStatus::class,
+        ];
+    }
+
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
+    }
+
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class);
+    }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
+}

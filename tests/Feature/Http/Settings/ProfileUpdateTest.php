@@ -3,7 +3,7 @@
 use App\Models\User;
 
 test('profile page is displayed', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withOrganization()->create();
 
     $response = $this
         ->actingAs($user)
@@ -13,7 +13,7 @@ test('profile page is displayed', function () {
 });
 
 test('profile information can be updated', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withOrganization()->create();
 
     $response = $this
         ->actingAs($user)
@@ -22,19 +22,20 @@ test('profile information can be updated', function () {
             'email' => 'test@example.com',
         ]);
 
+    /** @noinspection PhpUnhandledExceptionInspection */
     $response
         ->assertSessionHasNoErrors()
         ->assertRedirect(route('profile.edit'));
 
     $user->refresh();
 
-    expect($user->name)->toBe('Test User');
-    expect($user->email)->toBe('test@example.com');
-    expect($user->email_verified_at)->toBeNull();
+    expect($user->name)->toBe('Test User')
+        ->and($user->email)->toBe('test@example.com')
+        ->and($user->email_verified_at)->toBeNull();
 });
 
 test('email verification status is unchanged when the email address is unchanged', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withOrganization()->create();
 
     $response = $this
         ->actingAs($user)
@@ -43,6 +44,7 @@ test('email verification status is unchanged when the email address is unchanged
             'email' => $user->email,
         ]);
 
+    /** @noinspection PhpUnhandledExceptionInspection */
     $response
         ->assertSessionHasNoErrors()
         ->assertRedirect(route('profile.edit'));
@@ -51,7 +53,7 @@ test('email verification status is unchanged when the email address is unchanged
 });
 
 test('user can delete their account', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withOrganization()->create();
 
     $response = $this
         ->actingAs($user)
@@ -59,6 +61,7 @@ test('user can delete their account', function () {
             'password' => 'password',
         ]);
 
+    /** @noinspection PhpUnhandledExceptionInspection */
     $response
         ->assertSessionHasNoErrors()
         ->assertRedirect(route('home'));
@@ -68,7 +71,7 @@ test('user can delete their account', function () {
 });
 
 test('correct password must be provided to delete account', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->withOrganization()->create();
 
     $response = $this
         ->actingAs($user)
