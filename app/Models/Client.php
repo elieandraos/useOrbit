@@ -14,6 +14,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property int $organization_id
+ */
 #[Fillable([
     'organization_id', 'slug', 'first_name', 'middle_name', 'last_name', 'mothers_name',
     'date_of_birth', 'gender', 'photo', 'phone', 'email', 'street', 'building_floor',
