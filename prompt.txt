@@ -1,0 +1,9 @@
+
+#[CurrentUser] attribute (instead of request()->user())
+this->auhtorize() to php attribute?
+resources for get request not model object.
+for request authorisation using Gate::allow() ?
+
+testing philosophy:
+inertia assertions
+testing folder structure
