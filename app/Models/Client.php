@@ -7,7 +7,7 @@ namespace App\Models;
 use App\Enums\ClientStatus;
 use App\Enums\Gender;
 use App\Enums\LeadSource;
-use Database\Factories\ClientFactory;
+use App\Models\Concerns\BelongsToCurrentOrganization;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -25,8 +25,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 ])]
 final class Client extends Model
 {
-    /** @use HasFactory<ClientFactory> */
-    use HasFactory, SoftDeletes;
+    use BelongsToCurrentOrganization, HasFactory, SoftDeletes;
 
     public function getRouteKeyName(): string
     {
