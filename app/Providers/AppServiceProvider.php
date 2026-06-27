@@ -7,6 +7,7 @@ namespace App\Providers;
 use App\Models\Client;
 use App\Policies\ClientPolicy;
 use Carbon\CarbonImmutable;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -42,6 +43,8 @@ class AppServiceProvider extends ServiceProvider
      */
     protected function configureDefaults(): void
     {
+        JsonResource::withoutWrapping();
+
         Date::use(CarbonImmutable::class);
 
         DB::prohibitDestructiveCommands(

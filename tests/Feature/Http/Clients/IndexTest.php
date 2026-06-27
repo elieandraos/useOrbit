@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Resources\ClientResource;
 use App\Models\Client;
 use App\Models\Organization;
 use App\Models\User;
@@ -20,10 +21,7 @@ test('authenticated user can list their organization clients', function () {
     $this->actingAs($user)
         ->get(route('clients.index'))
         ->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->component('Clients/Index')
-            ->has('clients.data', 2)
-        );
+        ->assertHasPaginatedResource('clients', ClientResource::collection(Client::query()->paginate()));
 });
 
 test('clients from another organization are not included', function () {

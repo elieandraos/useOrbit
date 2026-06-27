@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\ClientResource;
 use App\Models\Client;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
 use Inertia\Inertia;
@@ -17,7 +18,7 @@ final class ClientsController extends Controller
         $clients = Client::query()->paginate();
 
         return Inertia::render('Clients/Index', [
-            'clients' => $clients,
+            'clients' => ClientResource::collection($clients),
         ]);
     }
 }
