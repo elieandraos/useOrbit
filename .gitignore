@@ -31,3 +31,4 @@ yarn-error.log
 /.claude
 .editorconfig
 _design/
+_ide_helper_macros.php
