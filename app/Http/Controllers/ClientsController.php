@@ -21,4 +21,12 @@ final class ClientsController extends Controller
             'clients' => ClientResource::collection($clients),
         ]);
     }
+
+    #[Authorize('view', 'client')]
+    public function show(Client $client): Response
+    {
+        return Inertia::render('Clients/Show', [
+            'client' => ClientResource::make($client),
+        ]);
+    }
 }
