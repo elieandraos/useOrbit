@@ -1,0 +1,53 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Enums\ClientStatus;
+use App\Enums\Gender;
+use App\Enums\LeadSource;
+use App\Models\Client;
+use App\Models\User;
+
+test('guests are redirected to the login page', function () {
+    $this->get(route('clients.create'))
+        ->assertRedirect(route('login'));
+
+    $this->post(route('clients.store'))
+        ->assertRedirect(route('login'));
+});
+
+test('create page renders for authenticated user', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('clients.create'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->component('Clients/Create'));
+});
+
+test('store returns validation errors when required fields are missing', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->post(route('clients.store'))
+        ->assertSessionHasErrors(['first_name', 'last_name', 'phone', 'date_of_birth', 'gender', 'enrollment_date', 'lead_source', 'status']);
+});
+
+test('store redirects to clients.show with toast on success', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->post(route('clients.store'), [
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+            'phone' => '555-0100',
+            'date_of_birth' => '1990-01-15',
+            'gender' => Gender::Male->value,
+            'enrollment_date' => '2024-01-01',
+            'lead_source' => LeadSource::Referral->value,
+            'status' => ClientStatus::Active->value,
+        ])
+        ->assertRedirect(route('clients.show', Client::query()->first()));
+
+    expect(Client::query()->count())->toBe(1);
+});
