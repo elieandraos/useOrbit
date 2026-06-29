@@ -55,7 +55,8 @@ test('update redirects to clients.show with toast on success', function () use (
 
     $this->actingAs($user)
         ->patch(route('clients.update', $client), $validPayload)
-        ->assertRedirect(route('clients.show', $client->fresh()));
+        ->assertRedirect(route('clients.show', $client->fresh()))
+        ->assertSessionHas('inertia.flash_data', ['toast' => ['type' => 'success', 'message' => 'Client updated.']]);
 });
 
 test('user gets 404 when updating a client from another organization', function () use ($validPayload) {

@@ -47,7 +47,8 @@ test('store redirects to clients.show with toast on success', function () {
             'lead_source' => LeadSource::Referral->value,
             'status' => ClientStatus::Active->value,
         ])
-        ->assertRedirect(route('clients.show', Client::query()->first()));
+        ->assertRedirect(route('clients.show', Client::query()->first()))
+        ->assertSessionHas('inertia.flash_data', ['toast' => ['type' => 'success', 'message' => 'Client created.']]);
 
     expect(Client::query()->count())->toBe(1);
 });
