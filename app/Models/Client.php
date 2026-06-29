@@ -8,6 +8,7 @@ use App\Enums\ClientStatus;
 use App\Enums\Gender;
 use App\Enums\LeadSource;
 use App\Models\Concerns\BelongsToCurrentOrganization;
+use App\Models\Concerns\HasSlug;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -53,12 +54,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 ])]
 final class Client extends Model
 {
-    use BelongsToCurrentOrganization, HasFactory, SoftDeletes;
-
-    public function getRouteKeyName(): string
-    {
-        return 'slug';
-    }
+    use BelongsToCurrentOrganization, HasFactory, HasSlug, SoftDeletes;
 
     protected function casts(): array
     {
