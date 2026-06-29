@@ -71,11 +71,6 @@ final class Client extends Model
         ];
     }
 
-    public function organization(): BelongsTo
-    {
-        return $this->belongsTo(Organization::class);
-    }
-
     public function country(): BelongsTo
     {
         return $this->belongsTo(Country::class);
