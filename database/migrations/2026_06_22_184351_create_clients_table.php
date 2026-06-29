@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('clients', function (Blueprint $table) {
             $table->id();
             $table->foreignId('organization_id')->constrained()->restrictOnDelete();
-            $table->string('slug')->unique();
+            $table->string('slug');
             $table->string('first_name', 100);
             $table->string('middle_name', 100)->nullable();
             $table->string('last_name', 100);
@@ -42,6 +42,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
+            $table->unique(['organization_id', 'slug']);
             $table->index('organization_id');
             $table->index(['organization_id', 'status']);
             $table->index(['organization_id', 'last_name', 'first_name']);

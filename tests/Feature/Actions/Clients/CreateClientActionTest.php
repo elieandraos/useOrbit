@@ -42,3 +42,24 @@ test('generates a non-empty slug', function () use ($attributes) {
 
     expect($client->slug)->not->toBeEmpty();
 });
+
+test('two organizations can each have the same slug without collision', function () use ($attributes) {
+    $userA = User::factory()->withOrganization()->create();
+    $userB = User::factory()->withOrganization()->create();
+
+    $clientA = app(CreateClientAction::class)->handle($userA, $attributes);
+    $clientB = app(CreateClientAction::class)->handle($userB, $attributes);
+
+    expect($clientA->slug)->toBe('john-doe')
+        ->and($clientB->slug)->toBe('john-doe');
+});
+
+test('appends counter when slug already exists in the same organization', function () use ($attributes) {
+    $user = User::factory()->withOrganization()->create();
+
+    $first = app(CreateClientAction::class)->handle($user, $attributes);
+    $second = app(CreateClientAction::class)->handle($user, $attributes);
+
+    expect($first->slug)->toBe('john-doe')
+        ->and($second->slug)->toBe('john-doe-1');
+});
