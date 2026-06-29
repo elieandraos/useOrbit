@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Actions\Clients\CreateClientAction;
+use App\Actions\Clients\UpdateClientAction;
 use App\Http\Requests\Clients\StoreClientRequest;
+use App\Http\Requests\Clients\UpdateClientRequest;
 use App\Http\Resources\ClientResource;
 use App\Models\Client;
 use App\Models\User;
@@ -50,5 +52,25 @@ final class ClientsController extends Controller
         return inertia('Clients/Show', [
             'client' => ClientResource::make($client),
         ]);
+    }
+
+    #[Authorize('update', 'client')]
+    public function edit(Client $client): Response
+    {
+        return inertia('Clients/Edit', [
+            'client' => ClientResource::make($client),
+        ]);
+    }
+
+    #[Authorize('update', 'client')]
+    public function update(UpdateClientRequest $request, Client $client, UpdateClientAction $action): RedirectResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        $client = $action->handle($user, $client, $request->validated());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Client updated.')]);
+
+        return to_route('clients.show', $client);
     }
 }

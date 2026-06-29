@@ -10,4 +10,6 @@ Route::middleware(['auth', 'verified', 'organization'])->group(function () {
     Route::get('clients/create', [ClientsController::class, 'create'])->name('clients.create');
     Route::post('clients', [ClientsController::class, 'store'])->name('clients.store');
     Route::get('clients/{client:slug}', [ClientsController::class, 'show'])->name('clients.show');
+    Route::get('clients/{client:slug}/edit', [ClientsController::class, 'edit'])->name('clients.edit');
+    Route::patch('clients/{client:slug}', [ClientsController::class, 'update'])->name('clients.update');
 });
