@@ -4,19 +4,19 @@ import { Link, usePage } from '@inertiajs/vue3';
 const page = usePage();
 
 const navItems = [
-    { label: 'Button', href: '/design-foundation/button' },
+    { label: 'Avatar', href: '/design-foundation/avatar' },
     { label: 'Badge', href: '/design-foundation/badge' },
     { label: 'Breadcrumbs', href: '/design-foundation/breadcrumbs' },
-    { label: 'Input', href: '/design-foundation/input' },
-    { label: 'Textarea', href: '/design-foundation/textarea' },
-    { label: 'Select', href: '/design-foundation/select' },
-    { label: 'Label', href: '/design-foundation/label' },
-    { label: 'Checkbox', href: '/design-foundation/checkbox' },
-    { label: 'Avatar', href: '/design-foundation/avatar' },
-    { label: 'Separator', href: '/design-foundation/separator' },
-    { label: 'DropMenu', href: '/design-foundation/drop-menu' },
-    { label: 'Dialog', href: '/design-foundation/dialog' },
+    { label: 'Button', href: '/design-foundation/button' },
     { label: 'Card', href: '/design-foundation/card' },
+    { label: 'Checkbox', href: '/design-foundation/checkbox' },
+    { label: 'Dialog', href: '/design-foundation/dialog' },
+    { label: 'DropMenu', href: '/design-foundation/drop-menu' },
+    { label: 'Input', href: '/design-foundation/input' },
+    { label: 'Label', href: '/design-foundation/label' },
+    { label: 'Select', href: '/design-foundation/select' },
+    { label: 'Separator', href: '/design-foundation/separator' },
+    { label: 'Textarea', href: '/design-foundation/textarea' },
 ];
 </script>
 
