@@ -4,6 +4,7 @@ import { Link, usePage } from '@inertiajs/vue3';
 const page = usePage();
 
 const navItems = [
+    { label: 'AuditStrip', href: '/design-foundation/audit-strip' },
     { label: 'Avatar', href: '/design-foundation/avatar' },
     { label: 'Badge', href: '/design-foundation/badge' },
     { label: 'Breadcrumbs', href: '/design-foundation/breadcrumbs' },

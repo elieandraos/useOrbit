@@ -24,4 +24,5 @@ if (app()->environment('local')) {
     Route::get('/design-foundation/photo-upload', fn () => inertia('design-foundation/photo-upload/Index'))->name('design-foundation.photo-upload');
     Route::get('/design-foundation/radio-chips', fn () => inertia('design-foundation/radio-chips/Index'))->name('design-foundation.radio-chips');
     Route::get('/design-foundation/form-section', fn () => inertia('design-foundation/form-section/Index'))->name('design-foundation.form-section');
+    Route::get('/design-foundation/audit-strip', fn () => inertia('design-foundation/audit-strip/Index'))->name('design-foundation.audit-strip');
 }
