@@ -12,6 +12,7 @@ const navItems = [
     { label: 'Checkbox', href: '/design-foundation/checkbox' },
     { label: 'Dialog', href: '/design-foundation/dialog' },
     { label: 'DropMenu', href: '/design-foundation/drop-menu' },
+    { label: 'FormField', href: '/design-foundation/form-field' },
     { label: 'Input', href: '/design-foundation/input' },
     { label: 'Label', href: '/design-foundation/label' },
     { label: 'Select', href: '/design-foundation/select' },
