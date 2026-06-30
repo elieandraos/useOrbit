@@ -16,6 +16,7 @@ const navItems = [
     { label: 'FormField', href: '/design-foundation/form-field' },
     { label: 'Input', href: '/design-foundation/input' },
     { label: 'Label', href: '/design-foundation/label' },
+    { label: 'PhotoUpload', href: '/design-foundation/photo-upload' },
     { label: 'RadioChips', href: '/design-foundation/radio-chips' },
     { label: 'Select', href: '/design-foundation/select' },
     { label: 'Separator', href: '/design-foundation/separator' },
