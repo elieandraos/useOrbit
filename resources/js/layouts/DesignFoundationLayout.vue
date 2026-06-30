@@ -14,6 +14,7 @@ const navItems = [
     { label: 'Dialog', href: '/design-foundation/dialog' },
     { label: 'DropMenu', href: '/design-foundation/drop-menu' },
     { label: 'FormField', href: '/design-foundation/form-field' },
+    { label: 'FormSection', href: '/design-foundation/form-section' },
     { label: 'Input', href: '/design-foundation/input' },
     { label: 'Label', href: '/design-foundation/label' },
     { label: 'PhotoUpload', href: '/design-foundation/photo-upload' },
