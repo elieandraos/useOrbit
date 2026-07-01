@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Enums\ClientStatus;
 use App\Enums\Gender;
 use App\Enums\LeadSource;
 use App\Models\Client;
@@ -30,7 +29,7 @@ test('store returns validation errors when required fields are missing', functio
 
     $this->actingAs($user)
         ->post(route('clients.store'))
-        ->assertSessionHasErrors(['first_name', 'last_name', 'phone', 'date_of_birth', 'gender', 'enrollment_date', 'lead_source', 'status']);
+        ->assertSessionHasErrors(['first_name', 'last_name', 'phone', 'date_of_birth', 'gender', 'enrollment_date', 'lead_source']);
 });
 
 test('store redirects to clients.show with toast on success', function () {
@@ -45,7 +44,6 @@ test('store redirects to clients.show with toast on success', function () {
             'gender' => Gender::Male->value,
             'enrollment_date' => '2024-01-01',
             'lead_source' => LeadSource::Referral->value,
-            'status' => ClientStatus::Active->value,
         ])
         ->assertRedirect(route('clients.show', Client::query()->first()))
         ->assertSessionHas('inertia.flash_data', ['toast' => ['type' => 'success', 'message' => 'Client created.']]);

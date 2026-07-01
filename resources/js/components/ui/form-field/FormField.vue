@@ -17,10 +17,10 @@ const props = defineProps<Props>();
 
 <template>
     <div class="flex flex-col gap-1.5">
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-0.5">
             <Label :for="props.for">{{ label }}</Label>
-            <Badge v-if="required" tone="danger">Required</Badge>
-            <Badge v-if="optional" tone="neutral">Optional</Badge>
+            <span v-if="required" class="text-danger">*</span>
+            <span v-if="optional" class="text-xs text-tertiary ml-0.5">optional</span>
         </div>
 
         <slot />

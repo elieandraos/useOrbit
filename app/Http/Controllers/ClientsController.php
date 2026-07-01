@@ -6,10 +6,14 @@ namespace App\Http\Controllers;
 
 use App\Actions\Clients\CreateClientAction;
 use App\Actions\Clients\UpdateClientAction;
+use App\Enums\Gender;
+use App\Enums\LeadSource;
 use App\Http\Requests\Clients\StoreClientRequest;
 use App\Http\Requests\Clients\UpdateClientRequest;
 use App\Http\Resources\ClientResource;
+use App\Http\Resources\CountryResource;
 use App\Models\Client;
+use App\Models\Country;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
@@ -31,7 +35,11 @@ final class ClientsController extends Controller
     #[Authorize('create', Client::class)]
     public function create(): Response
     {
-        return inertia('Clients/Create');
+        return inertia('Clients/Create', [
+            'countries' => CountryResource::collection(Country::query()->orderBy('name')->get()),
+            'genders' => collect(Gender::cases())->map(fn ($case) => ['label' => $case->label(), 'value' => $case->value]),
+            'leadSources' => collect(LeadSource::cases())->map(fn ($case) => ['label' => $case->label(), 'value' => $case->value]),
+        ]);
     }
 
     #[Authorize('create', Client::class)]

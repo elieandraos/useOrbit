@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Clients;
 
-use App\Enums\ClientStatus;
 use App\Enums\Gender;
 use App\Enums\LeadSource;
 use Illuminate\Foundation\Http\FormRequest;
@@ -22,7 +21,6 @@ final class StoreClientRequest extends FormRequest
             'gender' => ['required', new Enum(Gender::class)],
             'enrollment_date' => ['required', 'date'],
             'lead_source' => ['required', new Enum(LeadSource::class)],
-            'status' => ['required', new Enum(ClientStatus::class)],
             'middle_name' => ['nullable', 'string', 'max:255'],
             'mothers_name' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],

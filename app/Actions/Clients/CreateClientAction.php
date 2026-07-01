@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\Clients;
 
 use App\Concerns\GeneratesUniqueSlug;
+use App\Enums\ClientStatus;
 use App\Models\Client;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -14,7 +15,7 @@ final class CreateClientAction
     use GeneratesUniqueSlug;
 
     /**
-     * @param  array{first_name: string, last_name: string, phone: string, date_of_birth: string, gender: string, enrollment_date: string, lead_source: string, status: string, middle_name?: string|null, mothers_name?: string|null, email?: string|null, photo?: string|null, street?: string|null, building_floor?: string|null, city?: string|null, state?: string|null, country_id?: int|null, emergency_contact_name?: string|null, emergency_contact_relationship?: string|null, emergency_contact_phone?: string|null}  $attributes
+     * @param  array{first_name: string, last_name: string, phone: string, date_of_birth: string, gender: string, enrollment_date: string, lead_source: string, middle_name?: string|null, mothers_name?: string|null, email?: string|null, photo?: string|null, street?: string|null, building_floor?: string|null, city?: string|null, state?: string|null, country_id?: int|null, emergency_contact_name?: string|null, emergency_contact_relationship?: string|null, emergency_contact_phone?: string|null}  $attributes
      */
     public function handle(User $user, array $attributes): Client
     {
@@ -28,6 +29,7 @@ final class CreateClientAction
             /** @var Client $client */
             $client = Client::query()->create([
                 ...$attributes,
+                'status' => ClientStatus::Active,
                 'organization_id' => $user->current_organization_id,
                 'slug' => $slug,
                 'created_by' => $user->id,

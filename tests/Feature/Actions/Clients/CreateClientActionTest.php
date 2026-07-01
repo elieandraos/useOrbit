@@ -16,8 +16,15 @@ $attributes = [
     'gender' => Gender::Male->value,
     'enrollment_date' => '2024-01-01',
     'lead_source' => LeadSource::Referral->value,
-    'status' => ClientStatus::Active->value,
 ];
+
+test('sets status to active by default', function () use ($attributes) {
+    $user = User::factory()->withOrganization()->create();
+
+    $client = app(CreateClientAction::class)->handle($user, $attributes);
+
+    expect($client->status)->toBe(ClientStatus::Active);
+});
 
 test('creates client scoped to the user current organization', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();

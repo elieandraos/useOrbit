@@ -8,6 +8,7 @@ type Option = string | { label: string; value: string; desc?: string }
 interface Props {
     options: Option[]
     modelValue?: string
+    name?: string
     direction?: 'horizontal' | 'vertical'
     size?: 'sm' | 'md'
     class?: HTMLAttributes['class']
@@ -84,5 +85,6 @@ function select(value: string) {
 
             <template v-else>{{ option.label }}</template>
         </button>
+        <input v-if="name" type="hidden" :name="name" :value="modelValue" />
     </div>
 </template>

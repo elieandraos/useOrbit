@@ -4,6 +4,7 @@ import Select from '@/components/ui/select/Select.vue'
 
 const props = withDefaults(defineProps<{
     modelValue?: string
+    name?: string
     startYear?: number
     endYear?: number
     size?: 'sm' | 'md'
@@ -43,6 +44,12 @@ watch(() => props.modelValue, (val) => {
 watch([internalYear, internalMonth, internalDay], ([y, m, d]) => {
     emit('update:modelValue', y && m && d ? `${y}-${m}-${d}` : '')
 })
+
+const hiddenValue = computed(() =>
+    internalYear.value && internalMonth.value && internalDay.value
+        ? `${internalYear.value}-${internalMonth.value}-${internalDay.value}`
+        : '',
+)
 
 const days = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0'))
 
@@ -88,5 +95,6 @@ const years = computed(() => {
         <Select v-model="internalYear" placeholder="Year" :size="size">
             <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
         </Select>
+        <input v-if="name" type="hidden" :name="name" :value="hiddenValue" />
     </div>
 </template>

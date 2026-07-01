@@ -12,4 +12,16 @@ enum LeadSource: string
     case Partner = 'partner';
     case WalkIn = 'walk_in';
     case ColdCall = 'cold_call';
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::Referral => 'Referral',
+            self::Website => 'Website',
+            self::SocialMedia => 'Social media',
+            self::Partner => 'Partner',
+            self::WalkIn => 'Walk-in',
+            self::ColdCall => 'Cold call',
+        };
+    }
 }
