@@ -21,6 +21,7 @@ $attributes = [
 test('sets status to active by default', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
 
+    /** @noinspection PhpUnhandledExceptionInspection */
     $client = app(CreateClientAction::class)->handle($user, $attributes);
 
     expect($client->status)->toBe(ClientStatus::Active);
@@ -29,6 +30,7 @@ test('sets status to active by default', function () use ($attributes) {
 test('creates client scoped to the user current organization', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
 
+    /** @noinspection PhpUnhandledExceptionInspection */
     $client = app(CreateClientAction::class)->handle($user, $attributes);
 
     expect($client->organization_id)->toBe($user->current_organization_id);
@@ -37,6 +39,7 @@ test('creates client scoped to the user current organization', function () use (
 test('sets created_by to the user id', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
 
+    /** @noinspection PhpUnhandledExceptionInspection */
     $client = app(CreateClientAction::class)->handle($user, $attributes);
 
     expect($client->created_by)->toBe($user->id);
@@ -45,6 +48,7 @@ test('sets created_by to the user id', function () use ($attributes) {
 test('generates a non-empty slug', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
 
+    /** @noinspection PhpUnhandledExceptionInspection */
     $client = app(CreateClientAction::class)->handle($user, $attributes);
 
     expect($client->slug)->not->toBeEmpty();
@@ -54,7 +58,9 @@ test('two organizations can each have the same slug without collision', function
     $userA = User::factory()->withOrganization()->create();
     $userB = User::factory()->withOrganization()->create();
 
+    /** @noinspection PhpUnhandledExceptionInspection */
     $clientA = app(CreateClientAction::class)->handle($userA, $attributes);
+    /** @noinspection PhpUnhandledExceptionInspection */
     $clientB = app(CreateClientAction::class)->handle($userB, $attributes);
 
     expect($clientA->slug)->toBe('john-doe')
@@ -64,7 +70,9 @@ test('two organizations can each have the same slug without collision', function
 test('appends counter when slug already exists in the same organization', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
 
+    /** @noinspection PhpUnhandledExceptionInspection */
     $first = app(CreateClientAction::class)->handle($user, $attributes);
+    /** @noinspection PhpUnhandledExceptionInspection */
     $second = app(CreateClientAction::class)->handle($user, $attributes);
 
     expect($first->slug)->toBe('john-doe')
