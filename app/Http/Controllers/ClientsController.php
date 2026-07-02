@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\Clients\CreateClientAction;
 use App\Actions\Clients\UpdateClientAction;
+use App\Enums\EmergencyContactRelationship;
 use App\Enums\Gender;
 use App\Enums\LeadSource;
 use App\Http\Requests\Clients\StoreClientRequest;
@@ -39,6 +40,7 @@ final class ClientsController extends Controller
             'countries' => CountryResource::collection(Country::query()->orderBy('name')->get()),
             'genders' => collect(Gender::cases())->map(fn ($case) => ['label' => $case->label(), 'value' => $case->value]),
             'leadSources' => collect(LeadSource::cases())->map(fn ($case) => ['label' => $case->label(), 'value' => $case->value]),
+            'emergencyContactRelationships' => collect(EmergencyContactRelationship::cases())->map(fn ($case) => ['label' => $case->label(), 'value' => $case->value]),
         ]);
     }
 

@@ -15,6 +15,7 @@ defineProps<{
     countries: { id: number; name: string }[];
     genders: { label: string; value: string }[];
     leadSources: { label: string; value: string }[];
+    emergencyContactRelationships: { label: string; value: string }[];
 }>();
 
 defineOptions({
@@ -126,12 +127,9 @@ const gender = ref('female');
                 </FormField>
                 <FormField label="Relationship" for="emergency_contact_relationship" optional :error="errors.emergency_contact_relationship">
                     <Select id="emergency_contact_relationship" name="emergency_contact_relationship" placeholder="Select">
-                        <option value="Spouse">Spouse</option>
-                        <option value="Parent">Parent</option>
-                        <option value="Child">Child</option>
-                        <option value="Sibling">Sibling</option>
-                        <option value="Friend">Friend</option>
-                        <option value="Other">Other</option>
+                        <option v-for="rel in emergencyContactRelationships" :key="rel.value" :value="rel.value">
+                            {{ rel.label }}
+                        </option>
                     </Select>
                 </FormField>
                 <FormField label="Phone number" for="emergency_contact_phone" optional :error="errors.emergency_contact_phone">

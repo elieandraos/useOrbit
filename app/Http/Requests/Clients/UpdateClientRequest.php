@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests\Clients;
 
 use App\Enums\ClientStatus;
+use App\Enums\EmergencyContactRelationship;
 use App\Enums\Gender;
 use App\Enums\LeadSource;
 use Illuminate\Foundation\Http\FormRequest;
@@ -33,7 +34,7 @@ final class UpdateClientRequest extends FormRequest
             'state' => ['nullable', 'string', 'max:255'],
             'country_id' => ['nullable', 'integer', 'exists:countries,id'],
             'emergency_contact_name' => ['nullable', 'string', 'max:255'],
-            'emergency_contact_relationship' => ['nullable', 'string', 'max:255'],
+            'emergency_contact_relationship' => ['nullable', new Enum(EmergencyContactRelationship::class)],
             'emergency_contact_phone' => ['nullable', 'string', 'max:255'],
         ];
     }

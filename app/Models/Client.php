@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\ClientStatus;
+use App\Enums\EmergencyContactRelationship;
 use App\Enums\Gender;
 use App\Enums\LeadSource;
 use App\Models\Concerns\BelongsToCurrentOrganization;
@@ -35,7 +36,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $state
  * @property int|null $country_id
  * @property string|null $emergency_contact_name
- * @property string|null $emergency_contact_relationship
+ * @property EmergencyContactRelationship|null $emergency_contact_relationship
  * @property string|null $emergency_contact_phone
  * @property CarbonImmutable $enrollment_date
  * @property LeadSource $lead_source
@@ -61,6 +62,7 @@ final class Client extends Model
         return [
             'date_of_birth' => 'date',
             'enrollment_date' => 'date',
+            'emergency_contact_relationship' => EmergencyContactRelationship::class,
             'gender' => Gender::class,
             'lead_source' => LeadSource::class,
             'status' => ClientStatus::class,
