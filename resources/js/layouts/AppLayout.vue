@@ -13,7 +13,7 @@ defineProps<{
 <template>
     <AppShell>
         <AppTopNav />
-        <AppContent>
+        <AppContent :breadcrumbs="breadcrumbs">
             <slot />
         </AppContent>
         <Toaster />
