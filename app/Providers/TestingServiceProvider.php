@@ -52,5 +52,11 @@ class TestingServiceProvider extends ServiceProvider
                 $inertia->hasPaginatedResource($key, $resource);
             });
         });
+
+        TestResponse::macro('assertHasInertiaFlash', function (string $type, string $message) {
+            return $this->assertSessionHas('inertia.flash_data', [
+                'toast' => ['type' => $type, 'message' => $message],
+            ]);
+        });
     }
 }
