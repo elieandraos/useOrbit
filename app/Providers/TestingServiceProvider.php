@@ -15,6 +15,7 @@ use Inertia\Testing\AssertableInertia;
  * @method assertInertia(Closure $param)
  * @method has(string $key)
  * @method prop(string $key)
+ * @method assertSessionHas(string|array $key, mixed $value = null)
  */
 class TestingServiceProvider extends ServiceProvider
 {
