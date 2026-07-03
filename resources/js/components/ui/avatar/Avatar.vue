@@ -6,7 +6,7 @@ const props = withDefaults(
     defineProps<{
         name: string;
         src?: string | null;
-        size?: 'sm' | 'md' | 'lg';
+        size?: 'sm' | 'md' | 'lg' | number;
     }>(),
     { size: 'md' },
 );
@@ -22,6 +22,10 @@ const sizeClasses: Record<string, string> = {
     md: 'size-8 text-xs',
     lg: 'size-10 text-sm',
 };
+
+const numericSizeStyle = computed(() =>
+    typeof props.size === 'number' ? { width: `${props.size}px`, height: `${props.size}px`, fontSize: `${props.size * 0.4}px` } : undefined,
+);
 
 function nameToHue(name: string): number {
     let hash = 0;
@@ -41,7 +45,8 @@ const fallbackStyle = computed(() => ({
     <div
         data-slot="avatar"
         class="relative shrink-0 overflow-hidden rounded-full"
-        :class="sizeClasses[size]"
+        :class="typeof size === 'string' ? sizeClasses[size] : undefined"
+        :style="numericSizeStyle"
     >
         <img
             v-if="showImage"

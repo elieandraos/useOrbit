@@ -36,11 +36,15 @@ final class ClientsController extends Controller
     #[Authorize('create', Client::class)]
     public function create(): Response
     {
+        /** @var Country|null $defaultCountry */
+        $defaultCountry = Country::query()->firstWhere('name', 'Lebanon');
+
         return inertia('Clients/Create', [
             'countries' => CountryResource::collection(Country::query()->orderBy('name')->get()),
             'genders' => collect(Gender::cases())->map(fn ($case) => ['label' => $case->label(), 'value' => $case->value]),
             'leadSources' => collect(LeadSource::cases())->map(fn ($case) => ['label' => $case->label(), 'value' => $case->value]),
             'emergencyContactRelationships' => collect(EmergencyContactRelationship::cases())->map(fn ($case) => ['label' => $case->label(), 'value' => $case->value]),
+            'defaultCountryId' => $defaultCountry?->id,
         ]);
     }
 
@@ -67,8 +71,14 @@ final class ClientsController extends Controller
     #[Authorize('update', 'client')]
     public function edit(Client $client): Response
     {
+        $client->load('updatedBy');
+
         return inertia('Clients/Edit', [
             'client' => ClientResource::make($client),
+            'countries' => CountryResource::collection(Country::query()->orderBy('name')->get()),
+            'genders' => collect(Gender::cases())->map(fn ($case) => ['label' => $case->label(), 'value' => $case->value]),
+            'leadSources' => collect(LeadSource::cases())->map(fn ($case) => ['label' => $case->label(), 'value' => $case->value]),
+            'emergencyContactRelationships' => collect(EmergencyContactRelationship::cases())->map(fn ($case) => ['label' => $case->label(), 'value' => $case->value]),
         ]);
     }
 

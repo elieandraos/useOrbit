@@ -20,7 +20,7 @@ final class ClientResource extends JsonResource
             'middle_name' => $this->middle_name,
             'last_name' => $this->last_name,
             'mothers_name' => $this->mothers_name,
-            'date_of_birth' => $this->date_of_birth,
+            'date_of_birth' => $this->date_of_birth->format('Y-m-d'),
             'gender' => $this->gender,
             'photo' => $this->photo,
             'phone' => $this->phone,
@@ -33,11 +33,14 @@ final class ClientResource extends JsonResource
             'emergency_contact_name' => $this->emergency_contact_name,
             'emergency_contact_relationship' => $this->emergency_contact_relationship,
             'emergency_contact_phone' => $this->emergency_contact_phone,
-            'enrollment_date' => $this->enrollment_date,
+            'enrollment_date' => $this->enrollment_date->format('Y-m-d'),
             'lead_source' => $this->lead_source,
             'status' => $this->status,
             'created_by' => $this->created_by,
             'updated_by' => $this->updated_by,
+            'created_at' => $this->created_at->format('M j, Y · g:i A'),
+            'updated_at' => $this->updated_at->format('M j, Y · g:i A'),
+            'updated_by_name' => $this->updatedBy?->name,
         ];
     }
 }

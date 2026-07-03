@@ -23,7 +23,7 @@ final class UpdateClientRequest extends FormRequest
             'gender' => ['required', new Enum(Gender::class)],
             'enrollment_date' => ['required', 'date'],
             'lead_source' => ['required', new Enum(LeadSource::class)],
-            'status' => ['required', new Enum(ClientStatus::class)],
+            'status' => ['sometimes', new Enum(ClientStatus::class)],
             'middle_name' => ['nullable', 'string', 'max:255'],
             'mothers_name' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],

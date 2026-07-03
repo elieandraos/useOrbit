@@ -14,9 +14,12 @@ const props = withDefaults(
         class="flex items-start justify-between gap-4 pb-5"
         :class="props.divider && 'border-b border-border-subtle'"
     >
-        <div class="flex flex-col gap-0.5">
-            <h1 class="text-xl font-semibold text-primary">{{ title }}</h1>
-            <p v-if="subtitle" class="text-sm text-tertiary">{{ subtitle }}</p>
+        <div class="flex items-start gap-4">
+            <slot name="avatar" />
+            <div class="flex flex-col gap-0.5">
+                <h1 class="text-xl font-semibold text-primary">{{ title }}</h1>
+                <p v-if="subtitle" class="text-sm text-tertiary">{{ subtitle }}</p>
+            </div>
         </div>
         <div v-if="$slots.actions" class="flex shrink-0 items-center gap-2">
             <slot name="actions" />

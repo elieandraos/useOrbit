@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Enums\ClientStatus;
 use App\Enums\Gender;
 use App\Enums\LeadSource;
+use App\Http\Resources\ClientResource;
 use App\Models\Client;
 use App\Models\Organization;
 use App\Models\User;
@@ -29,14 +30,18 @@ test('guests are redirected to the login page', function () {
 
 test('edit page renders with client data', function () {
     $user = User::factory()->withOrganization()->create();
-    $client = Client::factory()->create(['organization_id' => $user->current_organization_id]);
+    $editor = User::factory()->withOrganization()->create();
+    $client = Client::factory()->create([
+        'organization_id' => $user->current_organization_id,
+        'updated_by' => $editor->id,
+    ]);
 
     $this->actingAs($user)
         ->get(route('clients.edit', $client))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('Clients/Edit')
-            ->has('client')
+            ->hasResource('client', ClientResource::make($client->load('updatedBy')))
         );
 });
 
@@ -46,7 +51,23 @@ test('update returns validation errors when required fields are missing', functi
 
     $this->actingAs($user)
         ->patch(route('clients.update', $client))
-        ->assertSessionHasErrors(['first_name', 'last_name', 'phone', 'date_of_birth', 'gender', 'enrollment_date', 'lead_source', 'status']);
+        ->assertSessionHasErrors(['first_name', 'last_name', 'phone', 'date_of_birth', 'gender', 'enrollment_date', 'lead_source']);
+});
+
+test('update succeeds without a status field and preserves the existing status', function () use ($validPayload) {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->create([
+        'organization_id' => $user->current_organization_id,
+        'status' => ClientStatus::Archived->value,
+    ]);
+
+    $this->actingAs($user)
+        ->patch(route('clients.update', $client), collect($validPayload)->except('status')->all())
+        ->assertRedirect(route('clients.show', $client->fresh()));
+
+    /** @var Client $fresh */
+    $fresh = $client->fresh();
+    expect($fresh->status)->toBe(ClientStatus::Archived);
 });
 
 test('update redirects to clients.show with toast on success', function () use ($validPayload) {
