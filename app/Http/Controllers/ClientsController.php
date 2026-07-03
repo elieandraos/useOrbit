@@ -63,6 +63,8 @@ final class ClientsController extends Controller
     #[Authorize('view', 'client')]
     public function show(Client $client): Response
     {
+        $client->load('country');
+
         return inertia('Clients/Show', [
             'client' => ClientResource::make($client),
         ]);
