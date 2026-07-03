@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { ChevronDown } from '@lucide/vue';
+import { ChevronDown, Home, Users } from '@lucide/vue';
 import { computed } from 'vue';
 import AppLogo from '@/components/shell/AppLogo.vue';
 import UserInfo from '@/components/shell/UserInfo.vue';
@@ -9,6 +9,7 @@ import { DropMenu, DropMenuItem } from '@/components/ui/drop-menu';
 import { Separator } from '@/components/ui/separator';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { dashboard, logout } from '@/routes';
+import { index as clientsIndex } from '@/routes/clients';
 import { edit } from '@/routes/profile';
 
 const page = usePage();
@@ -28,14 +29,28 @@ const { isCurrentOrParentUrl } = useCurrentUrl();
         <nav class="ml-8 flex h-full items-stretch gap-1">
             <Link
                 :href="dashboard()"
-                class="flex items-center border-b-2 px-3 text-sm font-medium transition-colors"
+                class="flex items-center gap-1.5 border-b-2 px-3 text-sm font-medium transition-colors"
                 :class="
                     isCurrentOrParentUrl(dashboard())
                         ? 'border-accent text-accent'
                         : 'border-transparent text-secondary hover:text-primary'
                 "
             >
+                <Home class="size-4" />
                 Dashboard
+            </Link>
+
+            <Link
+                :href="clientsIndex()"
+                class="flex items-center gap-1.5 border-b-2 px-3 text-sm font-medium transition-colors"
+                :class="
+                    isCurrentOrParentUrl(clientsIndex())
+                        ? 'border-accent text-accent'
+                        : 'border-transparent text-secondary hover:text-primary'
+                "
+            >
+                <Users class="size-4" />
+                Clients
             </Link>
         </nav>
 
