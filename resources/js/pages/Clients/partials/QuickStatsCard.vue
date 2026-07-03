@@ -3,15 +3,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 </script>
 
 <template>
-    <Card class="!gap-0 !py-0">
-        <CardHeader class="border-b border-border px-6 py-[14px]">
+    <Card>
+        <CardHeader bordered>
             <CardTitle>Quick stats</CardTitle>
         </CardHeader>
-        <CardContent class="!p-0">
+        <CardContent class="p-0">
             <div class="grid grid-cols-2">
                 <div class="px-[18px] py-3.5">
                     <p
-                        class="font-mono text-[10.5px] font-semibold tracking-[0.06em] text-tertiary uppercase"
+                        class="font-mono text-[10.5px] tracking-[0.06em] text-tertiary uppercase"
                     >
                         Annual premium
                     </p>
@@ -23,7 +23,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
                 </div>
                 <div class="border-l border-border-subtle px-[18px] py-3.5">
                     <p
-                        class="font-mono text-[10.5px] font-semibold tracking-[0.06em] text-tertiary uppercase"
+                        class="font-mono text-[10.5px] tracking-[0.06em] text-tertiary uppercase"
                     >
                         Lifetime value
                     </p>
@@ -35,7 +35,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
                 </div>
                 <div class="border-t border-border-subtle px-[18px] py-3.5">
                     <p
-                        class="font-mono text-[10.5px] font-semibold tracking-[0.06em] text-tertiary uppercase"
+                        class="font-mono text-[10.5px] tracking-[0.06em] text-tertiary uppercase"
                     >
                         Years as client
                     </p>
@@ -49,7 +49,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
                     class="border-t border-l border-border-subtle px-[18px] py-3.5"
                 >
                     <p
-                        class="font-mono text-[10.5px] font-semibold tracking-[0.06em] text-tertiary uppercase"
+                        class="font-mono text-[10.5px] tracking-[0.06em] text-tertiary uppercase"
                     >
                         Renewals due
                     </p>

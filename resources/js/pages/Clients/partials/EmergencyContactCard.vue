@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import Avatar from '@/components/ui/avatar/Avatar.vue';
-import Badge from '@/components/ui/badge/Badge.vue';
 import {
     Card,
-    CardAction,
     CardContent,
     CardHeader,
     CardTitle,
@@ -19,16 +17,6 @@ defineProps<{
     <Card>
         <CardHeader>
             <CardTitle>Emergency contact</CardTitle>
-            <CardAction>
-                <Badge
-                    :tone="
-                        client.emergency_contact_name ? 'success' : 'neutral'
-                    "
-                    dot
-                >
-                    {{ client.emergency_contact_name ? 'On file' : 'None' }}
-                </Badge>
-            </CardAction>
         </CardHeader>
         <CardContent>
             <div

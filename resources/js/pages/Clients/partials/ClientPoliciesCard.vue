@@ -11,8 +11,8 @@ import {
 </script>
 
 <template>
-    <Card class="!gap-0 !py-0">
-        <CardHeader class="border-b border-border px-6 py-[14px]">
+    <Card>
+        <CardHeader bordered>
             <CardTitle>Policies</CardTitle>
             <CardAction>
                 <Button variant="ghost" size="sm" disabled>
@@ -21,7 +21,7 @@ import {
                 </Button>
             </CardAction>
         </CardHeader>
-        <CardContent class="!p-6 text-center text-[13px] text-tertiary"
+        <CardContent class="text-center text-[13px] text-tertiary"
             >No policies yet.</CardContent
         >
     </Card>

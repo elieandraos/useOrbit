@@ -1,41 +1,18 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
-import { Pencil } from '@lucide/vue';
-import { computed } from 'vue';
-import Button from '@/components/ui/button/Button.vue';
-import {
-    Card,
-    CardAction,
-    CardContent,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
-import { edit as clientsEdit } from '@/routes/clients';
+import Badge from '@/components/ui/badge/Badge.vue';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { ClientResource } from './client';
 import DetailField from './DetailField.vue';
 
-const props = defineProps<{
+defineProps<{
     client: ClientResource;
 }>();
-
-const dateOfBirthLabel = computed(
-    () => `${props.client.date_of_birth_formatted} · ${props.client.age} yrs`,
-);
 </script>
 
 <template>
     <Card>
-        <CardHeader>
+        <CardHeader bordered>
             <CardTitle>Personal information</CardTitle>
-            <CardAction>
-                <Link :href="clientsEdit(client.slug).url">
-                    <Button variant="ghost" size="sm">
-                        <template #leading
-                            ><Pencil class="size-3.5"
-                        /></template>
-                    </Button>
-                </Link>
-            </CardAction>
         </CardHeader>
         <CardContent>
             <div class="grid grid-cols-2 gap-x-3.5 gap-y-4">
@@ -46,7 +23,19 @@ const dateOfBirthLabel = computed(
                     label="Mother's name"
                     :value="client.mothers_name"
                 />
-                <DetailField label="Date of birth" :value="dateOfBirthLabel" />
+                <div class="flex min-w-0 flex-col gap-1">
+                    <p
+                        class="font-mono text-[10.5px] tracking-[0.06em] text-tertiary uppercase"
+                    >
+                        Date of birth
+                    </p>
+                    <div class="flex items-center gap-2">
+                        <p class="truncate text-[13.5px] text-primary">
+                            {{ client.date_of_birth_formatted }}
+                        </p>
+                        <Badge tone="success">{{ client.age }} yrs</Badge>
+                    </div>
+                </div>
                 <DetailField label="Gender" :value="client.gender_label" />
             </div>
         </CardContent>

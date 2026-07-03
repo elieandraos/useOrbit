@@ -10,7 +10,7 @@ defineProps<{
 
 <template>
     <Card>
-        <CardHeader>
+        <CardHeader bordered>
             <CardTitle>Contact</CardTitle>
         </CardHeader>
         <CardContent>

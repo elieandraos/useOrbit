@@ -18,8 +18,8 @@ function statusTone(status: string) {
 </script>
 
 <template>
-    <Card class="!py-0 !gap-0">
-        <CardHeader class="border-b border-border px-6 py-[14px]">
+    <Card>
+        <CardHeader bordered>
             <CardTitle>Policies</CardTitle>
             <CardAction>
                 <Button variant="ghost" size="sm">
@@ -28,7 +28,7 @@ function statusTone(status: string) {
                 </Button>
             </CardAction>
         </CardHeader>
-        <CardContent class="!p-0">
+        <CardContent class="p-0">
             <div
                 v-for="policy in policies"
                 :key="policy.id"
