@@ -5,8 +5,9 @@ withDefaults(
         value?: string | null;
         mono?: boolean;
         lowercase?: boolean;
+        multiline?: boolean;
     }>(),
-    { value: null, mono: false, lowercase: false },
+    { value: null, mono: false, lowercase: false, multiline: false },
 );
 </script>
 
@@ -18,8 +19,12 @@ withDefaults(
             {{ label }}
         </p>
         <p
-            class="truncate text-[13.5px] text-primary"
-            :class="[mono && 'font-mono', lowercase ? 'lowercase' : 'capitalize']"
+            class="text-[13.5px] text-primary"
+            :class="[
+                mono && 'font-mono',
+                lowercase ? 'lowercase' : 'capitalize',
+                multiline ? 'whitespace-pre-line' : 'truncate',
+            ]"
         >
             <template v-if="value">{{ value }}</template>
             <span v-else class="text-tertiary">—</span>
