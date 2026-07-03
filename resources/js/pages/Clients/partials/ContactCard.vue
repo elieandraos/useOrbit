@@ -16,7 +16,7 @@ defineProps<{
         <CardContent>
             <div class="flex flex-col gap-3.5">
                 <DetailField label="Phone" :value="client.phone" mono />
-                <DetailField label="Email" :value="client.email" />
+                <DetailField label="Email" :value="client.email" lowercase />
                 <DetailField label="Address" :value="client.full_address" />
             </div>
         </CardContent>
