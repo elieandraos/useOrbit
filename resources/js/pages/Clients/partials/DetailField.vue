@@ -12,12 +12,12 @@ withDefaults(
 <template>
     <div class="flex min-w-0 flex-col gap-1">
         <p
-            class="font-mono text-[10.5px] font-semibold tracking-[0.06em] text-tertiary uppercase"
+            class="font-mono text-[10.5px] tracking-[0.06em] text-tertiary uppercase"
         >
             {{ label }}
         </p>
         <p
-            class="truncate text-[13.5px] text-primary"
+            class="truncate text-[13.5px] text-primary capitalize"
             :class="mono && 'font-mono'"
         >
             <template v-if="value">{{ value }}</template>
