@@ -35,5 +35,7 @@ class DatabaseSeeder extends Seeder
             'status' => OrganizationMemberStatus::Active->value,
             'joined_at' => now(),
         ]);
+
+        $this->callWith(ClientsSeeder::class, ['organization' => $organization, 'user' => $user]);
     }
 }
