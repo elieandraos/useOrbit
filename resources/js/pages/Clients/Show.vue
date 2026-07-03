@@ -26,21 +26,19 @@ interface ClientResource {
     first_name: string;
     middle_name: string | null;
     last_name: string;
+    full_name: string;
     mothers_name: string | null;
-    date_of_birth: string;
+    date_of_birth_formatted: string;
+    age: number;
     gender_label: string;
     photo: string | null;
     phone: string;
     email: string | null;
-    street: string | null;
-    building_floor: string | null;
-    city: string | null;
-    state: string | null;
-    country: string | null;
+    full_address: string;
     emergency_contact_name: string | null;
     emergency_contact_relationship_label: string | null;
     emergency_contact_phone: string | null;
-    enrollment_date: string;
+    enrollment_date_formatted: string;
     lead_source_label: string;
     status: string;
 }
@@ -49,8 +47,6 @@ const props = defineProps<{
     client: ClientResource;
 }>();
 
-const fullName = `${props.client.first_name} ${props.client.last_name}`;
-
 setLayoutProps({
     breadcrumbs: [
         {
@@ -58,63 +54,29 @@ setLayoutProps({
             href: clientsIndex(),
         },
         {
-            title: fullName,
+            title: props.client.full_name,
         },
     ],
 });
 
 const policiesCount = 0;
 
-function formatDate(date: string): string {
-    return new Date(`${date}T00:00:00`).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-    });
-}
-
-function age(dateOfBirth: string): number {
-    const dob = new Date(`${dateOfBirth}T00:00:00`);
-    const now = new Date();
-    let years = now.getFullYear() - dob.getFullYear();
-    const monthDiff = now.getMonth() - dob.getMonth();
-
-    if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < dob.getDate())) {
-        years--;
-    }
-
-    return years;
-}
-
 const dateOfBirthLabel = computed(
-    () =>
-        `${formatDate(props.client.date_of_birth)} · ${age(props.client.date_of_birth)} yrs`,
-);
-
-const address = computed(() =>
-    [
-        props.client.street,
-        props.client.building_floor,
-        props.client.city,
-        props.client.state,
-        props.client.country,
-    ]
-        .filter(Boolean)
-        .join(', '),
+    () => `${props.client.date_of_birth_formatted} · ${props.client.age} yrs`,
 );
 </script>
 
 <template>
-    <Head :title="fullName" />
+    <Head :title="client.full_name" />
 
     <div class="flex flex-1 flex-col">
         <div class="flex items-start gap-4 pb-6">
-            <Avatar :name="fullName" :size="64" />
+            <Avatar :name="client.full_name" :size="64" />
 
             <div class="min-w-0 flex-1">
                 <div class="flex flex-wrap items-center gap-2.5">
                     <h1 class="text-2xl font-semibold text-primary">
-                        {{ fullName }}
+                        {{ client.full_name }}
                     </h1>
                     <Badge v-if="client.status === 'active'" tone="success" dot
                         >Active client</Badge
@@ -137,7 +99,7 @@ const address = computed(() =>
                     </span>
                     <span class="inline-flex items-center gap-1.5">
                         <Calendar class="size-3.5 text-tertiary" />
-                        Enrolled {{ formatDate(client.enrollment_date) }}
+                        Enrolled {{ client.enrollment_date_formatted }}
                     </span>
                 </div>
             </div>
@@ -221,7 +183,10 @@ const address = computed(() =>
                                 mono
                             />
                             <DetailField label="Email" :value="client.email" />
-                            <DetailField label="Address" :value="address" />
+                            <DetailField
+                                label="Address"
+                                :value="client.full_address"
+                            />
                         </div>
                     </CardContent>
                 </Card>
@@ -234,7 +199,7 @@ const address = computed(() =>
                         <div class="grid grid-cols-2 gap-x-3.5 gap-y-4">
                             <DetailField
                                 label="Enrolled"
-                                :value="formatDate(client.enrollment_date)"
+                                :value="client.enrollment_date_formatted"
                             />
                             <DetailField
                                 label="Lead source"
