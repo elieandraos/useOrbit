@@ -47,6 +47,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property CarbonImmutable|null $updated_at
  * @property CarbonImmutable|null $deleted_at
  * @property-read User|null $updatedBy
+ * @property-read Country|null $country
  */
 #[Fillable([
     'organization_id', 'slug', 'first_name', 'middle_name', 'last_name', 'mothers_name',
