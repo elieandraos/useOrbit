@@ -19,6 +19,9 @@ const props = withDefaults(
             <div class="flex flex-col gap-0.5">
                 <h1 class="text-xl font-semibold text-primary">{{ title }}</h1>
                 <p v-if="subtitle" class="text-sm text-tertiary">{{ subtitle }}</p>
+                <div v-if="$slots.meta" class="mt-1.5">
+                    <slot name="meta" />
+                </div>
             </div>
         </div>
         <div v-if="$slots.actions" class="flex shrink-0 items-center gap-2">

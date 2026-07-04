@@ -3,6 +3,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import { Download, Filter, Plus } from '@lucide/vue';
 import { computed } from 'vue';
 import PageHeader from '@/components/shell/PageHeader.vue';
+import Badge from '@/components/ui/badge/Badge.vue';
 import Button from '@/components/ui/button/Button.vue';
 import { create as clientsCreate } from '@/routes/clients';
 import EmptyState from './partials/EmptyState.vue';
@@ -24,6 +25,14 @@ const hasClients = computed(() => props.clients.data.length > 0);
             title="Clients"
             subtitle="Manage individual and corporate insurance clients"
         >
+            <template v-if="hasClients" #meta>
+                <div class="flex flex-wrap items-center gap-2.5">
+                    <Badge tone="neutral">{{ clients.data.length }} clients</Badge>
+                    <span class="text-xs text-tertiary">·</span>
+                    <span class="text-xs text-tertiary">Sorted by enrollment date · newest first</span>
+                </div>
+            </template>
+
             <template #actions>
                 <template v-if="hasClients">
                     <Button variant="secondary" size="md">
