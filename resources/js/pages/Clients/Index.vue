@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { Plus } from '@lucide/vue';
+import { Download, Filter, Plus } from '@lucide/vue';
 import { computed } from 'vue';
 import PageHeader from '@/components/shell/PageHeader.vue';
 import Button from '@/components/ui/button/Button.vue';
@@ -25,12 +25,22 @@ const hasClients = computed(() => props.clients.data.length > 0);
             subtitle="Manage individual and corporate insurance clients"
         >
             <template #actions>
-                <Link v-if="hasClients" :href="clientsCreate().url">
-                    <Button variant="primary" size="md">
-                        <template #leading><Plus /></template>
-                        Add New Client
+                <template v-if="hasClients">
+                    <Button variant="secondary" size="md">
+                        <template #leading><Filter /></template>
+                        Filters
                     </Button>
-                </Link>
+                    <Button variant="secondary" size="md">
+                        <template #leading><Download /></template>
+                        Export
+                    </Button>
+                    <Link :href="clientsCreate().url">
+                        <Button variant="primary" size="md">
+                            <template #leading><Plus /></template>
+                            Add New Client
+                        </Button>
+                    </Link>
+                </template>
             </template>
         </PageHeader>
 
