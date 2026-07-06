@@ -4,37 +4,54 @@ import { Link, usePage } from '@inertiajs/vue3';
 const page = usePage();
 
 const navItems = [
-    { label: 'Button', href: '/design-foundation/button' },
-    { label: 'Badge', href: '/design-foundation/badge' },
-    { label: 'Input', href: '/design-foundation/input' },
-    { label: 'Textarea', href: '/design-foundation/textarea' },
-    { label: 'Select', href: '/design-foundation/select' },
-    { label: 'Label', href: '/design-foundation/label' },
-    { label: 'Checkbox', href: '/design-foundation/checkbox' },
+    { label: 'AuditStrip', href: '/design-foundation/audit-strip' },
     { label: 'Avatar', href: '/design-foundation/avatar' },
-    { label: 'Separator', href: '/design-foundation/separator' },
-    { label: 'DropMenu', href: '/design-foundation/drop-menu' },
+    { label: 'Badge', href: '/design-foundation/badge' },
+    { label: 'Breadcrumbs', href: '/design-foundation/breadcrumbs' },
+    { label: 'Button', href: '/design-foundation/button' },
+    { label: 'Card', href: '/design-foundation/card' },
+    { label: 'Checkbox', href: '/design-foundation/checkbox' },
+    { label: 'DateInput', href: '/design-foundation/date-input' },
     { label: 'Dialog', href: '/design-foundation/dialog' },
+    { label: 'DropMenu', href: '/design-foundation/drop-menu' },
+    { label: 'FormField', href: '/design-foundation/form-field' },
+    { label: 'FormSection', href: '/design-foundation/form-section' },
+    { label: 'Input', href: '/design-foundation/input' },
+    { label: 'Label', href: '/design-foundation/label' },
+    { label: 'Pagination', href: '/design-foundation/pagination' },
+    { label: 'PhotoUpload', href: '/design-foundation/photo-upload' },
+    { label: 'RadioChips', href: '/design-foundation/radio-chips' },
+    { label: 'Select', href: '/design-foundation/select' },
+    { label: 'Separator', href: '/design-foundation/separator' },
+    { label: 'Textarea', href: '/design-foundation/textarea' },
 ];
 </script>
 
 <template>
     <div class="flex min-h-screen bg-background text-primary">
         <!-- Left nav -->
-        <nav class="fixed inset-y-0 left-0 w-52 border-r border-border bg-background flex flex-col px-4 py-8 gap-6">
-            <span class="text-sm font-semibold tracking-tight">Design Foundation</span>
+        <nav
+            class="fixed inset-y-0 left-0 flex w-52 flex-col gap-6 border-r border-border bg-background px-4 py-8"
+        >
+            <span class="text-sm font-semibold tracking-tight"
+                >Design Foundation</span
+            >
 
             <div class="flex flex-col gap-1">
-                <p class="text-[10px] font-mono text-tertiary uppercase tracking-widest mb-2">Components</p>
+                <p
+                    class="mb-2 font-mono text-[10px] tracking-widest text-tertiary uppercase"
+                >
+                    Components
+                </p>
 
                 <Link
                     v-for="item in navItems"
                     :key="item.href"
                     :href="item.href"
-                    class="text-sm px-3 py-1.5 rounded-md transition-colors"
+                    class="rounded-md px-3 py-1.5 text-sm transition-colors"
                     :class="
                         page.url.startsWith(item.href)
-                            ? 'font-medium text-primary bg-surface'
+                            ? 'bg-surface font-medium text-primary'
                             : 'text-tertiary hover:text-secondary'
                     "
                 >
@@ -44,7 +61,7 @@ const navItems = [
         </nav>
 
         <!-- Page content -->
-        <main class="ml-52 flex-1 px-12 py-12 max-w-4xl">
+        <main class="ml-52 max-w-4xl flex-1 px-12 py-12">
             <slot />
         </main>
     </div>

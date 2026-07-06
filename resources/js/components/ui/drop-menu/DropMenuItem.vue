@@ -30,7 +30,7 @@ const closeMenu = inject<() => void>('dropMenuClose', () => {});
     <button
         v-else
         type="button"
-        class="flex w-full items-center gap-2 rounded-[6px] px-2 py-1.5 text-left text-sm transition-colors hover:bg-sunken"
+        class="flex w-full cursor-pointer items-center gap-2 rounded-[6px] px-2 py-1.5 text-left text-sm transition-colors hover:bg-sunken"
         :class="danger ? 'text-danger' : 'text-primary'"
         v-bind="$attrs"
         @click="closeMenu"

@@ -1,3 +1,7 @@
+<script lang="ts">
+let activeClose: (() => void) | null = null;
+</script>
+
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, provide, ref } from 'vue';
 
@@ -13,10 +17,21 @@ const menuRef = ref<HTMLElement | null>(null);
 
 function close() {
     menuOpen.value = false;
+
+    if (activeClose === close) {
+        activeClose = null;
+    }
 }
 
 function toggle() {
-    menuOpen.value = !menuOpen.value;
+    if (menuOpen.value) {
+        close();
+        return;
+    }
+
+    activeClose?.();
+    activeClose = close;
+    menuOpen.value = true;
 }
 
 function handleClickOutside(event: MouseEvent) {
@@ -33,13 +48,13 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 
 <template>
     <div ref="menuRef" class="relative">
-        <div @click="toggle">
+        <div class="inline-flex" @click="toggle">
             <slot name="trigger" />
         </div>
 
         <div
             v-if="menuOpen"
-            class="absolute top-[calc(100%+6px)] z-20 min-w-[220px] rounded-[10px] border border-border bg-surface p-1 shadow-lg"
+            class="absolute top-[calc(100%+2px)] z-20 min-w-[220px] rounded-[10px] border border-border bg-surface p-1 shadow-lg"
             :class="align === 'start' ? 'left-0' : 'right-0'"
         >
             <slot />

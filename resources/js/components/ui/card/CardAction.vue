@@ -10,7 +10,7 @@ const props = defineProps<{
 <template>
   <div
     data-slot="card-action"
-    :class="cn('col-start-2 row-span-2 row-start-1 self-start justify-self-end', props.class)"
+    :class="cn('absolute inset-y-0 right-6 flex items-center', props.class)"
   >
     <slot />
   </div>

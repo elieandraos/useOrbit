@@ -1,0 +1,67 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Http\Resources\ClientResource;
+use App\Models\Client;
+use App\Models\Organization;
+use App\Models\User;
+
+test('guests are redirected to the login page', function () {
+    $this->get(route('clients.index'))
+        ->assertRedirect(route('login'));
+});
+
+test('authenticated user can list their organization clients', function () {
+    $user = User::factory()->withOrganization()->create();
+    Client::factory(2)->create(['organization_id' => $user->current_organization_id]);
+
+    $this->assertDatabaseCount('clients', 2);
+
+    $this->actingAs($user)
+        ->get(route('clients.index'))
+        ->assertOk()
+        ->assertHasPaginatedResource('clients', ClientResource::collection(Client::query()->latest('enrollment_date')->paginate(7)));
+});
+
+test('clients are ordered by enrollment date, newest first', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    /** @var Client $oldest */
+    $oldest = Client::factory()->create(['organization_id' => $user->current_organization_id, 'enrollment_date' => '2023-01-01']);
+
+    /** @var Client $newest */
+    $newest = Client::factory()->create(['organization_id' => $user->current_organization_id, 'enrollment_date' => '2024-06-01']);
+
+    /** @var Client $middle */
+    $middle = Client::factory()->create(['organization_id' => $user->current_organization_id, 'enrollment_date' => '2024-01-01']);
+
+    $this->actingAs($user)
+        ->get(route('clients.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('clients.data.0.id', $newest->id)
+            ->where('clients.data.1.id', $middle->id)
+            ->where('clients.data.2.id', $oldest->id)
+        );
+});
+
+test('clients from another organization are not included', function () {
+    $user = User::factory()->withOrganization()->create();
+    Client::factory(2)->create(['organization_id' => $user->current_organization_id]);
+
+    $otherOrganization = Organization::factory()->create();
+    Client::factory(3)->create(['organization_id' => $otherOrganization->id]);
+
+    $this->assertDatabaseCount('clients', 5);
+
+    $this->actingAs($user)
+        ->get(route('clients.index'))
+        ->assertOk()
+        ->assertHasPaginatedResource(
+            'clients',
+            ClientResource::collection(
+                Client::query()->where('organization_id', $user->current_organization_id)->latest('enrollment_date')->paginate(7)
+            )
+        );
+});

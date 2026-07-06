@@ -1,0 +1,16 @@
+
+#[CurrentUser] attribute (instead of request()->user())
+
+testing philosophy:
+testing folder structure
+
+
+major decision:
+---------------
+companies/individual client.
+company should always be group policies (employees)
+individual can have single/group (family members)
+insurance companies would be brokers.
+
+policies history/renewal process
+group policies ? on policy per employee/family member?

@@ -1,47 +1,74 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Enums\ClientStatus;
+use App\Enums\EmergencyContactRelationship;
 use App\Enums\Gender;
 use App\Enums\LeadSource;
-use Database\Factories\ClientFactory;
+use App\Models\Concerns\BelongsToCurrentOrganization;
+use App\Models\Concerns\HasSlug;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property int $id
+ * @property int $organization_id
+ * @property string $slug
+ * @property string $first_name
+ * @property string|null $middle_name
+ * @property string $last_name
+ * @property string|null $mothers_name
+ * @property CarbonImmutable $date_of_birth
+ * @property Gender $gender
+ * @property string|null $photo
+ * @property string $phone
+ * @property string|null $email
+ * @property string|null $street
+ * @property string|null $building_floor
+ * @property string|null $city
+ * @property string|null $state
+ * @property int|null $country_id
+ * @property string|null $emergency_contact_name
+ * @property EmergencyContactRelationship|null $emergency_contact_relationship
+ * @property string|null $emergency_contact_phone
+ * @property CarbonImmutable $enrollment_date
+ * @property LeadSource $lead_source
+ * @property ClientStatus $status
+ * @property int $created_by
+ * @property int|null $updated_by
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property CarbonImmutable|null $deleted_at
+ * @property-read User|null $updatedBy
+ * @property-read Country|null $country
+ */
 #[Fillable([
     'organization_id', 'slug', 'first_name', 'middle_name', 'last_name', 'mothers_name',
     'date_of_birth', 'gender', 'photo', 'phone', 'email', 'street', 'building_floor',
     'city', 'state', 'country_id', 'emergency_contact_name', 'emergency_contact_relationship',
     'emergency_contact_phone', 'enrollment_date', 'lead_source', 'status', 'created_by', 'updated_by',
 ])]
-class Client extends Model
+final class Client extends Model
 {
-    /** @use HasFactory<ClientFactory> */
-    use HasFactory, SoftDeletes;
-
-    public function getRouteKeyName(): string
-    {
-        return 'slug';
-    }
+    use BelongsToCurrentOrganization, HasFactory, HasSlug, SoftDeletes;
 
     protected function casts(): array
     {
         return [
             'date_of_birth' => 'date',
             'enrollment_date' => 'date',
+            'emergency_contact_relationship' => EmergencyContactRelationship::class,
             'gender' => Gender::class,
             'lead_source' => LeadSource::class,
             'status' => ClientStatus::class,
         ];
-    }
-
-    public function organization(): BelongsTo
-    {
-        return $this->belongsTo(Organization::class);
     }
 
     public function country(): BelongsTo

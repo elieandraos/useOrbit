@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Seeders;
 
 use App\Enums\OrganizationMemberStatus;
@@ -33,5 +35,7 @@ class DatabaseSeeder extends Seeder
             'status' => OrganizationMemberStatus::Active->value,
             'joined_at' => now(),
         ]);
+
+        $this->callWith(ClientsSeeder::class, ['organization' => $organization, 'user' => $user]);
     }
 }
