@@ -24,9 +24,7 @@ function goToClient(client: ClientResource) {
 </script>
 
 <template>
-    <div
-        class="overflow-hidden rounded-lg border border-border bg-surface shadow-card"
-    >
+    <div class="rounded-lg border border-border bg-surface shadow-card">
         <table class="w-full table-fixed border-collapse">
             <colgroup>
                 <col style="width: 28%" />
@@ -38,7 +36,7 @@ function goToClient(client: ClientResource) {
             <thead>
                 <tr class="border-b border-border bg-sunken">
                     <th
-                        class="px-4 py-2.5 text-left font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase"
+                        class="rounded-tl-lg px-4 py-2.5 text-left font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase"
                     >
                         Client name
                     </th>
@@ -58,7 +56,7 @@ function goToClient(client: ClientResource) {
                         Enrollment date
                     </th>
                     <th
-                        class="px-4 py-2.5 text-right font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase"
+                        class="rounded-tr-lg px-4 py-2.5 text-right font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase"
                     >
                         Actions
                     </th>
@@ -108,7 +106,7 @@ function goToClient(client: ClientResource) {
                             <DropMenu>
                                 <template #trigger>
                                     <button
-                                        class="inline-flex size-7 items-center justify-center rounded-md text-secondary transition-colors hover:bg-sunken"
+                                        class="inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-secondary transition-colors hover:bg-sunken"
                                     >
                                         <MoreHorizontal class="size-4" />
                                     </button>
