@@ -26,7 +26,7 @@ final class ClientsController extends Controller
     #[Authorize('viewAny', Client::class)]
     public function index(): Response
     {
-        $clients = Client::query()->paginate();
+        $clients = Client::query()->latest('enrollment_date')->paginate(7);
 
         return inertia('Clients/Index', [
             'clients' => ClientResource::collection($clients),

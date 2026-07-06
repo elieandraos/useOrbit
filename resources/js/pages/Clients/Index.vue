@@ -6,12 +6,13 @@ import PageHeader from '@/components/shell/PageHeader.vue';
 import Badge from '@/components/ui/badge/Badge.vue';
 import Button from '@/components/ui/button/Button.vue';
 import { create as clientsCreate } from '@/routes/clients';
+import type { Paginated } from '@/types';
+import type { ClientResource } from './partials/client';
+import ClientsTable from './partials/ClientsTable.vue';
 import EmptyState from './partials/EmptyState.vue';
 
 const props = defineProps<{
-    clients: {
-        data: unknown[];
-    };
+    clients: Paginated<ClientResource>;
 }>();
 
 const hasClients = computed(() => props.clients.data.length > 0);
@@ -27,9 +28,13 @@ const hasClients = computed(() => props.clients.data.length > 0);
         >
             <template v-if="hasClients" #meta>
                 <div class="flex flex-wrap items-center gap-2.5">
-                    <Badge tone="neutral">{{ clients.data.length }} clients</Badge>
+                    <Badge tone="neutral"
+                        >{{ clients.meta.total }} clients</Badge
+                    >
                     <span class="text-xs text-tertiary">·</span>
-                    <span class="text-xs text-tertiary">Sorted by enrollment date · newest first</span>
+                    <span class="text-xs text-tertiary"
+                        >Sorted by enrollment date · newest first</span
+                    >
                 </div>
             </template>
 
@@ -53,6 +58,7 @@ const hasClients = computed(() => props.clients.data.length > 0);
             </template>
         </PageHeader>
 
-        <EmptyState v-if="!hasClients" />
+        <ClientsTable v-if="hasClients" class="mt-5" :clients="clients" />
+        <EmptyState v-else />
     </div>
 </template>
