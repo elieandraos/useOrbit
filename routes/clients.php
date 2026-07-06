@@ -12,4 +12,5 @@ Route::middleware(['auth', 'verified', 'organization'])->group(function () {
     Route::get('clients/{client:slug}', [ClientsController::class, 'show'])->name('clients.show');
     Route::get('clients/{client:slug}/edit', [ClientsController::class, 'edit'])->name('clients.edit');
     Route::patch('clients/{client:slug}', [ClientsController::class, 'update'])->name('clients.update');
+    Route::delete('clients/{client:slug}', [ClientsController::class, 'destroy'])->name('clients.destroy');
 });

@@ -95,4 +95,14 @@ final class ClientsController extends Controller
 
         return to_route('clients.show', $client);
     }
+
+    #[Authorize('delete', 'client')]
+    public function destroy(Client $client): RedirectResponse
+    {
+        $client->delete();
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Client deleted.')]);
+
+        return to_route('clients.index');
+    }
 }

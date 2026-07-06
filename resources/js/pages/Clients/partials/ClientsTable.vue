@@ -1,17 +1,21 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
 import { Archive, Eye, MoreHorizontal, Pencil } from '@lucide/vue';
+import { ref } from 'vue';
 import { Avatar } from '@/components/ui/avatar';
 import { DropMenu, DropMenuItem } from '@/components/ui/drop-menu';
 import { Pagination } from '@/components/ui/pagination';
 import { Separator } from '@/components/ui/separator';
 import { edit as clientsEdit, show as clientsShow } from '@/routes/clients';
 import type { Paginated } from '@/types';
+import ArchiveClientModal from './ArchiveClientModal.vue';
 import type { ClientResource } from './client';
 
 defineProps<{
     clients: Paginated<ClientResource>;
 }>();
+
+const clientToArchive = ref<ClientResource | null>(null);
 
 function goToClient(client: ClientResource) {
     router.visit(clientsShow(client.slug).url);
@@ -129,8 +133,7 @@ function goToClient(client: ClientResource) {
                                     <Separator class="my-1" />
                                     <DropMenuItem
                                         danger
-                                        disabled
-                                        class="opacity-50"
+                                        @click="clientToArchive = client"
                                     >
                                         <template #leading
                                             ><Archive class="size-4"
@@ -146,5 +149,7 @@ function goToClient(client: ClientResource) {
         </div>
 
         <Pagination :meta="clients.meta" item-label="clients" />
+
+        <ArchiveClientModal v-model="clientToArchive" />
     </div>
 </template>
