@@ -58,7 +58,10 @@ test('clients from another organization are not included', function () {
     $this->actingAs($user)
         ->get(route('clients.index'))
         ->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->has('clients.data', 2)
+        ->assertHasPaginatedResource(
+            'clients',
+            ClientResource::collection(
+                Client::query()->where('organization_id', $user->current_organization_id)->latest('enrollment_date')->paginate(7)
+            )
         );
 });
