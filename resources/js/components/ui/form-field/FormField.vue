@@ -19,7 +19,7 @@ const props = defineProps<Props>();
     <div class="flex flex-col gap-1.5">
         <div class="flex items-center gap-0.5">
             <Label :for="props.for">{{ label }}</Label>
-            <span v-if="required" class="text-danger">*</span>
+            <span v-if="required" class="text-sm text-danger">*</span>
             <span v-if="optional" class="text-xs text-tertiary ml-0.5">optional</span>
         </div>
 
