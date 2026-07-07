@@ -9,6 +9,8 @@ use App\Actions\Clients\UpdateClientAction;
 use App\Enums\EmergencyContactRelationship;
 use App\Enums\Gender;
 use App\Enums\LeadSource;
+use App\Filters\ClientFilter;
+use App\Http\Requests\Clients\IndexClientRequest;
 use App\Http\Requests\Clients\StoreClientRequest;
 use App\Http\Requests\Clients\UpdateClientRequest;
 use App\Http\Resources\ClientResource;
@@ -24,9 +26,13 @@ use Inertia\Response;
 final class ClientsController extends Controller
 {
     #[Authorize('viewAny', Client::class)]
-    public function index(): Response
+    public function index(IndexClientRequest $request): Response
     {
-        $clients = Client::query()->latest('enrollment_date')->paginate(7);
+        /** @noinspection PhpUndefinedMethodInspection */
+        $clients = Client::query()
+            ->filter(new ClientFilter($request->validated()))
+            ->latest('enrollment_date')
+            ->paginate(7);
 
         return inertia('Clients/Index', [
             'clients' => ClientResource::collection($clients),

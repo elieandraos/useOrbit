@@ -65,3 +65,51 @@ test('clients from another organization are not included', function () {
             )
         );
 });
+
+test('a filter query param narrows the response to matching clients', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    /** @var Client $match */
+    $match = Client::factory()->create(['organization_id' => $user->current_organization_id, 'first_name' => 'Aline']);
+    Client::factory()->create(['organization_id' => $user->current_organization_id, 'first_name' => 'Karim']);
+
+    $this->actingAs($user)
+        ->get(route('clients.index', ['search' => 'Aline']))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('clients.data', 1)
+            ->where('clients.data.0.id', $match->id)
+        );
+});
+
+test('an invalid gender is rejected', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('clients.index', ['gender' => 'other']))
+        ->assertInvalid(['gender']);
+});
+
+test('enrolled_to before enrolled_from is rejected', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('clients.index', ['enrolled_from' => '2024-01-10', 'enrolled_to' => '2024-01-01']))
+        ->assertInvalid(['enrolled_to']);
+});
+
+test('non-numeric age bounds are rejected', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('clients.index', ['age_min' => 'young']))
+        ->assertInvalid(['age_min']);
+});
+
+test('age_max below age_min is rejected', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('clients.index', ['age_min' => 40, 'age_max' => 20]))
+        ->assertInvalid(['age_max']);
+});
