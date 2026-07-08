@@ -26,6 +26,7 @@ const navItems = [
     { label: 'RangeSlider', href: '/design-foundation/range-slider' },
     { label: 'Select', href: '/design-foundation/select' },
     { label: 'Separator', href: '/design-foundation/separator' },
+    { label: 'Switch', href: '/design-foundation/switch' },
     { label: 'Textarea', href: '/design-foundation/textarea' },
 ];
 </script>
