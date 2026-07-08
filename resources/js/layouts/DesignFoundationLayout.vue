@@ -34,7 +34,7 @@ const navItems = [
     <div class="flex min-h-screen bg-background text-primary">
         <!-- Left nav -->
         <nav
-            class="fixed inset-y-0 left-0 flex w-52 flex-col gap-6 border-r border-border bg-background px-4 py-8"
+            class="fixed inset-y-0 left-0 flex w-52 flex-col gap-6 overflow-y-auto border-r border-border bg-background px-4 py-8"
         >
             <span class="text-sm font-semibold tracking-tight"
                 >Design Foundation</span
