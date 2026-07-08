@@ -46,8 +46,11 @@ const ageRange = ref<[number, number]>([
     props.filters.age_max ? Number(props.filters.age_max) : AGE_MAX_BOUND,
 ]);
 const archived = ref(isTruthy(props.filters.archived));
+const formErrors = ref<Record<string, string>>({});
 
 watch(open, (isOpen) => {
+    formErrors.value = {};
+
     if (!isOpen) {
         return;
     }
@@ -68,23 +71,7 @@ const genderOptions = computed(() => [
     ...props.genders,
 ]);
 
-const dateRangeError = computed(() => {
-    if (
-        enrolledFrom.value &&
-        enrolledTo.value &&
-        enrolledFrom.value > enrolledTo.value
-    ) {
-        return 'The "From" date must be before the "To" date.';
-    }
-
-    return undefined;
-});
-
 function applyFilters() {
-    if (dateRangeError.value) {
-        return;
-    }
-
     const query: Record<string, string | number> = {};
 
     if (search.value) {
@@ -115,8 +102,21 @@ function applyFilters() {
         query.archived = 1;
     }
 
-    open.value = false;
-    router.get(clientsIndex.url({ query }));
+    formErrors.value = {};
+    router.get(
+        clientsIndex.url({ query }),
+        {},
+        {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                open.value = false;
+            },
+            onError: (errors) => {
+                formErrors.value = errors as Record<string, string>;
+            },
+        },
+    );
 }
 
 function clearFilters() {
@@ -132,7 +132,11 @@ function clearFilters() {
         description="Narrow down the client list."
     >
         <div class="flex flex-col gap-5">
-            <FormField label="Search" for="filter_search">
+            <FormField
+                label="Search"
+                for="filter_search"
+                :error="formErrors.search"
+            >
                 <Input
                     id="filter_search"
                     v-model="search"
@@ -144,11 +148,14 @@ function clearFilters() {
                 </Input>
             </FormField>
 
-            <FormField label="Gender">
+            <FormField label="Gender" :error="formErrors.gender">
                 <RadioPills v-model="gender" :options="genderOptions" />
             </FormField>
 
-            <FormField label="Enrollment date" :error="dateRangeError">
+            <FormField
+                label="Enrollment date"
+                :error="formErrors.enrolled_to ?? formErrors.enrolled_from"
+            >
                 <div class="flex flex-col gap-3">
                     <div class="flex flex-col gap-1.5">
                         <span class="text-xs text-tertiary">From</span>
@@ -161,7 +168,10 @@ function clearFilters() {
                 </div>
             </FormField>
 
-            <FormField label="Age range">
+            <FormField
+                label="Age range"
+                :error="formErrors.age_max ?? formErrors.age_min"
+            >
                 <p class="mb-1 text-sm text-secondary">
                     {{ ageRange[0] }} – {{ ageRange[1] }} yrs
                 </p>
@@ -186,11 +196,7 @@ function clearFilters() {
                 >Clear filters</Button
             >
             <div class="flex-1" />
-            <Button
-                variant="primary"
-                size="md"
-                :disabled="!!dateRangeError"
-                @click="applyFilters"
+            <Button variant="primary" size="md" @click="applyFilters"
                 >Apply filters</Button
             >
         </template>
