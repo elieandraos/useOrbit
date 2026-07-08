@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
-import { Plus, SearchX, Users } from '@lucide/vue';
+import { Archive, Plus, SearchX, Users } from '@lucide/vue';
 import Button from '@/components/ui/button/Button.vue';
 import {
     create as clientsCreate,
@@ -9,6 +9,7 @@ import {
 
 defineProps<{
     filtered?: boolean;
+    archived?: boolean;
 }>();
 
 function clearFilters() {
@@ -24,20 +25,28 @@ function clearFilters() {
             <div
                 class="mx-auto mb-4 flex size-14 items-center justify-center rounded-lg bg-accent-bg text-accent"
             >
-                <SearchX v-if="filtered" class="size-6" />
+                <Archive v-if="archived" class="size-6" />
+                <SearchX v-else-if="filtered" class="size-6" />
                 <Users v-else class="size-6" />
             </div>
             <h2 class="text-lg font-semibold text-primary">
                 {{
-                    filtered
-                        ? 'No clients match your filters'
-                        : 'No clients yet'
+                    archived && filtered
+                        ? 'No archived clients match your filters'
+                        : archived
+                          ? 'No archived clients'
+                          : filtered
+                            ? 'No clients match your filters'
+                            : 'No clients yet'
                 }}
             </h2>
             <p
                 class="mx-auto mt-2 max-w-[360px] text-sm leading-relaxed text-secondary"
             >
-                <template v-if="filtered"
+                <template v-if="archived && !filtered"
+                    >Clients that have been archived will appear here.</template
+                >
+                <template v-else-if="filtered"
                     >Try adjusting or clearing your filters to see more
                     results.</template
                 >
@@ -49,7 +58,7 @@ function clearFilters() {
             </p>
             <div class="mt-6 flex justify-center">
                 <Button
-                    v-if="filtered"
+                    v-if="archived || filtered"
                     variant="secondary"
                     size="md"
                     @click="clearFilters"

@@ -49,4 +49,15 @@ final class ClientFilter extends QueryFilter
     {
         return $this->builder->whereDate('date_of_birth', '>', now()->subYears((int) $value + 1)->toDateString());
     }
+
+    /** @noinspection PhpUnused */
+    public function archived(bool|string $value): Builder
+    {
+        if (! filter_var($value, FILTER_VALIDATE_BOOLEAN)) {
+            return $this->builder;
+        }
+
+        /** @noinspection PhpUndefinedMethodInspection */
+        return $this->builder->onlyTrashed();
+    }
 }

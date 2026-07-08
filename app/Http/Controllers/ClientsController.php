@@ -47,6 +47,7 @@ final class ClientsController extends Controller
                 'enrolled_to' => $filters['enrolled_to'] ?? null,
                 'age_min' => $filters['age_min'] ?? null,
                 'age_max' => $filters['age_max'] ?? null,
+                'archived' => $filters['archived'] ?? null,
             ],
         ]);
     }

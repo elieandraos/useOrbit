@@ -9,10 +9,16 @@ import FormField from '@/components/ui/form-field/FormField.vue';
 import Input from '@/components/ui/input/Input.vue';
 import RadioPills from '@/components/ui/radio-pills/RadioPills.vue';
 import RangeSlider from '@/components/ui/range-slider/RangeSlider.vue';
+import Switch from '@/components/ui/switch/Switch.vue';
+import SwitchField from '@/components/ui/switch/SwitchField.vue';
 import { index as clientsIndex } from '@/routes/clients';
 
 const AGE_MIN_BOUND = 18;
 const AGE_MAX_BOUND = 90;
+
+function isTruthy(value: string | number | boolean | null): boolean {
+    return value === true || value === 1 || value === '1';
+}
 
 interface Filters {
     search: string | null;
@@ -21,6 +27,7 @@ interface Filters {
     enrolled_to: string | null;
     age_min: string | number | null;
     age_max: string | number | null;
+    archived: string | number | boolean | null;
 }
 
 const props = defineProps<{
@@ -38,6 +45,7 @@ const ageRange = ref<[number, number]>([
     props.filters.age_min ? Number(props.filters.age_min) : AGE_MIN_BOUND,
     props.filters.age_max ? Number(props.filters.age_max) : AGE_MAX_BOUND,
 ]);
+const archived = ref(isTruthy(props.filters.archived));
 
 watch(open, (isOpen) => {
     if (!isOpen) {
@@ -52,6 +60,7 @@ watch(open, (isOpen) => {
         props.filters.age_min ? Number(props.filters.age_min) : AGE_MIN_BOUND,
         props.filters.age_max ? Number(props.filters.age_max) : AGE_MAX_BOUND,
     ];
+    archived.value = isTruthy(props.filters.archived);
 });
 
 const genderOptions = computed(() => [
@@ -100,6 +109,10 @@ function applyFilters() {
 
     if (ageRange.value[1] < AGE_MAX_BOUND) {
         query.age_max = ageRange.value[1];
+    }
+
+    if (archived.value) {
+        query.archived = 1;
     }
 
     open.value = false;
@@ -158,6 +171,14 @@ function clearFilters() {
                     :max="AGE_MAX_BOUND"
                 />
             </FormField>
+
+            <SwitchField
+                label="Show archived clients"
+                description="View clients that have been archived."
+                v-slot="{ id }"
+            >
+                <Switch :id="id" v-model="archived" />
+            </SwitchField>
         </div>
 
         <template #footer>

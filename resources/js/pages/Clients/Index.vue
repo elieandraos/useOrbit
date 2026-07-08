@@ -22,6 +22,7 @@ const props = defineProps<{
         enrolled_to: string | null;
         age_min: string | number | null;
         age_max: string | number | null;
+        archived: string | number | boolean | null;
     };
 }>();
 
@@ -35,6 +36,21 @@ const activeFilterCount = computed(
             (value) => value !== null && value !== '',
         ).length,
 );
+
+const otherFilterCount = computed(
+    () =>
+        Object.entries(props.filters).filter(
+            ([key, value]) =>
+                key !== 'archived' && value !== null && value !== '',
+        ).length,
+);
+
+const isArchivedView = computed(
+    () =>
+        props.filters.archived === true ||
+        props.filters.archived === 1 ||
+        props.filters.archived === '1',
+);
 </script>
 
 <template>
@@ -47,13 +63,16 @@ const activeFilterCount = computed(
         >
             <template v-if="hasClients" #meta>
                 <div class="flex flex-wrap items-center gap-2.5">
-                    <Badge tone="neutral"
-                        >{{ clients.meta.total }} clients</Badge
-                    >
+                    <Badge :tone="isArchivedView ? 'warning' : 'neutral'">
+                        {{ clients.meta.total }}
+                        {{ isArchivedView ? 'archived clients' : 'clients' }}
+                    </Badge>
                     <span class="text-xs text-tertiary">·</span>
-                    <span class="text-xs text-tertiary"
-                        >Sorted by enrollment date · newest first</span
-                    >
+                    <span class="text-xs text-tertiary">{{
+                        isArchivedView
+                            ? 'Showing archived clients'
+                            : 'Sorted by enrollment date · newest first'
+                    }}</span>
                 </div>
             </template>
 
@@ -86,7 +105,11 @@ const activeFilterCount = computed(
         </PageHeader>
 
         <ClientsTable v-if="hasClients" class="mt-5" :clients="clients" />
-        <EmptyState v-else :filtered="activeFilterCount > 0" />
+        <EmptyState
+            v-else
+            :filtered="otherFilterCount > 0"
+            :archived="isArchivedView"
+        />
 
         <FiltersDrawer
             v-model:open="filtersOpen"

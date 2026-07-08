@@ -139,6 +139,7 @@ test('the index page echoes back the applied filters', function () {
             'enrolled_to' => '2024-06-01',
             'age_min' => 30,
             'age_max' => 60,
+            'archived' => 1,
         ]))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
@@ -147,7 +148,8 @@ test('the index page echoes back the applied filters', function () {
             ->where('filters.enrolled_from', '2024-01-01')
             ->where('filters.enrolled_to', '2024-06-01')
             ->where('filters.age_min', '30')
-            ->where('filters.age_max', '60'));
+            ->where('filters.age_max', '60')
+            ->where('filters.archived', '1'));
 });
 
 test('the index page returns null filters when none are applied', function () {
@@ -162,5 +164,43 @@ test('the index page returns null filters when none are applied', function () {
             ->where('filters.enrolled_from', null)
             ->where('filters.enrolled_to', null)
             ->where('filters.age_min', null)
-            ->where('filters.age_max', null));
+            ->where('filters.age_max', null)
+            ->where('filters.archived', null));
+});
+
+test('archived clients are excluded from the index by default', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    /** @var Client $active */
+    $active = Client::factory()->create(['organization_id' => $user->current_organization_id]);
+
+    /** @var Client $archived */
+    $archived = Client::factory()->create(['organization_id' => $user->current_organization_id]);
+    $archived->delete();
+
+    $this->actingAs($user)
+        ->get(route('clients.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('clients.data', 1)
+            ->where('clients.data.0.id', $active->id)
+        );
+});
+
+test('archived=1 returns only archived clients', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    Client::factory()->create(['organization_id' => $user->current_organization_id]);
+
+    /** @var Client $archived */
+    $archived = Client::factory()->create(['organization_id' => $user->current_organization_id]);
+    $archived->delete();
+
+    $this->actingAs($user)
+        ->get(route('clients.index', ['archived' => 1]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('clients.data', 1)
+            ->where('clients.data.0.id', $archived->id)
+        );
 });
