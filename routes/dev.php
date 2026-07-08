@@ -28,4 +28,5 @@ if (app()->environment('local')) {
     Route::get('/design-foundation/form-section', fn () => inertia('design-foundation/form-section/Index'))->name('design-foundation.form-section');
     Route::get('/design-foundation/audit-strip', fn () => inertia('design-foundation/audit-strip/Index'))->name('design-foundation.audit-strip');
     Route::get('/design-foundation/pagination', fn () => inertia('design-foundation/pagination/Index'))->name('design-foundation.pagination');
+    Route::get('/design-foundation/range-slider', fn () => inertia('design-foundation/range-slider/Index'))->name('design-foundation.range-slider');
 }
