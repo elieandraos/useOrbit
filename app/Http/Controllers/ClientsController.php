@@ -28,14 +28,26 @@ final class ClientsController extends Controller
     #[Authorize('viewAny', Client::class)]
     public function index(IndexClientRequest $request): Response
     {
+        $filters = $request->validated();
+
         /** @noinspection PhpUndefinedMethodInspection */
         $clients = Client::query()
-            ->filter(new ClientFilter($request->validated()))
+            ->filter(new ClientFilter($filters))
             ->latest('enrollment_date')
-            ->paginate(7);
+            ->paginate(7)
+            ->withQueryString();
 
         return inertia('Clients/Index', [
             'clients' => ClientResource::collection($clients),
+            'genders' => collect(Gender::cases())->map(fn ($case) => ['label' => $case->label(), 'value' => $case->value]),
+            'filters' => [
+                'search' => $filters['search'] ?? null,
+                'gender' => $filters['gender'] ?? null,
+                'enrolled_from' => $filters['enrolled_from'] ?? null,
+                'enrolled_to' => $filters['enrolled_to'] ?? null,
+                'age_min' => $filters['age_min'] ?? null,
+                'age_max' => $filters['age_max'] ?? null,
+            ],
         ]);
     }
 

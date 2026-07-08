@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import { Download, Filter, Plus } from '@lucide/vue';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import PageHeader from '@/components/shell/PageHeader.vue';
 import Badge from '@/components/ui/badge/Badge.vue';
 import Button from '@/components/ui/button/Button.vue';
@@ -10,12 +10,31 @@ import type { Paginated } from '@/types';
 import type { ClientResource } from './partials/client';
 import ClientsTable from './partials/ClientsTable.vue';
 import EmptyState from './partials/EmptyState.vue';
+import FiltersDrawer from './partials/FiltersDrawer.vue';
 
 const props = defineProps<{
     clients: Paginated<ClientResource>;
+    genders: { label: string; value: string }[];
+    filters: {
+        search: string | null;
+        gender: string | null;
+        enrolled_from: string | null;
+        enrolled_to: string | null;
+        age_min: string | number | null;
+        age_max: string | number | null;
+    };
 }>();
 
 const hasClients = computed(() => props.clients.data.length > 0);
+
+const filtersOpen = ref(false);
+
+const activeFilterCount = computed(
+    () =>
+        Object.values(props.filters).filter(
+            (value) => value !== null && value !== '',
+        ).length,
+);
 </script>
 
 <template>
@@ -39,11 +58,19 @@ const hasClients = computed(() => props.clients.data.length > 0);
             </template>
 
             <template #actions>
+                <Button
+                    v-if="hasClients || activeFilterCount > 0"
+                    variant="secondary"
+                    size="md"
+                    @click="filtersOpen = true"
+                >
+                    <template #leading><Filter /></template>
+                    Filters
+                    <Badge v-if="activeFilterCount > 0" tone="accent">{{
+                        activeFilterCount
+                    }}</Badge>
+                </Button>
                 <template v-if="hasClients">
-                    <Button variant="secondary" size="md">
-                        <template #leading><Filter /></template>
-                        Filters
-                    </Button>
                     <Button variant="secondary" size="md">
                         <template #leading><Download /></template>
                         Export
@@ -59,6 +86,12 @@ const hasClients = computed(() => props.clients.data.length > 0);
         </PageHeader>
 
         <ClientsTable v-if="hasClients" class="mt-5" :clients="clients" />
-        <EmptyState v-else />
+        <EmptyState v-else :filtered="activeFilterCount > 0" />
+
+        <FiltersDrawer
+            v-model:open="filtersOpen"
+            :genders="genders"
+            :filters="filters"
+        />
     </div>
 </template>

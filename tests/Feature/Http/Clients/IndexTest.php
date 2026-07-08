@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\Gender;
 use App\Http\Resources\ClientResource;
 use App\Models\Client;
 use App\Models\Organization;
@@ -112,4 +113,54 @@ test('age_max below age_min is rejected', function () {
     $this->actingAs($user)
         ->get(route('clients.index', ['age_min' => 40, 'age_max' => 20]))
         ->assertInvalid(['age_max']);
+});
+
+test('the index page includes the gender options for the filters drawer', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('clients.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where(
+                'genders',
+                collect(Gender::cases())->map(fn ($case) => ['label' => $case->label(), 'value' => $case->value])->toArray(),
+            ));
+});
+
+test('the index page echoes back the applied filters', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('clients.index', [
+            'search' => 'Aline',
+            'gender' => 'female',
+            'enrolled_from' => '2024-01-01',
+            'enrolled_to' => '2024-06-01',
+            'age_min' => 30,
+            'age_max' => 60,
+        ]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('filters.search', 'Aline')
+            ->where('filters.gender', 'female')
+            ->where('filters.enrolled_from', '2024-01-01')
+            ->where('filters.enrolled_to', '2024-06-01')
+            ->where('filters.age_min', '30')
+            ->where('filters.age_max', '60'));
+});
+
+test('the index page returns null filters when none are applied', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('clients.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('filters.search', null)
+            ->where('filters.gender', null)
+            ->where('filters.enrolled_from', null)
+            ->where('filters.enrolled_to', null)
+            ->where('filters.age_min', null)
+            ->where('filters.age_max', null));
 });
