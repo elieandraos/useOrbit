@@ -85,7 +85,7 @@ function goToClient(client: ClientResource) {
                                     <div
                                         class="mt-0.5 font-mono text-[11.5px] text-tertiary"
                                     >
-                                        {{ client.lead_source_label }}
+                                        {{ client.age }} yrs
                                     </div>
                                 </div>
                             </div>
