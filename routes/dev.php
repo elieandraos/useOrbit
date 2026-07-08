@@ -19,6 +19,7 @@ if (app()->environment('local')) {
     Route::get('/design-foundation/drop-menu', fn () => inertia('design-foundation/drop-menu/Index'))->name('design-foundation.drop-menu');
     Route::get('/design-foundation/date-input', fn () => inertia('design-foundation/date-input/Index'))->name('design-foundation.date-input');
     Route::get('/design-foundation/dialog', fn () => inertia('design-foundation/dialog/Index'))->name('design-foundation.dialog');
+    Route::get('/design-foundation/drawer', fn () => inertia('design-foundation/drawer/Index'))->name('design-foundation.drawer');
     Route::get('/design-foundation/card', fn () => inertia('design-foundation/card/Index'))->name('design-foundation.card');
     Route::get('/design-foundation/form-field', fn () => inertia('design-foundation/form-field/Index'))->name('design-foundation.form-field');
     Route::get('/design-foundation/photo-upload', fn () => inertia('design-foundation/photo-upload/Index'))->name('design-foundation.photo-upload');

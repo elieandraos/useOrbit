@@ -13,6 +13,7 @@ const navItems = [
     { label: 'Checkbox', href: '/design-foundation/checkbox' },
     { label: 'DateInput', href: '/design-foundation/date-input' },
     { label: 'Dialog', href: '/design-foundation/dialog' },
+    { label: 'Drawer', href: '/design-foundation/drawer' },
     { label: 'DropMenu', href: '/design-foundation/drop-menu' },
     { label: 'FormField', href: '/design-foundation/form-field' },
     { label: 'FormSection', href: '/design-foundation/form-section' },
