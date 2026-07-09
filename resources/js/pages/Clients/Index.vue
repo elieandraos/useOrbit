@@ -15,6 +15,10 @@ import FiltersDrawer from './partials/FiltersDrawer.vue';
 const props = defineProps<{
     clients: Paginated<ClientResource>;
     genders: { label: string; value: string }[];
+    sort: {
+        column: string;
+        direction: 'asc' | 'desc';
+    };
     filters: {
         search: string | null;
         gender: string | null;
@@ -51,6 +55,22 @@ const isArchivedView = computed(
         props.filters.archived === 1 ||
         props.filters.archived === '1',
 );
+
+const sortColumnLabels: Record<string, string> = {
+    name: 'name',
+    email: 'email',
+    enrollment_date: 'enrollment date',
+};
+
+const sortLabel = computed(() => {
+    const column = sortColumnLabels[props.sort.column] ?? props.sort.column;
+
+    if (props.sort.column === 'enrollment_date') {
+        return `Sorted by ${column} · ${props.sort.direction === 'desc' ? 'newest first' : 'oldest first'}`;
+    }
+
+    return `Sorted by ${column} · ${props.sort.direction === 'desc' ? 'Z–A' : 'A–Z'}`;
+});
 </script>
 
 <template>
@@ -68,11 +88,7 @@ const isArchivedView = computed(
                         {{ isArchivedView ? 'archived clients' : 'clients' }}
                     </Badge>
                     <span class="text-xs text-tertiary">·</span>
-                    <span class="text-xs text-tertiary">{{
-                        isArchivedView
-                            ? 'Showing archived clients'
-                            : 'Sorted by enrollment date · newest first'
-                    }}</span>
+                    <span class="text-xs text-tertiary">{{ sortLabel }}</span>
                 </div>
             </template>
 
@@ -104,7 +120,12 @@ const isArchivedView = computed(
             </template>
         </PageHeader>
 
-        <ClientsTable v-if="hasClients" class="mt-5" :clients="clients" />
+        <ClientsTable
+            v-if="hasClients"
+            class="mt-5"
+            :clients="clients"
+            :sort="sort"
+        />
         <EmptyState
             v-else
             :filtered="otherFilterCount > 0"

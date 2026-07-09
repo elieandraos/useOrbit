@@ -115,6 +115,53 @@ test('age_max below age_min is rejected', function () {
         ->assertInvalid(['age_max']);
 });
 
+test('an invalid sort column is rejected', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('clients.index', ['sort' => 'phone']))
+        ->assertInvalid(['sort']);
+});
+
+test('an invalid sort direction is rejected', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('clients.index', ['direction' => 'sideways']))
+        ->assertInvalid(['direction']);
+});
+
+test('a sort query param reorders the clients and is echoed back to the page', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    /** @var Client $bravo */
+    $bravo = Client::factory()->create(['organization_id' => $user->current_organization_id, 'first_name' => 'Bravo']);
+    /** @var Client $alpha */
+    $alpha = Client::factory()->create(['organization_id' => $user->current_organization_id, 'first_name' => 'Alpha']);
+
+    $this->actingAs($user)
+        ->get(route('clients.index', ['sort' => 'name', 'direction' => 'asc']))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('clients.data.0.id', $alpha->id)
+            ->where('clients.data.1.id', $bravo->id)
+            ->where('sort.column', 'name')
+            ->where('sort.direction', 'asc')
+        );
+});
+
+test('the index page echoes the default sort when none is applied', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('clients.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('sort.column', 'enrollment_date')
+            ->where('sort.direction', 'desc')
+        );
+});
+
 test('the index page includes the gender options for the filters drawer', function () {
     $user = User::factory()->withOrganization()->create();
 

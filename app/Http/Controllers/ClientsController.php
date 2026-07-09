@@ -18,6 +18,7 @@ use App\Http\Resources\CountryResource;
 use App\Models\Client;
 use App\Models\Country;
 use App\Models\User;
+use App\Sorts\ClientSort;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
 use Inertia\Inertia;
@@ -30,16 +31,23 @@ final class ClientsController extends Controller
     {
         $filters = $request->validated();
 
+        $sortColumn = $filters['sort'] ?? null;
+        $sortDirection = $filters['direction'] ?? 'asc';
+
         /** @noinspection PhpUndefinedMethodInspection */
         $clients = Client::query()
             ->filter(new ClientFilter($filters))
-            ->latest('enrollment_date')
+            ->sort(new ClientSort($sortColumn, $sortDirection))
             ->paginate(7)
             ->withQueryString();
 
         return inertia('Clients/Index', [
             'clients' => ClientResource::collection($clients),
             'genders' => collect(Gender::cases())->map(fn ($case) => ['label' => $case->label(), 'value' => $case->value]),
+            'sort' => [
+                'column' => $sortColumn ?? 'enrollment_date',
+                'direction' => $filters['direction'] ?? ($sortColumn === null ? 'desc' : 'asc'),
+            ],
             'filters' => [
                 'search' => $filters['search'] ?? null,
                 'gender' => $filters['gender'] ?? null,

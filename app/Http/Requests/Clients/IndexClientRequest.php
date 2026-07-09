@@ -20,6 +20,8 @@ final class IndexClientRequest extends FormRequest
             'age_min' => ['nullable', 'integer', 'min:0'],
             'age_max' => ['nullable', 'integer', 'min:0'],
             'archived' => ['nullable', 'boolean'],
+            'sort' => ['nullable', 'in:name,email,enrollment_date'],
+            'direction' => ['nullable', 'in:asc,desc'],
         ];
 
         if ($this->filled('age_min') && $this->filled('age_max')) {
