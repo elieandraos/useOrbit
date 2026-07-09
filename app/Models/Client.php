@@ -9,7 +9,9 @@ use App\Enums\EmergencyContactRelationship;
 use App\Enums\Gender;
 use App\Enums\LeadSource;
 use App\Models\Concerns\BelongsToCurrentOrganization;
+use App\Models\Concerns\Filterable;
 use App\Models\Concerns\HasSlug;
+use App\Models\Concerns\Sortable;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -57,7 +59,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 ])]
 final class Client extends Model
 {
-    use BelongsToCurrentOrganization, HasFactory, HasSlug, SoftDeletes;
+    use BelongsToCurrentOrganization, Filterable, HasFactory, HasSlug, SoftDeletes, Sortable;
 
     protected function casts(): array
     {

@@ -13,6 +13,7 @@ const navItems = [
     { label: 'Checkbox', href: '/design-foundation/checkbox' },
     { label: 'DateInput', href: '/design-foundation/date-input' },
     { label: 'Dialog', href: '/design-foundation/dialog' },
+    { label: 'Drawer', href: '/design-foundation/drawer' },
     { label: 'DropMenu', href: '/design-foundation/drop-menu' },
     { label: 'FormField', href: '/design-foundation/form-field' },
     { label: 'FormSection', href: '/design-foundation/form-section' },
@@ -21,8 +22,11 @@ const navItems = [
     { label: 'Pagination', href: '/design-foundation/pagination' },
     { label: 'PhotoUpload', href: '/design-foundation/photo-upload' },
     { label: 'RadioChips', href: '/design-foundation/radio-chips' },
+    { label: 'RadioPills', href: '/design-foundation/radio-pills' },
+    { label: 'RangeSlider', href: '/design-foundation/range-slider' },
     { label: 'Select', href: '/design-foundation/select' },
     { label: 'Separator', href: '/design-foundation/separator' },
+    { label: 'Switch', href: '/design-foundation/switch' },
     { label: 'Textarea', href: '/design-foundation/textarea' },
 ];
 </script>
@@ -31,7 +35,7 @@ const navItems = [
     <div class="flex min-h-screen bg-background text-primary">
         <!-- Left nav -->
         <nav
-            class="fixed inset-y-0 left-0 flex w-52 flex-col gap-6 border-r border-border bg-background px-4 py-8"
+            class="fixed inset-y-0 left-0 flex w-52 flex-col gap-6 overflow-y-auto border-r border-border bg-background px-4 py-8"
         >
             <span class="text-sm font-semibold tracking-tight"
                 >Design Foundation</span

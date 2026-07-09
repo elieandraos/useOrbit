@@ -1,8 +1,20 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
-import { Plus, Users } from '@lucide/vue';
+import { Link, router } from '@inertiajs/vue3';
+import { Archive, Plus, SearchX, Users } from '@lucide/vue';
 import Button from '@/components/ui/button/Button.vue';
-import { create as clientsCreate } from '@/routes/clients';
+import {
+    create as clientsCreate,
+    index as clientsIndex,
+} from '@/routes/clients';
+
+defineProps<{
+    filtered?: boolean;
+    archived?: boolean;
+}>();
+
+function clearFilters() {
+    router.get(clientsIndex.url());
+}
 </script>
 
 <template>
@@ -13,18 +25,47 @@ import { create as clientsCreate } from '@/routes/clients';
             <div
                 class="mx-auto mb-4 flex size-14 items-center justify-center rounded-lg bg-accent-bg text-accent"
             >
-                <Users class="size-6" />
+                <Archive v-if="archived" class="size-6" />
+                <SearchX v-else-if="filtered" class="size-6" />
+                <Users v-else class="size-6" />
             </div>
-            <h2 class="text-lg font-semibold text-primary">No clients yet</h2>
+            <h2 class="text-lg font-semibold text-primary">
+                {{
+                    archived && filtered
+                        ? 'No archived clients match your filters'
+                        : archived
+                          ? 'No archived clients'
+                          : filtered
+                            ? 'No clients match your filters'
+                            : 'No clients yet'
+                }}
+            </h2>
             <p
                 class="mx-auto mt-2 max-w-[360px] text-sm leading-relaxed text-secondary"
             >
-                Add your first client to start tracking policies, renewals, and
-                household details across health, auto, home, and commercial
-                lines.
+                <template v-if="archived && !filtered"
+                    >Clients that have been archived will appear here.</template
+                >
+                <template v-else-if="filtered"
+                    >Try adjusting or clearing your filters to see more
+                    results.</template
+                >
+                <template v-else
+                    >Add your first client to start tracking policies, renewals,
+                    and household details across health, auto, home, and
+                    commercial lines.</template
+                >
             </p>
             <div class="mt-6 flex justify-center">
-                <Link :href="clientsCreate().url">
+                <Button
+                    v-if="archived || filtered"
+                    variant="secondary"
+                    size="md"
+                    @click="clearFilters"
+                >
+                    Clear filters
+                </Button>
+                <Link v-else :href="clientsCreate().url">
                     <Button variant="primary" size="md">
                         <template #leading><Plus /></template>
                         Add New Client

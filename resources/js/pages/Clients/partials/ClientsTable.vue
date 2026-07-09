@@ -1,24 +1,54 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
-import { Archive, Eye, MoreHorizontal, Pencil } from '@lucide/vue';
+import {
+    Archive,
+    ChevronDown,
+    ChevronUp,
+    Eye,
+    MoreHorizontal,
+    Pencil,
+} from '@lucide/vue';
 import { ref } from 'vue';
 import { Avatar } from '@/components/ui/avatar';
 import { DropMenu, DropMenuItem } from '@/components/ui/drop-menu';
 import { Pagination } from '@/components/ui/pagination';
 import { Separator } from '@/components/ui/separator';
-import { edit as clientsEdit, show as clientsShow } from '@/routes/clients';
+import {
+    edit as clientsEdit,
+    index as clientsIndex,
+    show as clientsShow,
+} from '@/routes/clients';
 import type { Paginated } from '@/types';
 import ArchiveClientModal from './ArchiveClientModal.vue';
 import type { ClientResource } from './client';
 
-defineProps<{
+interface Sort {
+    column: string;
+    direction: 'asc' | 'desc';
+}
+
+const props = defineProps<{
     clients: Paginated<ClientResource>;
+    sort: Sort;
 }>();
 
 const clientToArchive = ref<ClientResource | null>(null);
 
 function goToClient(client: ClientResource) {
     router.visit(clientsShow(client.slug).url);
+}
+
+function sortBy(column: string) {
+    const direction =
+        props.sort.column === column && props.sort.direction === 'asc'
+            ? 'desc'
+            : 'asc';
+
+    router.get(
+        clientsIndex.url({ mergeQuery: { sort: column, direction } }),
+        {},
+        { preserveState: true, preserveScroll: true },
+    );
 }
 </script>
 
@@ -36,9 +66,23 @@ function goToClient(client: ClientResource) {
                 <thead>
                     <tr class="border-b border-border bg-sunken">
                         <th
-                            class="rounded-tl-lg px-4 py-2.5 text-left font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase"
+                            class="cursor-pointer rounded-tl-lg px-4 py-2.5 text-left font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase select-none"
+                            @click="sortBy('name')"
                         >
-                            Client name
+                            <span class="inline-flex items-center gap-1">
+                                Client name
+                                <ChevronUp
+                                    v-if="
+                                        sort.column === 'name' &&
+                                        sort.direction === 'asc'
+                                    "
+                                    class="size-3"
+                                />
+                                <ChevronDown
+                                    v-else-if="sort.column === 'name'"
+                                    class="size-3"
+                                />
+                            </span>
                         </th>
                         <th
                             class="px-4 py-2.5 text-left font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase"
@@ -46,14 +90,44 @@ function goToClient(client: ClientResource) {
                             Phone
                         </th>
                         <th
-                            class="px-4 py-2.5 text-left font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase"
+                            class="cursor-pointer px-4 py-2.5 text-left font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase select-none"
+                            @click="sortBy('email')"
                         >
-                            Email
+                            <span class="inline-flex items-center gap-1">
+                                Email
+                                <ChevronUp
+                                    v-if="
+                                        sort.column === 'email' &&
+                                        sort.direction === 'asc'
+                                    "
+                                    class="size-3"
+                                />
+                                <ChevronDown
+                                    v-else-if="sort.column === 'email'"
+                                    class="size-3"
+                                />
+                            </span>
                         </th>
                         <th
-                            class="px-4 py-2.5 text-left font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase"
+                            class="cursor-pointer px-4 py-2.5 text-left font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase select-none"
+                            @click="sortBy('enrollment_date')"
                         >
-                            Enrollment date
+                            <span class="inline-flex items-center gap-1">
+                                Enrollment date
+                                <ChevronUp
+                                    v-if="
+                                        sort.column === 'enrollment_date' &&
+                                        sort.direction === 'asc'
+                                    "
+                                    class="size-3"
+                                />
+                                <ChevronDown
+                                    v-else-if="
+                                        sort.column === 'enrollment_date'
+                                    "
+                                    class="size-3"
+                                />
+                            </span>
                         </th>
                         <th
                             class="rounded-tr-lg px-4 py-2.5 text-right font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase"
@@ -85,7 +159,7 @@ function goToClient(client: ClientResource) {
                                     <div
                                         class="mt-0.5 font-mono text-[11.5px] text-tertiary"
                                     >
-                                        {{ client.lead_source_label }}
+                                        {{ client.age }} yrs
                                     </div>
                                 </div>
                             </div>

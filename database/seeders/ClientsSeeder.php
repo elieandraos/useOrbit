@@ -6,7 +6,6 @@ namespace Database\Seeders;
 
 use App\Models\Client;
 use App\Models\Organization;
-use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -17,11 +16,10 @@ final class ClientsSeeder extends Seeder
     /**
      * Run the database seeds.
      */
-    public function run(Organization $organization, User $user): void
+    public function run(): void
     {
-        if (! app()->environment('local')) {
-            return;
-        }
+        $organization = Organization::query()->firstOrFail();
+        $user = $organization->owner();
 
         Client::factory()->count(25)->create([
             'organization_id' => $organization->id,
