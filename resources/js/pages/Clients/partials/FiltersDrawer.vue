@@ -15,6 +15,7 @@ import { index as clientsIndex } from '@/routes/clients';
 
 const AGE_MIN_BOUND = 18;
 const AGE_MAX_BOUND = 90;
+const AGE_DEFAULT_RANGE: [number, number] = [25, 50];
 
 function isTruthy(value: string | number | boolean | null): boolean {
     return value === true || value === 1 || value === '1';
@@ -42,8 +43,12 @@ const gender = ref(props.filters.gender ?? '');
 const enrolledFrom = ref(props.filters.enrolled_from ?? '');
 const enrolledTo = ref(props.filters.enrolled_to ?? '');
 const ageRange = ref<[number, number]>([
-    props.filters.age_min ? Number(props.filters.age_min) : AGE_MIN_BOUND,
-    props.filters.age_max ? Number(props.filters.age_max) : AGE_MAX_BOUND,
+    props.filters.age_min
+        ? Number(props.filters.age_min)
+        : AGE_DEFAULT_RANGE[0],
+    props.filters.age_max
+        ? Number(props.filters.age_max)
+        : AGE_DEFAULT_RANGE[1],
 ]);
 const archived = ref(isTruthy(props.filters.archived));
 const formErrors = ref<Record<string, string>>({});
@@ -60,8 +65,12 @@ watch(open, (isOpen) => {
     enrolledFrom.value = props.filters.enrolled_from ?? '';
     enrolledTo.value = props.filters.enrolled_to ?? '';
     ageRange.value = [
-        props.filters.age_min ? Number(props.filters.age_min) : AGE_MIN_BOUND,
-        props.filters.age_max ? Number(props.filters.age_max) : AGE_MAX_BOUND,
+        props.filters.age_min
+            ? Number(props.filters.age_min)
+            : AGE_DEFAULT_RANGE[0],
+        props.filters.age_max
+            ? Number(props.filters.age_max)
+            : AGE_DEFAULT_RANGE[1],
     ];
     archived.value = isTruthy(props.filters.archived);
 });
@@ -126,10 +135,7 @@ function clearFilters() {
 </script>
 
 <template>
-    <Drawer
-        v-model:open="open"
-        title="Clients Filters"
-    >
+    <Drawer v-model:open="open" title="Clients Filters">
         <div class="flex flex-col gap-5">
             <FormField
                 label="Search"

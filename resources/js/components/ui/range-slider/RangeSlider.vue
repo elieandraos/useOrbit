@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue';
+import type { HTMLAttributes, Ref } from 'vue';
 import { computed } from 'vue';
+import { useVModel } from '@vueuse/core';
 import { cn } from '@/lib/utils';
 
 interface Props {
     min: number;
     max: number;
-    modelValue: [number, number];
+    defaultValue?: [number, number];
+    modelValue?: [number, number];
     step?: number;
     labelPrefix?: string;
     labelSuffix?: string;
@@ -23,8 +25,13 @@ const emit = defineEmits<{
     'update:modelValue': [value: [number, number]];
 }>();
 
-const low = computed(() => props.modelValue[0]);
-const high = computed(() => props.modelValue[1]);
+const modelValue = useVModel(props, 'modelValue', emit, {
+    passive: true,
+    defaultValue: props.defaultValue ?? [props.min, props.max],
+}) as Ref<[number, number]>;
+
+const low = computed(() => modelValue.value[0]);
+const high = computed(() => modelValue.value[1]);
 
 function pct(value: number): number {
     return ((value - props.min) / (props.max - props.min)) * 100;
@@ -40,12 +47,12 @@ const labelLeftPct = computed(() => {
 
 function onLowInput(event: Event) {
     const value = Number((event.target as HTMLInputElement).value);
-    emit('update:modelValue', [Math.min(value, high.value - props.step), high.value]);
+    modelValue.value = [Math.min(value, high.value - props.step), high.value];
 }
 
 function onHighInput(event: Event) {
     const value = Number((event.target as HTMLInputElement).value);
-    emit('update:modelValue', [low.value, Math.max(value, low.value + props.step)]);
+    modelValue.value = [low.value, Math.max(value, low.value + props.step)];
 }
 </script>
 
