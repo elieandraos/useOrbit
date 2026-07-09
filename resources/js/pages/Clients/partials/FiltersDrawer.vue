@@ -128,8 +128,7 @@ function clearFilters() {
 <template>
     <Drawer
         v-model:open="open"
-        title="Filters"
-        description="Narrow down the client list."
+        title="Clients Filters"
     >
         <div class="flex flex-col gap-5">
             <FormField
@@ -172,13 +171,11 @@ function clearFilters() {
                 label="Age range"
                 :error="formErrors.age_max ?? formErrors.age_min"
             >
-                <p class="mb-1 text-sm text-secondary">
-                    {{ ageRange[0] }} – {{ ageRange[1] }} yrs
-                </p>
                 <RangeSlider
                     v-model="ageRange"
                     :min="AGE_MIN_BOUND"
                     :max="AGE_MAX_BOUND"
+                    label-suffix=" yrs"
                 />
             </FormField>
 
