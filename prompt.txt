@@ -1,9 +1,16 @@
+milestone 7:
+- archive rework
+- responsiveness
+- cities/states like bch (db tables) update client seeders once done
+
+backlog:
+- optimization: caching, inertia ssr, db indexes based on filters (after archive rework)
+
 
 #[CurrentUser] attribute (instead of request()->user())
 
 testing philosophy:
 testing folder structure
-
 
 major decision:
 ---------------
