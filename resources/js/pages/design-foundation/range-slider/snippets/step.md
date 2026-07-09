@@ -8,10 +8,13 @@ const priceRange = ref<[number, number]>([20, 80]);
 
 <template>
     <div class="flex flex-col gap-2">
-        <p class="text-sm text-secondary">
-            ${{ priceRange[0] }} – ${{ priceRange[1] }}
-        </p>
-        <RangeSlider v-model="priceRange" :min="0" :max="100" :step="5" />
+        <RangeSlider
+            v-model="priceRange"
+            :min="0"
+            :max="100"
+            :step="5"
+            label-prefix="$"
+        />
     </div>
 </template>
 ```

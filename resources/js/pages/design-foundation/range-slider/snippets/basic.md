@@ -8,10 +8,12 @@ const ageRange = ref<[number, number]>([26, 72]);
 
 <template>
     <div class="flex flex-col gap-2">
-        <p class="text-sm text-secondary">
-            {{ ageRange[0] }} – {{ ageRange[1] }} yrs
-        </p>
-        <RangeSlider v-model="ageRange" :min="18" :max="90" />
+        <RangeSlider
+            v-model="ageRange"
+            :min="18"
+            :max="90"
+            label-suffix=" yrs"
+        />
     </div>
 </template>
 ```

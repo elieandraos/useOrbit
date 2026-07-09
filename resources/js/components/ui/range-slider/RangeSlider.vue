@@ -8,11 +8,15 @@ interface Props {
     max: number;
     modelValue: [number, number];
     step?: number;
+    labelPrefix?: string;
+    labelSuffix?: string;
     class?: HTMLAttributes['class'];
 }
 
 const props = withDefaults(defineProps<Props>(), {
     step: 1,
+    labelPrefix: '',
+    labelSuffix: '',
 });
 
 const emit = defineEmits<{
@@ -25,6 +29,14 @@ const high = computed(() => props.modelValue[1]);
 function pct(value: number): number {
     return ((value - props.min) / (props.max - props.min)) * 100;
 }
+
+const rangeLabel = computed(
+    () => `${props.labelPrefix}${low.value}${props.labelSuffix} – ${props.labelPrefix}${high.value}${props.labelSuffix}`,
+);
+const labelLeftPct = computed(() => {
+    const center = (pct(low.value) + pct(high.value)) / 2;
+    return Math.min(88, Math.max(12, center));
+});
 
 function onLowInput(event: Event) {
     const value = Number((event.target as HTMLInputElement).value);
@@ -78,8 +90,9 @@ function onHighInput(event: Event) {
                 @input="onHighInput"
             />
         </div>
-        <div class="mt-2 flex justify-between font-mono text-[11px] text-tertiary">
+        <div class="relative mt-2 flex justify-between font-mono text-[11px] text-tertiary">
             <span>{{ min }}</span>
+            <span class="absolute -translate-x-1/2 whitespace-nowrap" :style="{ left: `${labelLeftPct}%` }">{{ rangeLabel }}</span>
             <span>{{ max }}</span>
         </div>
     </div>

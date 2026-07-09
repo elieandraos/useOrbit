@@ -104,24 +104,24 @@ const priceRange = ref<[number, number]>([20, 80]);
                     v-if="section.id === 'basic'"
                     class="flex max-w-xs flex-col gap-2"
                 >
-                    <p class="text-sm text-secondary">
-                        {{ ageRange[0] }} – {{ ageRange[1] }} yrs
-                    </p>
-                    <RangeSlider v-model="ageRange" :min="18" :max="90" />
+                    <RangeSlider
+                        v-model="ageRange"
+                        :min="18"
+                        :max="90"
+                        label-suffix=" yrs"
+                    />
                 </div>
 
                 <div
                     v-else-if="section.id === 'step'"
                     class="flex max-w-xs flex-col gap-2"
                 >
-                    <p class="text-sm text-secondary">
-                        ${{ priceRange[0] }} – ${{ priceRange[1] }}
-                    </p>
                     <RangeSlider
                         v-model="priceRange"
                         :min="0"
                         :max="100"
                         :step="5"
+                        label-prefix="$"
                     />
                 </div>
             </div>
