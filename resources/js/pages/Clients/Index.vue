@@ -5,7 +5,10 @@ import { computed, ref } from 'vue';
 import PageHeader from '@/components/shell/PageHeader.vue';
 import Badge from '@/components/ui/badge/Badge.vue';
 import Button from '@/components/ui/button/Button.vue';
-import { create as clientsCreate } from '@/routes/clients';
+import {
+    create as clientsCreate,
+    exportMethod as clientsExport,
+} from '@/routes/clients';
 import type { Paginated } from '@/types';
 import type { ClientResource } from './partials/client';
 import ClientsTable from './partials/ClientsTable.vue';
@@ -33,6 +36,21 @@ const props = defineProps<{
 const hasClients = computed(() => props.clients.data.length > 0);
 
 const filtersOpen = ref(false);
+
+// Mirrors the currently applied filters/sort so the download matches what's on screen.
+const exportUrl = computed(() =>
+    clientsExport.url({
+        query: {
+            ...Object.fromEntries(
+                Object.entries(props.filters).filter(
+                    ([, value]) => value !== null && value !== '',
+                ),
+            ),
+            sort: props.sort.column,
+            direction: props.sort.direction,
+        },
+    }),
+);
 
 const activeFilterCount = computed(
     () =>
@@ -106,10 +124,12 @@ const sortLabel = computed(() => {
                     }}</Badge>
                 </Button>
                 <template v-if="hasClients">
-                    <Button variant="secondary" size="md">
-                        <template #leading><Download /></template>
-                        Export
-                    </Button>
+                    <a :href="exportUrl">
+                        <Button variant="secondary" size="md">
+                            <template #leading><Download /></template>
+                            Export
+                        </Button>
+                    </a>
                     <Link :href="clientsCreate().url">
                         <Button variant="primary" size="md">
                             <template #leading><Plus /></template>
