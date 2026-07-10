@@ -15,6 +15,24 @@ test('empty filters return the unfiltered builder', function () {
     expect($clients)->toHaveCount(3);
 });
 
+test('a null or empty string value is skipped', function () {
+    Client::factory(3)->create();
+
+    /** @noinspection PhpUndefinedMethodInspection */
+    $clients = Client::query()->filter(new ClientFilter(['search' => null, 'gender' => '']))->get();
+
+    expect($clients)->toHaveCount(3);
+});
+
+test('an unrecognized filter key is ignored', function () {
+    Client::factory(3)->create();
+
+    /** @noinspection PhpUndefinedMethodInspection */
+    $clients = Client::query()->filter(new ClientFilter(['unknown' => 'value']))->get();
+
+    expect($clients)->toHaveCount(3);
+});
+
 test('search matches first name', function () {
     /** @var Client $match */
     $match = Client::factory()->create(['first_name' => 'Aline']);
