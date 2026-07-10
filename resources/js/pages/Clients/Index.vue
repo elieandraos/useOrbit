@@ -5,6 +5,8 @@ import { computed, ref } from 'vue';
 import PageHeader from '@/components/shell/PageHeader.vue';
 import Badge from '@/components/ui/badge/Badge.vue';
 import Button from '@/components/ui/button/Button.vue';
+import { Spinner } from '@/components/ui/spinner';
+import { useFileExport } from '@/composables/useFileExport';
 import {
     create as clientsCreate,
     exportMethod as clientsExport,
@@ -51,6 +53,15 @@ const exportUrl = computed(() =>
         },
     }),
 );
+
+const { isExporting, exportFile } = useFileExport();
+
+function exportClients(): Promise<void> {
+    return exportFile(exportUrl.value, 'clients.xlsx', {
+        success: 'Clients exported.',
+        error: 'Failed to export clients. Please try again.',
+    });
+}
 
 const activeFilterCount = computed(
     () =>
@@ -124,12 +135,18 @@ const sortLabel = computed(() => {
                     }}</Badge>
                 </Button>
                 <template v-if="hasClients">
-                    <a :href="exportUrl">
-                        <Button variant="secondary" size="md">
-                            <template #leading><Download /></template>
-                            Export
-                        </Button>
-                    </a>
+                    <Button
+                        variant="secondary"
+                        size="md"
+                        :disabled="isExporting"
+                        @click="exportClients"
+                    >
+                        <template #leading>
+                            <Spinner v-if="isExporting" />
+                            <Download v-else />
+                        </template>
+                        Export
+                    </Button>
                     <Link :href="clientsCreate().url">
                         <Button variant="primary" size="md">
                             <template #leading><Plus /></template>
