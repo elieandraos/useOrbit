@@ -21,7 +21,7 @@ The Clients index page already has a placeholder "Export" button with no handler
 
 - **Index → Excel**, via `maatwebsite/excel` — chunked `FromQuery` reads, native `->download()` streaming, no physical storage.
 - **Show → PDF**, via `barryvdh/laravel-dompdf` — pure PHP rendering (dompdf engine), no headless-browser binary needed on the server, which keeps Forge deploys simple. Renders a Blade view to PDF and streams it directly (`Pdf::view(...)->download(...)`), no disk writes.
-- **Delivery**: synchronous streamed download for both, no physical storage. The app currently has *no* queued jobs, no broadcasting, and no Pinia store despite a queue worker being wired into local dev tooling. Building a Forge-style persistent async indicator (job + status tracking + polling/websocket + global frontend state) is real, separate scope with no current need (today's dataset sizes don't warrant it) — documented below as a future upgrade, not built now.
+- **Delivery**: synchronous streamed download for both, no physical storage. Confirmed against real data scale rather than assumed: a user has at most ~1000 clients and ~2750 policies, well within what `maatwebsite/excel`'s chunked `FromQuery` reads produce synchronously in under a second. A queue, status table, and live notifications would add real infrastructure (a new table, a queued job, Reverb, a notifications system) for a wait time that's already imperceptible — not worth it here. That async pattern is documented separately under "Document Uploads" below, where it's actually justified.
 - **Controllers stay thin & CRUDdy**: single-action invokable controllers, with the actual export logic in `app/Actions/Clients/`, matching the existing Actions pattern (`CreateClientAction`, `UpdateClientAction` — see `app/Actions/Clients/CreateClientAction.php`) and per my-laravel-patterns conventions (FormRequest + Action + thin controller).
 - **PDF scope**: the Client model has no related child data yet — Policies/Quick Stats/Next Renewal/Recent Activities on the show page are all placeholder empty-states (confirmed by reading their partials, e.g. `resources/js/pages/Clients/partials/ClientPoliciesCard.vue`). So the PDF export is scoped to the client's own profile fields (same shape as `ClientResource`), structured so more sections can be appended once those features get real data.
 
@@ -61,13 +61,41 @@ The Clients index page already has a placeholder "Export" button with no handler
 - Run via `php artisan test --compact --filter=Export` after writing.
 - Run `vendor/bin/pint --dirty --format agent` after PHP changes.
 
-### Documented future upgrade (not built now)
-
-If exports later need to handle large datasets or long-running generation, the Forge-style pattern would require: an `exports` DB table (status: pending/processing/completed/failed + a temp file path, since a background job can't stream to a request that's already returned — this reintroduces physical storage, cleaned up after download or on a schedule), a queued `Job` class, a status endpoint, a Pinia store (not currently installed) to persist state across Inertia navigations, and a status indicator in `AppTopNav.vue`. Existing pieces that would help: `vue-sonner` (already wired for toasts via `resources/js/lib/flashToast.ts`), and the queue connection (`database`) already configured in `.env`.
-
 ### Verification
 
 - Manually exercise both export buttons in the browser: apply Clients index filters/sort, click Export, confirm the downloaded `.xlsx` matches the filtered/sorted rows on screen (including a drilled-down filter producing exactly that many rows). Open a client's show page, click Export, confirm the downloaded `.pdf` has correct profile data.
 - Run the new feature tests plus the existing Clients index tests to confirm filter/sort behavior wasn't disturbed.
+
+---
+
+## Document Uploads (future, not built now): async with notifications + Reverb
+
+### Context
+
+When document uploads are built, per-file processing (OCR, virus scanning, external API calls) is I/O-bound and can take real seconds-to-minutes independent of how many clients or policies exist — unlike the Clients export above, this doesn't get faster by chunking a query. That's the actual justification for async processing + live notifications here, where it wasn't for the export.
+
+### Data model
+
+Status lives on the `documents` table itself, not a separate `uploads` table — a document is already a real domain entity (owner, associated client/policy, storage path); processing status is just additional columns on it (`status`: pending/processing/completed/failed, `processed_at`, an error message column for failures). No wrapper table needed for individual files; multiple concurrent uploads are naturally independent, one row and one notification per file — no batching for v1 unless "this batch of files is done" becomes an actual requirement later.
+
+### Backend
+
+- A queued Job processes each uploaded file and updates its `documents` row on completion/failure.
+- `notifications` table (Laravel's built-in `notifications:table` migration) + one `App\Notifications\DocumentProcessed` class implementing `via() => ['database', 'broadcast']` — the database row and the live push come from a single `$user->notify(...)` call, no separate systems to keep in sync.
+- Reverb, scaffolded via `php artisan install:broadcasting` (package, `config/broadcasting.php`, `routes/channels.php`, `REVERB_*` `.env` vars, `resources/js/echo.ts` — mostly generated, not hand-wired). Delivery over the default per-user private channel (`App.Models.User.{id}`), authorized by the standard generated `routes/channels.php` stub.
+- Recipients default to the uploader only (`$user->notify(...)`). Broadening to additional recipients later (assigned agent, org admins) is `Notification::send($recipients, ...)` — a one-line change when there's an actual second recipient to design for, not a rearchitecture. A true org-wide activity feed (a shared channel many users subscribe to, rather than personal notifications) is a distinct pattern with its own questions (does everyone see everything, separate read-state?) — don't build it speculatively.
+
+### Frontend
+
+- `resources/js/composables/useNotifications.ts`: module-scoped `reactive({ items, unreadCount })` singleton, shared by both the bell and the full page so marking read in one place updates the other without a refetch. `unreadCount` bootstrapped via a lightweight Inertia shared prop; the list itself fetched lazily (Inertia v3's `useHttp` hook) on bell-open or page-load.
+- One Echo listener, registered once at a persistent point (`app.ts` boot, or `AppLayout.vue`'s `onMounted` — both stay mounted across every Inertia navigation): `Echo.private('App.Models.User.' + user.id).notification(n => { ... })`, using Echo's built-in `.notification()` helper. Pushes into the composable and fires a `vue-sonner` toast alongside the durable row — a live nudge plus a persistent record.
+- Bell (`AppTopNav.vue`, already persistent): unread badge + recent-items dropdown + "View all" link.
+- `resources/js/pages/Notifications/Index.vue`: full paginated list via `$user->notifications()->paginate()`, following existing index-page conventions (no breadcrumbs, bordered page header).
+- Per-document status in whatever upload UI gets built reads from a keyed collection (by document id) fed by the same mechanism — multiple simultaneous uploads show independent per-row status without extra plumbing.
+- No Pinia — one cohesive resource (notifications: list + count) read from two places that need to agree, which a single composable singleton handles without a new dependency.
+
+### Explicitly not built until there's a concrete need
+
+Org-wide/shared-channel broadcasting, multi-recipient notifications, resumable/chunked uploads, notification batching/grouping, and filtering on the notifications page.
 
 ---
