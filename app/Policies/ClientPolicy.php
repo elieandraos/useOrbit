@@ -34,4 +34,16 @@ final class ClientPolicy
         return $client->organization_id === $user->current_organization_id
             && $user->organizationRole() === 'owner';
     }
+
+    public function archive(User $user, Client $client): bool
+    {
+        return $client->organization_id === $user->current_organization_id
+            && $user->organizationRole() === 'owner';
+    }
+
+    public function unarchive(User $user, Client $client): bool
+    {
+        return $client->organization_id === $user->current_organization_id
+            && $user->organizationRole() === 'owner';
+    }
 }

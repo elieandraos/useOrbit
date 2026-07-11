@@ -19,7 +19,7 @@ function makeUserInOrg(Organization $organization, OrganizationRole $role): User
     return $user;
 }
 
-test('owner can viewAny, view, create, update, and delete clients in their organization', function () {
+test('owner can viewAny, view, create, update, delete, archive, and unarchive clients in their organization', function () {
     $organization = Organization::factory()->create();
     $owner = makeUserInOrg($organization, OrganizationRole::Owner);
     $client = Client::factory()->create(['organization_id' => $organization->id]);
@@ -28,10 +28,12 @@ test('owner can viewAny, view, create, update, and delete clients in their organ
         ->and($owner->can('view', $client))->toBeTrue()
         ->and($owner->can('create', Client::class))->toBeTrue()
         ->and($owner->can('update', $client))->toBeTrue()
-        ->and($owner->can('delete', $client))->toBeTrue();
+        ->and($owner->can('delete', $client))->toBeTrue()
+        ->and($owner->can('archive', $client))->toBeTrue()
+        ->and($owner->can('unarchive', $client))->toBeTrue();
 });
 
-test('member can viewAny, view, create, and update clients but cannot delete', function () {
+test('member can viewAny, view, create, and update clients but cannot delete, archive, or unarchive', function () {
     $organization = Organization::factory()->create();
     $member = makeUserInOrg($organization, OrganizationRole::Member);
     $client = Client::factory()->create(['organization_id' => $organization->id]);
@@ -40,7 +42,9 @@ test('member can viewAny, view, create, and update clients but cannot delete', f
         ->and($member->can('view', $client))->toBeTrue()
         ->and($member->can('create', Client::class))->toBeTrue()
         ->and($member->can('update', $client))->toBeTrue()
-        ->and($member->can('delete', $client))->toBeFalse();
+        ->and($member->can('delete', $client))->toBeFalse()
+        ->and($member->can('archive', $client))->toBeFalse()
+        ->and($member->can('unarchive', $client))->toBeFalse();
 });
 
 test('owner cannot perform any action on a client from a different organization', function () {
@@ -51,7 +55,9 @@ test('owner cannot perform any action on a client from a different organization'
 
     expect($owner->can('view', $client))->toBeFalse()
         ->and($owner->can('update', $client))->toBeFalse()
-        ->and($owner->can('delete', $client))->toBeFalse();
+        ->and($owner->can('delete', $client))->toBeFalse()
+        ->and($owner->can('archive', $client))->toBeFalse()
+        ->and($owner->can('unarchive', $client))->toBeFalse();
 });
 
 test('member cannot perform any action on a client from a different organization', function () {
@@ -62,5 +68,7 @@ test('member cannot perform any action on a client from a different organization
 
     expect($member->can('view', $client))->toBeFalse()
         ->and($member->can('update', $client))->toBeFalse()
-        ->and($member->can('delete', $client))->toBeFalse();
+        ->and($member->can('delete', $client))->toBeFalse()
+        ->and($member->can('archive', $client))->toBeFalse()
+        ->and($member->can('unarchive', $client))->toBeFalse();
 });

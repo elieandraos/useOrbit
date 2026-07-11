@@ -19,9 +19,9 @@ final class IndexClientRequest extends FormRequest
             'enrolled_to' => ['nullable', 'date', 'after_or_equal:enrolled_from'],
             'age_min' => ['nullable', 'integer', 'min:0'],
             'age_max' => ['nullable', 'integer', 'min:0'],
-            'archived' => ['nullable', 'boolean'],
+            'archived' => ['boolean'],
             'sort' => ['nullable', 'in:name,email,enrollment_date'],
-            'direction' => ['nullable', 'in:asc,desc'],
+            'direction' => ['in:asc,desc'],
         ];
 
         if ($this->filled('age_min') && $this->filled('age_max')) {
@@ -29,5 +29,13 @@ final class IndexClientRequest extends FormRequest
         }
 
         return $rules;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'archived' => $this->boolean('archived'),
+            'direction' => $this->input('direction') ?? ($this->filled('sort') ? 'asc' : 'desc'),
+        ]);
     }
 }

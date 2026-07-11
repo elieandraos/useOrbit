@@ -5,7 +5,12 @@ import { computed, ref } from 'vue';
 import PageHeader from '@/components/shell/PageHeader.vue';
 import Badge from '@/components/ui/badge/Badge.vue';
 import Button from '@/components/ui/button/Button.vue';
-import { create as clientsCreate } from '@/routes/clients';
+import { Spinner } from '@/components/ui/spinner';
+import { useFileExport } from '@/composables/useFileExport';
+import {
+    create as clientsCreate,
+    exportMethod as clientsExport,
+} from '@/routes/clients';
 import type { Paginated } from '@/types';
 import type { ClientResource } from './partials/client';
 import ClientsTable from './partials/ClientsTable.vue';
@@ -33,6 +38,30 @@ const props = defineProps<{
 const hasClients = computed(() => props.clients.data.length > 0);
 
 const filtersOpen = ref(false);
+
+// Mirrors the currently applied filters/sort so the download matches what's on screen.
+const exportUrl = computed(() =>
+    clientsExport.url({
+        query: {
+            ...Object.fromEntries(
+                Object.entries(props.filters).filter(
+                    ([, value]) => value !== null && value !== '',
+                ),
+            ),
+            sort: props.sort.column,
+            direction: props.sort.direction,
+        },
+    }),
+);
+
+const { isExporting, exportFile } = useFileExport();
+
+function exportClients(): Promise<void> {
+    return exportFile(exportUrl.value, 'clients.xlsx', {
+        success: 'Clients exported.',
+        error: 'Failed to export clients. Please try again.',
+    });
+}
 
 const activeFilterCount = computed(
     () =>
@@ -106,8 +135,16 @@ const sortLabel = computed(() => {
                     }}</Badge>
                 </Button>
                 <template v-if="hasClients">
-                    <Button variant="secondary" size="md">
-                        <template #leading><Download /></template>
+                    <Button
+                        variant="secondary"
+                        size="md"
+                        :disabled="isExporting"
+                        @click="exportClients"
+                    >
+                        <template #leading>
+                            <Spinner v-if="isExporting" />
+                            <Download v-else />
+                        </template>
                         Export
                     </Button>
                     <Link :href="clientsCreate().url">

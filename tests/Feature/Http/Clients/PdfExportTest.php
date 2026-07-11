@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Http\Resources\ClientResource;
 use App\Models\Client;
 use App\Models\Organization;
 use App\Models\User;
@@ -10,18 +9,23 @@ use App\Models\User;
 test('guests are redirected to the login page', function () {
     $client = Client::factory()->create();
 
-    $this->get(route('clients.show', $client))
+    $this->get(route('clients.export-pdf', $client))
         ->assertRedirect(route('login'));
 });
 
-test('authenticated user can view a client from their organization', function () {
+test('authenticated user can export a client from their organization to pdf', function () {
     $user = User::factory()->withOrganization()->create();
+
+    /** @var Client $client */
     $client = Client::factory()->create(['organization_id' => $user->current_organization_id]);
 
-    $this->actingAs($user)
-        ->get(route('clients.show', $client))
+    $response = $this->actingAs($user)
+        ->get(route('clients.export-pdf', $client))
         ->assertOk()
-        ->assertHasResource('client', ClientResource::make($client->load('country')));
+        ->assertHeader('content-type', 'application/pdf');
+
+    expect($response->headers->get('content-disposition'))
+        ->toContain("$client->slug.pdf");
 });
 
 test('authenticated user gets 404 for a client from another organization', function () {
@@ -31,15 +35,6 @@ test('authenticated user gets 404 for a client from another organization', funct
     $client = Client::factory()->create(['organization_id' => $otherOrganization->id]);
 
     $this->actingAs($user)
-        ->get(route('clients.show', $client))
+        ->get(route('clients.export-pdf', $client))
         ->assertNotFound();
-});
-
-test('an archived client can still be shown', function () {
-    $user = User::factory()->withOrganization()->create();
-    $client = Client::factory()->archived()->create(['organization_id' => $user->current_organization_id]);
-
-    $this->actingAs($user)
-        ->get(route('clients.show', $client))
-        ->assertOk();
 });

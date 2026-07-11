@@ -2,11 +2,13 @@
 import { router } from '@inertiajs/vue3';
 import {
     Archive,
+    ArchiveRestore,
     ChevronDown,
     ChevronUp,
     Eye,
     MoreHorizontal,
     Pencil,
+    Trash2,
 } from '@lucide/vue';
 import { ref } from 'vue';
 import { Avatar } from '@/components/ui/avatar';
@@ -17,10 +19,12 @@ import {
     edit as clientsEdit,
     index as clientsIndex,
     show as clientsShow,
+    unarchive as clientsUnarchive,
 } from '@/routes/clients';
 import type { Paginated } from '@/types';
 import ArchiveClientModal from './ArchiveClientModal.vue';
 import type { ClientResource } from './client';
+import DeleteClientModal from './DeleteClientModal.vue';
 
 interface Sort {
     column: string;
@@ -33,9 +37,18 @@ const props = defineProps<{
 }>();
 
 const clientToArchive = ref<ClientResource | null>(null);
+const clientToDelete = ref<ClientResource | null>(null);
 
 function goToClient(client: ClientResource) {
     router.visit(clientsShow(client.slug).url);
+}
+
+function unarchiveClient(client: ClientResource) {
+    router.patch(
+        clientsUnarchive.url(client.slug),
+        {},
+        { preserveScroll: true },
+    );
 }
 
 function sortBy(column: string) {
@@ -205,7 +218,29 @@ function sortBy(column: string) {
                                         Edit
                                     </DropMenuItem>
                                     <Separator class="my-1" />
+                                    <template
+                                        v-if="client.status === 'archived'"
+                                    >
+                                        <DropMenuItem
+                                            @click="unarchiveClient(client)"
+                                        >
+                                            <template #leading
+                                                ><ArchiveRestore class="size-4"
+                                            /></template>
+                                            Unarchive
+                                        </DropMenuItem>
+                                        <DropMenuItem
+                                            danger
+                                            @click="clientToDelete = client"
+                                        >
+                                            <template #leading
+                                                ><Trash2 class="size-4"
+                                            /></template>
+                                            Delete
+                                        </DropMenuItem>
+                                    </template>
                                     <DropMenuItem
+                                        v-else
                                         danger
                                         @click="clientToArchive = client"
                                     >
@@ -225,5 +260,6 @@ function sortBy(column: string) {
         <Pagination :meta="clients.meta" item-label="clients" />
 
         <ArchiveClientModal v-model="clientToArchive" />
+        <DeleteClientModal v-model="clientToDelete" />
     </div>
 </template>

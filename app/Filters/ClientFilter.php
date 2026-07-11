@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filters;
 
+use App\Enums\ClientStatus;
 use Illuminate\Database\Eloquent\Builder;
 
 final class ClientFilter extends QueryFilter
@@ -53,11 +54,8 @@ final class ClientFilter extends QueryFilter
     /** @noinspection PhpUnused */
     public function archived(bool|string $value): Builder
     {
-        if (! filter_var($value, FILTER_VALIDATE_BOOLEAN)) {
-            return $this->builder;
-        }
+        $status = filter_var($value, FILTER_VALIDATE_BOOLEAN) ? ClientStatus::Archived : ClientStatus::Active;
 
-        /** @noinspection PhpUndefinedMethodInspection */
-        return $this->builder->onlyTrashed();
+        return $this->builder->where('status', $status);
     }
 }

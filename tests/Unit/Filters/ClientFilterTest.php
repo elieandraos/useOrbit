@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\ClientStatus;
 use App\Enums\Gender;
 use App\Filters\ClientFilter;
 use App\Models\Client;
@@ -11,6 +12,24 @@ test('empty filters return the unfiltered builder', function () {
 
     /** @noinspection PhpUndefinedMethodInspection */
     $clients = Client::query()->filter(new ClientFilter([]))->get();
+
+    expect($clients)->toHaveCount(3);
+});
+
+test('a null or empty string value is skipped', function () {
+    Client::factory(3)->create();
+
+    /** @noinspection PhpUndefinedMethodInspection */
+    $clients = Client::query()->filter(new ClientFilter(['search' => null, 'gender' => '']))->get();
+
+    expect($clients)->toHaveCount(3);
+});
+
+test('an unrecognized filter key is ignored', function () {
+    Client::factory(3)->create();
+
+    /** @noinspection PhpUndefinedMethodInspection */
+    $clients = Client::query()->filter(new ClientFilter(['unknown' => 'value']))->get();
 
     expect($clients)->toHaveCount(3);
 });
@@ -199,4 +218,26 @@ test('all filters combined narrow to a single matching client', function () {
     ]))->get();
 
     expect($clients->pluck('id')->all())->toBe([$match->id]);
+});
+
+test('archived=false returns only active clients', function () {
+    /** @var Client $active */
+    $active = Client::factory()->create(['status' => ClientStatus::Active->value]);
+    Client::factory()->archived()->create();
+
+    /** @noinspection PhpUndefinedMethodInspection */
+    $clients = Client::query()->filter(new ClientFilter(['archived' => false]))->get();
+
+    expect($clients->pluck('id')->all())->toBe([$active->id]);
+});
+
+test('archived=true returns only archived clients', function () {
+    Client::factory()->create(['status' => ClientStatus::Active->value]);
+    /** @var Client $archived */
+    $archived = Client::factory()->archived()->create();
+
+    /** @noinspection PhpUndefinedMethodInspection */
+    $clients = Client::query()->filter(new ClientFilter(['archived' => true]))->get();
+
+    expect($clients->pluck('id')->all())->toBe([$archived->id]);
 });

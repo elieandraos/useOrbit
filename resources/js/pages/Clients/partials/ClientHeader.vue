@@ -1,16 +1,33 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { Calendar, Mail, Pencil, Phone, Plus } from '@lucide/vue';
+import { Calendar, Download, Mail, Pencil, Phone, Plus } from '@lucide/vue';
+import { computed } from 'vue';
 import Avatar from '@/components/ui/avatar/Avatar.vue';
 import Badge from '@/components/ui/badge/Badge.vue';
 import Button from '@/components/ui/button/Button.vue';
-import { edit as clientsEdit } from '@/routes/clients';
+import { Spinner } from '@/components/ui/spinner';
+import { useFileExport } from '@/composables/useFileExport';
+import {
+    edit as clientsEdit,
+    exportPdf as clientsExportPdf,
+} from '@/routes/clients';
 import type { ClientResource } from './client';
 
-defineProps<{
+const props = defineProps<{
     client: ClientResource;
     policiesCount: number;
 }>();
+
+const { isExporting, exportFile } = useFileExport();
+
+const exportUrl = computed(() => clientsExportPdf(props.client.slug).url);
+
+function exportClient(): Promise<void> {
+    return exportFile(exportUrl.value, `${props.client.slug}.pdf`, {
+        success: 'Client exported.',
+        error: 'Failed to export client. Please try again.',
+    });
+}
 </script>
 
 <template>
@@ -24,6 +41,9 @@ defineProps<{
                 </h1>
                 <Badge v-if="client.status === 'active'" tone="success" dot
                     >Active client</Badge
+                >
+                <Badge v-else-if="client.status === 'archived'" tone="warning"
+                    >Archived</Badge
                 >
                 <Badge tone="accent">{{ policiesCount }} policies</Badge>
             </div>
@@ -49,6 +69,18 @@ defineProps<{
         </div>
 
         <div class="flex shrink-0 items-center gap-2">
+            <Button
+                variant="secondary"
+                size="md"
+                :disabled="isExporting"
+                @click="exportClient"
+            >
+                <template #leading>
+                    <Spinner v-if="isExporting" />
+                    <Download v-else />
+                </template>
+                Export
+            </Button>
             <Link :href="clientsEdit(client.slug).url">
                 <Button variant="secondary" size="md">
                     <template #leading><Pencil /></template>

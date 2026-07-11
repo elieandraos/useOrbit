@@ -29,33 +29,30 @@ final class ClientsController extends Controller
     #[Authorize('viewAny', Client::class)]
     public function index(IndexClientRequest $request): Response
     {
-        $filters = $request->validated();
-
-        $sortColumn = $filters['sort'] ?? null;
-        $sortDirection = $filters['direction'] ?? 'asc';
+        $sortColumn = $request->validated('sort');
 
         /** @noinspection PhpUndefinedMethodInspection */
         $clients = Client::query()
-            ->filter(new ClientFilter($filters))
-            ->sort(new ClientSort($sortColumn, $sortDirection))
+            ->filter(new ClientFilter($request->validated()))
+            ->sort(new ClientSort($sortColumn, $request->validated('direction')))
             ->paginate(7)
             ->withQueryString();
 
         return inertia('Clients/Index', [
             'clients' => ClientResource::collection($clients),
-            'genders' => collect(Gender::cases())->map(fn ($case) => ['label' => $case->label(), 'value' => $case->value]),
+            'genders' => collect(Gender::all()),
             'sort' => [
                 'column' => $sortColumn ?? 'enrollment_date',
-                'direction' => $filters['direction'] ?? ($sortColumn === null ? 'desc' : 'asc'),
+                'direction' => $request->validated('direction'),
             ],
             'filters' => [
-                'search' => $filters['search'] ?? null,
-                'gender' => $filters['gender'] ?? null,
-                'enrolled_from' => $filters['enrolled_from'] ?? null,
-                'enrolled_to' => $filters['enrolled_to'] ?? null,
-                'age_min' => $filters['age_min'] ?? null,
-                'age_max' => $filters['age_max'] ?? null,
-                'archived' => $filters['archived'] ?? null,
+                'search' => $request->validated('search'),
+                'gender' => $request->validated('gender'),
+                'enrolled_from' => $request->validated('enrolled_from'),
+                'enrolled_to' => $request->validated('enrolled_to'),
+                'age_min' => $request->validated('age_min'),
+                'age_max' => $request->validated('age_max'),
+                'archived' => $request->validated('archived'),
             ],
         ]);
     }
@@ -68,9 +65,9 @@ final class ClientsController extends Controller
 
         return inertia('Clients/Create', [
             'countries' => CountryResource::collection(Country::query()->orderBy('name')->get()),
-            'genders' => collect(Gender::cases())->map(fn ($case) => ['label' => $case->label(), 'value' => $case->value]),
-            'leadSources' => collect(LeadSource::cases())->map(fn ($case) => ['label' => $case->label(), 'value' => $case->value]),
-            'emergencyContactRelationships' => collect(EmergencyContactRelationship::cases())->map(fn ($case) => ['label' => $case->label(), 'value' => $case->value]),
+            'genders' => collect(Gender::all()),
+            'leadSources' => collect(LeadSource::all()),
+            'emergencyContactRelationships' => collect(EmergencyContactRelationship::all()),
             'defaultCountryId' => $defaultCountry?->id,
         ]);
     }
@@ -105,9 +102,9 @@ final class ClientsController extends Controller
         return inertia('Clients/Edit', [
             'client' => ClientResource::make($client),
             'countries' => CountryResource::collection(Country::query()->orderBy('name')->get()),
-            'genders' => collect(Gender::cases())->map(fn ($case) => ['label' => $case->label(), 'value' => $case->value]),
-            'leadSources' => collect(LeadSource::cases())->map(fn ($case) => ['label' => $case->label(), 'value' => $case->value]),
-            'emergencyContactRelationships' => collect(EmergencyContactRelationship::cases())->map(fn ($case) => ['label' => $case->label(), 'value' => $case->value]),
+            'genders' => collect(Gender::all()),
+            'leadSources' => collect(LeadSource::all()),
+            'emergencyContactRelationships' => collect(EmergencyContactRelationship::all()),
         ]);
     }
 

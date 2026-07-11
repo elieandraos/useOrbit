@@ -3,7 +3,7 @@ import { Form } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
-import { archive as clientsArchive } from '@/routes/clients';
+import { destroy as clientsDestroy } from '@/routes/clients';
 import type { ClientResource } from './client';
 
 const client = defineModel<ClientResource | null>({ default: null });
@@ -21,15 +21,15 @@ const isOpen = computed({
 <template>
     <Form
         v-if="client"
-        v-bind="clientsArchive.form(client.slug)"
+        v-bind="clientsDestroy.form(client.slug)"
         :options="{ preserveScroll: true }"
         v-slot="{ processing }"
         @success="client = null"
     >
         <Dialog
             v-model:open="isOpen"
-            title="Archive this client?"
-            :description="`${client?.full_name} will be archived and removed from your active client list. This can be undone later.`"
+            title="Delete this client?"
+            :description="`${client?.full_name} will be removed from your client list.`"
         >
             <template #footer>
                 <Button variant="secondary" @click="client = null">
@@ -40,7 +40,7 @@ const isOpen = computed({
                     variant="destructive"
                     :disabled="processing"
                 >
-                    Archive
+                    Delete
                 </Button>
             </template>
         </Dialog>
