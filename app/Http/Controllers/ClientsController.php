@@ -29,14 +29,12 @@ final class ClientsController extends Controller
     #[Authorize('viewAny', Client::class)]
     public function index(IndexClientRequest $request): Response
     {
-        $filters = $request->validated();
-
-        $sortColumn = $filters['sort'] ?? null;
+        $sortColumn = $request->validated('sort');
 
         /** @noinspection PhpUndefinedMethodInspection */
         $clients = Client::query()
-            ->filter(new ClientFilter($filters))
-            ->sort(new ClientSort($sortColumn, $filters['direction']))
+            ->filter(new ClientFilter($request->validated()))
+            ->sort(new ClientSort($sortColumn, $request->validated('direction')))
             ->paginate(7)
             ->withQueryString();
 
@@ -45,16 +43,16 @@ final class ClientsController extends Controller
             'genders' => collect(Gender::all()),
             'sort' => [
                 'column' => $sortColumn ?? 'enrollment_date',
-                'direction' => $filters['direction'],
+                'direction' => $request->validated('direction'),
             ],
             'filters' => [
-                'search' => $filters['search'] ?? null,
-                'gender' => $filters['gender'] ?? null,
-                'enrolled_from' => $filters['enrolled_from'] ?? null,
-                'enrolled_to' => $filters['enrolled_to'] ?? null,
-                'age_min' => $filters['age_min'] ?? null,
-                'age_max' => $filters['age_max'] ?? null,
-                'archived' => $filters['archived'],
+                'search' => $request->validated('search'),
+                'gender' => $request->validated('gender'),
+                'enrolled_from' => $request->validated('enrolled_from'),
+                'enrolled_to' => $request->validated('enrolled_to'),
+                'age_min' => $request->validated('age_min'),
+                'age_max' => $request->validated('age_max'),
+                'archived' => $request->validated('archived'),
             ],
         ]);
     }
