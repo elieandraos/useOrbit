@@ -46,7 +46,7 @@ final class ClientsController extends Controller
 
         return inertia('Clients/Index', [
             'clients' => ClientResource::collection($clients),
-            'genders' => collect(Gender::cases())->map(fn ($case) => ['label' => $case->label(), 'value' => $case->value]),
+            'genders' => collect(Gender::all()),
             'sort' => [
                 'column' => $sortColumn ?? 'enrollment_date',
                 'direction' => $filters['direction'] ?? ($sortColumn === null ? 'desc' : 'asc'),
@@ -71,9 +71,9 @@ final class ClientsController extends Controller
 
         return inertia('Clients/Create', [
             'countries' => CountryResource::collection(Country::query()->orderBy('name')->get()),
-            'genders' => collect(Gender::cases())->map(fn ($case) => ['label' => $case->label(), 'value' => $case->value]),
-            'leadSources' => collect(LeadSource::cases())->map(fn ($case) => ['label' => $case->label(), 'value' => $case->value]),
-            'emergencyContactRelationships' => collect(EmergencyContactRelationship::cases())->map(fn ($case) => ['label' => $case->label(), 'value' => $case->value]),
+            'genders' => collect(Gender::all()),
+            'leadSources' => collect(LeadSource::all()),
+            'emergencyContactRelationships' => collect(EmergencyContactRelationship::all()),
             'defaultCountryId' => $defaultCountry?->id,
         ]);
     }
@@ -108,9 +108,9 @@ final class ClientsController extends Controller
         return inertia('Clients/Edit', [
             'client' => ClientResource::make($client),
             'countries' => CountryResource::collection(Country::query()->orderBy('name')->get()),
-            'genders' => collect(Gender::cases())->map(fn ($case) => ['label' => $case->label(), 'value' => $case->value]),
-            'leadSources' => collect(LeadSource::cases())->map(fn ($case) => ['label' => $case->label(), 'value' => $case->value]),
-            'emergencyContactRelationships' => collect(EmergencyContactRelationship::cases())->map(fn ($case) => ['label' => $case->label(), 'value' => $case->value]),
+            'genders' => collect(Gender::all()),
+            'leadSources' => collect(LeadSource::all()),
+            'emergencyContactRelationships' => collect(EmergencyContactRelationship::all()),
         ]);
     }
 

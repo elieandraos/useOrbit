@@ -171,7 +171,7 @@ test('the index page includes the gender options for the filters drawer', functi
         ->assertInertia(fn ($page) => $page
             ->where(
                 'genders',
-                collect(Gender::cases())->map(fn ($case) => ['label' => $case->label(), 'value' => $case->value])->toArray(),
+                Gender::all(),
             ));
 });
 
