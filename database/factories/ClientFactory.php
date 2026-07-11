@@ -73,4 +73,11 @@ class ClientFactory extends Factory
             'created_by' => User::factory(),
         ];
     }
+
+    public function archived(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'status' => ClientStatus::Archived->value,
+        ]);
+    }
 }

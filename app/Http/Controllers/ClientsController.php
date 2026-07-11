@@ -34,9 +34,12 @@ final class ClientsController extends Controller
         $sortColumn = $filters['sort'] ?? null;
         $sortDirection = $filters['direction'] ?? 'asc';
 
+        $clientFilters = $filters;
+        $clientFilters['archived'] = $request->boolean('archived');
+
         /** @noinspection PhpUndefinedMethodInspection */
         $clients = Client::query()
-            ->filter(new ClientFilter($filters))
+            ->filter(new ClientFilter($clientFilters))
             ->sort(new ClientSort($sortColumn, $sortDirection))
             ->paginate(7)
             ->withQueryString();

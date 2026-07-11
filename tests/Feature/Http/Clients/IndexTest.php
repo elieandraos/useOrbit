@@ -221,9 +221,7 @@ test('archived clients are excluded from the index by default', function () {
     /** @var Client $active */
     $active = Client::factory()->create(['organization_id' => $user->current_organization_id]);
 
-    /** @var Client $archived */
-    $archived = Client::factory()->create(['organization_id' => $user->current_organization_id]);
-    $archived->delete();
+    Client::factory()->archived()->create(['organization_id' => $user->current_organization_id]);
 
     $this->actingAs($user)
         ->get(route('clients.index'))
@@ -240,8 +238,7 @@ test('archived=1 returns only archived clients', function () {
     Client::factory()->create(['organization_id' => $user->current_organization_id]);
 
     /** @var Client $archived */
-    $archived = Client::factory()->create(['organization_id' => $user->current_organization_id]);
-    $archived->delete();
+    $archived = Client::factory()->archived()->create(['organization_id' => $user->current_organization_id]);
 
     $this->actingAs($user)
         ->get(route('clients.index', ['archived' => 1]))

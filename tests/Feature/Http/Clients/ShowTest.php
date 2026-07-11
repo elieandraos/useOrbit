@@ -34,3 +34,12 @@ test('authenticated user gets 404 for a client from another organization', funct
         ->get(route('clients.show', $client))
         ->assertNotFound();
 });
+
+test('an archived client can still be shown', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->archived()->create(['organization_id' => $user->current_organization_id]);
+
+    $this->actingAs($user)
+        ->get(route('clients.show', $client))
+        ->assertOk();
+});
