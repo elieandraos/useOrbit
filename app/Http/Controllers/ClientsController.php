@@ -32,15 +32,11 @@ final class ClientsController extends Controller
         $filters = $request->validated();
 
         $sortColumn = $filters['sort'] ?? null;
-        $sortDirection = $filters['direction'] ?? 'asc';
-
-        $clientFilters = $filters;
-        $clientFilters['archived'] = $request->boolean('archived');
 
         /** @noinspection PhpUndefinedMethodInspection */
         $clients = Client::query()
-            ->filter(new ClientFilter($clientFilters))
-            ->sort(new ClientSort($sortColumn, $sortDirection))
+            ->filter(new ClientFilter($filters))
+            ->sort(new ClientSort($sortColumn, $filters['direction']))
             ->paginate(7)
             ->withQueryString();
 
@@ -49,7 +45,7 @@ final class ClientsController extends Controller
             'genders' => collect(Gender::all()),
             'sort' => [
                 'column' => $sortColumn ?? 'enrollment_date',
-                'direction' => $filters['direction'] ?? ($sortColumn === null ? 'desc' : 'asc'),
+                'direction' => $filters['direction'],
             ],
             'filters' => [
                 'search' => $filters['search'] ?? null,
@@ -58,7 +54,7 @@ final class ClientsController extends Controller
                 'enrolled_to' => $filters['enrolled_to'] ?? null,
                 'age_min' => $filters['age_min'] ?? null,
                 'age_max' => $filters['age_max'] ?? null,
-                'archived' => $filters['archived'] ?? null,
+                'archived' => $filters['archived'],
             ],
         ]);
     }

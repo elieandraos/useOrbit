@@ -196,7 +196,7 @@ test('the index page echoes back the applied filters', function () {
             ->where('filters.enrolled_to', '2024-06-01')
             ->where('filters.age_min', '30')
             ->where('filters.age_max', '60')
-            ->where('filters.archived', '1'));
+            ->where('filters.archived', true));
 });
 
 test('the index page returns null filters when none are applied', function () {
@@ -212,7 +212,7 @@ test('the index page returns null filters when none are applied', function () {
             ->where('filters.enrolled_to', null)
             ->where('filters.age_min', null)
             ->where('filters.age_max', null)
-            ->where('filters.archived', null));
+            ->where('filters.archived', false));
 });
 
 test('archived clients are excluded from the index by default', function () {
