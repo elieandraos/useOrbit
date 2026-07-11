@@ -27,7 +27,7 @@ test('owner can unarchive a client from their organization', function () {
 
     $this->actingAs($owner)
         ->patch(route('clients.unarchive', $client))
-        ->assertRedirect(route('clients.show', $client))
+        ->assertRedirect(route('clients.index'))
         ->assertHasInertiaFlash('success', 'Client unarchived.');
 
     /** @var Client $fresh */

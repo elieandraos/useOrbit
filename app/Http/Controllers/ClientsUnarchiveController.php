@@ -23,6 +23,6 @@ final class ClientsUnarchiveController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Client unarchived.')]);
 
-        return to_route('clients.show', $client);
+        return to_route('clients.index');
     }
 }

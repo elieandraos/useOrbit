@@ -23,6 +23,6 @@ final class ClientsArchiveController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Client archived.')]);
 
-        return to_route('clients.show', $client);
+        return to_route('clients.index');
     }
 }
