@@ -3,7 +3,7 @@ import { Form } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
-import { destroy as clientsDestroy } from '@/routes/clients';
+import { archive as clientsArchive } from '@/routes/clients';
 import type { ClientResource } from './client';
 
 const client = defineModel<ClientResource | null>({ default: null });
@@ -21,7 +21,7 @@ const isOpen = computed({
 <template>
     <Form
         v-if="client"
-        v-bind="clientsDestroy.form(client.slug)"
+        v-bind="clientsArchive.form(client.slug)"
         :options="{ preserveScroll: true }"
         v-slot="{ processing }"
         @success="client = null"

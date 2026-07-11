@@ -42,6 +42,9 @@ function exportClient(): Promise<void> {
                 <Badge v-if="client.status === 'active'" tone="success" dot
                     >Active client</Badge
                 >
+                <Badge v-else-if="client.status === 'archived'" tone="warning"
+                    >Archived</Badge
+                >
                 <Badge tone="accent">{{ policiesCount }} policies</Badge>
             </div>
             <div

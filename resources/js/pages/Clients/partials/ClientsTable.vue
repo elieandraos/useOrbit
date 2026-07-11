@@ -2,6 +2,7 @@
 import { router } from '@inertiajs/vue3';
 import {
     Archive,
+    ArchiveRestore,
     ChevronDown,
     ChevronUp,
     Eye,
@@ -17,6 +18,7 @@ import {
     edit as clientsEdit,
     index as clientsIndex,
     show as clientsShow,
+    unarchive as clientsUnarchive,
 } from '@/routes/clients';
 import type { Paginated } from '@/types';
 import ArchiveClientModal from './ArchiveClientModal.vue';
@@ -36,6 +38,14 @@ const clientToArchive = ref<ClientResource | null>(null);
 
 function goToClient(client: ClientResource) {
     router.visit(clientsShow(client.slug).url);
+}
+
+function unarchiveClient(client: ClientResource) {
+    router.patch(
+        clientsUnarchive.url(client.slug),
+        {},
+        { preserveScroll: true },
+    );
 }
 
 function sortBy(column: string) {
@@ -206,6 +216,16 @@ function sortBy(column: string) {
                                     </DropMenuItem>
                                     <Separator class="my-1" />
                                     <DropMenuItem
+                                        v-if="client.status === 'archived'"
+                                        @click="unarchiveClient(client)"
+                                    >
+                                        <template #leading
+                                            ><ArchiveRestore class="size-4"
+                                        /></template>
+                                        Unarchive
+                                    </DropMenuItem>
+                                    <DropMenuItem
+                                        v-else
                                         danger
                                         @click="clientToArchive = client"
                                     >
