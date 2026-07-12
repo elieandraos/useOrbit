@@ -1,10 +1,16 @@
-milestone 7:
-- archive rework
+backlog milestone:
 - responsiveness
+- audit (what changed) and activity log (Who changed)
 - cities/states like bch (db tables) update client seeders once done
-
-backlog:
+- file uploads/documents
 - optimization: caching, inertia ssr, db indexes based on filters (after archive rework)
+
+onboarding:
+-----------
+country
+companies (brokers)
+document tags
+currency?
 
 
 #[CurrentUser] attribute (instead of request()->user())
