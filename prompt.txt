@@ -1,9 +1,8 @@
 backlog milestone:
-- responsiveness
 - audit (what changed) and activity log (Who changed)
-- cities/states like bch (db tables) update client seeders once done
 - file uploads/documents
-- optimization: caching, inertia ssr, db indexes based on filters (after archive rework)
+- optimization: caching, inertia ssr, db indexes based on filters
+- settings for countries? since it will remain a select box, small ux improvments. (lebanon, ksa, emirates i only use, why have all the countries in the select)
 
 onboarding:
 -----------
