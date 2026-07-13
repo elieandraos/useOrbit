@@ -27,6 +27,7 @@ setLayoutProps({
             title: props.client.full_name,
         },
     ],
+    breadcrumbsSurface: true,
 });
 
 const policiesCount = 0;
@@ -38,14 +39,20 @@ const policiesCount = 0;
     <div class="flex flex-1 flex-col">
         <ClientShowHeader :client="client" :policies-count="policiesCount" />
 
-        <Tabs class="mt-6">
-            <Tab :href="clientsShow(client.slug)">Overview</Tab>
-            <Tab href="#">Policies</Tab>
-            <Tab href="#">Documents</Tab>
-            <Tab href="#">Notes</Tab>
-        </Tabs>
+        <div
+            class="-mx-4 overflow-x-auto border-b border-border-subtle bg-surface px-4 sm:mx-0 sm:mt-6 sm:overflow-visible sm:border-0 sm:bg-transparent sm:px-0"
+        >
+            <Tabs class="min-w-max">
+                <Tab :href="clientsShow(client.slug)">Overview</Tab>
+                <Tab href="#">Policies</Tab>
+                <Tab href="#">Documents</Tab>
+                <Tab href="#">Notes</Tab>
+            </Tabs>
+        </div>
 
-        <div class="grid grid-cols-[360px_1fr] items-start gap-5 pt-6">
+        <div
+            class="grid grid-cols-1 items-start gap-5 pt-6 lg:grid-cols-[360px_1fr]"
+        >
             <!-- Left column -->
             <div class="flex flex-col gap-4">
                 <PersonalInformationCard :client="client" />
@@ -58,7 +65,7 @@ const policiesCount = 0;
             <div class="flex flex-col gap-4">
                 <ClientPoliciesCard />
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <QuickStatsCard />
                     <NextRenewalCard />
                 </div>

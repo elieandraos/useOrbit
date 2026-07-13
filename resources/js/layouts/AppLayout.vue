@@ -9,6 +9,8 @@ import type { BreadcrumbItem } from '@/types';
 
 defineProps<{
     breadcrumbs?: BreadcrumbItem[];
+    /** Passed through to AppContent — see its prop doc for what this does. */
+    breadcrumbsSurface?: boolean;
 }>();
 
 const mobileNavOpen = ref(false);
@@ -18,7 +20,7 @@ const mobileNavOpen = ref(false);
     <AppShell>
         <AppTopNav v-model:mobile-nav-open="mobileNavOpen" />
         <NavDrawer v-model:open="mobileNavOpen" />
-        <AppContent :breadcrumbs="breadcrumbs">
+        <AppContent :breadcrumbs="breadcrumbs" :breadcrumbs-surface="breadcrumbsSurface">
             <slot />
         </AppContent>
         <Toaster />
