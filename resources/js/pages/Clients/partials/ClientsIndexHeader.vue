@@ -40,19 +40,46 @@ const open = defineModel<boolean>('open', { default: false });
         </template>
 
         <template #actions>
-            <Button
-                v-if="hasClients || activeFilterCount > 0"
-                variant="secondary"
-                size="sm"
-                class="sm:hidden"
-                @click="open = true"
+            <!-- Mobile: Add New Client leads, Filters + icon-only Export trail on the right -->
+            <div
+                class="flex w-full items-center justify-between gap-2 sm:hidden"
             >
-                <template #leading><Filter /></template>
-                Filters
-                <Badge v-if="activeFilterCount > 0" tone="accent">{{
-                    activeFilterCount
-                }}</Badge>
-            </Button>
+                <Link v-if="hasClients" :href="clientsCreate().url">
+                    <Button variant="primary" size="md">
+                        <template #leading><Plus /></template>
+                        Add New Client
+                    </Button>
+                </Link>
+                <div v-else />
+
+                <div class="flex items-center gap-1.5">
+                    <Button
+                        v-if="hasClients || activeFilterCount > 0"
+                        variant="secondary"
+                        size="md"
+                        @click="open = true"
+                    >
+                        <template #leading><Filter /></template>
+                        Filters
+                        <Badge v-if="activeFilterCount > 0" tone="accent">{{
+                            activeFilterCount
+                        }}</Badge>
+                    </Button>
+                    <button
+                        v-if="hasClients"
+                        type="button"
+                        title="Export"
+                        :disabled="isExporting"
+                        class="inline-flex size-[34px] shrink-0 items-center justify-center rounded-md border border-border bg-surface text-secondary shadow-card transition-colors hover:bg-sunken disabled:pointer-events-none disabled:opacity-50"
+                        @click="$emit('export')"
+                    >
+                        <Spinner v-if="isExporting" />
+                        <Download v-else class="size-4" />
+                    </button>
+                </div>
+            </div>
+
+            <!-- Desktop (`sm` and above): Filters, Export, Add New Client -->
             <Button
                 v-if="hasClients || activeFilterCount > 0"
                 variant="secondary"
@@ -69,19 +96,6 @@ const open = defineModel<boolean>('open', { default: false });
             <template v-if="hasClients">
                 <Button
                     variant="secondary"
-                    size="sm"
-                    class="sm:hidden"
-                    :disabled="isExporting"
-                    @click="$emit('export')"
-                >
-                    <template #leading>
-                        <Spinner v-if="isExporting" />
-                        <Download v-else />
-                    </template>
-                    Export
-                </Button>
-                <Button
-                    variant="secondary"
                     size="md"
                     class="hidden sm:inline-flex"
                     :disabled="isExporting"
@@ -93,16 +107,8 @@ const open = defineModel<boolean>('open', { default: false });
                     </template>
                     Export
                 </Button>
-                <Link :href="clientsCreate().url">
-                    <Button variant="primary" size="sm" class="sm:hidden">
-                        <template #leading><Plus /></template>
-                        Add New Client
-                    </Button>
-                    <Button
-                        variant="primary"
-                        size="md"
-                        class="hidden sm:inline-flex"
-                    >
+                <Link :href="clientsCreate().url" class="hidden sm:inline-flex">
+                    <Button variant="primary" size="md">
                         <template #leading><Plus /></template>
                         Add New Client
                     </Button>
