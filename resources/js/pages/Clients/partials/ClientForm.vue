@@ -69,7 +69,7 @@ const leadSource = ref(props.client?.lead_source ?? '');
 <template>
     <Form v-bind="route" v-slot="{ errors, processing }" class="mx-auto flex w-full max-w-[1100px] flex-col gap-4">
         <FormSection title="Personal information" subtitle="Legal name as it appears on policy documents.">
-            <div class="grid grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <FormField label="First name" for="first_name" required :error="errors.first_name">
                     <Input id="first_name" v-model="firstName" name="first_name" />
                 </FormField>
@@ -80,7 +80,7 @@ const leadSource = ref(props.client?.lead_source ?? '');
                     <Input id="last_name" v-model="lastName" name="last_name" />
                 </FormField>
             </div>
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormField label="Mother's name" for="mothers_name" optional helper="Used by some carriers as a verification field." :error="errors.mothers_name">
                     <Input id="mothers_name" v-model="mothersName" name="mothers_name" />
                 </FormField>
@@ -93,7 +93,7 @@ const leadSource = ref(props.client?.lead_source ?? '');
             </FormField>
         </FormSection>
 
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
             <FormSection title="Contact" subtitle="At least one of phone or email is required.">
                 <FormField label="Phone number" for="phone" required :error="errors.phone">
                     <Input id="phone" v-model="phone" name="phone" type="tel">
@@ -119,7 +119,7 @@ const leadSource = ref(props.client?.lead_source ?? '');
                 <FormField label="Building / Floor" for="building_floor" optional :error="errors.building_floor">
                     <Input id="building_floor" v-model="buildingFloor" name="building_floor" />
                 </FormField>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <FormField label="City" for="city" optional :error="errors.city">
                         <Input id="city" v-model="city" name="city" />
                     </FormField>
@@ -168,7 +168,7 @@ const leadSource = ref(props.client?.lead_source ?? '');
         </div>
 
         <FormSection title="Enrollment" subtitle="When this client joined your book and how they found you.">
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormField label="Enrollment date" required :error="errors.enrollment_date">
                     <DateInput v-model="enrollmentDate" name="enrollment_date" />
                 </FormField>
