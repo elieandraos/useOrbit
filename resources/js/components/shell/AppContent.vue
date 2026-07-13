@@ -8,7 +8,7 @@ defineProps<{
 </script>
 
 <template>
-    <main class="flex-1 overflow-auto p-8">
+    <main class="flex-1 overflow-auto p-4 md:p-8">
         <Breadcrumbs
             v-if="breadcrumbs?.length"
             :breadcrumbs="breadcrumbs"
