@@ -82,7 +82,7 @@ function sortBy(column: string) {
 
         <!-- Mobile: pagination footer for the card list -->
         <div
-            class="rounded-lg border border-border bg-surface shadow-card md:hidden"
+            class="mt-2.5 rounded-lg border border-border bg-surface shadow-card md:hidden"
         >
             <Pagination :meta="clients.meta" item-label="clients" />
         </div>
