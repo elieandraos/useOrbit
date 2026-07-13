@@ -3,8 +3,8 @@ import { Head, setLayoutProps } from '@inertiajs/vue3';
 import { Tab, Tabs } from '@/components/ui/tabs';
 import { index as clientsIndex, show as clientsShow } from '@/routes/clients';
 import type { ClientResource } from './partials/client';
-import ClientHeader from './partials/ClientHeader.vue';
 import ClientPoliciesCard from './partials/ClientPoliciesCard.vue';
+import ClientShowHeader from './partials/ClientShowHeader.vue';
 import ContactCard from './partials/ContactCard.vue';
 import EmergencyContactCard from './partials/EmergencyContactCard.vue';
 import EnrollmentCard from './partials/EnrollmentCard.vue';
@@ -36,7 +36,7 @@ const policiesCount = 0;
     <Head :title="client.full_name" />
 
     <div class="flex flex-1 flex-col">
-        <ClientHeader :client="client" :policies-count="policiesCount" />
+        <ClientShowHeader :client="client" :policies-count="policiesCount" />
 
         <Tabs class="mt-6">
             <Tab :href="clientsShow(client.slug)">Overview</Tab>
