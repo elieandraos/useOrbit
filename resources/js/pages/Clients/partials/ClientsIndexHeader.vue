@@ -29,7 +29,7 @@ const open = defineModel<boolean>('open', { default: false });
         subtitle="Manage individual and corporate insurance clients"
     >
         <template v-if="hasClients" #meta>
-            <div class="flex flex-wrap items-center gap-2.5">
+            <div class="hidden flex-wrap items-center gap-2.5 sm:flex">
                 <Badge :tone="isArchivedView ? 'warning' : 'neutral'">
                     {{ total }}
                     {{ isArchivedView ? 'archived clients' : 'clients' }}

@@ -35,6 +35,7 @@ interface Sort {
 const props = defineProps<{
     clients: Paginated<ClientResource>;
     sort: Sort;
+    sortLabel: string;
 }>();
 
 const clientToArchive = ref<ClientResource | null>(null);
@@ -68,6 +69,14 @@ function sortBy(column: string) {
 
 <template>
     <div>
+        <!-- Mobile: count + sort caption, above the card list -->
+        <div
+            class="mb-2.5 flex items-center justify-between font-mono text-[11px] tracking-wider text-tertiary uppercase md:hidden"
+        >
+            <span>{{ clients.meta.total }} clients</span>
+            <span>{{ sortLabel }} ↓</span>
+        </div>
+
         <!-- Mobile: stacked client cards, replaces the table below `md` -->
         <div class="flex flex-col gap-2.5 md:hidden">
             <ClientCard

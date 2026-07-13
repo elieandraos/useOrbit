@@ -93,6 +93,17 @@ const sortLabel = computed(() => {
 
     return `Sorted by ${column} · ${props.sort.direction === 'desc' ? 'Z–A' : 'A–Z'}`;
 });
+
+// Compact form of sortLabel for the mobile count/sort caption above the card list.
+const sortLabelShort = computed(() => {
+    const column = sortColumnLabels[props.sort.column] ?? props.sort.column;
+
+    if (props.sort.column === 'enrollment_date') {
+        return props.sort.direction === 'desc' ? 'Newest first' : 'Oldest first';
+    }
+
+    return `${column} ${props.sort.direction === 'desc' ? 'Z–A' : 'A–Z'}`;
+});
 </script>
 
 <template>
@@ -115,6 +126,7 @@ const sortLabel = computed(() => {
             class="mt-5"
             :clients="clients"
             :sort="sort"
+            :sort-label="sortLabelShort"
         />
         <EmptyState
             v-else
