@@ -21,7 +21,7 @@ test('authenticated user can view a client from their organization', function ()
     $this->actingAs($user)
         ->get(route('clients.show', $client))
         ->assertOk()
-        ->assertHasResource('client', ClientResource::make($client->load('country')));
+        ->assertHasResource('client', ClientResource::make($client->load(['country', 'state', 'city'])));
 });
 
 test('authenticated user gets 404 for a client from another organization', function () {
