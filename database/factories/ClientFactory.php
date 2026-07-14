@@ -8,34 +8,19 @@ use App\Enums\ClientStatus;
 use App\Enums\Gender;
 use App\Enums\LeadSource;
 use App\Models\Client;
-use App\Models\Country;
 use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
+use Nnjeim\World\Models\City;
+use Nnjeim\World\Models\Country;
+use Nnjeim\World\Models\State;
 
 /**
  * @extends Factory<Client>
  */
 class ClientFactory extends Factory
 {
-    /**
-     * Real Lebanese cities grouped by their governorate, matching the 8 values
-     * in the client form's "Governorate" dropdown (resources/js/pages/Clients/partials/ClientForm.vue).
-     *
-     * @var array<string, list<string>>
-     */
-    private const array CITIES_BY_STATE = [
-        'Beirut' => ['Achrafieh', 'Hamra', 'Verdun', 'Gemmayze', 'Mar Mikhael', 'Badaro', 'Downtown Beirut', 'Ras Beirut', 'Manara', 'Clemenceau', 'Mazraa'],
-        'Mount Lebanon' => ['Jounieh', 'Byblos', 'Baabda', 'Aley', 'Jal el Dib', 'Antelias', 'Bikfaya'],
-        'North' => ['Tripoli', 'Zgharta', 'Koura', 'Batroun'],
-        'South' => ['Sidon', 'Tyre', 'Jezzine'],
-        'Nabatieh' => ['Nabatieh', 'Bint Jbeil', 'Marjeyoun', 'Hasbaya'],
-        'Bekaa' => ['Zahle', 'Chtaura', 'Rachaya', 'West Bekaa'],
-        'Akkar' => ['Halba', 'Qoubaiyat'],
-        'Baalbek-Hermel' => ['Baalbek', 'Hermel'],
-    ];
-
     /**
      * Define the model's default state.
      *
@@ -49,7 +34,18 @@ class ClientFactory extends Factory
         $lastName = fake()->lastName();
         $mothersName = fake()->firstName(Gender::Female->value);
         $emailDomain = fake()->randomElement(['gmail.com', 'outlook.com', 'yahoo.com', 'hotmail.com', 'icloud.com']);
-        $state = fake()->randomElement(array_keys(self::CITIES_BY_STATE));
+
+        $country = Country::query()->firstOrCreate(
+            ['iso2' => 'LB'],
+            ['name' => 'Lebanon', 'iso3' => 'LBN', 'phone_code' => '961', 'region' => 'Asia', 'subregion' => 'Western Asia'],
+        );
+        $state = State::query()->firstOrCreate(
+            ['name' => 'Mount Lebanon', 'country_id' => $country->id],
+        );
+        $city = City::query()->firstOrCreate(
+            ['name' => 'Jounieh', 'state_id' => $state->id, 'country_id' => $country->id],
+            ['country_code' => 'LB'],
+        );
 
         return [
             'organization_id' => Organization::factory(),
@@ -64,9 +60,9 @@ class ClientFactory extends Factory
             'email' => Str::slug($firstName, '_').'_'.Str::slug($lastName, '_').'@'.$emailDomain,
             'street' => fake()->buildingNumber().' '.fake()->streetName(),
             'building_floor' => fake()->randomElement(['Ground Floor', '1st Floor', '2nd Floor', '3rd Floor', '4th Floor', '5th Floor']),
-            'city' => fake()->randomElement(self::CITIES_BY_STATE[$state]),
-            'state' => $state,
-            'country_id' => Country::query()->firstOrCreate(['name' => 'Lebanon'])->id,
+            'country_id' => $country->id,
+            'state_id' => $state->id,
+            'city_id' => $city->id,
             'enrollment_date' => fake()->dateTimeBetween('-2 years')->format('Y-m-d'),
             'lead_source' => fake()->randomElement(LeadSource::cases())->value,
             'status' => ClientStatus::Active->value,

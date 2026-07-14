@@ -16,13 +16,13 @@ use App\Http\Requests\Clients\UpdateClientRequest;
 use App\Http\Resources\ClientResource;
 use App\Http\Resources\CountryResource;
 use App\Models\Client;
-use App\Models\Country;
 use App\Models\User;
 use App\Sorts\ClientSort;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
 use Inertia\Inertia;
 use Inertia\Response;
+use Nnjeim\World\Models\Country;
 
 final class ClientsController extends Controller
 {
@@ -87,7 +87,7 @@ final class ClientsController extends Controller
     #[Authorize('view', 'client')]
     public function show(Client $client): Response
     {
-        $client->load('country');
+        $client->load(['country', 'state', 'city']);
 
         return inertia('Clients/Show', [
             'client' => ClientResource::make($client),
@@ -97,7 +97,7 @@ final class ClientsController extends Controller
     #[Authorize('update', 'client')]
     public function edit(Client $client): Response
     {
-        $client->load('updatedBy');
+        $client->load(['updatedBy', 'country', 'state', 'city']);
 
         return inertia('Clients/Edit', [
             'client' => ClientResource::make($client),

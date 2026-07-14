@@ -7,7 +7,9 @@ namespace App\Http\Requests\Clients;
 use App\Enums\EmergencyContactRelationship;
 use App\Enums\Gender;
 use App\Enums\LeadSource;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 
 final class UpdateClientRequest extends FormRequest
@@ -28,9 +30,9 @@ final class UpdateClientRequest extends FormRequest
             'photo' => ['nullable', 'string', 'max:255'],
             'street' => ['nullable', 'string', 'max:255'],
             'building_floor' => ['nullable', 'string', 'max:255'],
-            'city' => ['nullable', 'string', 'max:255'],
-            'state' => ['nullable', 'string', 'max:255'],
             'country_id' => ['nullable', 'integer', 'exists:countries,id'],
+            'state_id' => ['nullable', 'integer', Rule::exists('states', 'id')->where(fn (Builder $query) => $query->where('country_id', $this->input('country_id')))],
+            'city_id' => ['nullable', 'integer', Rule::exists('cities', 'id')->where(fn (Builder $query) => $query->where('state_id', $this->input('state_id')))],
             'emergency_contact_name' => ['nullable', 'string', 'max:255'],
             'emergency_contact_relationship' => ['nullable', new Enum(EmergencyContactRelationship::class)],
             'emergency_contact_phone' => ['nullable', 'string', 'max:255'],

@@ -14,6 +14,8 @@ final class ClientResource extends JsonResource
     public function toArray(Request $request): array
     {
         $countryName = $this->relationLoaded('country') ? $this->country?->name : null;
+        $stateName = $this->relationLoaded('state') ? $this->state?->name : null;
+        $cityName = $this->relationLoaded('city') ? $this->city?->name : null;
 
         return [
             'id' => $this->id,
@@ -33,10 +35,12 @@ final class ClientResource extends JsonResource
             'email' => $this->email,
             'street' => $this->street,
             'building_floor' => $this->building_floor,
-            'city' => $this->city,
-            'state' => $this->state,
             'country_id' => $this->country_id,
-            'full_address' => collect([$this->street, $this->building_floor, $this->city, $this->state, $countryName])
+            'state_id' => $this->state_id,
+            'city_id' => $this->city_id,
+            'state_name' => $stateName,
+            'city_name' => $cityName,
+            'full_address' => collect([$this->street, $this->building_floor, $cityName, $stateName, $countryName])
                 ->filter()
                 ->implode("\n"),
             'emergency_contact_name' => $this->emergency_contact_name,
