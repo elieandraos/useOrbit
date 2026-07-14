@@ -28,9 +28,9 @@ return new class extends Migration
             $table->string('email')->nullable();
             $table->string('street')->nullable();
             $table->string('building_floor')->nullable();
-            $table->string('city', 100)->nullable();
-            $table->string('state', 100)->nullable();
             $table->foreignId('country_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('state_id')->nullable()->constrained('states')->nullOnDelete();
+            $table->foreignId('city_id')->nullable()->constrained('cities')->nullOnDelete();
             $table->string('emergency_contact_name', 150)->nullable();
             $table->string('emergency_contact_relationship', 100)->nullable();
             $table->string('emergency_contact_phone', 30)->nullable();

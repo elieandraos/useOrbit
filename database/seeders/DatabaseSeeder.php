@@ -6,6 +6,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Nnjeim\World\Models\Country;
 
 class DatabaseSeeder extends Seeder
 {
@@ -16,7 +17,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(CountrySeeder::class);
+        if (Country::query()->doesntExist()) {
+            $this->call(WorldSeeder::class);
+        }
 
         if (app()->environment('local')) {
             $this->call(UserSeeder::class);
