@@ -7,8 +7,8 @@ namespace App\Http\Controllers\World;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\World\Concerns\RanksSearchResults;
 use App\Http\Requests\World\SearchStatesRequest;
+use App\Models\State;
 use Illuminate\Http\JsonResponse;
-use Nnjeim\World\World;
 
 final class StatesController extends Controller
 {
@@ -18,11 +18,12 @@ final class StatesController extends Controller
     {
         $search = $request->validated('search');
 
-        $result = World::states([
-            'filters' => ['country_id' => $request->validated('country_id')],
-            'search' => $search !== null && $search !== '' ? $search : null,
-        ]);
+        $results = State::query()
+            ->where('country_id', $request->validated('country_id'))
+            ->when($search, fn ($query) => $query->where('name', 'like', "%$search%"))
+            ->get(['id', 'name'])
+            ->map(fn (State $state): array => ['id' => $state->id, 'name' => $state->name]);
 
-        return response()->json(['data' => $this->rankAndCap($result->data, $search)]);
+        return response()->json(['data' => $this->rankAndCap($results, $search)]);
     }
 }

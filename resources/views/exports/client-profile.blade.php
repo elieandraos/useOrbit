@@ -113,7 +113,7 @@
             <td colspan="2">
                 <span class="label">Address</span>
                 <span class="value">
-                    {!! nl2br(e(collect([$client->street, $client->building_floor, $client->city, $client->state, $client->country?->name])->filter()->implode("\n"))) ?: '—' !!}
+                    {!! nl2br(e(collect([$client->street, $client->building_floor, $client->city, $client->state?->name, $client->country?->name])->filter()->implode("\n"))) ?: '—' !!}
                 </span>
             </td>
         </tr>

@@ -15,7 +15,6 @@ final class ClientResource extends JsonResource
     {
         $countryName = $this->relationLoaded('country') ? $this->country?->name : null;
         $stateName = $this->relationLoaded('state') ? $this->state?->name : null;
-        $cityName = $this->relationLoaded('city') ? $this->city?->name : null;
 
         return [
             'id' => $this->id,
@@ -37,10 +36,10 @@ final class ClientResource extends JsonResource
             'building_floor' => $this->building_floor,
             'country_id' => $this->country_id,
             'state_id' => $this->state_id,
-            'city_id' => $this->city_id,
+            'city' => $this->city,
+            'country_name' => $countryName,
             'state_name' => $stateName,
-            'city_name' => $cityName,
-            'full_address' => collect([$this->street, $this->building_floor, $cityName, $stateName, $countryName])
+            'full_address' => collect([$this->street, $this->building_floor, $this->city, $stateName, $countryName])
                 ->filter()
                 ->implode("\n"),
             'emergency_contact_name' => $this->emergency_contact_name,

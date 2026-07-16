@@ -32,7 +32,7 @@ final class UpdateClientRequest extends FormRequest
             'building_floor' => ['nullable', 'string', 'max:255'],
             'country_id' => ['nullable', 'integer', 'exists:countries,id'],
             'state_id' => ['nullable', 'integer', Rule::exists('states', 'id')->where(fn (Builder $query) => $query->where('country_id', $this->input('country_id')))],
-            'city_id' => ['nullable', 'integer', Rule::exists('cities', 'id')->where(fn (Builder $query) => $query->where('state_id', $this->input('state_id')))],
+            'city' => ['nullable', 'string', 'max:100'],
             'emergency_contact_name' => ['nullable', 'string', 'max:255'],
             'emergency_contact_relationship' => ['nullable', new Enum(EmergencyContactRelationship::class)],
             'emergency_contact_phone' => ['nullable', 'string', 'max:255'],
