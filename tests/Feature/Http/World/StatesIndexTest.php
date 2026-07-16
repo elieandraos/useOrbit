@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Models\Country;
+use App\Models\State;
 use App\Models\User;
-use Nnjeim\World\Models\Country;
-use Nnjeim\World\Models\State;
 
 test('guests are redirected to the login page', function () {
     $this->get(route('world.states.index', ['country_id' => 1]))

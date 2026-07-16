@@ -5,10 +5,9 @@ declare(strict_types=1);
 use App\Enums\Gender;
 use App\Enums\LeadSource;
 use App\Models\Client;
+use App\Models\Country;
+use App\Models\State;
 use App\Models\User;
-use Nnjeim\World\Models\City;
-use Nnjeim\World\Models\Country;
-use Nnjeim\World\Models\State;
 
 test('guests are redirected to the login page', function () {
     $this->get(route('clients.create'))
@@ -80,11 +79,10 @@ test('store redirects to clients.show with toast on success', function () {
     expect(Client::query()->count())->toBe(1);
 });
 
-test('store persists state_id and city_id on the client', function () {
+test('store persists state_id and city on the client', function () {
     $user = User::factory()->withOrganization()->create();
     $country = Country::query()->create(['iso2' => 'LB', 'name' => 'Lebanon', 'iso3' => 'LBN', 'phone_code' => '961', 'region' => 'Asia', 'subregion' => 'Western Asia']);
     $state = State::query()->create(['name' => 'Mount Lebanon', 'country_id' => $country->id]);
-    $city = City::query()->create(['name' => 'Jounieh', 'state_id' => $state->id, 'country_id' => $country->id, 'country_code' => 'LB']);
 
     $this->actingAs($user)
         ->post(route('clients.store'), [
@@ -97,12 +95,12 @@ test('store persists state_id and city_id on the client', function () {
             'lead_source' => LeadSource::Referral->value,
             'country_id' => $country->id,
             'state_id' => $state->id,
-            'city_id' => $city->id,
+            'city' => 'Jounieh',
         ])
         ->assertRedirect(route('clients.show', Client::query()->first()));
 
     /** @var Client $client */
     $client = Client::query()->first();
     expect($client->state_id)->toBe($state->id)
-        ->and($client->city_id)->toBe($city->id);
+        ->and($client->city)->toBe('Jounieh');
 });

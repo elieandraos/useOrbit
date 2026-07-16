@@ -41,7 +41,7 @@ test('edit page renders with client data', function () {
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('Clients/Edit')
-            ->hasResource('client', ClientResource::make($client->load(['updatedBy', 'country', 'state', 'city'])))
+            ->hasResource('client', ClientResource::make($client->load(['updatedBy', 'country', 'state'])))
         );
 });
 
