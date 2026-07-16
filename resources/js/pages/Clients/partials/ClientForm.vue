@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Form, Link } from '@inertiajs/vue3';
 import { Mail, MapPin, Phone } from '@lucide/vue';
-import { ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import Button from '@/components/ui/button/Button.vue';
 import DateInput from '@/components/ui/date-input/DateInput.vue';
 import FormField from '@/components/ui/form-field/FormField.vue';
@@ -9,6 +9,9 @@ import FormSection from '@/components/ui/form-section/FormSection.vue';
 import Input from '@/components/ui/input/Input.vue';
 import RadioChips from '@/components/ui/radio-chips/RadioChips.vue';
 import Select from '@/components/ui/select/Select.vue';
+import { Typeahead } from '@/components/ui/typeahead';
+import type { TypeaheadOption } from '@/components/ui/typeahead';
+import { useStateOptions } from '@/composables/useWorldLocations';
 import { index as clientsIndex } from '@/routes/clients';
 import type { RouteFormDefinition } from '@/wayfinder';
 
@@ -23,9 +26,11 @@ interface ClientFormValues {
     email: string | null;
     street: string | null;
     building_floor: string | null;
+    state_id: number | null;
     city: string | null;
-    state: string | null;
     country_id: number | null;
+    country_name: string | null;
+    state_name: string | null;
     emergency_contact_name: string | null;
     emergency_contact_relationship: string | null;
     emergency_contact_phone: string | null;
@@ -54,16 +59,21 @@ const phone = ref(props.client?.phone ?? '');
 const email = ref(props.client?.email ?? '');
 const street = ref(props.client?.street ?? '');
 const buildingFloor = ref(props.client?.building_floor ?? '');
+const countryId = ref<number | null>(props.client?.country_id ?? props.defaultCountryId ?? null);
+const stateId = ref<number | null>(props.client?.state_id ?? null);
 const city = ref(props.client?.city ?? '');
-const state = ref(props.client?.state ?? '');
-const countryId = ref(
-    props.client?.country_id ? String(props.client.country_id) : props.defaultCountryId ? String(props.defaultCountryId) : '',
-);
 const emergencyContactName = ref(props.client?.emergency_contact_name ?? '');
 const emergencyContactRelationship = ref(props.client?.emergency_contact_relationship ?? '');
 const emergencyContactPhone = ref(props.client?.emergency_contact_phone ?? '');
 const enrollmentDate = ref(props.client?.enrollment_date ?? '');
 const leadSource = ref(props.client?.lead_source ?? '');
+
+const countryOptions = computed<TypeaheadOption[]>(() => props.countries.map((country) => ({ value: country.id, label: country.name })));
+const { options: stateOptions, loading: stateLoading } = useStateOptions(countryId);
+
+watch(countryId, () => {
+    stateId.value = null;
+});
 </script>
 
 <template>
@@ -119,30 +129,25 @@ const leadSource = ref(props.client?.lead_source ?? '');
                 <FormField label="Building / Floor" for="building_floor" optional :error="errors.building_floor">
                     <Input id="building_floor" v-model="buildingFloor" name="building_floor" />
                 </FormField>
+                <FormField label="Country" for="country_id" optional :error="errors.country_id">
+                    <Typeahead id="country_id" v-model="countryId" name="country_id" :options="countryOptions" placeholder="Select" />
+                </FormField>
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <FormField label="Governorate" for="state_id" optional :error="errors.state_id">
+                        <Typeahead
+                            id="state_id"
+                            v-model="stateId"
+                            name="state_id"
+                            :options="stateOptions"
+                            :loading="stateLoading"
+                            :initial-label="client?.state_name"
+                            placeholder="Select"
+                        />
+                    </FormField>
                     <FormField label="City" for="city" optional :error="errors.city">
                         <Input id="city" v-model="city" name="city" />
                     </FormField>
-                    <FormField label="Governorate" for="state" optional :error="errors.state">
-                        <Select id="state" v-model="state" name="state" placeholder="Select">
-                            <option value="Beirut">Beirut</option>
-                            <option value="Mount Lebanon">Mount Lebanon</option>
-                            <option value="North">North</option>
-                            <option value="South">South</option>
-                            <option value="Nabatieh">Nabatieh</option>
-                            <option value="Bekaa">Bekaa</option>
-                            <option value="Akkar">Akkar</option>
-                            <option value="Baalbek-Hermel">Baalbek-Hermel</option>
-                        </Select>
-                    </FormField>
                 </div>
-                <FormField label="Country" for="country_id" optional :error="errors.country_id">
-                    <Select id="country_id" v-model="countryId" name="country_id" placeholder="Select">
-                        <option v-for="country in countries" :key="country.id" :value="country.id">
-                            {{ country.name }}
-                        </option>
-                    </Select>
-                </FormField>
             </FormSection>
 
             <FormSection title="Emergency contact" subtitle="Recommended for senior and Medicare clients.">
