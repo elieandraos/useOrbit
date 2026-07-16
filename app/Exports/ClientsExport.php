@@ -25,7 +25,7 @@ final readonly class ClientsExport implements FromQuery, WithHeadings, WithMappi
     {
         /** @noinspection PhpUndefinedMethodInspection */
         return Client::query()
-            ->with('country')
+            ->with(['country', 'state'])
             ->filter(new ClientFilter($this->filters))
             ->sort(new ClientSort($this->sortColumn, $this->sortDirection));
     }
@@ -56,7 +56,7 @@ final readonly class ClientsExport implements FromQuery, WithHeadings, WithMappi
             $row->gender->label(),
             $row->date_of_birth->format('Y-m-d'),
             $row->date_of_birth->age,
-            collect([$row->street, $row->building_floor, $row->city, $row->state, $row->country?->name])->filter()->implode(', '),
+            collect([$row->street, $row->building_floor, $row->city, $row->state?->name, $row->country?->name])->filter()->implode(', '),
             $row->enrollment_date->format('Y-m-d'),
             $row->lead_source->label(),
             ucfirst($row->status->value),

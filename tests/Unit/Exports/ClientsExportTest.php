@@ -8,6 +8,7 @@ use App\Enums\LeadSource;
 use App\Exports\ClientsExport;
 use App\Models\Client;
 use App\Models\Country;
+use App\Models\State;
 
 test('headings returns the export column labels', function () {
     $export = new ClientsExport([], null, 'asc');
@@ -28,7 +29,9 @@ test('headings returns the export column labels', function () {
 
 test('map transforms a client into an export row', function () {
     /** @var Country $country */
-    $country = Country::query()->create(['name' => 'Lebanon']);
+    $country = Country::query()->create(['iso2' => 'LB', 'name' => 'Lebanon', 'iso3' => 'LBN', 'phone_code' => '961', 'region' => 'Asia', 'subregion' => 'Western Asia']);
+    /** @var State $state */
+    $state = State::query()->create(['name' => 'Beirut', 'country_id' => $country->id]);
 
     /** @var Client $client */
     $client = Client::factory()->create([
@@ -42,12 +45,12 @@ test('map transforms a client into an export row', function () {
         'street' => '12 Main Street',
         'building_floor' => '3rd Floor',
         'city' => 'Achrafieh',
-        'state' => 'Beirut',
+        'state_id' => $state->id,
         'country_id' => $country->id,
         'enrollment_date' => '2024-01-10',
         'lead_source' => LeadSource::Referral->value,
         'status' => ClientStatus::Active->value,
-    ])->load('country');
+    ])->load(['country', 'state']);
 
     $export = new ClientsExport([], null, 'asc');
 
@@ -70,10 +73,10 @@ test('map omits blank address parts', function () {
     $client = Client::factory()->create([
         'building_floor' => null,
         'country_id' => null,
-    ])->load('country');
+    ])->load(['country', 'state']);
 
     $export = new ClientsExport([], null, 'asc');
     $row = $export->map($client);
 
-    expect($row[6])->toBe(collect([$client->street, $client->city, $client->state])->filter()->implode(', '));
+    expect($row[6])->toBe(collect([$client->street, $client->city, $client->state?->name])->filter()->implode(', '));
 });

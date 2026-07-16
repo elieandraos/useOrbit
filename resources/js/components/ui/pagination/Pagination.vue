@@ -24,11 +24,20 @@ function goTo(url: string | null) {
 <template>
     <div class="flex items-center justify-between border-t border-border-subtle px-4 py-3 text-xs text-secondary">
         <div>
-            Showing
-            <span class="font-medium text-primary">{{ meta.from }}–{{ meta.to }}</span>
-            of
-            <span class="font-medium text-primary">{{ meta.total }}</span>
-            {{ itemLabel }}
+            <!-- Mobile: compact count only -->
+            <span class="sm:hidden">
+                <span class="font-medium text-primary">{{ meta.from }}–{{ meta.to }}</span>
+                of
+                <span class="font-medium text-primary">{{ meta.total }}</span>
+            </span>
+            <!-- Desktop (`sm` and above): full "Showing X–Y of Z <item>" wording -->
+            <span class="hidden sm:inline">
+                Showing
+                <span class="font-medium text-primary">{{ meta.from }}–{{ meta.to }}</span>
+                of
+                <span class="font-medium text-primary">{{ meta.total }}</span>
+                {{ itemLabel }}
+            </span>
         </div>
 
         <div class="flex items-center gap-1.5">

@@ -6,6 +6,7 @@ namespace Database\Seeders;
 
 use App\Enums\OrganizationMemberStatus;
 use App\Enums\OrganizationRole;
+use App\Models\Country;
 use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -19,10 +20,16 @@ final class UserSeeder extends Seeder
     {
         $organization = Organization::factory()->create(['name' => 'Demo Org']);
 
+        $country = Country::query()->firstOrCreate(
+            ['iso2' => 'LB'],
+            ['name' => 'Lebanon', 'iso3' => 'LBN', 'phone_code' => '961', 'region' => 'Asia', 'subregion' => 'Western Asia'],
+        );
+
         $user = User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
             'current_organization_id' => $organization->id,
+            'country_id' => $country->id,
         ]);
 
         $user->organizations()->attach($organization->id, [

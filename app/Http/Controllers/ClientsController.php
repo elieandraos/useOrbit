@@ -20,6 +20,7 @@ use App\Models\Country;
 use App\Models\User;
 use App\Sorts\ClientSort;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -58,17 +59,17 @@ final class ClientsController extends Controller
     }
 
     #[Authorize('create', Client::class)]
-    public function create(): Response
+    public function create(Request $request): Response
     {
-        /** @var Country|null $defaultCountry */
-        $defaultCountry = Country::query()->firstWhere('name', 'Lebanon');
+        /** @var User $user */
+        $user = $request->user();
 
         return inertia('Clients/Create', [
             'countries' => CountryResource::collection(Country::query()->orderBy('name')->get()),
             'genders' => collect(Gender::all()),
             'leadSources' => collect(LeadSource::all()),
             'emergencyContactRelationships' => collect(EmergencyContactRelationship::all()),
-            'defaultCountryId' => $defaultCountry?->id,
+            'defaultCountryId' => $user->country_id,
         ]);
     }
 
@@ -87,7 +88,7 @@ final class ClientsController extends Controller
     #[Authorize('view', 'client')]
     public function show(Client $client): Response
     {
-        $client->load('country');
+        $client->load(['country', 'state']);
 
         return inertia('Clients/Show', [
             'client' => ClientResource::make($client),
@@ -97,7 +98,7 @@ final class ClientsController extends Controller
     #[Authorize('update', 'client')]
     public function edit(Client $client): Response
     {
-        $client->load('updatedBy');
+        $client->load(['updatedBy', 'country', 'state']);
 
         return inertia('Clients/Edit', [
             'client' => ClientResource::make($client),

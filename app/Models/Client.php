@@ -35,9 +35,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $email
  * @property string|null $street
  * @property string|null $building_floor
- * @property string|null $city
- * @property string|null $state
  * @property int|null $country_id
+ * @property int|null $state_id
+ * @property string|null $city
  * @property string|null $emergency_contact_name
  * @property EmergencyContactRelationship|null $emergency_contact_relationship
  * @property string|null $emergency_contact_phone
@@ -51,11 +51,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property CarbonImmutable|null $deleted_at
  * @property-read User|null $updatedBy
  * @property-read Country|null $country
+ * @property-read State|null $state
  */
 #[Fillable([
     'organization_id', 'slug', 'first_name', 'middle_name', 'last_name', 'mothers_name',
     'date_of_birth', 'gender', 'photo', 'phone', 'email', 'street', 'building_floor',
-    'city', 'state', 'country_id', 'emergency_contact_name', 'emergency_contact_relationship',
+    'country_id', 'state_id', 'city', 'emergency_contact_name', 'emergency_contact_relationship',
     'emergency_contact_phone', 'enrollment_date', 'lead_source', 'status', 'created_by', 'updated_by',
 ])]
 final class Client extends Model
@@ -78,6 +79,11 @@ final class Client extends Model
     public function country(): BelongsTo
     {
         return $this->belongsTo(Country::class);
+    }
+
+    public function state(): BelongsTo
+    {
+        return $this->belongsTo(State::class);
     }
 
     public function createdBy(): BelongsTo

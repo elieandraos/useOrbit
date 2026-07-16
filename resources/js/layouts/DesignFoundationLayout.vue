@@ -28,6 +28,7 @@ const navItems = [
     { label: 'Separator', href: '/design-foundation/separator' },
     { label: 'Switch', href: '/design-foundation/switch' },
     { label: 'Textarea', href: '/design-foundation/textarea' },
+    { label: 'Typeahead', href: '/design-foundation/typeahead' },
 ];
 </script>
 

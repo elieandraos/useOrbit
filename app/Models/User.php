@@ -22,8 +22,10 @@ use Illuminate\Support\Carbon;
  * @property string $password
  * @property Carbon|null $email_verified_at
  * @property int|null $current_organization_id
+ * @property int|null $country_id
+ * @property-read Country|null $country
  */
-#[Fillable(['name', 'email', 'password', 'current_organization_id', 'email_verified_at'])]
+#[Fillable(['name', 'email', 'password', 'current_organization_id', 'country_id', 'email_verified_at'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 final class User extends Authenticatable
 {
@@ -53,6 +55,11 @@ final class User extends Authenticatable
     public function currentOrganization(): BelongsTo
     {
         return $this->belongsTo(Organization::class, 'current_organization_id');
+    }
+
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class);
     }
 
     public function organizationRole(): ?string

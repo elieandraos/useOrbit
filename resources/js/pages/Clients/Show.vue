@@ -3,8 +3,8 @@ import { Head, setLayoutProps } from '@inertiajs/vue3';
 import { Tab, Tabs } from '@/components/ui/tabs';
 import { index as clientsIndex, show as clientsShow } from '@/routes/clients';
 import type { ClientResource } from './partials/client';
-import ClientHeader from './partials/ClientHeader.vue';
 import ClientPoliciesCard from './partials/ClientPoliciesCard.vue';
+import ClientShowHeader from './partials/ClientShowHeader.vue';
 import ContactCard from './partials/ContactCard.vue';
 import EmergencyContactCard from './partials/EmergencyContactCard.vue';
 import EnrollmentCard from './partials/EnrollmentCard.vue';
@@ -27,6 +27,7 @@ setLayoutProps({
             title: props.client.full_name,
         },
     ],
+    breadcrumbsSurface: true,
 });
 
 const policiesCount = 0;
@@ -36,16 +37,22 @@ const policiesCount = 0;
     <Head :title="client.full_name" />
 
     <div class="flex flex-1 flex-col">
-        <ClientHeader :client="client" :policies-count="policiesCount" />
+        <ClientShowHeader :client="client" :policies-count="policiesCount" />
 
-        <Tabs class="mt-6">
-            <Tab :href="clientsShow(client.slug)">Overview</Tab>
-            <Tab href="#">Policies</Tab>
-            <Tab href="#">Documents</Tab>
-            <Tab href="#">Notes</Tab>
-        </Tabs>
+        <div
+            class="-mx-4 overflow-x-auto border-b border-border-subtle bg-surface px-4 sm:mx-0 sm:mt-6 sm:overflow-visible sm:border-0 sm:bg-transparent sm:px-0"
+        >
+            <Tabs class="min-w-max">
+                <Tab :href="clientsShow(client.slug)">Overview</Tab>
+                <Tab href="#">Policies</Tab>
+                <Tab href="#">Documents</Tab>
+                <Tab href="#">Notes</Tab>
+            </Tabs>
+        </div>
 
-        <div class="grid grid-cols-[360px_1fr] items-start gap-5 pt-6">
+        <div
+            class="grid grid-cols-1 items-start gap-5 pt-6 lg:grid-cols-[360px_1fr]"
+        >
             <!-- Left column -->
             <div class="flex flex-col gap-4">
                 <PersonalInformationCard :client="client" />
@@ -58,7 +65,7 @@ const policiesCount = 0;
             <div class="flex flex-col gap-4">
                 <ClientPoliciesCard />
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <QuickStatsCard />
                     <NextRenewalCard />
                 </div>

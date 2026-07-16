@@ -6,6 +6,7 @@ use App\Enums\Gender;
 use App\Enums\LeadSource;
 use App\Models\Client;
 use App\Models\Country;
+use App\Models\State;
 use App\Models\User;
 
 test('guests are redirected to the login page', function () {
@@ -25,22 +26,21 @@ test('create page renders for authenticated user', function () {
         ->assertInertia(fn ($page) => $page->component('Clients/Create'));
 });
 
-test('create page passes the Lebanon country id as the default country', function () {
-    $user = User::factory()->withOrganization()->create();
-    $lebanon = Country::query()->create(['name' => 'Lebanon']);
-    Country::query()->create(['name' => 'France']);
+test('create page passes the acting user country id as the default country', function () {
+    $country = Country::query()->create(['iso2' => 'LB', 'name' => 'Lebanon', 'iso3' => 'LBN', 'phone_code' => '961', 'region' => 'Asia', 'subregion' => 'Western Asia']);
+    $user = User::factory()->withOrganization()->create(['country_id' => $country->id]);
 
     $this->actingAs($user)
         ->get(route('clients.create'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('Clients/Create')
-            ->where('defaultCountryId', $lebanon->id)
+            ->where('defaultCountryId', $country->id)
         );
 });
 
-test('create page passes a null default country id when Lebanon is not seeded', function () {
-    $user = User::factory()->withOrganization()->create();
+test('create page passes a null default country id when the acting user has none set', function () {
+    $user = User::factory()->withOrganization()->create(['country_id' => null]);
 
     $this->actingAs($user)
         ->get(route('clients.create'))
@@ -76,4 +76,30 @@ test('store redirects to clients.show with toast on success', function () {
         ->assertHasInertiaFlash('success', 'Client created.');
 
     expect(Client::query()->count())->toBe(1);
+});
+
+test('store persists state_id and city on the client', function () {
+    $user = User::factory()->withOrganization()->create();
+    $country = Country::query()->create(['iso2' => 'LB', 'name' => 'Lebanon', 'iso3' => 'LBN', 'phone_code' => '961', 'region' => 'Asia', 'subregion' => 'Western Asia']);
+    $state = State::query()->create(['name' => 'Mount Lebanon', 'country_id' => $country->id]);
+
+    $this->actingAs($user)
+        ->post(route('clients.store'), [
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+            'phone' => '555-0100',
+            'date_of_birth' => '1990-01-15',
+            'gender' => Gender::Male->value,
+            'enrollment_date' => '2024-01-01',
+            'lead_source' => LeadSource::Referral->value,
+            'country_id' => $country->id,
+            'state_id' => $state->id,
+            'city' => 'Jounieh',
+        ])
+        ->assertRedirect(route('clients.show', Client::query()->first()));
+
+    /** @var Client $client */
+    $client = Client::query()->first();
+    expect($client->state_id)->toBe($state->id)
+        ->and($client->city)->toBe('Jounieh');
 });

@@ -20,9 +20,11 @@ interface ClientResource {
     email: string | null;
     street: string | null;
     building_floor: string | null;
+    state_id: number | null;
     city: string | null;
-    state: string | null;
     country_id: number | null;
+    country_name: string | null;
+    state_name: string | null;
     emergency_contact_name: string | null;
     emergency_contact_relationship: string | null;
     emergency_contact_phone: string | null;

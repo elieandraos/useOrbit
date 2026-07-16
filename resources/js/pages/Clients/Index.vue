@@ -1,18 +1,11 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
-import { Download, Filter, Plus } from '@lucide/vue';
+import { Head } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
-import PageHeader from '@/components/shell/PageHeader.vue';
-import Badge from '@/components/ui/badge/Badge.vue';
-import Button from '@/components/ui/button/Button.vue';
-import { Spinner } from '@/components/ui/spinner';
 import { useFileExport } from '@/composables/useFileExport';
-import {
-    create as clientsCreate,
-    exportMethod as clientsExport,
-} from '@/routes/clients';
+import { exportMethod as clientsExport } from '@/routes/clients';
 import type { Paginated } from '@/types';
 import type { ClientResource } from './partials/client';
+import ClientsIndexHeader from './partials/ClientsIndexHeader.vue';
 import ClientsTable from './partials/ClientsTable.vue';
 import EmptyState from './partials/EmptyState.vue';
 import FiltersDrawer from './partials/FiltersDrawer.vue';
@@ -100,68 +93,40 @@ const sortLabel = computed(() => {
 
     return `Sorted by ${column} · ${props.sort.direction === 'desc' ? 'Z–A' : 'A–Z'}`;
 });
+
+// Compact form of sortLabel for the mobile count/sort caption above the card list.
+const sortLabelShort = computed(() => {
+    const column = sortColumnLabels[props.sort.column] ?? props.sort.column;
+
+    if (props.sort.column === 'enrollment_date') {
+        return props.sort.direction === 'desc' ? 'Newest first' : 'Oldest first';
+    }
+
+    return `${column} ${props.sort.direction === 'desc' ? 'Z–A' : 'A–Z'}`;
+});
 </script>
 
 <template>
     <Head title="Clients" />
 
     <div class="flex flex-1 flex-col">
-        <PageHeader
-            title="Clients"
-            subtitle="Manage individual and corporate insurance clients"
-        >
-            <template v-if="hasClients" #meta>
-                <div class="flex flex-wrap items-center gap-2.5">
-                    <Badge :tone="isArchivedView ? 'warning' : 'neutral'">
-                        {{ clients.meta.total }}
-                        {{ isArchivedView ? 'archived clients' : 'clients' }}
-                    </Badge>
-                    <span class="text-xs text-tertiary">·</span>
-                    <span class="text-xs text-tertiary">{{ sortLabel }}</span>
-                </div>
-            </template>
-
-            <template #actions>
-                <Button
-                    v-if="hasClients || activeFilterCount > 0"
-                    variant="secondary"
-                    size="md"
-                    @click="filtersOpen = true"
-                >
-                    <template #leading><Filter /></template>
-                    Filters
-                    <Badge v-if="activeFilterCount > 0" tone="accent">{{
-                        activeFilterCount
-                    }}</Badge>
-                </Button>
-                <template v-if="hasClients">
-                    <Button
-                        variant="secondary"
-                        size="md"
-                        :disabled="isExporting"
-                        @click="exportClients"
-                    >
-                        <template #leading>
-                            <Spinner v-if="isExporting" />
-                            <Download v-else />
-                        </template>
-                        Export
-                    </Button>
-                    <Link :href="clientsCreate().url">
-                        <Button variant="primary" size="md">
-                            <template #leading><Plus /></template>
-                            Add New Client
-                        </Button>
-                    </Link>
-                </template>
-            </template>
-        </PageHeader>
+        <ClientsIndexHeader
+            v-model:open="filtersOpen"
+            :has-clients="hasClients"
+            :total="clients.meta.total"
+            :is-archived-view="isArchivedView"
+            :sort-label="sortLabel"
+            :active-filter-count="activeFilterCount"
+            :is-exporting="isExporting"
+            @export="exportClients"
+        />
 
         <ClientsTable
             v-if="hasClients"
             class="mt-5"
             :clients="clients"
             :sort="sort"
+            :sort-label="sortLabelShort"
         />
         <EmptyState
             v-else

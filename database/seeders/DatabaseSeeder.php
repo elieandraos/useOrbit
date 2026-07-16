@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Models\Country;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -16,7 +17,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(CountrySeeder::class);
+        if (Country::query()->doesntExist()) {
+            $this->call([CountrySeeder::class, StateSeeder::class]);
+        }
 
         if (app()->environment('local')) {
             $this->call(UserSeeder::class);
