@@ -26,22 +26,21 @@ test('create page renders for authenticated user', function () {
         ->assertInertia(fn ($page) => $page->component('Clients/Create'));
 });
 
-test('create page passes the Lebanon country id as the default country', function () {
-    $user = User::factory()->withOrganization()->create();
-    $lebanon = Country::query()->create(['iso2' => 'LB', 'name' => 'Lebanon', 'iso3' => 'LBN', 'phone_code' => '961', 'region' => 'Asia', 'subregion' => 'Western Asia']);
-    Country::query()->create(['iso2' => 'FR', 'name' => 'France', 'iso3' => 'FRA', 'phone_code' => '33', 'region' => 'Europe', 'subregion' => 'Western Europe']);
+test('create page passes the acting user country id as the default country', function () {
+    $country = Country::query()->create(['iso2' => 'LB', 'name' => 'Lebanon', 'iso3' => 'LBN', 'phone_code' => '961', 'region' => 'Asia', 'subregion' => 'Western Asia']);
+    $user = User::factory()->withOrganization()->create(['country_id' => $country->id]);
 
     $this->actingAs($user)
         ->get(route('clients.create'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('Clients/Create')
-            ->where('defaultCountryId', $lebanon->id)
+            ->where('defaultCountryId', $country->id)
         );
 });
 
-test('create page passes a null default country id when Lebanon is not seeded', function () {
-    $user = User::factory()->withOrganization()->create();
+test('create page passes a null default country id when the acting user has none set', function () {
+    $user = User::factory()->withOrganization()->create(['country_id' => null]);
 
     $this->actingAs($user)
         ->get(route('clients.create'))

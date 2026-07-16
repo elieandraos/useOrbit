@@ -20,6 +20,7 @@ use App\Models\Country;
 use App\Models\User;
 use App\Sorts\ClientSort;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -58,17 +59,17 @@ final class ClientsController extends Controller
     }
 
     #[Authorize('create', Client::class)]
-    public function create(): Response
+    public function create(Request $request): Response
     {
-        /** @var Country|null $defaultCountry */
-        $defaultCountry = Country::query()->firstWhere('name', 'Lebanon');
+        /** @var User $user */
+        $user = $request->user();
 
         return inertia('Clients/Create', [
             'countries' => CountryResource::collection(Country::query()->orderBy('name')->get()),
             'genders' => collect(Gender::all()),
             'leadSources' => collect(LeadSource::all()),
             'emergencyContactRelationships' => collect(EmergencyContactRelationship::all()),
-            'defaultCountryId' => $defaultCountry?->id,
+            'defaultCountryId' => $user->country_id,
         ]);
     }
 
