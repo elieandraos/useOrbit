@@ -8,13 +8,12 @@ use App\Enums\ClientStatus;
 use App\Enums\Gender;
 use App\Enums\LeadSource;
 use App\Models\Client;
+use App\Models\Country;
 use App\Models\Organization;
+use App\Models\State;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
-use Nnjeim\World\Models\City;
-use Nnjeim\World\Models\Country;
-use Nnjeim\World\Models\State;
 
 /**
  * @extends Factory<Client>
@@ -42,10 +41,6 @@ class ClientFactory extends Factory
         $state = State::query()->firstOrCreate(
             ['name' => 'Mount Lebanon', 'country_id' => $country->id],
         );
-        $city = City::query()->firstOrCreate(
-            ['name' => 'Jounieh', 'state_id' => $state->id, 'country_id' => $country->id],
-            ['country_code' => 'LB'],
-        );
 
         return [
             'organization_id' => Organization::factory(),
@@ -62,7 +57,7 @@ class ClientFactory extends Factory
             'building_floor' => fake()->randomElement(['Ground Floor', '1st Floor', '2nd Floor', '3rd Floor', '4th Floor', '5th Floor']),
             'country_id' => $country->id,
             'state_id' => $state->id,
-            'city_id' => $city->id,
+            'city' => 'Jounieh',
             'enrollment_date' => fake()->dateTimeBetween('-2 years')->format('Y-m-d'),
             'lead_source' => fake()->randomElement(LeadSource::cases())->value,
             'status' => ClientStatus::Active->value,
