@@ -105,4 +105,15 @@ Mirrors `tests/Feature/Http/Clients/*` + `tests/Unit/Actions/Clients/*` + `tests
 
 Policy attachment (until a real `policies` table exists), document categorization/tagging, soft-delete/retention, org-wide/shared-channel broadcasting, multi-recipient notifications, resumable/chunked uploads, live per-file status updates mid-batch, server-side search/pagination on the documents tab, and filtering on the notifications page.
 
+### Known gaps to resolve before implementation
+
+Flagged in review, not yet folded into the sections above:
+
+1. **IDOR on the phase-2 finalize request.** It currently filters submitted document IDs to `status = pending` + org-owned, but not `uploaded_by = auth()->id()`. Document IDs are sequential/guessable — another org member's still-pending upload could be swept into someone else's finalize batch, forcing it to complete and leaking its filename into that other user's batch notification. Needs `uploaded_by = auth()->id()` added to the filter.
+2. **`DocumentStatus` enum cast is never actually wired.** The Download bullet compares `$document->status === DocumentStatus::Completed`, which only works if `Document::casts()` maps `status` to `DocumentStatus::class`. Not stated anywhere yet — as written, that comparison silently fails (string vs enum instance).
+3. **No retry/backoff configured on `StoreDocumentJob`.** Without explicit `$tries`/backoff, retry behavior falls back to the worker's `--tries` flag — often effectively no automatic retry. Undercuts the async justification: a transient failure (disk hiccup, future S3 network blip) would permanently mark a document `failed` on the first attempt instead of recovering.
+4. **Validation rule specificity.** Plan says "validates against `config('documents.*')`" without naming the rule — should explicitly be `mimes:` (content-sniffed via fileinfo), not `extensions:` alone, so a renamed file can't slip past on extension matching.
+5. **No rate-limiting on the upload routes.** The file-count cap protects against one giant drop, not repeated scripted batches back-to-back. Lower priority given the trusted-user context, but currently unstated rather than a conscious omission.
+6. **Unbounded total storage per org.** Per-file size and per-batch count are both capped; cumulative storage across all of an org's documents over time is not. Possibly fine to leave given the "don't build for hypothetical need" philosophy applied elsewhere — flagged so it's a deliberate call, not an oversight.
+
 ---
