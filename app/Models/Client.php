@@ -10,8 +10,10 @@ use App\Enums\Gender;
 use App\Enums\LeadSource;
 use App\Models\Concerns\BelongsToCurrentOrganization;
 use App\Models\Concerns\Filterable;
+use App\Models\Concerns\HasDocuments;
 use App\Models\Concerns\HasSlug;
 use App\Models\Concerns\Sortable;
+use App\Models\Contracts\Documentable;
 use Carbon\CarbonImmutable;
 use Database\Factories\ClientFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -59,10 +61,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'country_id', 'state_id', 'city', 'emergency_contact_name', 'emergency_contact_relationship',
     'emergency_contact_phone', 'enrollment_date', 'lead_source', 'status', 'created_by', 'updated_by',
 ])]
-final class Client extends Model
+final class Client extends Model implements Documentable
 {
     /** @use HasFactory<ClientFactory> */
-    use BelongsToCurrentOrganization, Filterable, HasFactory, HasSlug, SoftDeletes, Sortable;
+    use BelongsToCurrentOrganization, Filterable, HasDocuments, HasFactory, HasSlug, SoftDeletes, Sortable;
 
     protected function casts(): array
     {
