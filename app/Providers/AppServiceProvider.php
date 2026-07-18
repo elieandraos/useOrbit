@@ -7,6 +7,7 @@ namespace App\Providers;
 use App\Models\Client;
 use App\Policies\ClientPolicy;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -31,11 +32,19 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         $this->registerPolicies();
+        $this->registerMorphMap();
     }
 
     protected function registerPolicies(): void
     {
         Gate::policy(Client::class, ClientPolicy::class);
+    }
+
+    protected function registerMorphMap(): void
+    {
+        Relation::enforceMorphMap([
+            'clients' => Client::class,
+        ]);
     }
 
     /**
