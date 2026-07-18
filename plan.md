@@ -114,4 +114,44 @@ Flagged in review, not yet folded into the sections above:
 1. **No rate-limiting on the upload routes.** The file-count cap protects against one giant drop, not repeated scripted batches back-to-back. Lower priority given the trusted-user context, but currently unstated rather than a conscious omission.
 2. **Unbounded total storage per org.** Per-file size and per-batch count are both capped; cumulative storage across all of an org's documents over time is not. Possibly fine to leave given the "don't build for hypothetical need" philosophy applied elsewhere — flagged so it's a deliberate call, not an oversight.
 
+### Implementation plan: milestones & GitHub issues
+
+Two milestones — **Document Uploads**, then **Notifications** — sequenced so Milestone 1 ships end-to-end before Milestone 2 layers broadcasting on top. Not yet created; reviewing this breakdown before turning it into actual GitHub milestones/issues.
+
+**Milestone 1 — Document Uploads**
+
+Phase A — Foundation (scaffolding, no TDD needed):
+1. `documents` migration + `job_batches` migration + `config/documents.php` + morph map registration.
+2. `Document` model + `DocumentStatus` enum + `Documentable` interface + `DocumentFactory`.
+
+Phase B — Backend vertical slices (test written before implementation, one slice at a time):
+
+3. Phase 1 upload: `UploadDocumentRequest` + `UploadDocumentAction` (staging) — `UploadDocumentActionTest` first.
+4. Phase 2 finalize: `DocumentsUploadBatchController` + `Bus::batch()` wiring — `DocumentsUploadBatchControllerTest` first.
+5. `StoreDocumentJob` (move + claim/lock + idempotent retry) — `StoreDocumentJobTest` first; the trickiest slice given the concurrency/retry hardening above.
+6. `DocumentPolicy` + `DocumentsDestroyController` (delete, pending-guard) — `DocumentPolicyTest` first.
+7. `DocumentsDownloadController` (local stream + S3 redirect) — `DownloadTest` first.
+8. `documents:prune-stale` command — `PruneStaleDocumentsCommandTest` first.
+9. `ClientDocumentsController@index` (listing) — `IndexTest` first.
+
+Phase C — Frontend primitives (reusable, built against the working backend, no page assembly yet):
+
+10. `ClientDetailShell.vue` extraction (refactor `Clients/Show.vue`'s shell out, no behavior change).
+11. `DocumentUploadDropzone.vue` (idle/hover/reject states, config-driven size/mime).
+12. `DocumentRow.vue` (uploading/pending/failed/completed states + status badge).
+13. `DeleteDocumentModal.vue`.
+
+Phase D — Frontend wiring:
+
+14. `Documents.vue` page: dropzone + list + search, phase-1/phase-2 request orchestration, wired into the tab. Ships with **manual refresh** for `pending` → `completed`/`failed` status updates (reload the tab to see the result) — no Echo listener yet, that arrives with Milestone 2.
+
+**Milestone 2 — Notifications**
+
+15. `notifications` table + `DocumentsUploadBatchProcessed` notification class, fired from the batch's `->finally()`.
+16. Reverb scaffold (`install:broadcasting`, `routes/channels.php` private channel auth).
+17. `useNotifications.ts` composable (primitive).
+18. Echo listener wiring (app boot, persistent across navigations) — this is also what upgrades the Documents tab from manual-refresh to live status updates (primitive).
+19. Bell component in `AppTopNav.vue` (primitive).
+20. `Notifications/Index.vue` full page (wiring).
+
 ---
