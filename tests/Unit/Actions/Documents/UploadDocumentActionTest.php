@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Storage;
 test('stashes the file to the local staging disk', function () {
     Storage::fake('local');
     $user = User::factory()->withOrganization()->create();
-    $client = Client::factory()->create(['organization_id' => $user->current_organization_id]);
+    $client = Client::factory()->forOrganization($user)->create();
     $file = UploadedFile::fake()->create('report.pdf', 100, 'application/pdf');
 
     /** @noinspection PhpUnhandledExceptionInspection */
@@ -25,7 +25,7 @@ test('stashes the file to the local staging disk', function () {
 test('creates a pending document row', function () {
     Storage::fake('local');
     $user = User::factory()->withOrganization()->create();
-    $client = Client::factory()->create(['organization_id' => $user->current_organization_id]);
+    $client = Client::factory()->forOrganization($user)->create();
     $file = UploadedFile::fake()->create('report.pdf', 100, 'application/pdf');
 
     /** @noinspection PhpUnhandledExceptionInspection */
@@ -38,7 +38,7 @@ test('creates a pending document row', function () {
 test('scopes the document to the user current organization', function () {
     Storage::fake('local');
     $user = User::factory()->withOrganization()->create();
-    $client = Client::factory()->create(['organization_id' => $user->current_organization_id]);
+    $client = Client::factory()->forOrganization($user)->create();
     $file = UploadedFile::fake()->create('report.pdf', 100, 'application/pdf');
 
     /** @noinspection PhpUnhandledExceptionInspection */
@@ -50,7 +50,7 @@ test('scopes the document to the user current organization', function () {
 test('sets uploaded_by to the user id', function () {
     Storage::fake('local');
     $user = User::factory()->withOrganization()->create();
-    $client = Client::factory()->create(['organization_id' => $user->current_organization_id]);
+    $client = Client::factory()->forOrganization($user)->create();
     $file = UploadedFile::fake()->create('report.pdf', 100, 'application/pdf');
 
     /** @noinspection PhpUnhandledExceptionInspection */
@@ -62,7 +62,7 @@ test('sets uploaded_by to the user id', function () {
 test('associates the document with the given documentable', function () {
     Storage::fake('local');
     $user = User::factory()->withOrganization()->create();
-    $client = Client::factory()->create(['organization_id' => $user->current_organization_id]);
+    $client = Client::factory()->forOrganization($user)->create();
     $file = UploadedFile::fake()->create('report.pdf', 100, 'application/pdf');
 
     /** @noinspection PhpUnhandledExceptionInspection */
@@ -75,7 +75,7 @@ test('associates the document with the given documentable', function () {
 test('keeps the original filename separate from the staging path', function () {
     Storage::fake('local');
     $user = User::factory()->withOrganization()->create();
-    $client = Client::factory()->create(['organization_id' => $user->current_organization_id]);
+    $client = Client::factory()->forOrganization($user)->create();
     $file = UploadedFile::fake()->create('report.pdf', 100, 'application/pdf');
 
     /** @noinspection PhpUnhandledExceptionInspection */
@@ -88,7 +88,7 @@ test('keeps the original filename separate from the staging path', function () {
 test('records the mime type and size', function () {
     Storage::fake('local');
     $user = User::factory()->withOrganization()->create();
-    $client = Client::factory()->create(['organization_id' => $user->current_organization_id]);
+    $client = Client::factory()->forOrganization($user)->create();
     $file = UploadedFile::fake()->create('report.pdf', 100, 'application/pdf');
 
     /** @noinspection PhpUnhandledExceptionInspection */

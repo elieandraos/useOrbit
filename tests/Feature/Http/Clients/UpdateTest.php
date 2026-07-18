@@ -31,8 +31,7 @@ test('guests are redirected to the login page', function () {
 test('edit page renders with client data', function () {
     $user = User::factory()->withOrganization()->create();
     $editor = User::factory()->withOrganization()->create();
-    $client = Client::factory()->create([
-        'organization_id' => $user->current_organization_id,
+    $client = Client::factory()->forOrganization($user)->create([
         'updated_by' => $editor->id,
     ]);
 
@@ -47,7 +46,7 @@ test('edit page renders with client data', function () {
 
 test('update returns validation errors when required fields are missing', function () {
     $user = User::factory()->withOrganization()->create();
-    $client = Client::factory()->create(['organization_id' => $user->current_organization_id]);
+    $client = Client::factory()->forOrganization($user)->create();
 
     $this->actingAs($user)
         ->patch(route('clients.update', $client))
@@ -56,8 +55,7 @@ test('update returns validation errors when required fields are missing', functi
 
 test('update succeeds without a status field and preserves the existing status', function () use ($validPayload) {
     $user = User::factory()->withOrganization()->create();
-    $client = Client::factory()->create([
-        'organization_id' => $user->current_organization_id,
+    $client = Client::factory()->forOrganization($user)->create([
         'status' => ClientStatus::Archived->value,
     ]);
 
@@ -72,7 +70,7 @@ test('update succeeds without a status field and preserves the existing status',
 
 test('update redirects to clients.show with toast on success', function () use ($validPayload) {
     $user = User::factory()->withOrganization()->create();
-    $client = Client::factory()->create(['organization_id' => $user->current_organization_id]);
+    $client = Client::factory()->forOrganization($user)->create();
 
     $this->actingAs($user)
         ->patch(route('clients.update', $client), $validPayload)
@@ -83,7 +81,7 @@ test('update redirects to clients.show with toast on success', function () use (
 test('user gets 404 when updating a client from another organization', function () use ($validPayload) {
     $user = User::factory()->withOrganization()->create();
     $otherOrganization = Organization::factory()->create();
-    $client = Client::factory()->create(['organization_id' => $otherOrganization->id]);
+    $client = Client::factory()->for($otherOrganization)->create();
 
     $this->actingAs($user)
         ->patch(route('clients.update', $client), $validPayload)

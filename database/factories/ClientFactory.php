@@ -71,4 +71,11 @@ class ClientFactory extends Factory
             'status' => ClientStatus::Archived->value,
         ]);
     }
+
+    public function forOrganization(User $user): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'organization_id' => $user->current_organization_id,
+        ]);
+    }
 }

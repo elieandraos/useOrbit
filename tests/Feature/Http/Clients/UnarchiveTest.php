@@ -23,7 +23,7 @@ test('owner can unarchive a client from their organization', function () {
         'role' => OrganizationRole::Owner->value,
         'status' => OrganizationMemberStatus::Active->value,
     ]);
-    $client = Client::factory()->archived()->create(['organization_id' => $organization->id]);
+    $client = Client::factory()->forOrganization($owner)->archived()->create();
 
     $this->actingAs($owner)
         ->patch(route('clients.unarchive', $client))
@@ -37,7 +37,7 @@ test('owner can unarchive a client from their organization', function () {
 
 test('non-owner member is forbidden from unarchiving a client', function () {
     $user = User::factory()->withOrganization()->create();
-    $client = Client::factory()->archived()->create(['organization_id' => $user->current_organization_id]);
+    $client = Client::factory()->forOrganization($user)->archived()->create();
 
     $this->actingAs($user)
         ->patch(route('clients.unarchive', $client))

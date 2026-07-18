@@ -22,7 +22,7 @@ test('owner can soft delete a client from their organization', function () {
         'role' => OrganizationRole::Owner->value,
         'status' => OrganizationMemberStatus::Active->value,
     ]);
-    $client = Client::factory()->create(['organization_id' => $organization->id]);
+    $client = Client::factory()->forOrganization($owner)->create();
 
     $this->actingAs($owner)
         ->delete(route('clients.destroy', $client))
@@ -34,7 +34,7 @@ test('owner can soft delete a client from their organization', function () {
 
 test('non-owner member is forbidden from deleting a client', function () {
     $user = User::factory()->withOrganization()->create();
-    $client = Client::factory()->create(['organization_id' => $user->current_organization_id]);
+    $client = Client::factory()->forOrganization($user)->create();
 
     $this->actingAs($user)
         ->delete(route('clients.destroy', $client))

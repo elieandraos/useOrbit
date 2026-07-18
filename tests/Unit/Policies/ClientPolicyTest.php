@@ -22,7 +22,7 @@ function makeUserInOrg(Organization $organization, OrganizationRole $role): User
 test('owner can viewAny, view, create, update, delete, archive, and unarchive clients in their organization', function () {
     $organization = Organization::factory()->create();
     $owner = makeUserInOrg($organization, OrganizationRole::Owner);
-    $client = Client::factory()->create(['organization_id' => $organization->id]);
+    $client = Client::factory()->forOrganization($owner)->create();
 
     expect($owner->can('viewAny', Client::class))->toBeTrue()
         ->and($owner->can('view', $client))->toBeTrue()
@@ -36,7 +36,7 @@ test('owner can viewAny, view, create, update, delete, archive, and unarchive cl
 test('member can viewAny, view, create, and update clients but cannot delete, archive, or unarchive', function () {
     $organization = Organization::factory()->create();
     $member = makeUserInOrg($organization, OrganizationRole::Member);
-    $client = Client::factory()->create(['organization_id' => $organization->id]);
+    $client = Client::factory()->forOrganization($member)->create();
 
     expect($member->can('viewAny', Client::class))->toBeTrue()
         ->and($member->can('view', $client))->toBeTrue()
@@ -51,7 +51,7 @@ test('owner cannot perform any action on a client from a different organization'
     $organization = Organization::factory()->create();
     $otherOrganization = Organization::factory()->create();
     $owner = makeUserInOrg($organization, OrganizationRole::Owner);
-    $client = Client::factory()->create(['organization_id' => $otherOrganization->id]);
+    $client = Client::factory()->for($otherOrganization)->create();
 
     expect($owner->can('view', $client))->toBeFalse()
         ->and($owner->can('update', $client))->toBeFalse()
@@ -64,7 +64,7 @@ test('member cannot perform any action on a client from a different organization
     $organization = Organization::factory()->create();
     $otherOrganization = Organization::factory()->create();
     $member = makeUserInOrg($organization, OrganizationRole::Member);
-    $client = Client::factory()->create(['organization_id' => $otherOrganization->id]);
+    $client = Client::factory()->for($otherOrganization)->create();
 
     expect($member->can('view', $client))->toBeFalse()
         ->and($member->can('update', $client))->toBeFalse()
