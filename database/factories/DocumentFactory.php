@@ -59,4 +59,18 @@ class DocumentFactory extends Factory
             'error_message' => 'Unable to store the file.',
         ]);
     }
+
+    public function forOrganization(User $user): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'organization_id' => $user->current_organization_id,
+        ]);
+    }
+
+    public function uploadedBy(User $user): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'uploaded_by' => $user->id,
+        ]);
+    }
 }
