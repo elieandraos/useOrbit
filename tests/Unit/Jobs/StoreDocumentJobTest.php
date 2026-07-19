@@ -6,6 +6,7 @@ use App\Enums\DocumentStatus;
 use App\Jobs\StoreDocumentJob;
 use App\Models\Document;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -83,6 +84,39 @@ test('failed hook marks the document as failed with the exception message', func
     expect($fresh->status)->toBe(DocumentStatus::Failed)
         ->and($fresh->error_message)->toBe('Disk write failed.');
 });
+
+test('is a no-op when the batch has been cancelled', function () {
+    Storage::fake('local');
+    $user = User::factory()->withOrganization()->create();
+    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create([
+        'mime_type' => 'application/pdf',
+        'path' => 'documents-staging/'.Str::uuid(),
+    ]);
+    Storage::disk('local')->put($document->path, 'staged contents');
+
+    $job = new StoreDocumentJob($document);
+    /** @var StoreDocumentJob $job */
+    [$job] = $job->withFakeBatch(cancelledAt: CarbonImmutable::now());
+
+    $job->handle();
+
+    $fresh = $document->fresh();
+    expect($fresh->status)->toBe(DocumentStatus::Pending)
+        ->and($fresh->path)->toBe($document->path);
+    Storage::disk('local')->assertExists($document->path);
+});
+
+test('throws when the mime type has no allowed extension', function () {
+    Storage::fake('local');
+    $user = User::factory()->withOrganization()->create();
+    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create([
+        'mime_type' => 'application/zip',
+        'path' => 'documents-staging/'.Str::uuid(),
+    ]);
+    Storage::disk('local')->put($document->path, 'staged contents');
+
+    new StoreDocumentJob($document)->handle();
+})->throws(RuntimeException::class, 'has no validated extension for mime type [application/zip].');
 
 test('retries up to three times with an exponential backoff schedule', function () {
     $job = new StoreDocumentJob(Document::factory()->make());
