@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified', 'organization'])->group(function () {
     Route::get('clients/{client:slug}/documents', [ClientDocumentsController::class, 'index'])->name('clients.documents.index');
+    Route::post('clients/{client:slug}/documents', [ClientDocumentsController::class, 'store'])->name('clients.documents.store');
 });
 
 Route::middleware(['auth', 'verified', 'organization'])->prefix('documents')->name('documents.')->group(function () {

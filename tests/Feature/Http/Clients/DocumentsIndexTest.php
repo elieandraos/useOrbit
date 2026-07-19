@@ -28,9 +28,9 @@ test('authenticated user can list a client documents', function () {
         ->get(route('clients.documents.index', $client))
         ->assertOk()
         ->assertHasResource('client', ClientResource::make($client))
-        ->assertHasPaginatedResource(
+        ->assertHasResource(
             'documents',
-            DocumentResource::collection($client->documents()->with('uploadedBy')->latest()->paginate(10))
+            DocumentResource::collection($client->documents()->with('uploadedBy')->latest()->get())
         );
 });
 
@@ -51,7 +51,7 @@ test('documents from another client are not included', function () {
     $this->actingAs($user)
         ->get(route('clients.documents.index', $client))
         ->assertOk()
-        ->assertInertia(fn ($page) => $page->has('documents.data', 2));
+        ->assertInertia(fn ($page) => $page->has('documents', 2));
 });
 
 test('authenticated user gets 404 for a client from another organization', function () {
@@ -63,4 +63,18 @@ test('authenticated user gets 404 for a client from another organization', funct
     $this->actingAs($user)
         ->get(route('clients.documents.index', $client))
         ->assertNotFound();
+});
+
+test('shares the document upload config for the dropzone', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create();
+
+    $this->actingAs($user)
+        ->get(route('clients.documents.index', $client))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('uploadConfig.max_size_bytes', config('documents.max_size'))
+            ->where('uploadConfig.max_files_per_batch', config('documents.max_files_per_batch'))
+            ->has('uploadConfig.allowed_extensions', count(config('documents.allowed_mimes')))
+        );
 });
