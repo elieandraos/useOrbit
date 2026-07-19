@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use App\Http\Controllers\ClientsArchiveController;
-use App\Http\Controllers\ClientsController;
-use App\Http\Controllers\ClientsExcelExportController;
-use App\Http\Controllers\ClientsPdfExportController;
-use App\Http\Controllers\ClientsUnarchiveController;
+use App\Http\Controllers\Clients\ClientsArchiveController;
+use App\Http\Controllers\Clients\ClientsController;
+use App\Http\Controllers\Clients\ClientsExcelExportController;
+use App\Http\Controllers\Clients\ClientsPdfExportController;
+use App\Http\Controllers\Clients\ClientsUnarchiveController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified', 'organization'])->group(function () {

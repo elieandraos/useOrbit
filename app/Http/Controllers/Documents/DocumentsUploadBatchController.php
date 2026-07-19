@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Documents;
 
 use App\Actions\Documents\FinalizeDocumentsUploadBatchAction;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Documents\DocumentsUploadBatchRequest;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
