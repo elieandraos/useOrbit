@@ -2,26 +2,14 @@
 
 declare(strict_types=1);
 
-use App\Enums\OrganizationMemberStatus;
 use App\Enums\OrganizationRole;
 use App\Models\Client;
 use App\Models\Organization;
 use App\Models\User;
 
-function makeUserInOrg(Organization $organization, OrganizationRole $role): User
-{
-    $user = User::factory()->create(['current_organization_id' => $organization->id]);
-    $user->organizations()->attach($organization, [
-        'role' => $role->value,
-        'status' => OrganizationMemberStatus::Active->value,
-    ]);
-
-    return $user;
-}
-
 test('owner can viewAny, view, create, update, delete, archive, and unarchive clients in their organization', function () {
     $organization = Organization::factory()->create();
-    $owner = makeUserInOrg($organization, OrganizationRole::Owner);
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
     $client = Client::factory()->forOrganization($owner)->create();
 
     expect($owner->can('viewAny', Client::class))->toBeTrue()
@@ -35,7 +23,7 @@ test('owner can viewAny, view, create, update, delete, archive, and unarchive cl
 
 test('member can viewAny, view, create, and update clients but cannot delete, archive, or unarchive', function () {
     $organization = Organization::factory()->create();
-    $member = makeUserInOrg($organization, OrganizationRole::Member);
+    $member = User::factory()->forOrganization($organization)->create();
     $client = Client::factory()->forOrganization($member)->create();
 
     expect($member->can('viewAny', Client::class))->toBeTrue()
@@ -50,7 +38,7 @@ test('member can viewAny, view, create, and update clients but cannot delete, ar
 test('owner cannot perform any action on a client from a different organization', function () {
     $organization = Organization::factory()->create();
     $otherOrganization = Organization::factory()->create();
-    $owner = makeUserInOrg($organization, OrganizationRole::Owner);
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
     $client = Client::factory()->for($otherOrganization)->create();
 
     expect($owner->can('view', $client))->toBeFalse()
@@ -63,7 +51,7 @@ test('owner cannot perform any action on a client from a different organization'
 test('member cannot perform any action on a client from a different organization', function () {
     $organization = Organization::factory()->create();
     $otherOrganization = Organization::factory()->create();
-    $member = makeUserInOrg($organization, OrganizationRole::Member);
+    $member = User::factory()->forOrganization($organization)->create();
     $client = Client::factory()->for($otherOrganization)->create();
 
     expect($member->can('view', $client))->toBeFalse()
