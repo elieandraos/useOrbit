@@ -1,0 +1,78 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Enums\DocumentStatus;
+use App\Enums\OrganizationRole;
+use App\Models\Client;
+use App\Models\Document;
+use App\Models\Organization;
+
+test('user with a current organization can viewAny, view, and create documents for a documentable', function () {
+    $organization = Organization::factory()->create();
+    $user = makeUserInOrg($organization, OrganizationRole::Member);
+    $client = Client::factory()->for($organization)->create();
+    $document = Document::factory()->create(['organization_id' => $organization->id]);
+
+    expect($user->can('viewAny', [Document::class, $client]))->toBeTrue()
+        ->and($user->can('view', $document))->toBeTrue()
+        ->and($user->can('create', [Document::class, $client]))->toBeTrue();
+});
+
+test('owner can delete a completed document uploaded by another member of their organization', function () {
+    $organization = Organization::factory()->create();
+    $owner = makeUserInOrg($organization, OrganizationRole::Owner);
+    $member = makeUserInOrg($organization, OrganizationRole::Member);
+    $document = Document::factory()->completed()->create([
+        'organization_id' => $organization->id,
+        'uploaded_by' => $member->id,
+    ]);
+
+    expect($owner->can('delete', $document))->toBeTrue();
+});
+
+test('member can delete their own completed document', function () {
+    $organization = Organization::factory()->create();
+    $member = makeUserInOrg($organization, OrganizationRole::Member);
+    $document = Document::factory()->completed()->create([
+        'organization_id' => $organization->id,
+        'uploaded_by' => $member->id,
+    ]);
+
+    expect($member->can('delete', $document))->toBeTrue();
+});
+
+test('member cannot delete a completed document uploaded by another member', function () {
+    $organization = Organization::factory()->create();
+    $member = makeUserInOrg($organization, OrganizationRole::Member);
+    $otherMember = makeUserInOrg($organization, OrganizationRole::Member);
+    $document = Document::factory()->completed()->create([
+        'organization_id' => $organization->id,
+        'uploaded_by' => $otherMember->id,
+    ]);
+
+    expect($member->can('delete', $document))->toBeFalse();
+});
+
+test('delete is denied while the document is pending, even for the owner or the uploader', function () {
+    $organization = Organization::factory()->create();
+    $owner = makeUserInOrg($organization, OrganizationRole::Owner);
+    $uploader = makeUserInOrg($organization, OrganizationRole::Member);
+    $document = Document::factory()->create([
+        'organization_id' => $organization->id,
+        'uploaded_by' => $uploader->id,
+        'status' => DocumentStatus::Pending,
+    ]);
+
+    expect($owner->can('delete', $document))->toBeFalse()
+        ->and($uploader->can('delete', $document))->toBeFalse();
+});
+
+test('owner cannot delete a document from a different organization', function () {
+    $organization = Organization::factory()->create();
+    $otherOrganization = Organization::factory()->create();
+    $owner = makeUserInOrg($organization, OrganizationRole::Owner);
+    $document = Document::factory()->completed()->create(['organization_id' => $otherOrganization->id]);
+
+    expect($owner->can('delete', $document))->toBeFalse();
+});
