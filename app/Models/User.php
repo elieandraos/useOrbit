@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\OrganizationRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -48,6 +49,7 @@ final class User extends Authenticatable
     public function organizations(): BelongsToMany
     {
         return $this->belongsToMany(Organization::class)
+            ->using(OrganizationMember::class)
             ->withPivot('role', 'status')
             ->withTimestamps();
     }
@@ -62,7 +64,7 @@ final class User extends Authenticatable
         return $this->belongsTo(Country::class);
     }
 
-    public function organizationRole(): ?string
+    public function organizationRole(): ?OrganizationRole
     {
         if (! $this->current_organization_id) {
             return null;

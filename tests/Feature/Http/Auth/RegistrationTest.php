@@ -37,6 +37,6 @@ test('new users can register', function () {
 
     expect($organization)->not->toBeNull()
         ->and($user->current_organization_id)->toBe($organization->id)
-        ->and($pivot->role)->toBe(OrganizationRole::Owner->value)
+        ->and($pivot->role)->toBe(OrganizationRole::Owner)
         ->and($pivot->status)->toBe(OrganizationMemberStatus::Active->value);
 });

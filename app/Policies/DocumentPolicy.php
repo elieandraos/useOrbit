@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Policies;
 
 use App\Enums\DocumentStatus;
+use App\Enums\OrganizationRole;
 use App\Models\Contracts\Documentable;
 use App\Models\Document;
 use App\Models\User;
@@ -30,6 +31,6 @@ final class DocumentPolicy
     {
         return $document->organization_id === $user->current_organization_id
             && $document->status !== DocumentStatus::Pending
-            && ($user->organizationRole() === 'owner' || $document->uploaded_by === $user->id);
+            && ($user->organizationRole() === OrganizationRole::Owner || $document->uploaded_by === $user->id);
     }
 }
