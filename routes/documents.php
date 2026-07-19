@@ -2,10 +2,15 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Clients\ClientDocumentsController;
 use App\Http\Controllers\Documents\DocumentsDestroyController;
 use App\Http\Controllers\Documents\DocumentsDownloadController;
 use App\Http\Controllers\Documents\DocumentsUploadBatchController;
 use Illuminate\Support\Facades\Route;
+
+Route::middleware(['auth', 'verified', 'organization'])->group(function () {
+    Route::get('clients/{client:slug}/documents', [ClientDocumentsController::class, 'index'])->name('clients.documents.index');
+});
 
 Route::middleware(['auth', 'verified', 'organization'])->prefix('documents')->name('documents.')->group(function () {
     Route::post('batch', DocumentsUploadBatchController::class)->name('batch');
