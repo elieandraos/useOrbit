@@ -19,6 +19,18 @@ test('user with a current organization can viewAny, view, and create documents f
         ->and($user->can('create', [Document::class, $client]))->toBeTrue();
 });
 
+test('user cannot viewAny, view, or create documents for a documentable or document from a different organization', function () {
+    $organization = Organization::factory()->create();
+    $otherOrganization = Organization::factory()->create();
+    $user = makeUserInOrg($organization, OrganizationRole::Member);
+    $client = Client::factory()->for($otherOrganization)->create();
+    $document = Document::factory()->create(['organization_id' => $otherOrganization->id]);
+
+    expect($user->can('viewAny', [Document::class, $client]))->toBeFalse()
+        ->and($user->can('view', $document))->toBeFalse()
+        ->and($user->can('create', [Document::class, $client]))->toBeFalse();
+});
+
 test('owner can delete a completed document uploaded by another member of their organization', function () {
     $organization = Organization::factory()->create();
     $owner = makeUserInOrg($organization, OrganizationRole::Owner);

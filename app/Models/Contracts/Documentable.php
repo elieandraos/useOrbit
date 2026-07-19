@@ -6,6 +6,9 @@ namespace App\Models\Contracts;
 
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
+/**
+ * @property int $organization_id
+ */
 interface Documentable
 {
     public function documents(): MorphMany;
