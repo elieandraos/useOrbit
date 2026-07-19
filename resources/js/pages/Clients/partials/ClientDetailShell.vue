@@ -2,6 +2,7 @@
 import { Head, setLayoutProps } from '@inertiajs/vue3';
 import { Tab, Tabs } from '@/components/ui/tabs';
 import { index as clientsIndex, show as clientsShow } from '@/routes/clients';
+import { index as clientsDocumentsIndex } from '@/routes/clients/documents';
 import type { ClientResource } from './client';
 import ClientShowHeader from './ClientShowHeader.vue';
 
@@ -36,7 +37,7 @@ setLayoutProps({
             <Tabs class="min-w-max">
                 <Tab :href="clientsShow(client.slug)">Overview</Tab>
                 <Tab href="#">Policies</Tab>
-                <Tab href="#">Documents</Tab>
+                <Tab :href="clientsDocumentsIndex(client.slug)">Documents</Tab>
                 <Tab href="#">Notes</Tab>
             </Tabs>
         </div>
