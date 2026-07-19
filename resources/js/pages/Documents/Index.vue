@@ -1,0 +1,175 @@
+<script setup lang="ts">
+import { Head, router, useHttp } from '@inertiajs/vue3';
+import { SearchIcon } from '@lucide/vue';
+import { computed, ref } from 'vue';
+import {
+    Card,
+    CardAction,
+    CardContent,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import Input from '@/components/ui/input/Input.vue';
+import { store as storeDocument } from '@/routes/clients/documents';
+import { batch as finalizeBatch } from '@/routes/documents';
+import type { ClientResource } from '../Clients/partials/client';
+import ClientDetailShell from '../Clients/partials/ClientDetailShell.vue';
+import DeleteDocumentModal from './partials/DeleteDocumentModal.vue';
+import type {
+    DocumentListItem,
+    DocumentResource,
+    DocumentRowItem,
+    DocumentUploadConfig,
+    UploadRowItem,
+} from './partials/document';
+import DocumentList from './partials/DocumentList.vue';
+import DocumentUploadDropzone from './partials/DocumentUploadDropzone.vue';
+
+const props = defineProps<{
+    client: ClientResource;
+    documents: DocumentResource[];
+    uploadConfig: DocumentUploadConfig;
+}>();
+
+const policiesCount = 0;
+
+const search = ref('');
+const searched = computed(() => search.value.trim().length > 0);
+
+const filteredDocuments = computed<DocumentRowItem[]>(() => {
+    const query = search.value.trim().toLowerCase();
+    const documents = props.documents.map(
+        (document): DocumentRowItem => ({ kind: 'document', ...document }),
+    );
+
+    if (!query) {
+        return documents;
+    }
+
+    return documents.filter((document) =>
+        document.original_filename.toLowerCase().includes(query),
+    );
+});
+
+const uploads = ref<UploadRowItem[]>([]);
+const uploadHandles = new Map<
+    string,
+    ReturnType<typeof useHttp<{ file: File | null }, DocumentResource>>
+>();
+
+const listItems = computed<DocumentListItem[]>(() => [
+    ...uploads.value,
+    ...filteredDocuments.value,
+]);
+
+const documentToDelete = ref<DocumentRowItem | null>(null);
+
+function stageFile(item: UploadRowItem, file: File): Promise<number | null> {
+    return new Promise((resolve) => {
+        const http = useHttp<{ file: File | null }, DocumentResource>({
+            file: null,
+        });
+        http.file = file;
+        uploadHandles.set(item.id, http);
+
+        http.post(storeDocument(props.client.slug).url, {
+            onProgress: (progress) => {
+                item.progress = progress?.percentage ?? item.progress;
+            },
+            onSuccess: (response) => {
+                removeUpload(item.id);
+                resolve(response.id);
+            },
+            onError: (errors) => {
+                item.status = 'error';
+                item.errorMessage =
+                    Object.values(errors)[0] ?? 'Upload failed.';
+                resolve(null);
+            },
+            onCancel: () => {
+                removeUpload(item.id);
+                resolve(null);
+            },
+            onFinish: () => {
+                uploadHandles.delete(item.id);
+            },
+        });
+    });
+}
+
+async function handleFiles(files: File[]): Promise<void> {
+    const items: UploadRowItem[] = files.map((file) => ({
+        kind: 'upload',
+        id: crypto.randomUUID(),
+        name: file.name,
+        progress: 0,
+        status: 'uploading',
+    }));
+
+    uploads.value.push(...items);
+
+    const results = await Promise.allSettled(
+        items.map((item, index) => stageFile(item, files[index])),
+    );
+
+    const stagedIds = results
+        .filter((result) => result.status === 'fulfilled')
+        .map((result) => result.value)
+        .filter((id): id is number => id !== null);
+
+    if (stagedIds.length > 0) {
+        router.post(
+            finalizeBatch().url,
+            { document_ids: stagedIds },
+            { preserveScroll: true },
+        );
+    }
+}
+
+function removeUpload(id: string): void {
+    uploads.value = uploads.value.filter((upload) => upload.id !== id);
+}
+
+function cancelUpload(id: string): void {
+    uploadHandles.get(id)?.cancel();
+}
+</script>
+
+<template>
+    <ClientDetailShell :client="client" :policies-count="policiesCount">
+        <Head :title="`${client.full_name} · Documents`" />
+
+        <Card class="mt-6">
+            <CardHeader bordered>
+                <CardTitle>Documents · {{ documents.length }}</CardTitle>
+                <CardAction>
+                    <Input
+                        v-model="search"
+                        size="sm"
+                        placeholder="Search documents…"
+                        class="w-60"
+                    >
+                        <template #leading><SearchIcon /></template>
+                    </Input>
+                </CardAction>
+            </CardHeader>
+
+            <DocumentUploadDropzone
+                :config="uploadConfig"
+                @files="handleFiles"
+            />
+
+            <CardContent class="p-0">
+                <DocumentList
+                    :items="listItems"
+                    :searched="searched"
+                    @cancel="cancelUpload"
+                    @dismiss="removeUpload"
+                    @delete="documentToDelete = $event"
+                />
+            </CardContent>
+        </Card>
+
+        <DeleteDocumentModal v-model="documentToDelete" />
+    </ClientDetailShell>
+</template>

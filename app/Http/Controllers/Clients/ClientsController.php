@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Clients;
 
 use App\Actions\Clients\CreateClientAction;
 use App\Actions\Clients\UpdateClientAction;
@@ -10,6 +10,7 @@ use App\Enums\EmergencyContactRelationship;
 use App\Enums\Gender;
 use App\Enums\LeadSource;
 use App\Filters\ClientFilter;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Clients\IndexClientRequest;
 use App\Http\Requests\Clients\StoreClientRequest;
 use App\Http\Requests\Clients\UpdateClientRequest;

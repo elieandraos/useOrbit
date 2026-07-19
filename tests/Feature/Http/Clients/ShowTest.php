@@ -16,7 +16,7 @@ test('guests are redirected to the login page', function () {
 
 test('authenticated user can view a client from their organization', function () {
     $user = User::factory()->withOrganization()->create();
-    $client = Client::factory()->create(['organization_id' => $user->current_organization_id]);
+    $client = Client::factory()->forOrganization($user)->create();
 
     $this->actingAs($user)
         ->get(route('clients.show', $client))
@@ -28,7 +28,7 @@ test('authenticated user gets 404 for a client from another organization', funct
     $user = User::factory()->withOrganization()->create();
 
     $otherOrganization = Organization::factory()->create();
-    $client = Client::factory()->create(['organization_id' => $otherOrganization->id]);
+    $client = Client::factory()->for($otherOrganization)->create();
 
     $this->actingAs($user)
         ->get(route('clients.show', $client))
@@ -37,7 +37,7 @@ test('authenticated user gets 404 for a client from another organization', funct
 
 test('an archived client can still be shown', function () {
     $user = User::factory()->withOrganization()->create();
-    $client = Client::factory()->archived()->create(['organization_id' => $user->current_organization_id]);
+    $client = Client::factory()->forOrganization($user)->archived()->create();
 
     $this->actingAs($user)
         ->get(route('clients.show', $client))

@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Models\Client;
+use App\Models\Document;
 use App\Policies\ClientPolicy;
+use App\Policies\DocumentPolicy;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -31,11 +34,20 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         $this->registerPolicies();
+        $this->registerMorphMap();
     }
 
     protected function registerPolicies(): void
     {
         Gate::policy(Client::class, ClientPolicy::class);
+        Gate::policy(Document::class, DocumentPolicy::class);
+    }
+
+    protected function registerMorphMap(): void
+    {
+        Relation::enforceMorphMap([
+            'clients' => Client::class,
+        ]);
     }
 
     /**

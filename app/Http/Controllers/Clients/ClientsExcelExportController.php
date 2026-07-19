@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Clients;
 
 use App\Actions\Clients\ExportClientsToExcelAction;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Clients\IndexClientRequest;
 use App\Models\Client;
 use Illuminate\Routing\Attributes\Controllers\Authorize;

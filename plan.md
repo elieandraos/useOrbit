@@ -46,7 +46,7 @@ Schema::create('documents', function (Blueprint $table) {
     $table->string('disk', 50)->default('local');
     $table->string('path', 500);
     $table->string('mime_type', 100);
-    $table->unsignedBigInteger('size'); // bytes
+    $table->unsignedBigInteger('size_in_bytes');
     $table->string('status', 20)->default('pending'); // pending|completed|failed
     $table->timestamp('stored_at')->nullable();
     $table->text('error_message')->nullable();

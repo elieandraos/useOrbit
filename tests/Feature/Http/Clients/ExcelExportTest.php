@@ -17,7 +17,7 @@ test('authenticated user can download the clients export', function () {
     Excel::fake();
 
     $user = User::factory()->withOrganization()->create();
-    Client::factory(2)->create(['organization_id' => $user->current_organization_id]);
+    Client::factory(2)->forOrganization($user)->create();
 
     $this->actingAs($user)
         ->get(route('clients.export'))
@@ -32,10 +32,10 @@ test('the export only includes the current organization clients', function () {
     $user = User::factory()->withOrganization()->create();
 
     /** @var Client $ownClient */
-    $ownClient = Client::factory()->create(['organization_id' => $user->current_organization_id]);
+    $ownClient = Client::factory()->forOrganization($user)->create();
 
     $otherOrganization = Organization::factory()->create();
-    Client::factory()->create(['organization_id' => $otherOrganization->id]);
+    Client::factory()->for($otherOrganization)->create();
 
     $this->actingAs($user)
         ->get(route('clients.export'))
@@ -52,8 +52,8 @@ test('a filter query param narrows the exported rows to matching clients', funct
     $user = User::factory()->withOrganization()->create();
 
     /** @var Client $match */
-    $match = Client::factory()->create(['organization_id' => $user->current_organization_id, 'first_name' => 'Aline']);
-    Client::factory()->create(['organization_id' => $user->current_organization_id, 'first_name' => 'Karim']);
+    $match = Client::factory()->forOrganization($user)->create(['first_name' => 'Aline']);
+    Client::factory()->forOrganization($user)->create(['first_name' => 'Karim']);
 
     $this->actingAs($user)
         ->get(route('clients.export', ['search' => 'Aline']))
@@ -70,9 +70,9 @@ test('a sort query param reorders the exported rows', function () {
     $user = User::factory()->withOrganization()->create();
 
     /** @var Client $bravo */
-    $bravo = Client::factory()->create(['organization_id' => $user->current_organization_id, 'first_name' => 'Bravo']);
+    $bravo = Client::factory()->forOrganization($user)->create(['first_name' => 'Bravo']);
     /** @var Client $alpha */
-    $alpha = Client::factory()->create(['organization_id' => $user->current_organization_id, 'first_name' => 'Alpha']);
+    $alpha = Client::factory()->forOrganization($user)->create(['first_name' => 'Alpha']);
 
     $this->actingAs($user)
         ->get(route('clients.export', ['sort' => 'name', 'direction' => 'asc']))

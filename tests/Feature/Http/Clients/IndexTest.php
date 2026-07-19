@@ -15,7 +15,7 @@ test('guests are redirected to the login page', function () {
 
 test('authenticated user can list their organization clients', function () {
     $user = User::factory()->withOrganization()->create();
-    Client::factory(2)->create(['organization_id' => $user->current_organization_id]);
+    Client::factory(2)->forOrganization($user)->create();
 
     $this->assertDatabaseCount('clients', 2);
 
@@ -29,13 +29,13 @@ test('clients are ordered by enrollment date, newest first', function () {
     $user = User::factory()->withOrganization()->create();
 
     /** @var Client $oldest */
-    $oldest = Client::factory()->create(['organization_id' => $user->current_organization_id, 'enrollment_date' => '2023-01-01']);
+    $oldest = Client::factory()->forOrganization($user)->create(['enrollment_date' => '2023-01-01']);
 
     /** @var Client $newest */
-    $newest = Client::factory()->create(['organization_id' => $user->current_organization_id, 'enrollment_date' => '2024-06-01']);
+    $newest = Client::factory()->forOrganization($user)->create(['enrollment_date' => '2024-06-01']);
 
     /** @var Client $middle */
-    $middle = Client::factory()->create(['organization_id' => $user->current_organization_id, 'enrollment_date' => '2024-01-01']);
+    $middle = Client::factory()->forOrganization($user)->create(['enrollment_date' => '2024-01-01']);
 
     $this->actingAs($user)
         ->get(route('clients.index'))
@@ -49,10 +49,10 @@ test('clients are ordered by enrollment date, newest first', function () {
 
 test('clients from another organization are not included', function () {
     $user = User::factory()->withOrganization()->create();
-    Client::factory(2)->create(['organization_id' => $user->current_organization_id]);
+    Client::factory(2)->forOrganization($user)->create();
 
     $otherOrganization = Organization::factory()->create();
-    Client::factory(3)->create(['organization_id' => $otherOrganization->id]);
+    Client::factory(3)->for($otherOrganization)->create();
 
     $this->assertDatabaseCount('clients', 5);
 
@@ -71,8 +71,8 @@ test('a filter query param narrows the response to matching clients', function (
     $user = User::factory()->withOrganization()->create();
 
     /** @var Client $match */
-    $match = Client::factory()->create(['organization_id' => $user->current_organization_id, 'first_name' => 'Aline']);
-    Client::factory()->create(['organization_id' => $user->current_organization_id, 'first_name' => 'Karim']);
+    $match = Client::factory()->forOrganization($user)->create(['first_name' => 'Aline']);
+    Client::factory()->forOrganization($user)->create(['first_name' => 'Karim']);
 
     $this->actingAs($user)
         ->get(route('clients.index', ['search' => 'Aline']))
@@ -135,9 +135,9 @@ test('a sort query param reorders the clients and is echoed back to the page', f
     $user = User::factory()->withOrganization()->create();
 
     /** @var Client $bravo */
-    $bravo = Client::factory()->create(['organization_id' => $user->current_organization_id, 'first_name' => 'Bravo']);
+    $bravo = Client::factory()->forOrganization($user)->create(['first_name' => 'Bravo']);
     /** @var Client $alpha */
-    $alpha = Client::factory()->create(['organization_id' => $user->current_organization_id, 'first_name' => 'Alpha']);
+    $alpha = Client::factory()->forOrganization($user)->create(['first_name' => 'Alpha']);
 
     $this->actingAs($user)
         ->get(route('clients.index', ['sort' => 'name', 'direction' => 'asc']))
@@ -219,9 +219,9 @@ test('archived clients are excluded from the index by default', function () {
     $user = User::factory()->withOrganization()->create();
 
     /** @var Client $active */
-    $active = Client::factory()->create(['organization_id' => $user->current_organization_id]);
+    $active = Client::factory()->forOrganization($user)->create();
 
-    Client::factory()->archived()->create(['organization_id' => $user->current_organization_id]);
+    Client::factory()->forOrganization($user)->archived()->create();
 
     $this->actingAs($user)
         ->get(route('clients.index'))
@@ -235,10 +235,10 @@ test('archived clients are excluded from the index by default', function () {
 test('archived=1 returns only archived clients', function () {
     $user = User::factory()->withOrganization()->create();
 
-    Client::factory()->create(['organization_id' => $user->current_organization_id]);
+    Client::factory()->forOrganization($user)->create();
 
     /** @var Client $archived */
-    $archived = Client::factory()->archived()->create(['organization_id' => $user->current_organization_id]);
+    $archived = Client::factory()->forOrganization($user)->archived()->create();
 
     $this->actingAs($user)
         ->get(route('clients.index', ['archived' => 1]))

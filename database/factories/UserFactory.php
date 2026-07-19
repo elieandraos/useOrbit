@@ -41,16 +41,6 @@ class UserFactory extends Factory
     }
 
     /**
-     * Indicate that the model's email address should be unverified.
-     */
-    public function unverified(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
-        ]);
-    }
-
-    /**
      * Indicate that the user belongs to an active organization.
      */
     public function withOrganization(): static
@@ -59,6 +49,20 @@ class UserFactory extends Factory
             $organization = Organization::factory()->create();
             $user->organizations()->attach($organization, [
                 'role' => OrganizationRole::Member->value,
+                'status' => OrganizationMemberStatus::Active->value,
+            ]);
+            $user->update(['current_organization_id' => $organization->id]);
+        });
+    }
+
+    /**
+     * Indicate that the user is an active member of the given organization.
+     */
+    public function forOrganization(Organization $organization, OrganizationRole $role = OrganizationRole::Member): static
+    {
+        return $this->afterCreating(function (User $user) use ($organization, $role) {
+            $user->organizations()->attach($organization, [
+                'role' => $role->value,
                 'status' => OrganizationMemberStatus::Active->value,
             ]);
             $user->update(['current_organization_id' => $organization->id]);

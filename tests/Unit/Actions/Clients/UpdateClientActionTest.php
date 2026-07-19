@@ -23,7 +23,7 @@ $attributes = [
 test('updates the client fields in the database', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
     /** @var Client $client */
-    $client = Client::factory()->create(['organization_id' => $user->current_organization_id]);
+    $client = Client::factory()->forOrganization($user)->create();
 
     /** @noinspection PhpUnhandledExceptionInspection */
     app(UpdateClientAction::class)->handle($user, $client, $attributes);
@@ -38,7 +38,7 @@ test('updates the client fields in the database', function () use ($attributes) 
 test('sets updated_by to the user id', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
     /** @var Client $client */
-    $client = Client::factory()->create(['organization_id' => $user->current_organization_id]);
+    $client = Client::factory()->forOrganization($user)->create();
 
     /** @noinspection PhpUnhandledExceptionInspection */
     app(UpdateClientAction::class)->handle($user, $client, $attributes);
@@ -51,8 +51,7 @@ test('sets updated_by to the user id', function () use ($attributes) {
 test('regenerates slug when name changes', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
     /** @var Client $client */
-    $client = Client::factory()->create([
-        'organization_id' => $user->current_organization_id,
+    $client = Client::factory()->forOrganization($user)->create([
         'first_name' => 'John',
         'last_name' => 'Doe',
         'slug' => 'john-doe',
@@ -69,8 +68,7 @@ test('regenerates slug when name changes', function () use ($attributes) {
 test('keeps existing slug when name does not change', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
     /** @var Client $client */
-    $client = Client::factory()->create([
-        'organization_id' => $user->current_organization_id,
+    $client = Client::factory()->forOrganization($user)->create([
         'first_name' => 'Jane',
         'last_name' => 'Smith',
         'slug' => 'jane-smith',

@@ -17,7 +17,7 @@ test('authenticated user can export a client from their organization to pdf', fu
     $user = User::factory()->withOrganization()->create();
 
     /** @var Client $client */
-    $client = Client::factory()->create(['organization_id' => $user->current_organization_id]);
+    $client = Client::factory()->forOrganization($user)->create();
 
     $response = $this->actingAs($user)
         ->get(route('clients.export-pdf', $client))
@@ -32,7 +32,7 @@ test('authenticated user gets 404 for a client from another organization', funct
     $user = User::factory()->withOrganization()->create();
 
     $otherOrganization = Organization::factory()->create();
-    $client = Client::factory()->create(['organization_id' => $otherOrganization->id]);
+    $client = Client::factory()->for($otherOrganization)->create();
 
     $this->actingAs($user)
         ->get(route('clients.export-pdf', $client))

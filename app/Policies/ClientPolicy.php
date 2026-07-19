@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
+use App\Enums\OrganizationRole;
 use App\Models\Client;
 use App\Models\User;
 
@@ -32,18 +33,18 @@ final class ClientPolicy
     public function delete(User $user, Client $client): bool
     {
         return $client->organization_id === $user->current_organization_id
-            && $user->organizationRole() === 'owner';
+            && $user->organizationRole() === OrganizationRole::Owner;
     }
 
     public function archive(User $user, Client $client): bool
     {
         return $client->organization_id === $user->current_organization_id
-            && $user->organizationRole() === 'owner';
+            && $user->organizationRole() === OrganizationRole::Owner;
     }
 
     public function unarchive(User $user, Client $client): bool
     {
         return $client->organization_id === $user->current_organization_id
-            && $user->organizationRole() === 'owner';
+            && $user->organizationRole() === OrganizationRole::Owner;
     }
 }

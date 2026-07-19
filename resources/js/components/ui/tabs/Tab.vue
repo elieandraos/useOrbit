@@ -8,7 +8,7 @@ defineProps<{
     title?: string;
 }>();
 
-const { isCurrentOrParentUrl } = useCurrentUrl();
+const { isCurrentUrl } = useCurrentUrl();
 </script>
 
 <template>
@@ -16,7 +16,7 @@ const { isCurrentOrParentUrl } = useCurrentUrl();
         :href="href"
         class="border-b-2 px-3 py-2 text-sm font-medium transition-colors"
         :class="
-            isCurrentOrParentUrl(href)
+            isCurrentUrl(href)
                 ? 'border-accent text-accent'
                 : 'border-transparent text-secondary hover:text-primary'
         "
