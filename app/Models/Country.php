@@ -24,9 +24,4 @@ final class Country extends Model
     {
         return $this->hasMany(State::class);
     }
-
-    public function clients(): HasMany
-    {
-        return $this->hasMany(Client::class);
-    }
 }
