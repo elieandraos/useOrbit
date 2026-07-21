@@ -37,7 +37,13 @@ test('an unrecognized filter key is ignored', function () {
 test('search matches first name', function () {
     /** @var Client $match */
     $match = Client::factory()->create(['first_name' => 'Aline']);
-    Client::factory()->create(['first_name' => 'Karim']);
+    Client::factory()->create([
+        'first_name' => 'Karim',
+        'middle_name' => 'Nasser',
+        'last_name' => 'Saad',
+        'phone' => '+96170999999',
+        'email' => 'john@example.com',
+    ]);
 
     /** @noinspection PhpUndefinedMethodInspection */
     $clients = Client::query()->filter(new ClientFilter(['search' => 'Ali']))->get();
@@ -48,7 +54,13 @@ test('search matches first name', function () {
 test('search matches middle name', function () {
     /** @var Client $match */
     $match = Client::factory()->create(['middle_name' => 'Yusuf']);
-    Client::factory()->create(['middle_name' => 'Nasser']);
+    Client::factory()->create([
+        'first_name' => 'Karim',
+        'middle_name' => 'Nasser',
+        'last_name' => 'Saad',
+        'phone' => '+96170999999',
+        'email' => 'john@example.com',
+    ]);
 
     /** @noinspection PhpUndefinedMethodInspection */
     $clients = Client::query()->filter(new ClientFilter(['search' => 'Yusuf']))->get();
@@ -59,7 +71,13 @@ test('search matches middle name', function () {
 test('search matches last name', function () {
     /** @var Client $match */
     $match = Client::factory()->create(['last_name' => 'Haddad']);
-    Client::factory()->create(['last_name' => 'Saad']);
+    Client::factory()->create([
+        'first_name' => 'Karim',
+        'middle_name' => 'Nasser',
+        'last_name' => 'Saad',
+        'phone' => '+96170999999',
+        'email' => 'john@example.com',
+    ]);
 
     /** @noinspection PhpUndefinedMethodInspection */
     $clients = Client::query()->filter(new ClientFilter(['search' => 'Haddad']))->get();
@@ -70,7 +88,13 @@ test('search matches last name', function () {
 test('search matches phone', function () {
     /** @var Client $match */
     $match = Client::factory()->create(['phone' => '+96170123456']);
-    Client::factory()->create(['phone' => '+96170999999']);
+    Client::factory()->create([
+        'first_name' => 'Karim',
+        'middle_name' => 'Nasser',
+        'last_name' => 'Saad',
+        'phone' => '+96170999999',
+        'email' => 'john@example.com',
+    ]);
 
     /** @noinspection PhpUndefinedMethodInspection */
     $clients = Client::query()->filter(new ClientFilter(['search' => '70123456']))->get();
@@ -81,7 +105,13 @@ test('search matches phone', function () {
 test('search matches email', function () {
     /** @var Client $match */
     $match = Client::factory()->create(['email' => 'jane@example.com']);
-    Client::factory()->create(['email' => 'john@example.com']);
+    Client::factory()->create([
+        'first_name' => 'Karim',
+        'middle_name' => 'Nasser',
+        'last_name' => 'Saad',
+        'phone' => '+96170999999',
+        'email' => 'john@example.com',
+    ]);
 
     /** @noinspection PhpUndefinedMethodInspection */
     $clients = Client::query()->filter(new ClientFilter(['search' => 'jane@']))->get();
