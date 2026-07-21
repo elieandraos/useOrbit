@@ -36,10 +36,13 @@
     "dependencies": {
         "@inertiajs/vite": "^3.0.0",
         "@inertiajs/vue3": "^3.0.0",
+        "@laravel/echo-vue": "^2.4.0",
         "@lucide/vue": "^1.17.0",
         "@vueuse/core": "^12.8.2",
         "clsx": "^2.1.1",
+        "laravel-echo": "^2.4.0",
         "laravel-vite-plugin": "^3.0.0",
+        "pusher-js": "^8.5.0",
         "shiki": "^4.2.0",
         "tailwind-merge": "^3.2.0",
         "tailwindcss": "^4.1.1",
