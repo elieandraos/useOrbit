@@ -190,6 +190,10 @@ function stageFile(item: UploadRowItem, file: File): Promise<number | null> {
             onFinish: () => {
                 uploadHandles.delete(item.id);
             },
+        }).catch(() => {
+            // onCancel/onError already resolved this stageFile promise;
+            // useHttp rethrows after those callbacks, so swallow it here to
+            // avoid an unhandled promise rejection.
         });
     });
 }
