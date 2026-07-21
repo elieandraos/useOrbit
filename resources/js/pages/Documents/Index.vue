@@ -2,6 +2,7 @@
 import { Head, router, useHttp } from '@inertiajs/vue3';
 import { SearchIcon } from '@lucide/vue';
 import { computed, onMounted, reactive, ref, watch } from 'vue';
+import Badge from '@/components/ui/badge/Badge.vue';
 import {
     Card,
     CardAction,
@@ -139,6 +140,24 @@ const listItems = computed<DocumentListItem[]>(() => [
 
 const hasActiveUploads = computed(() => uploads.value.length > 0);
 
+// Documents settle into documentsById one-by-one as each upload finishes, so
+// documentsCount ticks up mid-batch. The header badge should instead hold at
+// its pre-batch value and jump straight to the final count once every file
+// in the batch has settled (succeeded or failed).
+const headerCount = ref(documentsCount.value);
+
+watch(documentsCount, (value) => {
+    if (!hasActiveUploads.value) {
+        headerCount.value = value;
+    }
+});
+
+watch(hasActiveUploads, (isActive, wasActive) => {
+    if (wasActive && !isActive) {
+        headerCount.value = documentsCount.value;
+    }
+});
+
 const documentToDelete = ref<DocumentRowItem | null>(null);
 
 function stageFile(item: UploadRowItem, file: File): Promise<number | null> {
@@ -221,7 +240,10 @@ function cancelUpload(id: string): void {
 
         <Card class="mt-6">
             <CardHeader bordered>
-                <CardTitle>Documents · {{ documentsCount }}</CardTitle>
+                <CardTitle>Documents</CardTitle>
+                <Badge v-if="headerCount > 0" tone="accent">{{
+                    headerCount
+                }}</Badge>
                 <CardAction>
                     <Input
                         v-model="search"
