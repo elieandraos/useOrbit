@@ -3,11 +3,14 @@ let activeClose: (() => void) | null = null;
 </script>
 
 <script setup lang="ts">
+import type { HTMLAttributes } from 'vue';
 import { onBeforeUnmount, onMounted, provide, ref } from 'vue';
+import { cn } from '@/lib/utils';
 
 withDefaults(
     defineProps<{
         align?: 'start' | 'end';
+        panelClass?: HTMLAttributes['class'];
     }>(),
     { align: 'end' },
 );
@@ -55,7 +58,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
         <div
             v-if="menuOpen"
             class="absolute top-[calc(100%+2px)] z-20 min-w-[220px] rounded-[10px] border border-border bg-surface p-1 shadow-lg"
-            :class="align === 'start' ? 'left-0' : 'right-0'"
+            :class="cn(align === 'start' ? 'left-0' : 'right-0', panelClass)"
         >
             <slot />
         </div>
