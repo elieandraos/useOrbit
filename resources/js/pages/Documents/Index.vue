@@ -139,6 +139,8 @@ const listItems = computed<DocumentListItem[]>(() => [
     ...filteredDocuments.value,
 ]);
 
+const hasActiveUploads = computed(() => uploads.value.length > 0);
+
 const documentToDelete = ref<DocumentRowItem | null>(null);
 
 function stageFile(item: UploadRowItem, file: File): Promise<number | null> {
@@ -243,6 +245,7 @@ function cancelUpload(id: string): void {
                 <DocumentList
                     :items="listItems"
                     :searched="searched"
+                    :has-active-uploads="hasActiveUploads"
                     @cancel="cancelUpload"
                     @dismiss="removeUpload"
                     @delete="documentToDelete = $event"

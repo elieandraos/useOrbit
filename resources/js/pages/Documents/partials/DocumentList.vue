@@ -6,6 +6,7 @@ import DocumentRow from './DocumentRow.vue';
 defineProps<{
     items: DocumentListItem[];
     searched: boolean;
+    hasActiveUploads: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -21,6 +22,7 @@ const emit = defineEmits<{
             v-for="item in items"
             :key="item.kind === 'upload' ? item.id : `document-${item.id}`"
             :item="item"
+            :has-active-uploads="hasActiveUploads"
             @cancel="emit('cancel', $event)"
             @dismiss="emit('dismiss', $event)"
             @delete="emit('delete', $event)"

@@ -7,6 +7,7 @@ import type { DocumentListItem, DocumentRowItem } from './document';
 
 const props = defineProps<{
     item: DocumentListItem;
+    hasActiveUploads?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -179,7 +180,12 @@ const kind = computed(() => fileKind(filename.value));
                 </template>
                 <template v-else>
                     {{ formatBytes(item.size_in_bytes) }} ·
-                    {{ item.uploaded_by_name }} · finalizing…
+                    {{ item.uploaded_by_name }} ·
+                    {{
+                        hasActiveUploads
+                            ? 'waiting for other uploads…'
+                            : 'finalizing…'
+                    }}
                 </template>
             </p>
         </div>
