@@ -10,6 +10,11 @@ export type UseNotificationsReturn = {
     fetchItems: () => void;
     markAsRead: (id: string) => void;
     markAllAsRead: () => void;
+    receiveNotification: (notification: {
+        id: string;
+        type: string;
+        data: Record<string, unknown>;
+    }) => void;
 };
 
 const state = reactive<{ items: NotificationItem[]; unreadCount: number }>({
@@ -89,11 +94,27 @@ export function useNotifications(): UseNotificationsReturn {
         });
     }
 
+    function receiveNotification(notification: {
+        id: string;
+        type: string;
+        data: Record<string, unknown>;
+    }): void {
+        state.items.unshift({
+            id: notification.id,
+            type: notification.type,
+            data: notification.data,
+            read_at: null,
+            created_at: new Date().toISOString(),
+        });
+        state.unreadCount += 1;
+    }
+
     return {
         items: state.items,
         unreadCount: computed(() => state.unreadCount),
         fetchItems,
         markAsRead,
         markAllAsRead,
+        receiveNotification,
     };
 }
