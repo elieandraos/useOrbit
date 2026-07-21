@@ -176,13 +176,15 @@ function stageFile(item: UploadRowItem, file: File): Promise<number | null> {
 }
 
 async function handleFiles(files: File[]): Promise<void> {
-    const items: UploadRowItem[] = files.map((file) => ({
-        kind: 'upload',
-        id: crypto.randomUUID(),
-        name: file.name,
-        progress: 0,
-        status: 'uploading',
-    }));
+    const items: UploadRowItem[] = files.map((file) =>
+        reactive<UploadRowItem>({
+            kind: 'upload',
+            id: crypto.randomUUID(),
+            name: file.name,
+            progress: 0,
+            status: 'uploading',
+        }),
+    );
 
     uploads.value.push(...items);
 
