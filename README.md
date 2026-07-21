@@ -22,7 +22,15 @@ This installs PHP dependencies, copies `.env.example` to `.env`, generates the a
 composer run dev
 ```
 
-Runs the app server, queue worker (`queue:listen`), log tailing (`pail`), and the Vite dev server concurrently.
+Runs the following concurrently:
+
+- `php artisan serve` — the app server
+- `php artisan queue:listen` — the queue worker
+- `php artisan pail` — log tailing
+- `npm run dev` — the Vite dev server
+- `php artisan reverb:start` — the Reverb WebSocket server, for broadcast notifications
+
+### Task Scheduler
 
 If you need the task scheduler running (e.g. to test scheduled commands like `documents:prune-stale`), start it separately — it's not included in `composer run dev`:
 
@@ -34,4 +42,10 @@ php artisan schedule:work
 
 ```bash
 php artisan test --compact
+```
+
+With coverage:
+
+```bash
+php artisan test --compact --coverage
 ```
