@@ -47,6 +47,9 @@ final class HandleInertiaRequests extends Middleware
                     'avatar' => $request->user()->avatar,
                 ] : null,
             ],
+            'notifications' => [
+                'unreadCount' => fn (): int => $request->user()?->unreadNotifications()->count() ?? 0,
+            ],
         ];
     }
 }
