@@ -2,7 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Models\User;
+use App\Notifications\DocumentsUploadBatchProcessed;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /*
@@ -49,4 +53,16 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+function createNotificationFor(User $user, bool $read = false): DatabaseNotification
+{
+    return DatabaseNotification::query()->create([
+        'id' => Str::uuid()->toString(),
+        'type' => DocumentsUploadBatchProcessed::class,
+        'notifiable_type' => $user->getMorphClass(),
+        'notifiable_id' => $user->id,
+        'data' => ['summary' => 'Test notification.'],
+        'read_at' => $read ? now() : null,
+    ]);
 }
