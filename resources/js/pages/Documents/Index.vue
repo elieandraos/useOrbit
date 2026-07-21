@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/card';
 import Input from '@/components/ui/input/Input.vue';
 import { useNotifications } from '@/composables/useNotifications';
+import { DOCUMENTS_UPLOAD_BATCH_PROCESSED } from '@/lib/notificationTypes';
 import { store as storeDocument } from '@/routes/clients/documents';
 import {
     batch as finalizeBatch,
@@ -29,9 +30,6 @@ import type {
 } from './partials/document';
 import DocumentList from './partials/DocumentList.vue';
 import DocumentUploadDropzone from './partials/DocumentUploadDropzone.vue';
-
-const DOCUMENTS_UPLOAD_BATCH_PROCESSED =
-    'App\\Notifications\\DocumentsUploadBatchProcessed';
 
 const props = defineProps<{
     client: ClientResource;

@@ -42,7 +42,11 @@ export function useNotifications(): UseNotificationsReturn {
 
         useHttp({}).get(recent().url, {
             onSuccess: (response) => {
-                state.items = response as NotificationItem[];
+                state.items.splice(
+                    0,
+                    state.items.length,
+                    ...(response as NotificationItem[]),
+                );
             },
             onError: () => {
                 itemsRequested = false;
@@ -53,16 +57,22 @@ export function useNotifications(): UseNotificationsReturn {
     function markAsRead(id: string): void {
         const item = state.items.find((notification) => notification.id === id);
 
-        if (!item || item.read_at) {
+        if (item?.read_at) {
             return;
         }
 
-        item.read_at = new Date().toISOString();
+        if (item) {
+            item.read_at = new Date().toISOString();
+        }
+
         state.unreadCount = Math.max(0, state.unreadCount - 1);
 
         useHttp({}).post(read(id).url, {
             onError: () => {
-                item.read_at = null;
+                if (item) {
+                    item.read_at = null;
+                }
+
                 state.unreadCount += 1;
             },
         });
@@ -104,7 +114,7 @@ export function useNotifications(): UseNotificationsReturn {
             type: notification.type,
             data: notification.data,
             read_at: null,
-            created_at: new Date().toISOString(),
+            created_at: 'Just now',
         });
         state.unreadCount += 1;
     }
