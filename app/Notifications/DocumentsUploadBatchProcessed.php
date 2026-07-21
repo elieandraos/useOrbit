@@ -11,6 +11,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 final class DocumentsUploadBatchProcessed extends Notification implements ShouldQueue
 {
@@ -72,7 +73,7 @@ final class DocumentsUploadBatchProcessed extends Notification implements Should
                 ->all(),
             'client' => [
                 'slug' => $this->client->slug,
-                'name' => "{$this->client->first_name} {$this->client->last_name}",
+                'name' => $this->clientName(),
             ],
             'summary' => $this->summary(),
         ];
@@ -83,11 +84,33 @@ final class DocumentsUploadBatchProcessed extends Notification implements Should
         $total = $this->documents->count();
         $completed = $this->outcome['completed'];
         $failed = $this->outcome['failed'];
+        $clientName = $this->clientName();
 
         return match (true) {
-            $failed === 0 => "$completed of $total documents uploaded successfully.",
-            $completed === 0 => "$failed of $total documents failed to upload.",
-            default => "$completed of $total documents uploaded, $failed failed.",
+            $failed === 0 => sprintf(
+                'You uploaded %d %s to %s.',
+                $completed,
+                Str::plural('document', $completed),
+                $clientName,
+            ),
+            $completed === 0 => sprintf(
+                '%d %s failed to upload to %s.',
+                $failed,
+                Str::plural('document', $failed),
+                $clientName,
+            ),
+            default => sprintf(
+                'You uploaded %d of %d documents to %s — %d failed.',
+                $completed,
+                $total,
+                $clientName,
+                $failed,
+            ),
         };
+    }
+
+    private function clientName(): string
+    {
+        return "{$this->client->first_name} {$this->client->last_name}";
     }
 }

@@ -44,7 +44,7 @@ test('array and broadcast payloads carry counts, document details, client info, 
             ['id' => $failed->id, 'status' => 'failed'],
         ],
         'client' => ['slug' => $client->slug, 'name' => 'Jane Doe'],
-        'summary' => '1 of 2 documents uploaded, 1 failed.',
+        'summary' => 'You uploaded 1 of 2 documents to Jane Doe — 1 failed.',
     ];
 
     expect($notification->toArray($user))->toBe($expected);
@@ -56,7 +56,7 @@ test('array and broadcast payloads carry counts, document details, client info, 
 
 test('summarizes an all-success batch without mentioning failures', function () {
     $user = User::factory()->withOrganization()->create();
-    $client = Client::factory()->forOrganization($user)->create();
+    $client = Client::factory()->forOrganization($user)->create(['first_name' => 'Jane', 'last_name' => 'Doe']);
     $documents = Document::factory(2)->forOrganization($user)->uploadedBy($user)->completed()->create([
         'documentable_type' => $client->getMorphClass(),
         'documentable_id' => $client->id,
@@ -64,12 +64,25 @@ test('summarizes an all-success batch without mentioning failures', function () 
 
     $notification = new DocumentsUploadBatchProcessed(['completed' => 2, 'failed' => 0], $documents, $client);
 
-    expect($notification->toArray($user)['summary'])->toBe('2 of 2 documents uploaded successfully.');
+    expect($notification->toArray($user)['summary'])->toBe('You uploaded 2 documents to Jane Doe.');
+});
+
+test('summarizes a single-document upload using the singular form', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['first_name' => 'Jane', 'last_name' => 'Doe']);
+    $documents = Document::factory(1)->forOrganization($user)->uploadedBy($user)->completed()->create([
+        'documentable_type' => $client->getMorphClass(),
+        'documentable_id' => $client->id,
+    ]);
+
+    $notification = new DocumentsUploadBatchProcessed(['completed' => 1, 'failed' => 0], $documents, $client);
+
+    expect($notification->toArray($user)['summary'])->toBe('You uploaded 1 document to Jane Doe.');
 });
 
 test('summarizes an all-failed batch without mentioning successes', function () {
     $user = User::factory()->withOrganization()->create();
-    $client = Client::factory()->forOrganization($user)->create();
+    $client = Client::factory()->forOrganization($user)->create(['first_name' => 'Jane', 'last_name' => 'Doe']);
     $documents = Document::factory(2)->forOrganization($user)->uploadedBy($user)->failed()->create([
         'documentable_type' => $client->getMorphClass(),
         'documentable_id' => $client->id,
@@ -77,5 +90,5 @@ test('summarizes an all-failed batch without mentioning successes', function () 
 
     $notification = new DocumentsUploadBatchProcessed(['completed' => 0, 'failed' => 2], $documents, $client);
 
-    expect($notification->toArray($user)['summary'])->toBe('2 of 2 documents failed to upload.');
+    expect($notification->toArray($user)['summary'])->toBe('2 documents failed to upload to Jane Doe.');
 });
