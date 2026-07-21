@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\DocumentStatus;
 use App\Models\Concerns\BelongsToCurrentOrganization;
+use App\Models\Contracts\Documentable;
 use Carbon\CarbonImmutable;
 use Database\Factories\DocumentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -31,6 +32,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read User $uploadedBy
+ * @property-read Documentable $documentable
  */
 #[Fillable([
     'organization_id', 'documentable_type', 'documentable_id', 'uploaded_by',
