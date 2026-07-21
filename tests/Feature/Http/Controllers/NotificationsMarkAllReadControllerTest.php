@@ -14,5 +14,5 @@ test('member can mark all their notifications as read', function () {
 
     $this->actingAs($user)
         ->post(route('notifications.read-all'))
-        ->assertRedirectBack();
+        ->assertNoContent();
 });

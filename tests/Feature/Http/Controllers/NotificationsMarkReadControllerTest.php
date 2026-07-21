@@ -18,7 +18,7 @@ test('member can mark their own notification as read', function () {
 
     $this->actingAs($user)
         ->post(route('notifications.read', $notification))
-        ->assertRedirectBack();
+        ->assertNoContent();
 });
 
 test('member cannot mark another user\'s notification as read', function () {
