@@ -42,10 +42,14 @@ final class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'auth' => [
                 'user' => $request->user() ? [
+                    'id' => $request->user()->id,
                     'name' => $request->user()->name,
                     'email' => $request->user()->email,
                     'avatar' => $request->user()->avatar,
                 ] : null,
+            ],
+            'notifications' => [
+                'unreadCount' => fn (): int => $request->user()?->unreadNotifications()->count() ?? 0,
             ],
         ];
     }

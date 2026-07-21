@@ -25,6 +25,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $current_organization_id
  * @property int|null $country_id
  * @property-read Country|null $country
+ * @property-read Organization|null $currentOrganization
  */
 #[Fillable(['name', 'email', 'password', 'current_organization_id', 'country_id', 'email_verified_at'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]

@@ -6,6 +6,7 @@ namespace App\Providers;
 
 use App\Models\Client;
 use App\Models\Document;
+use App\Models\User;
 use App\Policies\ClientPolicy;
 use App\Policies\DocumentPolicy;
 use Carbon\CarbonImmutable;
@@ -47,6 +48,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Relation::enforceMorphMap([
             'clients' => Client::class,
+            'users' => User::class,
         ]);
     }
 
