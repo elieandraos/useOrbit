@@ -9,3 +9,12 @@ export type NotificationItem = {
 export type Notifications = {
     unreadCount: number;
 };
+
+export type DocumentsUploadBatchProcessedData = {
+    total: number;
+    completed: number;
+    failed: number;
+    documents: { id: number; status: 'completed' | 'failed' }[];
+    client: { slug: string; name: string };
+    summary: string;
+};

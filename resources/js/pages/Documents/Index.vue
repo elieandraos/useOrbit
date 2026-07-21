@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, router, useHttp } from '@inertiajs/vue3';
 import { SearchIcon } from '@lucide/vue';
-import { computed, ref } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import {
     Card,
     CardAction,
@@ -10,8 +10,13 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import Input from '@/components/ui/input/Input.vue';
+import { useNotifications } from '@/composables/useNotifications';
 import { store as storeDocument } from '@/routes/clients/documents';
-import { batch as finalizeBatch } from '@/routes/documents';
+import {
+    batch as finalizeBatch,
+    download as downloadDocument,
+} from '@/routes/documents';
+import type { DocumentsUploadBatchProcessedData } from '@/types/notification';
 import type { ClientResource } from '../Clients/partials/client';
 import ClientDetailShell from '../Clients/partials/ClientDetailShell.vue';
 import DeleteDocumentModal from './partials/DeleteDocumentModal.vue';
@@ -25,6 +30,9 @@ import type {
 import DocumentList from './partials/DocumentList.vue';
 import DocumentUploadDropzone from './partials/DocumentUploadDropzone.vue';
 
+const DOCUMENTS_UPLOAD_BATCH_PROCESSED =
+    'App\\Notifications\\DocumentsUploadBatchProcessed';
+
 const props = defineProps<{
     client: ClientResource;
     documents: DocumentResource[];
@@ -33,12 +41,43 @@ const props = defineProps<{
 
 const policiesCount = 0;
 
+const documentsById = reactive<Record<number, DocumentResource>>({});
+
+watch(
+    () => props.documents,
+    (documents) => {
+        Object.keys(documentsById).forEach((id) => {
+            delete documentsById[Number(id)];
+        });
+
+        documents.forEach((document) => {
+            documentsById[document.id] = document;
+        });
+    },
+    { immediate: true },
+);
+
+const documentsCount = computed(() => Object.keys(documentsById).length);
+
+// A stale history-cached visit (browser back/forward) or a batch that
+// finished while this page wasn't mounted (missing the live push) can both
+// leave "pending" rows showing outdated state — reconcile once on mount.
+onMounted(() => {
+    const hasPending = props.documents.some(
+        (document) => document.status === 'pending',
+    );
+
+    if (hasPending) {
+        router.reload({ only: ['documents'], showProgress: false });
+    }
+});
+
 const search = ref('');
 const searched = computed(() => search.value.trim().length > 0);
 
 const filteredDocuments = computed<DocumentRowItem[]>(() => {
     const query = search.value.trim().toLowerCase();
-    const documents = props.documents.map(
+    const documents = Object.values(documentsById).map(
         (document): DocumentRowItem => ({ kind: 'document', ...document }),
     );
 
@@ -50,6 +89,44 @@ const filteredDocuments = computed<DocumentRowItem[]>(() => {
         document.original_filename.toLowerCase().includes(query),
     );
 });
+
+const { items: notifications } = useNotifications();
+
+watch(
+    () => notifications.length,
+    (length, previousLength) => {
+        if (length <= previousLength) {
+            return;
+        }
+
+        const notification = notifications[0];
+
+        if (notification.type !== DOCUMENTS_UPLOAD_BATCH_PROCESSED) {
+            return;
+        }
+
+        const data = notification.data as DocumentsUploadBatchProcessedData;
+
+        if (data.client.slug !== props.client.slug) {
+            return;
+        }
+
+        data.documents.forEach(({ id, status }) => {
+            const document = documentsById[id];
+
+            if (!document) {
+                return;
+            }
+
+            document.status = status;
+            document.download_url =
+                status === 'completed' ? downloadDocument(id).url : null;
+            // DocumentsUploadBatchProcessed only notifies the uploader, so once a
+            // document leaves "pending" every DocumentPolicy::delete condition holds.
+            document.can_delete = true;
+        });
+    },
+);
 
 const uploads = ref<UploadRowItem[]>([]);
 const uploadHandles = new Map<
@@ -77,6 +154,7 @@ function stageFile(item: UploadRowItem, file: File): Promise<number | null> {
                 item.progress = progress?.percentage ?? item.progress;
             },
             onSuccess: (response) => {
+                documentsById[response.id] = response;
                 removeUpload(item.id);
                 resolve(response.id);
             },
@@ -121,7 +199,7 @@ async function handleFiles(files: File[]): Promise<void> {
         router.post(
             finalizeBatch().url,
             { document_ids: stagedIds },
-            { preserveScroll: true },
+            { preserveScroll: true, showProgress: false },
         );
     }
 }
@@ -141,7 +219,7 @@ function cancelUpload(id: string): void {
 
         <Card class="mt-6">
             <CardHeader bordered>
-                <CardTitle>Documents · {{ documents.length }}</CardTitle>
+                <CardTitle>Documents · {{ documentsCount }}</CardTitle>
                 <CardAction>
                     <Input
                         v-model="search"
