@@ -7,18 +7,12 @@ namespace App\Notifications;
 use App\Models\Contracts\Documentable;
 use App\Models\Document;
 use App\Models\User;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Notifications\Messages\BroadcastMessage;
-use Illuminate\Notifications\Notification;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
-final class DocumentsUploadBatchProcessed extends Notification implements ShouldQueue
+final class DocumentsUploadBatchProcessed extends EnvelopeNotification
 {
-    use Queueable;
-
     public const string ACTION = 'documents.uploaded';
 
     /**
@@ -29,74 +23,50 @@ final class DocumentsUploadBatchProcessed extends Notification implements Should
         public readonly array $outcome,
         public readonly Collection $documents,
         public readonly Model&Documentable $documentable,
-        public readonly ?User $actor = null,
-    ) {}
-
-    /**
-     * @return array<int, string>
-     *
-     * @noinspection PhpUnusedParameterInspection
-     */
-    public function via(object $notifiable): array
-    {
-        return ['database', 'broadcast'];
+        ?User $actor = null,
+    ) {
+        parent::__construct($actor);
     }
 
-    /** @noinspection PhpUnusedParameterInspection */
-    public function toArray(object $notifiable): array
+    protected function action(): string
     {
-        return $this->payload();
+        return self::ACTION;
     }
 
-    /** @noinspection PhpUnusedParameterInspection */
-    public function toBroadcast(object $notifiable): BroadcastMessage
+    /** @return array{kind: string, slug: string, name: string} */
+    protected function subject(): array
     {
-        return new BroadcastMessage($this->payload());
+        return [
+            'kind' => $this->documentable->documentableKind(),
+            'slug' => (string) $this->documentable->getRouteKey(),
+            'name' => $this->documentable->documentableName(),
+        ];
     }
 
     /**
      * @return array{
-     *     action: string,
-     *     actor: array{id: int, name: string}|null,
-     *     subject: array{kind: string, slug: string, name: string},
-     *     meta: array{
-     *         total: int,
-     *         completed: int,
-     *         failed: int,
-     *         documents: array<int, array{id: int, status: string}>,
-     *     },
-     *     summary: string,
+     *     total: int,
+     *     completed: int,
+     *     failed: int,
+     *     documents: array<int, array{id: int, status: string}>,
      * }
      */
-    private function payload(): array
+    protected function meta(): array
     {
         return [
-            'action' => self::ACTION,
-            'actor' => $this->actor === null ? null : [
-                'id' => $this->actor->id,
-                'name' => $this->actor->name,
-            ],
-            'subject' => [
-                'kind' => $this->documentable->documentableKind(),
-                'slug' => (string) $this->documentable->getRouteKey(),
-                'name' => $this->documentable->documentableName(),
-            ],
-            'meta' => [
-                'total' => $this->documents->count(),
-                'completed' => $this->outcome['completed'],
-                'failed' => $this->outcome['failed'],
-                'documents' => $this->documents
-                    ->map(fn (Document $document): array => [
-                        'id' => $document->id,
-                        'status' => $document->status->value,
-                    ])
-                    ->all(),
-            ],
-            'summary' => $this->summary(),
+            'total' => $this->documents->count(),
+            'completed' => $this->outcome['completed'],
+            'failed' => $this->outcome['failed'],
+            'documents' => $this->documents
+                ->map(fn (Document $document): array => [
+                    'id' => $document->id,
+                    'status' => $document->status->value,
+                ])
+                ->all(),
         ];
     }
 
-    private function summary(): string
+    protected function summary(): string
     {
         $total = $this->documents->count();
         $completed = $this->outcome['completed'];
