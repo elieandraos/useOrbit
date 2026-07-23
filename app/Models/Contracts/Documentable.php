@@ -12,4 +12,8 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 interface Documentable
 {
     public function documents(): MorphMany;
+
+    public function documentableKind(): string;
+
+    public function documentableName(): string;
 }

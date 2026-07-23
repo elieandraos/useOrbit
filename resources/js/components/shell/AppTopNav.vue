@@ -27,6 +27,14 @@ const recentItems = computed(() => items.slice(0, RECENT_NOTIFICATIONS_LIMIT));
 
 onMounted(fetchItems);
 
+function markRecentAsRead(): void {
+    recentItems.value.forEach((item) => {
+        if (!item.read_at) {
+            markAsRead(item.id);
+        }
+    });
+}
+
 const mobileNavOpen = defineModel<boolean>('mobileNavOpen', {
     default: false,
 });
@@ -68,7 +76,8 @@ const mobileNavOpen = defineModel<boolean>('mobileNavOpen', {
         <div class="ml-auto flex items-center gap-1">
             <DropMenu
                 align="end"
-                panel-class="w-[340px] max-h-[420px] overflow-y-auto"
+                panel-class="flex w-[340px] max-h-[420px] flex-col overflow-hidden p-0"
+                @close="markRecentAsRead"
             >
                 <template #trigger>
                     <button
@@ -87,17 +96,17 @@ const mobileNavOpen = defineModel<boolean>('mobileNavOpen', {
                     </button>
                 </template>
 
-                <div class="px-2 py-1.5 text-sm font-semibold text-primary">
+                <div class="shrink-0 px-3 py-1.5 text-sm font-semibold text-primary">
                     Notifications
                 </div>
-                <Separator class="my-1" />
+                <Separator class="shrink-0" />
                 <div
                     v-if="recentItems.length === 0"
                     class="px-2 py-6 text-center text-sm text-tertiary"
                 >
                     No notifications yet
                 </div>
-                <div v-else class="flex flex-col">
+                <div v-else class="flex flex-col overflow-y-auto p-1">
                     <NotificationRow
                         v-for="item in recentItems"
                         :key="item.id"
@@ -106,13 +115,15 @@ const mobileNavOpen = defineModel<boolean>('mobileNavOpen', {
                         @select="markAsRead"
                     />
                 </div>
-                <Separator class="my-1" />
-                <DropMenuItem
-                    :href="notificationsIndex()"
-                    class="justify-center text-accent"
-                >
-                    View all
-                </DropMenuItem>
+                <Separator class="shrink-0" />
+                <div class="shrink-0 p-1">
+                    <DropMenuItem
+                        :href="notificationsIndex()"
+                        class="justify-center text-accent"
+                    >
+                        View all
+                    </DropMenuItem>
+                </div>
             </DropMenu>
 
             <DropMenu align="end">

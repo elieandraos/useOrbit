@@ -4,9 +4,13 @@ import { computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { destroy as documentsDestroy } from '@/routes/documents';
-import type { DocumentRowItem } from './document';
+import type { DocumentRowItem } from '@/types/document';
 
 const documentToDelete = defineModel<DocumentRowItem | null>({ default: null });
+
+const emit = defineEmits<{
+    deleted: [id: number];
+}>();
 
 const isOpen = computed({
     get: () => documentToDelete.value !== null,
@@ -24,7 +28,10 @@ const isOpen = computed({
         v-bind="documentsDestroy.form(documentToDelete.id)"
         :options="{ preserveScroll: true }"
         v-slot="{ processing }"
-        @success="documentToDelete = null"
+        @success="
+            emit('deleted', documentToDelete.id);
+            documentToDelete = null;
+        "
     >
         <Dialog
             v-model:open="isOpen"

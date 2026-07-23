@@ -10,10 +10,13 @@ use App\Models\Contracts\Documentable;
 use Carbon\CarbonImmutable;
 use Database\Factories\DocumentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * @property int $id
@@ -42,7 +45,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 final class Document extends Model
 {
     /** @use HasFactory<DocumentFactory> */
-    use BelongsToCurrentOrganization, HasFactory;
+    use BelongsToCurrentOrganization, HasFactory, Prunable;
 
     protected function casts(): array
     {
@@ -60,5 +63,17 @@ final class Document extends Model
     public function uploadedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'uploaded_by');
+    }
+
+    public function prunable(): Builder
+    {
+        return self::query()
+            ->where('status', DocumentStatus::Pending)
+            ->where('created_at', '<', now()->subHours(config('documents.prune_after_hours')));
+    }
+
+    protected function pruning(): void
+    {
+        Storage::disk($this->disk)->delete($this->path);
     }
 }

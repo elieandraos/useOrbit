@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { FileX2 } from '@lucide/vue';
-import type { DocumentListItem, DocumentRowItem } from './document';
+import type { DocumentListItem, DocumentRowItem } from '@/types/document';
 import DocumentRow from './DocumentRow.vue';
 
 defineProps<{

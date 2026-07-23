@@ -9,20 +9,21 @@ export type NotificationTypeMeta = {
     resolveUrl: (data: Record<string, unknown>) => string;
 };
 
-export const DOCUMENTS_UPLOAD_BATCH_PROCESSED =
-    'App\\Notifications\\DocumentsUploadBatchProcessed';
+export const DOCUMENTS_UPLOADED = 'documents.uploaded';
 
 /**
- * Keyed off the raw FQCN stored in the `notifications` table's `type` column.
- * The seam a future notification type plugs into without touching bell/index rendering code.
+ * Keyed off `data.action`, the semantic key set server-side in each
+ * notification's envelope. The seam a future notification type plugs into
+ * without touching bell/index rendering code.
  */
 export const notificationTypes: Record<string, NotificationTypeMeta> = {
-    [DOCUMENTS_UPLOAD_BATCH_PROCESSED]: {
+    [DOCUMENTS_UPLOADED]: {
         icon: Upload,
         label: 'Document upload',
         resolveUrl: (data) =>
             documentsIndex({
-                client: (data as DocumentsUploadBatchProcessedData).client.slug,
+                client: (data as DocumentsUploadBatchProcessedData).subject
+                    .slug,
             }).url,
     },
 };

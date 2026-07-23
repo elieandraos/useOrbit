@@ -3,7 +3,7 @@ import { Link } from '@inertiajs/vue3';
 import { computed, inject } from 'vue';
 import { notificationTypes } from '@/lib/notificationTypes';
 import type {
-    DocumentsUploadBatchProcessedData,
+    NotificationEnvelope,
     NotificationItem,
 } from '@/types/notification';
 
@@ -18,10 +18,10 @@ const emit = defineEmits<{
 
 const closeMenu = inject<() => void>('dropMenuClose', () => {});
 
-const meta = computed(() => notificationTypes[props.notification.type]);
 const data = computed(
-    () => props.notification.data as DocumentsUploadBatchProcessedData,
+    () => props.notification.data as NotificationEnvelope<unknown>,
 );
+const meta = computed(() => notificationTypes[data.value.action]);
 const href = computed(
     () => meta.value?.resolveUrl(props.notification.data) ?? '#',
 );

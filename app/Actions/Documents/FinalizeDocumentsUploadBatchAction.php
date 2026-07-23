@@ -6,10 +6,11 @@ namespace App\Actions\Documents;
 
 use App\Enums\DocumentStatus;
 use App\Jobs\StoreDocumentJob;
-use App\Models\Client;
+use App\Models\Contracts\Documentable;
 use App\Models\Document;
 use App\Models\User;
 use App\Notifications\DocumentsUploadBatchProcessed;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Bus;
 
 final class FinalizeDocumentsUploadBatchAction
@@ -38,15 +39,15 @@ final class FinalizeDocumentsUploadBatchAction
         /** @var Document $firstDocument */
         $firstDocument = $documents->first();
 
-        /** @var Client $client */
-        $client = $firstDocument->documentable;
+        /** @var Model&Documentable $documentable */
+        $documentable = $firstDocument->documentable;
 
         Bus::batch($documents->map(fn (Document $document): StoreDocumentJob => new StoreDocumentJob($document))->all())
-            ->finally(function () use ($user, $ids, $client): void {
+            ->finally(function () use ($user, $ids, $documentable): void {
                 $outcome = app(CountDocumentsUploadBatchOutcomeAction::class)->handle($ids);
                 $processedDocuments = Document::query()->whereKey($ids)->get(['id', 'status']);
 
-                $user->notify(new DocumentsUploadBatchProcessed($outcome, $processedDocuments, $client));
+                $user->notify(new DocumentsUploadBatchProcessed($outcome, $processedDocuments, $documentable));
             })
             ->dispatch();
     }
