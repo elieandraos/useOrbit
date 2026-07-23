@@ -44,7 +44,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Staged documents still pending after this many hours are considered
-    | stale and removed by the `documents:prune-stale` command.
+    | stale and removed by the `model:prune` command via Document::prunable().
     |
     */
 
