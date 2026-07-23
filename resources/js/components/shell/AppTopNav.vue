@@ -15,24 +15,33 @@ import { dashboard, logout } from '@/routes';
 import { index as notificationsIndex } from '@/routes/notifications';
 import { edit } from '@/routes/profile';
 
-const RECENT_NOTIFICATIONS_LIMIT = 5;
+const SCROLL_LOAD_THRESHOLD_PX = 48;
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
 
 const { isCurrentOrParentUrl } = useCurrentUrl();
 
-const { items, unreadCount, fetchItems, markAsRead } = useNotifications();
-const recentItems = computed(() => items.slice(0, RECENT_NOTIFICATIONS_LIMIT));
+const { items, unreadCount, fetchItems, loadMore, markAsRead } =
+    useNotifications();
 
 onMounted(fetchItems);
 
-function markRecentAsRead(): void {
-    recentItems.value.forEach((item) => {
+function markVisibleAsRead(): void {
+    items.forEach((item) => {
         if (!item.read_at) {
             markAsRead(item.id);
         }
     });
+}
+
+function handleScroll(event: Event): void {
+    const el = event.target as HTMLElement;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+
+    if (distanceFromBottom <= SCROLL_LOAD_THRESHOLD_PX) {
+        loadMore();
+    }
 }
 
 const mobileNavOpen = defineModel<boolean>('mobileNavOpen', {
@@ -77,7 +86,7 @@ const mobileNavOpen = defineModel<boolean>('mobileNavOpen', {
             <DropMenu
                 align="end"
                 panel-class="flex w-[340px] max-h-[420px] flex-col overflow-hidden p-0"
-                @close="markRecentAsRead"
+                @close="markVisibleAsRead"
             >
                 <template #trigger>
                     <button
@@ -96,19 +105,25 @@ const mobileNavOpen = defineModel<boolean>('mobileNavOpen', {
                     </button>
                 </template>
 
-                <div class="shrink-0 px-3 py-1.5 text-sm font-semibold text-primary">
+                <div
+                    class="shrink-0 px-3 py-1.5 text-sm font-semibold text-primary"
+                >
                     Notifications
                 </div>
                 <Separator class="shrink-0" />
                 <div
-                    v-if="recentItems.length === 0"
+                    v-if="items.length === 0"
                     class="px-2 py-6 text-center text-sm text-tertiary"
                 >
                     No notifications yet
                 </div>
-                <div v-else class="flex flex-col overflow-y-auto p-1">
+                <div
+                    v-else
+                    class="flex flex-col overflow-y-auto p-1"
+                    @scroll="handleScroll"
+                >
                     <NotificationRow
-                        v-for="item in recentItems"
+                        v-for="item in items"
                         :key="item.id"
                         :notification="item"
                         dense
