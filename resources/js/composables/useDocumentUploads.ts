@@ -103,7 +103,11 @@ export function useDocumentUploads(
     }
 
     function removeUpload(id: string): void {
-        state.uploads = state.uploads.filter((upload) => upload.id !== id);
+        const index = state.uploads.findIndex((upload) => upload.id === id);
+
+        if (index !== -1) {
+            state.uploads.splice(index, 1);
+        }
     }
 
     function stageFile(
