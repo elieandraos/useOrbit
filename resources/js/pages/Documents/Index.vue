@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/card';
 import Input from '@/components/ui/input/Input.vue';
 import { useNotifications } from '@/composables/useNotifications';
-import { DOCUMENTS_UPLOAD_BATCH_PROCESSED } from '@/lib/notificationTypes';
+import { DOCUMENTS_UPLOADED } from '@/lib/notificationTypes';
 import { store as storeDocument } from '@/routes/clients/documents';
 import {
     batch as finalizeBatch,
@@ -99,18 +99,17 @@ watch(
         }
 
         const notification = notifications[0];
-
-        if (notification.type !== DOCUMENTS_UPLOAD_BATCH_PROCESSED) {
-            return;
-        }
-
         const data = notification.data as DocumentsUploadBatchProcessedData;
 
-        if (data.client.slug !== props.client.slug) {
+        if (data.action !== DOCUMENTS_UPLOADED) {
             return;
         }
 
-        data.documents.forEach(({ id, status }) => {
+        if (data.subject.slug !== props.client.slug) {
+            return;
+        }
+
+        data.meta.documents.forEach(({ id, status }) => {
             const document = documentsById[id];
 
             if (!document) {

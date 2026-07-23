@@ -10,11 +10,31 @@ export type Notifications = {
     unreadCount: number;
 };
 
-export type DocumentsUploadBatchProcessedData = {
+export type NotificationActor = {
+    id: number;
+    name: string;
+};
+
+export type NotificationSubject = {
+    kind: string;
+    slug: string;
+    name: string;
+};
+
+export type NotificationEnvelope<TMeta> = {
+    action: string;
+    actor: NotificationActor | null;
+    subject: NotificationSubject;
+    meta: TMeta;
+    summary: string;
+};
+
+export type DocumentsUploadMeta = {
     total: number;
     completed: number;
     failed: number;
     documents: { id: number; status: 'completed' | 'failed' }[];
-    client: { slug: string; name: string };
-    summary: string;
 };
+
+export type DocumentsUploadBatchProcessedData =
+    NotificationEnvelope<DocumentsUploadMeta>;
