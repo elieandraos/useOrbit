@@ -14,6 +14,7 @@ import Input from '@/components/ui/input/Input.vue';
 import { useDocumentUploads } from '@/composables/useDocumentUploads';
 import { useNotifications } from '@/composables/useNotifications';
 import { DOCUMENTS_UPLOADED } from '@/lib/notificationTypes';
+import { store as storeDocument } from '@/routes/clients/documents';
 import type { DocumentsUploadBatchProcessedData } from '@/types/notification';
 import type { ClientResource } from '../Clients/partials/client';
 import ClientDetailShell from '../Clients/partials/ClientDetailShell.vue';
@@ -45,7 +46,10 @@ const {
     cancelUpload,
     dismissUpload,
     removeDocument,
-} = useDocumentUploads(props.client.slug);
+} = useDocumentUploads(
+    `client-${props.client.id}`,
+    storeDocument(props.client.slug).url,
+);
 
 watch(() => props.documents, syncDocuments, { immediate: true });
 

@@ -5,7 +5,6 @@ import type {
     DocumentResource,
     UploadRowItem,
 } from '@/pages/Documents/partials/document';
-import { store as storeDocument } from '@/routes/clients/documents';
 import {
     batch as finalizeBatch,
     download as downloadDocument,
@@ -25,17 +24,17 @@ export type UseDocumentUploadsReturn = {
     removeDocument: (id: number) => void;
 };
 
-type ClientUploadState = {
+type ScopeUploadState = {
     documentsById: Record<number, DocumentResource>;
     uploads: UploadRowItem[];
 };
 
 // Module-scoped (not component-scoped) so uploads and optimistic document
-// state survive Inertia navigation away from Documents/Index.vue instead of
-// dying with the component that started them. Keyed by client slug so an
-// in-flight upload for one client can't leak into another client's tab.
-const stateByClient = reactive<Record<string, ClientUploadState>>({});
-const uploadHandlesByClient = new Map<
+// state survive Inertia navigation away from the page that started them.
+// Keyed by an opaque scope key so an in-flight upload for one resource can't
+// leak into another resource's tab (e.g. two different clients).
+const stateByScope = reactive<Record<string, ScopeUploadState>>({});
+const uploadHandlesByScope = new Map<
     string,
     Map<
         string,
@@ -43,35 +42,36 @@ const uploadHandlesByClient = new Map<
     >
 >();
 
-function clientState(slug: string): ClientUploadState {
-    if (!stateByClient[slug]) {
-        stateByClient[slug] = { documentsById: {}, uploads: [] };
+function scopeState(scopeKey: string): ScopeUploadState {
+    if (!stateByScope[scopeKey]) {
+        stateByScope[scopeKey] = { documentsById: {}, uploads: [] };
     }
 
-    return stateByClient[slug];
+    return stateByScope[scopeKey];
 }
 
-function clientUploadHandles(
-    slug: string,
+function scopeUploadHandles(
+    scopeKey: string,
 ): Map<
     string,
     ReturnType<typeof useHttp<{ file: File | null }, DocumentResource>>
 > {
-    if (!uploadHandlesByClient.has(slug)) {
-        uploadHandlesByClient.set(slug, new Map());
+    if (!uploadHandlesByScope.has(scopeKey)) {
+        uploadHandlesByScope.set(scopeKey, new Map());
     }
 
-    return uploadHandlesByClient.get(slug) as Map<
+    return uploadHandlesByScope.get(scopeKey) as Map<
         string,
         ReturnType<typeof useHttp<{ file: File | null }, DocumentResource>>
     >;
 }
 
 export function useDocumentUploads(
-    clientSlug: string,
+    scopeKey: string,
+    uploadUrl: string,
 ): UseDocumentUploadsReturn {
-    const state = clientState(clientSlug);
-    const handles = clientUploadHandles(clientSlug);
+    const state = scopeState(scopeKey);
+    const handles = scopeUploadHandles(scopeKey);
 
     function syncDocuments(documents: DocumentResource[]): void {
         documents.forEach((document) => {
@@ -117,7 +117,7 @@ export function useDocumentUploads(
             http.file = file;
             handles.set(item.id, http);
 
-            http.post(storeDocument(clientSlug).url, {
+            http.post(uploadUrl, {
                 onProgress: (progress) => {
                     item.progress = progress?.percentage ?? item.progress;
                 },
