@@ -27,6 +27,14 @@ const recentItems = computed(() => items.slice(0, RECENT_NOTIFICATIONS_LIMIT));
 
 onMounted(fetchItems);
 
+function markRecentAsRead(): void {
+    recentItems.value.forEach((item) => {
+        if (!item.read_at) {
+            markAsRead(item.id);
+        }
+    });
+}
+
 const mobileNavOpen = defineModel<boolean>('mobileNavOpen', {
     default: false,
 });
@@ -69,6 +77,7 @@ const mobileNavOpen = defineModel<boolean>('mobileNavOpen', {
             <DropMenu
                 align="end"
                 panel-class="flex w-[340px] max-h-[420px] flex-col overflow-hidden p-0"
+                @close="markRecentAsRead"
             >
                 <template #trigger>
                     <button

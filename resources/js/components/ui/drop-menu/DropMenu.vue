@@ -15,15 +15,25 @@ withDefaults(
     { align: 'end' },
 );
 
+const emit = defineEmits<{
+    close: [];
+}>();
+
 const menuOpen = ref(false);
 const menuRef = ref<HTMLElement | null>(null);
 
 function close() {
+    if (!menuOpen.value) {
+        return;
+    }
+
     menuOpen.value = false;
 
     if (activeClose === close) {
         activeClose = null;
     }
+
+    emit('close');
 }
 
 function toggle() {
