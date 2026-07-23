@@ -18,7 +18,7 @@ test('deletes stale pending documents and their staging files', function () {
     ]);
     Storage::disk('local')->put($document->path, 'staged contents');
 
-    $this->artisan('documents:prune-stale')->assertSuccessful();
+    $this->artisan('model:prune', ['--model' => [Document::class]])->assertSuccessful();
 
     expect(Document::query()->whereKey($document->id)->exists())->toBeFalse();
     Storage::disk('local')->assertMissing($document->path);
@@ -34,7 +34,7 @@ test('leaves recent pending documents untouched', function () {
     ]);
     Storage::disk('local')->put($document->path, 'staged contents');
 
-    $this->artisan('documents:prune-stale')->assertSuccessful();
+    $this->artisan('model:prune', ['--model' => [Document::class]])->assertSuccessful();
 
     expect(Document::query()->whereKey($document->id)->exists())->toBeTrue();
     Storage::disk('local')->assertExists($document->path);
@@ -46,7 +46,7 @@ test('leaves old completed documents untouched', function () {
         'created_at' => now()->subHours(2),
     ]);
 
-    $this->artisan('documents:prune-stale')->assertSuccessful();
+    $this->artisan('model:prune', ['--model' => [Document::class]])->assertSuccessful();
 
     expect(Document::query()->whereKey($document->id)->exists())->toBeTrue();
 });
@@ -57,7 +57,7 @@ test('leaves old failed documents untouched', function () {
         'created_at' => now()->subHours(2),
     ]);
 
-    $this->artisan('documents:prune-stale')->assertSuccessful();
+    $this->artisan('model:prune', ['--model' => [Document::class]])->assertSuccessful();
 
     expect(Document::query()->whereKey($document->id)->exists())->toBeTrue();
 });
