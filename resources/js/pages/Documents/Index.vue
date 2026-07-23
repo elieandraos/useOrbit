@@ -2,6 +2,9 @@
 import { Head, router } from '@inertiajs/vue3';
 import { SearchIcon } from '@lucide/vue';
 import { computed, onMounted, ref, watch } from 'vue';
+import DeleteDocumentModal from '@/components/documents/DeleteDocumentModal.vue';
+import DocumentList from '@/components/documents/DocumentList.vue';
+import DocumentUploadDropzone from '@/components/documents/DocumentUploadDropzone.vue';
 import Badge from '@/components/ui/badge/Badge.vue';
 import {
     Card,
@@ -15,18 +18,15 @@ import { useDocumentUploads } from '@/composables/useDocumentUploads';
 import { useNotifications } from '@/composables/useNotifications';
 import { DOCUMENTS_UPLOADED } from '@/lib/notificationTypes';
 import { store as storeDocument } from '@/routes/clients/documents';
-import type { DocumentsUploadBatchProcessedData } from '@/types/notification';
-import type { ClientResource } from '../Clients/partials/client';
-import ClientDetailShell from '../Clients/partials/ClientDetailShell.vue';
-import DeleteDocumentModal from './partials/DeleteDocumentModal.vue';
 import type {
     DocumentListItem,
     DocumentResource,
     DocumentRowItem,
     DocumentUploadConfig,
-} from './partials/document';
-import DocumentList from './partials/DocumentList.vue';
-import DocumentUploadDropzone from './partials/DocumentUploadDropzone.vue';
+} from '@/types/document';
+import type { DocumentsUploadBatchProcessedData } from '@/types/notification';
+import type { ClientResource } from '../Clients/partials/client';
+import ClientDetailShell from '../Clients/partials/ClientDetailShell.vue';
 
 const props = defineProps<{
     client: ClientResource;

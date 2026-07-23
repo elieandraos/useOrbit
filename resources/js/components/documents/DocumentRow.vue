@@ -3,7 +3,7 @@ import { Clock, Download, Trash2, X } from '@lucide/vue';
 import { computed } from 'vue';
 import Badge from '@/components/ui/badge/Badge.vue';
 import { Spinner } from '@/components/ui/spinner';
-import type { DocumentListItem, DocumentRowItem } from './document';
+import type { DocumentListItem, DocumentRowItem } from '@/types/document';
 
 const props = defineProps<{
     item: DocumentListItem;

@@ -4,7 +4,7 @@ import { computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { destroy as documentsDestroy } from '@/routes/documents';
-import type { DocumentRowItem } from './document';
+import type { DocumentRowItem } from '@/types/document';
 
 const documentToDelete = defineModel<DocumentRowItem | null>({ default: null });
 

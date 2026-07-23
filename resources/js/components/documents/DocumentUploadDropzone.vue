@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Upload, X } from '@lucide/vue';
 import { computed, ref, useId } from 'vue';
-import type { DocumentUploadConfig } from './document';
+import type { DocumentUploadConfig } from '@/types/document';
 
 const props = defineProps<{
     config: DocumentUploadConfig;

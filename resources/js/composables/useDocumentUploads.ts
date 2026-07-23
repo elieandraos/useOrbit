@@ -1,14 +1,11 @@
 import { router, useHttp } from '@inertiajs/vue3';
 import type { ComputedRef } from 'vue';
 import { computed, reactive } from 'vue';
-import type {
-    DocumentResource,
-    UploadRowItem,
-} from '@/pages/Documents/partials/document';
 import {
     batch as finalizeBatch,
     download as downloadDocument,
 } from '@/routes/documents';
+import type { DocumentResource, UploadRowItem } from '@/types/document';
 
 export type UseDocumentUploadsReturn = {
     documentsById: Record<number, DocumentResource>;
