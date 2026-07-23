@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import { SearchIcon } from '@lucide/vue';
-import { computed, onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import DeleteDocumentModal from '@/components/documents/DeleteDocumentModal.vue';
 import DocumentList from '@/components/documents/DocumentList.vue';
 import DocumentUploadDropzone from '@/components/documents/DocumentUploadDropzone.vue';
@@ -19,7 +19,6 @@ import { useNotifications } from '@/composables/useNotifications';
 import { DOCUMENTS_UPLOADED } from '@/lib/notificationTypes';
 import { store as storeDocument } from '@/routes/clients/documents';
 import type {
-    DocumentListItem,
     DocumentResource,
     DocumentRowItem,
     DocumentUploadConfig,
@@ -37,9 +36,11 @@ const props = defineProps<{
 const policiesCount = 0;
 
 const {
-    documentsById,
-    uploads,
     hasActiveUploads,
+    search,
+    searched,
+    listItems,
+    headerCount,
     syncDocuments,
     applyBatchUpdate,
     handleFiles,
@@ -53,8 +54,6 @@ const {
 
 watch(() => props.documents, syncDocuments, { immediate: true });
 
-const documentsCount = computed(() => Object.keys(documentsById).length);
-
 // A stale history-cached visit (browser back/forward) or a batch that
 // finished while this page wasn't mounted (missing the live push) can both
 // leave "pending" rows showing outdated state — reconcile once on mount.
@@ -66,24 +65,6 @@ onMounted(() => {
     if (hasPending) {
         router.reload({ only: ['documents'], showProgress: false });
     }
-});
-
-const search = ref('');
-const searched = computed(() => search.value.trim().length > 0);
-
-const filteredDocuments = computed<DocumentRowItem[]>(() => {
-    const query = search.value.trim().toLowerCase();
-    const documents = Object.values(documentsById).map(
-        (document): DocumentRowItem => ({ kind: 'document', ...document }),
-    );
-
-    if (!query) {
-        return documents;
-    }
-
-    return documents.filter((document) =>
-        document.original_filename.toLowerCase().includes(query),
-    );
 });
 
 const { items: notifications } = useNotifications();
@@ -109,29 +90,6 @@ watch(
         applyBatchUpdate(data.meta.documents);
     },
 );
-
-const listItems = computed<DocumentListItem[]>(() => [
-    ...uploads,
-    ...filteredDocuments.value,
-]);
-
-// Documents settle into documentsById one-by-one as each upload finishes, so
-// documentsCount ticks up mid-batch. The header badge should instead hold at
-// its pre-batch value and jump straight to the final count once every file
-// in the batch has settled (succeeded or failed).
-const headerCount = ref(documentsCount.value);
-
-watch(documentsCount, (value) => {
-    if (!hasActiveUploads.value) {
-        headerCount.value = value;
-    }
-});
-
-watch(hasActiveUploads, (isActive, wasActive) => {
-    if (wasActive && !isActive) {
-        headerCount.value = documentsCount.value;
-    }
-});
 
 const documentToDelete = ref<DocumentRowItem | null>(null);
 </script>

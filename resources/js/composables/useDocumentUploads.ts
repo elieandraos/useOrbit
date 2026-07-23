@@ -1,16 +1,27 @@
 import { router, useHttp } from '@inertiajs/vue3';
-import type { ComputedRef } from 'vue';
-import { computed, reactive } from 'vue';
+import type { ComputedRef, Ref } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import {
     batch as finalizeBatch,
     download as downloadDocument,
 } from '@/routes/documents';
-import type { DocumentResource, UploadRowItem } from '@/types/document';
+import type {
+    DocumentListItem,
+    DocumentResource,
+    DocumentRowItem,
+    UploadRowItem,
+} from '@/types/document';
 
 export type UseDocumentUploadsReturn = {
     documentsById: Record<number, DocumentResource>;
     uploads: UploadRowItem[];
     hasActiveUploads: ComputedRef<boolean>;
+    documentsCount: ComputedRef<number>;
+    search: Ref<string>;
+    searched: ComputedRef<boolean>;
+    filteredDocuments: ComputedRef<DocumentRowItem[]>;
+    listItems: ComputedRef<DocumentListItem[]>;
+    headerCount: Ref<number>;
     syncDocuments: (documents: DocumentResource[]) => void;
     applyBatchUpdate: (
         documents: { id: number; status: DocumentResource['status'] }[],
@@ -183,10 +194,62 @@ export function useDocumentUploads(
         handles.get(id)?.cancel();
     }
 
+    const hasActiveUploads = computed(() => state.uploads.length > 0);
+    const documentsCount = computed(
+        () => Object.keys(state.documentsById).length,
+    );
+
+    const search = ref('');
+    const searched = computed(() => search.value.trim().length > 0);
+
+    const filteredDocuments = computed<DocumentRowItem[]>(() => {
+        const query = search.value.trim().toLowerCase();
+        const documents = Object.values(state.documentsById).map(
+            (document): DocumentRowItem => ({ kind: 'document', ...document }),
+        );
+
+        if (!query) {
+            return documents;
+        }
+
+        return documents.filter((document) =>
+            document.original_filename.toLowerCase().includes(query),
+        );
+    });
+
+    const listItems = computed<DocumentListItem[]>(() => [
+        ...state.uploads,
+        ...filteredDocuments.value,
+    ]);
+
+    // Documents settle into documentsById one-by-one as each upload finishes, so
+    // documentsCount ticks up mid-batch. The header badge should instead hold at
+    // its pre-batch value and jump straight to the final count once every file
+    // in the batch has settled (succeeded or failed).
+    const headerCount = ref(documentsCount.value);
+
+    watch(documentsCount, (value) => {
+        if (!hasActiveUploads.value) {
+            headerCount.value = value;
+        }
+    });
+
+    watch(hasActiveUploads, (isActive, wasActive) => {
+        if (wasActive && !isActive) {
+            headerCount.value = documentsCount.value;
+        }
+    });
+
     return {
         documentsById: state.documentsById,
         uploads: state.uploads,
-        hasActiveUploads: computed(() => state.uploads.length > 0),
+        hasActiveUploads,
+        documentsCount,
+        search,
+        searched,
+        filteredDocuments,
+        listItems,
+        headerCount,
         syncDocuments,
         applyBatchUpdate,
         handleFiles,
