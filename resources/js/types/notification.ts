@@ -10,6 +10,11 @@ export type Notifications = {
     unreadCount: number;
 };
 
+export type RecentNotificationsResponse = {
+    data: NotificationItem[];
+    next_cursor: string | null;
+};
+
 export type NotificationActor = {
     id: number;
     name: string;

@@ -2,12 +2,18 @@ import { useHttp, usePage } from '@inertiajs/vue3';
 import type { ComputedRef } from 'vue';
 import { computed, reactive } from 'vue';
 import { read, readAll, recent } from '@/routes/notifications';
-import type { NotificationItem } from '@/types/notification';
+import type {
+    NotificationItem,
+    RecentNotificationsResponse,
+} from '@/types/notification';
 
 export type UseNotificationsReturn = {
     items: NotificationItem[];
     unreadCount: ComputedRef<number>;
+    hasMore: ComputedRef<boolean>;
+    loadingMore: ComputedRef<boolean>;
     fetchItems: () => void;
+    loadMore: () => void;
     markAsRead: (id: string) => void;
     markAllAsRead: () => void;
     receiveNotification: (notification: {
@@ -17,9 +23,18 @@ export type UseNotificationsReturn = {
     }) => void;
 };
 
-const state = reactive<{ items: NotificationItem[]; unreadCount: number }>({
+const state = reactive<{
+    items: NotificationItem[];
+    unreadCount: number;
+    nextCursor: string | null;
+    hasMore: boolean;
+    loadingMore: boolean;
+}>({
     items: [],
     unreadCount: 0,
+    nextCursor: null,
+    hasMore: true,
+    loadingMore: false,
 });
 
 let unreadCountBootstrapped = false;
@@ -33,6 +48,29 @@ export function useNotifications(): UseNotificationsReturn {
         unreadCountBootstrapped = true;
     }
 
+    // The dropdown's page of 15 is ordered unread-first, then most-recent
+    // first within each group (see NotificationsListController). Once a
+    // fetched page contains zero unread items we've crossed into read
+    // history, so auto-loading stops there even if more pages exist —
+    // "View all" is the path to the rest.
+    function applyPage(
+        response: RecentNotificationsResponse,
+        { append }: { append: boolean },
+    ): void {
+        if (append) {
+            state.items.push(...response.data);
+        } else {
+            state.items.splice(0, state.items.length, ...response.data);
+        }
+
+        state.nextCursor = response.next_cursor;
+
+        const pageHasUnread = response.data.some(
+            (item) => item.read_at === null,
+        );
+        state.hasMore = Boolean(response.next_cursor) && pageHasUnread;
+    }
+
     function fetchItems(): void {
         if (itemsRequested) {
             return;
@@ -42,14 +80,32 @@ export function useNotifications(): UseNotificationsReturn {
 
         useHttp({}).get(recent().url, {
             onSuccess: (response) => {
-                state.items.splice(
-                    0,
-                    state.items.length,
-                    ...(response as NotificationItem[]),
-                );
+                applyPage(response as RecentNotificationsResponse, {
+                    append: false,
+                });
             },
             onError: () => {
                 itemsRequested = false;
+            },
+        });
+    }
+
+    function loadMore(): void {
+        if (state.loadingMore || !state.hasMore || !state.nextCursor) {
+            return;
+        }
+
+        state.loadingMore = true;
+
+        useHttp({}).get(recent({ query: { cursor: state.nextCursor } }).url, {
+            onSuccess: (response) => {
+                applyPage(response as RecentNotificationsResponse, {
+                    append: true,
+                });
+                state.loadingMore = false;
+            },
+            onError: () => {
+                state.loadingMore = false;
             },
         });
     }
@@ -122,7 +178,10 @@ export function useNotifications(): UseNotificationsReturn {
     return {
         items: state.items,
         unreadCount: computed(() => state.unreadCount),
+        hasMore: computed(() => state.hasMore),
+        loadingMore: computed(() => state.loadingMore),
         fetchItems,
+        loadMore,
         markAsRead,
         markAllAsRead,
         receiveNotification,
