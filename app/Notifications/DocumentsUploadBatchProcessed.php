@@ -6,6 +6,7 @@ namespace App\Notifications;
 
 use App\Models\Client;
 use App\Models\Document;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
@@ -17,6 +18,8 @@ final class DocumentsUploadBatchProcessed extends Notification implements Should
 {
     use Queueable;
 
+    public const string ACTION = 'documents.uploaded';
+
     /**
      * @param  array{completed: int, failed: int}  $outcome
      * @param  Collection<int, Document>  $documents
@@ -25,6 +28,7 @@ final class DocumentsUploadBatchProcessed extends Notification implements Should
         public readonly array $outcome,
         public readonly Collection $documents,
         public readonly Client $client,
+        public readonly ?User $actor = null,
     ) {}
 
     /**
@@ -51,29 +55,41 @@ final class DocumentsUploadBatchProcessed extends Notification implements Should
 
     /**
      * @return array{
-     *     total: int,
-     *     completed: int,
-     *     failed: int,
-     *     documents: array<int, array{id: int, status: string}>,
-     *     client: array{slug: string, name: string},
+     *     action: string,
+     *     actor: array{id: int, name: string}|null,
+     *     subject: array{kind: string, slug: string, name: string},
+     *     meta: array{
+     *         total: int,
+     *         completed: int,
+     *         failed: int,
+     *         documents: array<int, array{id: int, status: string}>,
+     *     },
      *     summary: string,
      * }
      */
     private function payload(): array
     {
         return [
-            'total' => $this->documents->count(),
-            'completed' => $this->outcome['completed'],
-            'failed' => $this->outcome['failed'],
-            'documents' => $this->documents
-                ->map(fn (Document $document): array => [
-                    'id' => $document->id,
-                    'status' => $document->status->value,
-                ])
-                ->all(),
-            'client' => [
+            'action' => self::ACTION,
+            'actor' => $this->actor === null ? null : [
+                'id' => $this->actor->id,
+                'name' => $this->actor->name,
+            ],
+            'subject' => [
+                'kind' => 'client',
                 'slug' => $this->client->slug,
                 'name' => $this->clientName(),
+            ],
+            'meta' => [
+                'total' => $this->documents->count(),
+                'completed' => $this->outcome['completed'],
+                'failed' => $this->outcome['failed'],
+                'documents' => $this->documents
+                    ->map(fn (Document $document): array => [
+                        'id' => $document->id,
+                        'status' => $document->status->value,
+                    ])
+                    ->all(),
             ],
             'summary' => $this->summary(),
         ];
@@ -84,26 +100,63 @@ final class DocumentsUploadBatchProcessed extends Notification implements Should
         $total = $this->documents->count();
         $completed = $this->outcome['completed'];
         $failed = $this->outcome['failed'];
-        $clientName = $this->clientName();
+        $subject = "client {$this->clientName()}";
 
+        return $this->actor === null
+            ? $this->selfSummary($total, $completed, $failed, $subject)
+            : $this->attributedSummary($total, $completed, $failed, $subject, $this->actor->name);
+    }
+
+    private function selfSummary(int $total, int $completed, int $failed, string $subject): string
+    {
         return match (true) {
             $failed === 0 => sprintf(
-                'You uploaded %d %s to %s.',
+                '%d %s uploaded to %s.',
                 $completed,
                 Str::plural('document', $completed),
-                $clientName,
+                $subject,
             ),
             $completed === 0 => sprintf(
                 '%d %s failed to upload to %s.',
                 $failed,
                 Str::plural('document', $failed),
-                $clientName,
+                $subject,
             ),
             default => sprintf(
-                'You uploaded %d of %d documents to %s — %d failed.',
+                '%d of %d %s uploaded to %s — %d failed.',
                 $completed,
                 $total,
-                $clientName,
+                Str::plural('document', $total),
+                $subject,
+                $failed,
+            ),
+        };
+    }
+
+    private function attributedSummary(int $total, int $completed, int $failed, string $subject, string $actorName): string
+    {
+        return match (true) {
+            $failed === 0 => sprintf(
+                '%s uploaded %d %s to %s.',
+                $actorName,
+                $completed,
+                Str::plural('document', $completed),
+                $subject,
+            ),
+            $completed === 0 => sprintf(
+                '%s failed to upload %d %s to %s.',
+                $actorName,
+                $failed,
+                Str::plural('document', $failed),
+                $subject,
+            ),
+            default => sprintf(
+                '%s uploaded %d of %d %s to %s — %d failed.',
+                $actorName,
+                $completed,
+                $total,
+                Str::plural('document', $total),
+                $subject,
                 $failed,
             ),
         };
