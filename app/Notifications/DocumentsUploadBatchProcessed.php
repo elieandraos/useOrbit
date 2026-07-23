@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace App\Notifications;
 
-use App\Models\Client;
+use App\Models\Contracts\Documentable;
 use App\Models\Document;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Collection;
@@ -27,7 +28,7 @@ final class DocumentsUploadBatchProcessed extends Notification implements Should
     public function __construct(
         public readonly array $outcome,
         public readonly Collection $documents,
-        public readonly Client $client,
+        public readonly Model&Documentable $documentable,
         public readonly ?User $actor = null,
     ) {}
 
@@ -76,9 +77,9 @@ final class DocumentsUploadBatchProcessed extends Notification implements Should
                 'name' => $this->actor->name,
             ],
             'subject' => [
-                'kind' => 'client',
-                'slug' => $this->client->slug,
-                'name' => $this->clientName(),
+                'kind' => $this->documentable->documentableKind(),
+                'slug' => (string) $this->documentable->getRouteKey(),
+                'name' => $this->documentable->documentableName(),
             ],
             'meta' => [
                 'total' => $this->documents->count(),
@@ -100,7 +101,7 @@ final class DocumentsUploadBatchProcessed extends Notification implements Should
         $total = $this->documents->count();
         $completed = $this->outcome['completed'];
         $failed = $this->outcome['failed'];
-        $subject = "client {$this->clientName()}";
+        $subject = "{$this->documentable->documentableKind()} {$this->documentable->documentableName()}";
 
         return $this->actor === null
             ? $this->selfSummary($total, $completed, $failed, $subject)
@@ -160,10 +161,5 @@ final class DocumentsUploadBatchProcessed extends Notification implements Should
                 $failed,
             ),
         };
-    }
-
-    private function clientName(): string
-    {
-        return "{$this->client->first_name} {$this->client->last_name}";
     }
 }

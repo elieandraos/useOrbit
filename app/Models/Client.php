@@ -97,4 +97,14 @@ final class Client extends Model implements Documentable
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+
+    public function documentableKind(): string
+    {
+        return 'client';
+    }
+
+    public function documentableName(): string
+    {
+        return "{$this->first_name} {$this->last_name}";
+    }
 }
