@@ -19,9 +19,9 @@ final class NotificationsIndexController extends Controller
         $user = $request->user();
 
         return Inertia::render('Notifications/Index', [
-            'notifications' => NotificationResource::collection(
-                $user->notifications()->latest()->paginate()->withQueryString()
-            ),
+            'notifications' => Inertia::scroll(fn () => NotificationResource::collection(
+                $user->notifications()->latest()->paginate(10)
+            )),
         ]);
     }
 }

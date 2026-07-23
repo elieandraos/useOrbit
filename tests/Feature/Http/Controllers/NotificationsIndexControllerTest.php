@@ -29,7 +29,7 @@ test('member sees only their own notifications, paginated most recent first', fu
                 DatabaseNotification::query()
                     ->where('notifiable_id', $user->id)
                     ->latest()
-                    ->paginate(15)
+                    ->paginate(10)
             )
         )
         ->assertInertia(fn ($page) => $page
@@ -48,7 +48,7 @@ test('notifications are paginated', function () {
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->where('notifications.meta.total', 17)
-            ->where('notifications.meta.per_page', 15)
-            ->has('notifications.data', 15)
+            ->where('notifications.meta.per_page', 10)
+            ->has('notifications.data', 10)
         );
 });

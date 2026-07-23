@@ -26,7 +26,7 @@ final class ClientDocumentsController extends Controller
             ->latest()
             ->get();
 
-        return inertia('Documents/Index', [
+        return inertia('ClientDocuments/Index', [
             'client' => ClientResource::make($client),
             'documents' => DocumentResource::collection($documents),
             'uploadConfig' => [
