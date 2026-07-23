@@ -8,6 +8,10 @@ import type { DocumentRowItem } from './document';
 
 const documentToDelete = defineModel<DocumentRowItem | null>({ default: null });
 
+const emit = defineEmits<{
+    deleted: [id: number];
+}>();
+
 const isOpen = computed({
     get: () => documentToDelete.value !== null,
     set: (value) => {
@@ -24,7 +28,10 @@ const isOpen = computed({
         v-bind="documentsDestroy.form(documentToDelete.id)"
         :options="{ preserveScroll: true }"
         v-slot="{ processing }"
-        @success="documentToDelete = null"
+        @success="
+            emit('deleted', documentToDelete.id);
+            documentToDelete = null;
+        "
     >
         <Dialog
             v-model:open="isOpen"
