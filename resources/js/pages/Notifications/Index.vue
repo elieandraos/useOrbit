@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, InfiniteScroll } from '@inertiajs/vue3';
 import { computed, reactive, watch } from 'vue';
 import NotificationRow from '@/components/notifications/NotificationRow.vue';
 import PageHeader from '@/components/shell/PageHeader.vue';
 import Button from '@/components/ui/button/Button.vue';
 import { Card, CardContent } from '@/components/ui/card';
-import { Pagination } from '@/components/ui/pagination';
 import { useNotifications } from '@/composables/useNotifications';
 import type { Paginated } from '@/types';
 import type { NotificationItem } from '@/types/notification';
@@ -70,15 +69,16 @@ function handleMarkAllAsRead(): void {
         </PageHeader>
 
         <Card v-if="hasNotifications" class="mt-5 overflow-hidden">
-            <CardContent class="divide-y divide-border-subtle p-0">
-                <NotificationRow
-                    v-for="notification in items"
-                    :key="notification.id"
-                    :notification="notification"
-                    @select="handleSelect"
-                />
-            </CardContent>
-            <Pagination :meta="notifications.meta" item-label="notifications" />
+            <InfiniteScroll data="notifications">
+                <CardContent class="divide-y divide-border-subtle p-0">
+                    <NotificationRow
+                        v-for="notification in items"
+                        :key="notification.id"
+                        :notification="notification"
+                        @select="handleSelect"
+                    />
+                </CardContent>
+            </InfiniteScroll>
         </Card>
         <div
             v-else
