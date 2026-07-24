@@ -3,3 +3,10 @@ artifact review prompt:
 Review it as if I'm the lead engineer deciding whether this is documentation I'd want in my team's repository.
 Don't just look for correctness. look for clarity, omissions, repetition,
 and whether it showcases the engineering decisions that make the feature worth talking about
+
+to check:
+--------
+why notable dont have notableKind() and notableName() like Documentable() ? because no notification involved for notes ?
+tests that test laravel built-in: pruning, note test relations
+deletes on the db level: migrations cascadesOnDelete(), restrictOnDelete()
+what falls in unit/feature tests ? define structure once for all.
