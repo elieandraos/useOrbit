@@ -42,7 +42,10 @@ function cancel(): void {
 
 <template>
     <div class="flex items-start gap-3">
-        <Avatar :name="authorName" :size="32" />
+        <div class="flex flex-col items-center gap-1.5">
+            <Avatar :name="authorName" :size="32" />
+            <NoteCharacterCounter :length="body.length" :max="maxLength" />
+        </div>
         <div class="min-w-0 flex-1">
             <Textarea
                 v-model="body"
@@ -52,7 +55,6 @@ function cancel(): void {
                 class="w-full"
             />
             <div class="mt-2 flex items-center gap-2">
-                <NoteCharacterCounter :length="body.length" :max="maxLength" />
                 <div class="flex-1" />
                 <Button
                     v-if="body.trim().length > 0"

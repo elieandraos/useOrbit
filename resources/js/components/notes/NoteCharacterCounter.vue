@@ -17,7 +17,7 @@ const toneClass = computed(() => {
         return 'text-warning';
     }
 
-    return 'text-secondary';
+    return 'text-tertiary';
 });
 </script>
 

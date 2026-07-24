@@ -41,7 +41,10 @@ function save(): void {
 <template>
     <div class="rounded-lg border-2 border-accent bg-surface p-[18px]">
         <div class="flex items-start gap-3">
-            <Avatar :name="note.created_by_name ?? ''" :size="32" />
+            <div class="flex flex-col items-center gap-1.5">
+                <Avatar :name="note.created_by_name ?? ''" :size="32" />
+                <NoteCharacterCounter :length="body.length" :max="maxLength" />
+            </div>
             <div class="min-w-0 flex-1">
                 <div class="mb-2.5 flex items-center gap-2">
                     <span class="text-[13.5px] font-semibold text-primary">
@@ -70,10 +73,6 @@ function save(): void {
                         <Checkbox v-model="pinned" :disabled="processing" />
                         Pin to top
                     </label>
-                    <NoteCharacterCounter
-                        :length="body.length"
-                        :max="maxLength"
-                    />
                     <div class="flex-1" />
                     <Button
                         variant="ghost"

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, router, useHttp } from '@inertiajs/vue3';
+import { StickyNote } from '@lucide/vue';
 import { ref } from 'vue';
 import DeleteNoteModal from '@/components/notes/DeleteNoteModal.vue';
 import NoteCard from '@/components/notes/NoteCard.vue';
@@ -95,9 +96,13 @@ function saveNote(
                         />
                     </template>
                 </template>
-                <p v-else class="text-center text-[13px] text-tertiary">
-                    No notes yet.
-                </p>
+                <div
+                    v-else
+                    class="flex flex-col items-center gap-2 py-10 text-center"
+                >
+                    <StickyNote class="size-6 text-tertiary" />
+                    <p class="text-sm text-secondary">No notes yet.</p>
+                </div>
             </CardContent>
         </Card>
 
