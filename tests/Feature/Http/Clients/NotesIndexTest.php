@@ -80,3 +80,13 @@ test('notes from another client are not included', function () {
         ->assertOk()
         ->assertInertia(fn ($page) => $page->has('notes', 2));
 });
+
+test('shares the note config for the composer character counter', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create();
+
+    $this->actingAs($user)
+        ->get(route('clients.notes.index', $client))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('noteConfig.max_length', config('notes.max_length')));
+});
