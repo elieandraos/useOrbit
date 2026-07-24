@@ -9,6 +9,8 @@ use App\Models\Contracts\Documentable;
 use App\Models\Document;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 final class UploadDocumentAction
 {
@@ -17,17 +19,23 @@ final class UploadDocumentAction
         $disk = config('documents.disk');
         $path = $file->store('documents-staging', $disk);
 
-        /** @var Document $document */
-        $document = $documentable->documents()->create([
-            'organization_id' => $user->current_organization_id,
-            'uploaded_by' => $user->id,
-            'original_filename' => $file->getClientOriginalName(),
-            'disk' => $disk,
-            'path' => $path,
-            'mime_type' => $file->getMimeType(),
-            'size_in_bytes' => $file->getSize(),
-            'status' => DocumentStatus::Pending,
-        ]);
+        try {
+            /** @var Document $document */
+            $document = $documentable->documents()->create([
+                'organization_id' => $user->current_organization_id,
+                'uploaded_by' => $user->id,
+                'original_filename' => $file->getClientOriginalName(),
+                'disk' => $disk,
+                'path' => $path,
+                'mime_type' => $file->getMimeType(),
+                'size_in_bytes' => $file->getSize(),
+                'status' => DocumentStatus::Pending,
+            ]);
+        } catch (Throwable $exception) {
+            Storage::disk($disk)->delete($path);
+
+            throw $exception;
+        }
 
         return $document;
     }

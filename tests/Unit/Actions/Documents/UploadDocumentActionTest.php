@@ -6,6 +6,7 @@ use App\Actions\Documents\UploadDocumentAction;
 use App\Enums\DocumentStatus;
 use App\Models\Client;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
@@ -97,6 +98,18 @@ test('keeps the original filename separate from the staging path', function () {
 
     expect($document->original_filename)->toBe('report.pdf')
         ->and($document->path)->not->toContain('report.pdf');
+});
+
+test('deletes the staged file when the document row fails to persist', function () {
+    Storage::fake('local');
+    $user = User::factory()->create(['current_organization_id' => 999999]);
+    $client = Client::factory()->create();
+    $file = UploadedFile::fake()->create('report.pdf', 100, 'application/pdf');
+
+    expect(fn () => app(UploadDocumentAction::class)->handle($user, $client, $file))
+        ->toThrow(QueryException::class);
+
+    Storage::disk('local')->assertDirectoryEmpty('documents-staging');
 });
 
 test('records the mime type and size', function () {
