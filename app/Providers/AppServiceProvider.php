@@ -6,9 +6,11 @@ namespace App\Providers;
 
 use App\Models\Client;
 use App\Models\Document;
+use App\Models\Note;
 use App\Models\User;
 use App\Policies\ClientPolicy;
 use App\Policies\DocumentPolicy;
+use App\Policies\NotePolicy;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -42,6 +44,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(Client::class, ClientPolicy::class);
         Gate::policy(Document::class, DocumentPolicy::class);
+        Gate::policy(Note::class, NotePolicy::class);
     }
 
     protected function registerMorphMap(): void
