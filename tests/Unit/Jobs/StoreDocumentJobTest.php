@@ -44,6 +44,27 @@ test('sets status to completed, updates the path, and stamps stored_at on succes
         ->and($fresh->stored_at)->not->toBeNull();
 });
 
+test('moves the staged file and updates the disk column on the configured non-local disk', function () {
+    config(['documents.disk' => 's3']);
+    Storage::fake('s3');
+    $user = User::factory()->withOrganization()->create();
+    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create([
+        'mime_type' => 'application/pdf',
+        'disk' => 's3',
+        'path' => 'documents-staging/'.Str::uuid(),
+    ]);
+    Storage::disk('s3')->put($document->path, 'staged contents');
+    $destination = sprintf('organizations/%d/%s/%d/%d.pdf', $document->organization_id, $document->documentable_type, $document->documentable_id, $document->id);
+
+    new StoreDocumentJob($document)->handle();
+
+    Storage::disk('s3')->assertExists($destination);
+    $fresh = $document->fresh();
+    expect($fresh->disk)->toBe('s3')
+        ->and($fresh->path)->toBe($destination)
+        ->and($fresh->status)->toBe(DocumentStatus::Completed);
+});
+
 test('finalizes the row without moving when the destination already exists', function () {
     Storage::fake('local');
     $user = User::factory()->withOrganization()->create();

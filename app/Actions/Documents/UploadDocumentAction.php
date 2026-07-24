@@ -14,14 +14,15 @@ final class UploadDocumentAction
 {
     public function handle(User $user, Documentable $documentable, UploadedFile $file): Document
     {
-        $path = $file->store('documents-staging', 'local');
+        $disk = config('documents.disk');
+        $path = $file->store('documents-staging', $disk);
 
         /** @var Document $document */
         $document = $documentable->documents()->create([
             'organization_id' => $user->current_organization_id,
             'uploaded_by' => $user->id,
             'original_filename' => $file->getClientOriginalName(),
-            'disk' => 'local',
+            'disk' => $disk,
             'path' => $path,
             'mime_type' => $file->getMimeType(),
             'size_in_bytes' => $file->getSize(),

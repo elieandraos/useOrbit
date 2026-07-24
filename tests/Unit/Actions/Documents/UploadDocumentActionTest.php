@@ -22,6 +22,20 @@ test('stashes the file to the local staging disk', function () {
     expect($document->path)->toStartWith('documents-staging/');
 });
 
+test('stages the file to the configured documents disk', function () {
+    config(['documents.disk' => 's3']);
+    Storage::fake('s3');
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create();
+    $file = UploadedFile::fake()->create('report.pdf', 100, 'application/pdf');
+
+    /** @noinspection PhpUnhandledExceptionInspection */
+    $document = app(UploadDocumentAction::class)->handle($user, $client, $file);
+
+    Storage::disk('s3')->assertExists($document->path);
+    expect($document->disk)->toBe('s3');
+});
+
 test('creates a pending document row', function () {
     Storage::fake('local');
     $user = User::factory()->withOrganization()->create();

@@ -51,6 +51,7 @@ final class StoreDocumentJob implements ShouldQueue
         }
 
         $document->update([
+            'disk' => $disk,
             'path' => $destination,
             'status' => DocumentStatus::Completed,
             'stored_at' => now(),
