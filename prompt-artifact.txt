@@ -1,0 +1,360 @@
+Explore the codebase and create a concise architecture hand-off artifact for:
+
+[TOPIC]
+
+Do not begin writing immediately.
+
+First, inspect the implementation thoroughly enough to understand the actual architecture, including:
+
+- models and relationships;
+- contracts, interfaces, and traits;
+- middleware and service providers;
+- controllers and request classes;
+- policies and authorization;
+- actions, services, jobs, listeners, and notifications;
+- resources and frontend-facing contracts;
+- composables and reusable frontend components, where relevant;
+- routes and integration boundaries;
+- configuration;
+- scheduled tasks;
+- database structure and scopes;
+- tests covering the feature;
+- representative page or feature integrations.
+
+Follow references across the codebase instead of documenting one file in isolation.
+
+The artifact must describe the architecture that actually exists. Do not invent abstractions, guarantees, integrations, or future capabilities that are not supported by the code.
+
+When something is ambiguous, state the ambiguity rather than guessing.
+
+GOAL
+
+Create a developer hand-off and portfolio-quality architecture document.
+
+It should help:
+
+1. A developer joining the project understand the system quickly.
+2. A developer extend the system without breaking its conventions.
+3. An engineering reviewer understand the design decisions and trade-offs.
+4. An interviewer see the architectural reasoning behind the implementation.
+
+Assume the reader already knows Laravel, Vue, Inertia, queues, policies, resources, and the general technology stack.
+
+Do not teach framework basics.
+
+TARGET
+
+- Reading time: approximately 5 to 8 minutes.
+- Focus on architecture, responsibilities, boundaries, contracts, lifecycle, extension points, security, failures, and testing.
+- Do not reproduce the codebase.
+- Prefer compact diagrams, tables, signatures, and payload shapes.
+- Use implementation code only when it communicates an important public contract.
+- Every major section should earn its place.
+
+The document should feel like an architectural map and extension guide, not source-code documentation.
+
+BEFORE WRITING
+
+Build an internal implementation map covering:
+
+- the problem this architecture solves;
+- the central abstraction or source of truth;
+- reusable pieces;
+- integration-specific pieces;
+- synchronous and asynchronous boundaries;
+- request or event lifecycle;
+- authorization and isolation boundaries;
+- failure behavior;
+- testing boundaries;
+- deliberate trade-offs;
+- current limitations that are directly relevant to the architecture.
+
+Use this map to determine the best narrative order.
+
+Do not include the internal research notes in the final artifact.
+
+DOCUMENT STRUCTURE
+
+Adapt the structure to the topic rather than following it mechanically, but generally include the following.
+
+## 1. Problem, purpose, and scope
+
+Start with the problem being solved.
+
+Explain why the architecture exists and what duplication, inconsistency, security risk, or maintenance problem it avoids.
+
+Then define:
+
+- what the system covers;
+- what the central reusable capability is;
+- the current concrete integrations;
+- where the document stops.
+
+Do not begin with class names.
+
+Do not list unrelated future product work as limitations.
+
+## 2. Core architecture
+
+Identify the foundation of the system.
+
+Depending on the topic, this might be:
+
+- tenant context and organization ownership;
+- a polymorphic model;
+- an application event envelope;
+- a controller-action-resource flow;
+- a shared query abstraction;
+- a reusable frontend orchestration layer.
+
+Explain:
+
+- the source of truth;
+- the main abstractions;
+- what is shared;
+- what remains integration-specific;
+- why the boundaries exist.
+
+Include one compact architecture diagram.
+
+## 3. Building blocks and responsibilities
+
+Show the main components in a concise table:
+
+| Component | Type | Responsibility |
+|---|---|---|
+
+Group them by layer when useful:
+
+- HTTP or entry layer;
+- application layer;
+- domain or model layer;
+- persistence layer;
+- asynchronous layer;
+- presentation layer;
+- frontend layer.
+
+Do not describe every class. Include only components that explain the architecture.
+
+## 4. Lifecycle
+
+Walk through the main request, command, or event lifecycle once.
+
+For example:
+
+- request enters;
+- context is established;
+- authorization and validation run;
+- a query or action performs the use case;
+- state changes are persisted;
+- a resource or event forms the output;
+- the frontend consumes the result.
+
+Use one Mermaid sequence diagram or flowchart.
+
+Keep it architecture-level and avoid line-by-line implementation detail.
+
+Do not repeat the lifecycle in later sections.
+
+## 5. Public contracts and conventions
+
+Document the APIs another developer must understand to use or extend the system.
+
+Examples:
+
+- interfaces and traits;
+- action signatures;
+- controller method responsibilities;
+- query/filter contracts;
+- resource shapes;
+- event payloads;
+- middleware guarantees;
+- frontend composable APIs;
+- route-level contracts.
+
+Prefer small signatures over complete implementations.
+
+Clearly distinguish:
+
+- mandatory conventions;
+- reusable helpers;
+- owner-specific or page-specific integration code.
+
+## 6. Adding a new integration
+
+Show the minimum conceptual steps required to extend the architecture.
+
+Answer:
+
+- what the developer must add;
+- what they must configure;
+- what authorization they must define;
+- what existing infrastructure they reuse unchanged;
+- what tests they should add.
+
+Use one small representative example only.
+
+Label illustrative code clearly if it is not an existing implementation.
+
+## 7. Security and correctness boundaries
+
+Document only controls confirmed by the codebase.
+
+Depending on the topic, cover relevant concerns such as:
+
+- tenant or organization isolation;
+- policy authorization;
+- server-side validation;
+- trusted versus untrusted identifiers;
+- global scopes;
+- explicit tenant assignment;
+- query scoping;
+- resource exposure;
+- private channels;
+- file access;
+- idempotency;
+- transactions;
+- safe error exposure.
+
+Use a compact matrix:
+
+| Concern | How it is enforced |
+|---|---|
+
+Do not add generic security claims that the implementation does not support.
+
+## 8. Failure and recovery behavior
+
+Describe meaningful failure domains for this architecture.
+
+Use a compact table:
+
+| Failure | Current behavior or recovery |
+|---|---|
+
+Distinguish between architectural failures rather than grouping everything under one generic error.
+
+Document intentional boundaries separately from failures.
+
+## 9. Testing strategy
+
+Inspect the actual tests before writing this section.
+
+Explain how the test structure mirrors the architecture.
+
+Cover, where present:
+
+- feature tests at HTTP or integration boundaries;
+- unit tests for reusable actions, jobs, queries, filters, notifications, or policies;
+- tenant isolation tests;
+- authorization and validation tests;
+- event or payload tests;
+- regression tests for important failure paths.
+
+Do not list every test method.
+
+Explain what confidence each testing layer provides.
+
+## 10. Architecture decisions and trade-offs
+
+Use a concise table:
+
+| Decision | Why | Trade-off |
+|---|---|---|
+
+Order decisions from foundational architecture to implementation mechanics.
+
+Focus on choices that reveal engineering judgment.
+
+Examples include:
+
+- shared abstraction versus page-specific code;
+- explicit application actions versus controller logic;
+- resource boundaries versus raw models;
+- tenant scopes versus repeated query conditions;
+- one event envelope versus notification-specific payloads;
+- query objects versus inline filtering;
+- synchronous versus queued processing;
+- framework primitives versus custom infrastructure.
+
+## 11. Architectural principles
+
+Add no more than five short principles that naturally emerge from the codebase.
+
+Examples:
+
+- Reusable capability over duplicated feature implementations.
+- Explicit boundaries over implicit framework behavior.
+- Durable state over component-owned state.
+- Thin entry points with focused application actions.
+- Framework primitives over custom infrastructure.
+
+Do not force principles that are not supported by the implementation.
+
+## 12. Focused improvements
+
+Include only improvements directly relevant to the documented architecture.
+
+Keep this to three to five items.
+
+Separate:
+
+- genuine correctness or maintainability improvements;
+- intentional current boundaries;
+- future capabilities that should only be added if requirements change.
+
+Do not turn this into a product backlog.
+
+## 13. Summary
+
+End with a concise summary that answers:
+
+- what the reusable capability is;
+- what the main abstraction is;
+- how an integration uses it;
+- how the lifecycle works;
+- what guarantees and boundaries matter.
+
+Finish with one memorable formula or compact architecture statement where appropriate.
+
+WRITING STYLE
+
+Write like a senior engineer documenting a production system.
+
+The document should be:
+
+- concise;
+- technically precise;
+- source-grounded;
+- easy to scan;
+- confident without overselling;
+- useful for both hand-off and interview discussion.
+
+Avoid:
+
+- full implementations;
+- method-by-method narration;
+- code-review language throughout;
+- repeating the same concept from several viewpoints;
+- unsupported claims;
+- generic framework explanations;
+- bloated future-work sections;
+- describing implementation details that another developer can discover directly from the code.
+
+Prefer:
+
+- one strong narrative;
+- one primary lifecycle diagram;
+- compact tables;
+- small API signatures;
+- one extension example;
+- explicit security and testing sections;
+- decisions framed with reasons and trade-offs.
+
+OUTPUT
+
+Create the complete final artifact in the same visual and structural style as the existing Reusable Documents Architecture artifact.
+
+Do not output research notes, a critique, or a proposed outline.
+
+Produce the finished architecture hand-off.
