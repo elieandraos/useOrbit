@@ -10,6 +10,7 @@ use App\Http\Requests\Notes\UpdateNoteRequest;
 use App\Http\Resources\NoteResource;
 use App\Models\Note;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
+use Inertia\Inertia;
 
 final class NotesUpdateController extends Controller
 {
@@ -18,6 +19,8 @@ final class NotesUpdateController extends Controller
     {
         $note = $action->handle($note, $request->validated());
         $note->loadMissing('createdBy');
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Note updated.')]);
 
         return NoteResource::make($note);
     }

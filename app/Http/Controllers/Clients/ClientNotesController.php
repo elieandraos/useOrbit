@@ -13,6 +13,7 @@ use App\Models\Client;
 use App\Models\Note;
 use App\Models\User;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
+use Inertia\Inertia;
 use Inertia\Response;
 
 final class ClientNotesController extends Controller
@@ -43,6 +44,8 @@ final class ClientNotesController extends Controller
 
         $note = $action->handle($user, $client, $request->validated());
         $note->loadMissing('createdBy');
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Note created.')]);
 
         return NoteResource::make($note);
     }
