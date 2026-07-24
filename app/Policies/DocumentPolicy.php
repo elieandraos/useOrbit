@@ -22,6 +22,11 @@ final class DocumentPolicy
         return $documentable->organization_id === $user->current_organization_id;
     }
 
+    public function finalize(User $user): bool
+    {
+        return $user->current_organization_id !== null;
+    }
+
     public function view(User $user, Document $document): bool
     {
         return $document->organization_id === $user->current_organization_id;

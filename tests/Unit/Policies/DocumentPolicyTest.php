@@ -75,3 +75,15 @@ test('owner cannot delete a document from a different organization', function ()
 
     expect($owner->can('delete', $document))->toBeFalse();
 });
+
+test('user with a current organization can finalize a document batch', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    expect($user->can('finalize', Document::class))->toBeTrue();
+});
+
+test('user without a current organization cannot finalize a document batch', function () {
+    $user = User::factory()->create(['current_organization_id' => null]);
+
+    expect($user->can('finalize', Document::class))->toBeFalse();
+});
