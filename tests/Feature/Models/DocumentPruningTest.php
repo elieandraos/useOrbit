@@ -66,13 +66,32 @@ test('leaves old completed documents untouched', function () {
     expect(Document::query()->whereKey($document->id)->exists())->toBeTrue();
 });
 
-test('leaves old failed documents untouched', function () {
+test('deletes stale failed documents and their staging files', function () {
+    Storage::fake('local');
     $user = User::factory()->withOrganization()->create();
     $document = Document::factory()->forOrganization($user)->uploadedBy($user)->failed()->create([
+        'path' => 'documents-staging/'.Str::uuid(),
         'created_at' => now()->subHours(2),
     ]);
+    Storage::disk('local')->put($document->path, 'staged contents');
+
+    $this->artisan('model:prune', ['--model' => [Document::class]])->assertSuccessful();
+
+    expect(Document::query()->whereKey($document->id)->exists())->toBeFalse();
+    Storage::disk('local')->assertMissing($document->path);
+});
+
+test('leaves recent failed documents untouched', function () {
+    Storage::fake('local');
+    $user = User::factory()->withOrganization()->create();
+    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->failed()->create([
+        'path' => 'documents-staging/'.Str::uuid(),
+        'created_at' => now()->subMinutes(30),
+    ]);
+    Storage::disk('local')->put($document->path, 'staged contents');
 
     $this->artisan('model:prune', ['--model' => [Document::class]])->assertSuccessful();
 
     expect(Document::query()->whereKey($document->id)->exists())->toBeTrue();
+    Storage::disk('local')->assertExists($document->path);
 });

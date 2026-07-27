@@ -69,7 +69,7 @@ final class Document extends Model
     public function prunable(): Builder
     {
         return self::query()
-            ->whereIn('status', [DocumentStatus::Pending, DocumentStatus::Processing])
+            ->whereIn('status', [DocumentStatus::Pending, DocumentStatus::Processing, DocumentStatus::Failed])
             ->where('created_at', '<', now()->subHours(config('documents.prune_after_hours')));
     }
 
