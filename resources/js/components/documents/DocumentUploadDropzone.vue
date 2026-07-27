@@ -23,12 +23,18 @@ const maxSizeMb = computed(() =>
 
 const acceptAttribute = computed(() =>
     props.config.allowed_extensions
-        .map((extension) => `.${extension.toLowerCase()}`)
+        .map((extension) => `.${extension}`)
         .join(','),
 );
 
+const allowedExtensionsLabel = computed(() =>
+    props.config.allowed_extensions
+        .map((extension) => extension.toUpperCase())
+        .join(', '),
+);
+
 function extensionOf(file: File): string {
-    return file.name.split('.').pop()?.toUpperCase() ?? '';
+    return file.name.split('.').pop()?.toLowerCase() ?? '';
 }
 
 function reject(name: string, reason: string): void {
@@ -66,7 +72,7 @@ function handleFiles(fileList: FileList | null): void {
         if (!props.config.allowed_extensions.includes(extensionOf(file))) {
             reject(
                 file.name,
-                `Unsupported file type — try ${props.config.allowed_extensions.join(', ')}`,
+                `Unsupported file type — try ${allowedExtensionsLabel.value}`,
             );
 
             continue;
@@ -175,8 +181,8 @@ function onLabelClick(event: MouseEvent): void {
                     >
                 </p>
                 <p class="mt-0.5 text-xs text-tertiary">
-                    {{ config.allowed_extensions.join(', ') }} · Max
-                    {{ maxSizeMb }} MB per file
+                    {{ allowedExtensionsLabel }} · Max {{ maxSizeMb }} MB per
+                    file
                 </p>
             </template>
         </div>

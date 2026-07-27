@@ -31,10 +31,7 @@ final class ClientDocumentsController extends Controller
             'documents' => DocumentResource::collection($documents),
             'uploadConfig' => [
                 'max_size_bytes' => config('documents.max_size'),
-                'allowed_extensions' => collect(config('documents.allowed_mimes'))
-                    ->map(fn (string $mime) => strtoupper($mime))
-                    ->values()
-                    ->all(),
+                'allowed_extensions' => config('documents.allowed_mimes'),
                 'max_files_per_batch' => config('documents.max_files_per_batch'),
             ],
         ]);
