@@ -7,6 +7,7 @@ use App\Jobs\StoreDocumentJob;
 use App\Models\Document;
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -175,7 +176,7 @@ test('reverts the document to pending when the attempt throws, so it can be retr
     expect($document->fresh()->status)->toBe(DocumentStatus::Pending);
 });
 
-test('failed hook marks the document as failed with the exception message', function () {
+test('failed hook marks the document as failed with a safe, generic message', function () {
     $user = User::factory()->withOrganization()->create();
     $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create();
 
@@ -183,7 +184,20 @@ test('failed hook marks the document as failed with the exception message', func
 
     $fresh = $document->fresh();
     expect($fresh->status)->toBe(DocumentStatus::Failed)
-        ->and($fresh->error_message)->toBe('Disk write failed.');
+        ->and($fresh->error_message)->toBe('We were unable to store this file. Please try uploading it again.');
+});
+
+test('failed hook logs the real exception message for debugging', function () {
+    Log::spy();
+    $user = User::factory()->withOrganization()->create();
+    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create();
+
+    new StoreDocumentJob($document)->failed(new RuntimeException('Disk write failed.'));
+
+    Log::shouldHaveReceived('error')->once()->withArgs(
+        fn (string $message, array $context): bool => $context['document_id'] === $document->id
+            && $context['exception'] === 'Disk write failed.',
+    );
 });
 
 test('is a no-op when the batch has been cancelled', function () {

@@ -10,6 +10,7 @@ use Illuminate\Bus\Batchable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 use Symfony\Component\Mime\MimeTypes;
@@ -73,9 +74,14 @@ final class StoreDocumentJob implements ShouldQueue
 
     public function failed(?Throwable $exception): void
     {
+        Log::error('Failed to store an uploaded document.', [
+            'document_id' => $this->document->id,
+            'exception' => $exception?->getMessage(),
+        ]);
+
         $this->document->update([
             'status' => DocumentStatus::Failed,
-            'error_message' => $exception?->getMessage(),
+            'error_message' => 'We were unable to store this file. Please try uploading it again.',
         ]);
     }
 
