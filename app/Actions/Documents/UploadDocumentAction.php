@@ -14,6 +14,9 @@ use Throwable;
 
 final class UploadDocumentAction
 {
+    /**
+     * @throws Throwable
+     */
     public function handle(User $user, Documentable $documentable, UploadedFile $file): Document
     {
         $disk = config('documents.disk');
