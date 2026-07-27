@@ -37,6 +37,7 @@ class DocumentFactory extends Factory
             'path' => 'documents-staging/'.fake()->uuid(),
             'mime_type' => fake()->mimeType(),
             'size_in_bytes' => fake()->numberBetween(1024, 25 * 1024 * 1024),
+            'checksum' => fake()->sha256(),
             'status' => DocumentStatus::Pending,
             'stored_at' => null,
             'error_message' => null,

@@ -17,6 +17,7 @@ final class UploadDocumentAction
     public function handle(User $user, Documentable $documentable, UploadedFile $file): Document
     {
         $disk = config('documents.disk');
+        $checksum = hash_file('sha256', $file->getRealPath());
         $path = $file->store('documents-staging', $disk);
 
         try {
@@ -29,6 +30,7 @@ final class UploadDocumentAction
                 'path' => $path,
                 'mime_type' => $file->getMimeType(),
                 'size_in_bytes' => $file->getSize(),
+                'checksum' => $checksum,
                 'status' => DocumentStatus::Pending,
             ]);
         } catch (Throwable $exception) {

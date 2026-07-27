@@ -29,6 +29,7 @@ use Illuminate\Support\Facades\Storage;
  * @property string $path
  * @property string $mime_type
  * @property int $size_in_bytes
+ * @property string|null $checksum
  * @property DocumentStatus $status
  * @property CarbonImmutable|null $stored_at
  * @property string|null $error_message
@@ -39,7 +40,7 @@ use Illuminate\Support\Facades\Storage;
  */
 #[Fillable([
     'organization_id', 'documentable_type', 'documentable_id', 'uploaded_by',
-    'original_filename', 'disk', 'path', 'mime_type', 'size_in_bytes',
+    'original_filename', 'disk', 'path', 'mime_type', 'size_in_bytes', 'checksum',
     'status', 'stored_at', 'error_message',
 ])]
 final class Document extends Model

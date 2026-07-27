@@ -65,22 +65,60 @@ test('moves the staged file and updates the disk column on the configured non-lo
         ->and($fresh->status)->toBe(DocumentStatus::Completed);
 });
 
-test('finalizes the row without moving when the destination already exists', function () {
+test('finalizes the row without moving when the destination already exists and passes its checksum', function () {
     Storage::fake('local');
     $user = User::factory()->withOrganization()->create();
+    $contents = 'already moved by a prior crashed attempt';
     $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create([
         'mime_type' => 'application/pdf',
         'path' => 'documents-staging/'.Str::uuid(),
+        'checksum' => hash('sha256', $contents),
     ]);
     $destination = sprintf('organizations/%d/%s/%d/%d.pdf', $document->organization_id, $document->documentable_type, $document->documentable_id, $document->id);
-    Storage::disk('local')->put($destination, 'already moved by a prior crashed attempt');
+    Storage::disk('local')->put($destination, $contents);
 
     new StoreDocumentJob($document)->handle();
 
     $fresh = $document->fresh();
     expect($fresh->status)->toBe(DocumentStatus::Completed)
         ->and($fresh->path)->toBe($destination);
+    Storage::disk('local')->assertExists($destination);
 });
+
+test('re-copies the staged file when the destination copy fails its checksum', function () {
+    Storage::fake('local');
+    $user = User::factory()->withOrganization()->create();
+    $stagedContents = 'staged contents';
+    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create([
+        'mime_type' => 'application/pdf',
+        'path' => 'documents-staging/'.Str::uuid(),
+        'checksum' => hash('sha256', $stagedContents),
+    ]);
+    $destination = sprintf('organizations/%d/%s/%d/%d.pdf', $document->organization_id, $document->documentable_type, $document->documentable_id, $document->id);
+    Storage::disk('local')->put($document->path, $stagedContents);
+    Storage::disk('local')->put($destination, 'a partial write from a crashed attempt');
+
+    new StoreDocumentJob($document)->handle();
+
+    $fresh = $document->fresh();
+    expect($fresh->status)->toBe(DocumentStatus::Completed)
+        ->and(Storage::disk('local')->get($destination))->toBe($stagedContents);
+});
+
+test('throws when the destination fails its checksum and the staged file is gone', function () {
+    Storage::fake('local');
+    $user = User::factory()->withOrganization()->create();
+    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create([
+        'mime_type' => 'application/pdf',
+        'path' => 'documents-staging/'.Str::uuid(),
+        'checksum' => hash('sha256', 'staged contents'),
+    ]);
+    $destination = sprintf('organizations/%d/%s/%d/%d.pdf', $document->organization_id, $document->documentable_type, $document->documentable_id, $document->id);
+    Storage::disk('local')->put($destination, 'a partial write from a crashed attempt');
+    // No staged file at $document->path: nothing left to recover from.
+
+    new StoreDocumentJob($document)->handle();
+})->throws(RuntimeException::class, 'staged file is missing and the destination copy failed its integrity check.');
 
 test('is a no-op when the document is no longer pending', function () {
     Storage::fake('local');

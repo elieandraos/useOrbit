@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('path', 500);
             $table->string('mime_type', 100);
             $table->unsignedBigInteger('size_in_bytes');
+            $table->string('checksum', 64)->nullable();
             $table->string('status', 20)->default('pending');
             $table->timestamp('stored_at')->nullable();
             $table->text('error_message')->nullable();

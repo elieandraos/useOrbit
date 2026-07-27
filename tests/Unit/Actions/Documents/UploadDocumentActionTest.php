@@ -100,6 +100,19 @@ test('keeps the original filename separate from the staging path', function () {
         ->and($document->path)->not->toContain('report.pdf');
 });
 
+test('computes a sha256 checksum of the uploaded file', function () {
+    Storage::fake('local');
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create();
+    $file = UploadedFile::fake()->create('report.pdf', 100, 'application/pdf');
+    $expectedChecksum = hash_file('sha256', $file->getRealPath());
+
+    /** @noinspection PhpUnhandledExceptionInspection */
+    $document = app(UploadDocumentAction::class)->handle($user, $client, $file);
+
+    expect($document->checksum)->toBe($expectedChecksum);
+});
+
 test('deletes the staged file when the document row fails to persist', function () {
     Storage::fake('local');
     $user = User::factory()->create(['current_organization_id' => 999999]);

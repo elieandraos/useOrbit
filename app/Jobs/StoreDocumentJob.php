@@ -31,6 +31,9 @@ final class StoreDocumentJob implements ShouldQueue
         return [10, 30, 60];
     }
 
+    /**
+     * @throws Throwable
+     */
     public function handle(): void
     {
         if ($this->batch()?->cancelled()) {
@@ -47,7 +50,11 @@ final class StoreDocumentJob implements ShouldQueue
             $disk = config('documents.disk');
             $destination = $this->destinationPath($document);
 
-            if (! Storage::disk($disk)->exists($destination)) {
+            if (! $this->alreadyStored($disk, $destination, $document->checksum)) {
+                if (! Storage::disk($disk)->exists($document->path)) {
+                    throw new RuntimeException("Document [$document->id] staged file is missing and the destination copy failed its integrity check.");
+                }
+
                 Storage::disk($disk)->move($document->path, $destination);
             }
 
@@ -86,6 +93,34 @@ final class StoreDocumentJob implements ShouldQueue
 
             return $document;
         });
+    }
+
+    private function alreadyStored(string $disk, string $destination, ?string $expectedChecksum): bool
+    {
+        if (! Storage::disk($disk)->exists($destination)) {
+            return false;
+        }
+
+        if ($expectedChecksum === null) {
+            return true;
+        }
+
+        return $this->checksum($disk, $destination) === $expectedChecksum;
+    }
+
+    private function checksum(string $disk, string $path): ?string
+    {
+        $stream = Storage::disk($disk)->readStream($path);
+
+        if (! is_resource($stream)) {
+            return null;
+        }
+
+        $context = hash_init('sha256');
+        hash_update_stream($context, $stream);
+        fclose($stream);
+
+        return hash_final($context);
     }
 
     private function destinationPath(Document $document): string
