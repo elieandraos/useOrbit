@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
-use App\Enums\DocumentStatus;
 use App\Enums\OrganizationRole;
 use App\Models\Contracts\Documentable;
 use App\Models\Document;
@@ -41,7 +40,7 @@ final class DocumentPolicy
     public function delete(User $user, Document $document): bool
     {
         return $document->organization_id === $user->current_organization_id
-            && $document->status !== DocumentStatus::Pending
+            && $document->status->isSettled()
             && ($user->organizationRole() === OrganizationRole::Owner || $document->uploaded_by === $user->id);
     }
 }

@@ -52,6 +52,13 @@ class DocumentFactory extends Factory
         ]);
     }
 
+    public function processing(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'status' => DocumentStatus::Processing,
+        ]);
+    }
+
     public function failed(): static
     {
         return $this->state(fn (array $attributes): array => [

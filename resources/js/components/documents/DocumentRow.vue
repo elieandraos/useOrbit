@@ -139,11 +139,13 @@ const kind = computed(() => fileKind(filename.value));
         </button>
     </div>
 
-    <!-- Persisted document: pending or failed -->
+    <!-- Persisted document: pending, processing, or failed -->
     <div
         v-else-if="
             item.kind === 'document' &&
-            (item.status === 'pending' || item.status === 'failed')
+            (item.status === 'pending' ||
+                item.status === 'processing' ||
+                item.status === 'failed')
         "
         class="flex items-center gap-3.5 rounded-md border px-3.5 py-3"
         :class="
@@ -189,7 +191,10 @@ const kind = computed(() => fileKind(filename.value));
                 </template>
             </p>
         </div>
-        <Badge v-if="item.status === 'pending'" tone="warning" dot
+        <Badge
+            v-if="item.status === 'pending' || item.status === 'processing'"
+            tone="warning"
+            dot
             >Processing</Badge
         >
         <Badge v-else tone="danger" dot>Failed</Badge>

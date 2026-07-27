@@ -67,6 +67,16 @@ test('delete is denied while the document is pending, even for the owner or the 
         ->and($uploader->can('delete', $document))->toBeFalse();
 });
 
+test('delete is denied while the document is processing, even for the owner or the uploader', function () {
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+    $uploader = User::factory()->forOrganization($organization)->create();
+    $document = Document::factory()->forOrganization($uploader)->uploadedBy($uploader)->processing()->create();
+
+    expect($owner->can('delete', $document))->toBeFalse()
+        ->and($uploader->can('delete', $document))->toBeFalse();
+});
+
 test('owner cannot delete a document from a different organization', function () {
     $organization = Organization::factory()->create();
     $otherOrganization = Organization::factory()->create();

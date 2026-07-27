@@ -95,6 +95,48 @@ test('is a no-op when the document is no longer pending', function () {
         ->and($fresh->path)->toBe($originalPath);
 });
 
+test('is a no-op when the document is already being processed by another worker', function () {
+    Storage::fake('local');
+    $user = User::factory()->withOrganization()->create();
+    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->processing()->create();
+    $originalPath = $document->path;
+
+    new StoreDocumentJob($document)->handle();
+
+    $fresh = $document->fresh();
+    expect($fresh->status)->toBe(DocumentStatus::Processing)
+        ->and($fresh->path)->toBe($originalPath);
+});
+
+test('claiming transitions the document to processing and blocks a second concurrent claim', function () {
+    $user = User::factory()->withOrganization()->create();
+    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create();
+    $job = new StoreDocumentJob($document);
+    $claim = fn (): ?Document => Closure::bind(fn (): ?Document => $this->claim(), $job, $job)();
+
+    $claimed = $claim();
+
+    expect($claimed)->not->toBeNull()
+        ->and($claimed->status)->toBe(DocumentStatus::Processing)
+        ->and($document->fresh()->status)->toBe(DocumentStatus::Processing);
+
+    expect($claim())->toBeNull();
+});
+
+test('reverts the document to pending when the attempt throws, so it can be retried', function () {
+    Storage::fake('local');
+    $user = User::factory()->withOrganization()->create();
+    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create([
+        'mime_type' => 'application/zip',
+        'path' => 'documents-staging/'.Str::uuid(),
+    ]);
+    Storage::disk('local')->put($document->path, 'staged contents');
+
+    expect(fn () => new StoreDocumentJob($document)->handle())->toThrow(RuntimeException::class);
+
+    expect($document->fresh()->status)->toBe(DocumentStatus::Pending);
+});
+
 test('failed hook marks the document as failed with the exception message', function () {
     $user = User::factory()->withOrganization()->create();
     $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create();

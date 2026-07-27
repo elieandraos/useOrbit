@@ -43,19 +43,25 @@ final class StoreDocumentJob implements ShouldQueue
             return;
         }
 
-        $disk = config('documents.disk');
-        $destination = $this->destinationPath($document);
+        try {
+            $disk = config('documents.disk');
+            $destination = $this->destinationPath($document);
 
-        if (! Storage::disk($disk)->exists($destination)) {
-            Storage::disk($disk)->move($document->path, $destination);
+            if (! Storage::disk($disk)->exists($destination)) {
+                Storage::disk($disk)->move($document->path, $destination);
+            }
+
+            $document->update([
+                'disk' => $disk,
+                'path' => $destination,
+                'status' => DocumentStatus::Completed,
+                'stored_at' => now(),
+            ]);
+        } catch (Throwable $exception) {
+            $document->update(['status' => DocumentStatus::Pending]);
+
+            throw $exception;
         }
-
-        $document->update([
-            'disk' => $disk,
-            'path' => $destination,
-            'status' => DocumentStatus::Completed,
-            'stored_at' => now(),
-        ]);
     }
 
     public function failed(?Throwable $exception): void
@@ -75,6 +81,8 @@ final class StoreDocumentJob implements ShouldQueue
             if (! $document instanceof Document || $document->status !== DocumentStatus::Pending) {
                 return null;
             }
+
+            $document->update(['status' => DocumentStatus::Processing]);
 
             return $document;
         });

@@ -40,6 +40,21 @@ test('leaves recent pending documents untouched', function () {
     Storage::disk('local')->assertExists($document->path);
 });
 
+test('deletes stale processing documents and their staging files', function () {
+    Storage::fake('local');
+    $user = User::factory()->withOrganization()->create();
+    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->processing()->create([
+        'path' => 'documents-staging/'.Str::uuid(),
+        'created_at' => now()->subHours(2),
+    ]);
+    Storage::disk('local')->put($document->path, 'staged contents');
+
+    $this->artisan('model:prune', ['--model' => [Document::class]])->assertSuccessful();
+
+    expect(Document::query()->whereKey($document->id)->exists())->toBeFalse();
+    Storage::disk('local')->assertMissing($document->path);
+});
+
 test('leaves old completed documents untouched', function () {
     $user = User::factory()->withOrganization()->create();
     $document = Document::factory()->forOrganization($user)->uploadedBy($user)->completed()->create([

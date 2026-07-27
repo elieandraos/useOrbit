@@ -59,7 +59,8 @@ watch(() => props.documents, syncDocuments, { immediate: true });
 // leave "pending" rows showing outdated state — reconcile once on mount.
 onMounted(() => {
     const hasPending = props.documents.some(
-        (document) => document.status === 'pending',
+        (document) =>
+            document.status === 'pending' || document.status === 'processing',
     );
 
     if (hasPending) {
