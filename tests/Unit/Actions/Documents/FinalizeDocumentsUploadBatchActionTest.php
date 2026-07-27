@@ -37,8 +37,9 @@ test('dispatches a batch containing a job for each pending document owned by the
     $second = Document::factory()->forOrganization($user)->uploadedBy($user)->create(['status' => DocumentStatus::Pending]);
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    app(FinalizeDocumentsUploadBatchAction::class)->handle($user, [$first->id, $second->id]);
+    $rejectedCount = app(FinalizeDocumentsUploadBatchAction::class)->handle($user, [$first->id, $second->id]);
 
+    expect($rejectedCount)->toBe(0);
     /** @noinspection PhpParamsInspection */
     Bus::assertBatched(fn (PendingBatchFake $batch): bool => $batch->jobs->count() === 2
         && $batch->hasJobs([
@@ -54,8 +55,9 @@ test('excludes documents that are not pending', function () {
     $completed = Document::factory()->forOrganization($user)->uploadedBy($user)->completed()->create();
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    app(FinalizeDocumentsUploadBatchAction::class)->handle($user, [$completed->id]);
+    $rejectedCount = app(FinalizeDocumentsUploadBatchAction::class)->handle($user, [$completed->id]);
 
+    expect($rejectedCount)->toBe(1);
     Bus::assertNothingBatched();
 });
 
@@ -66,8 +68,9 @@ test('excludes documents uploaded by another user', function () {
     $othersDocument = Document::factory()->forOrganization($user)->uploadedBy($otherMember)->create(['status' => DocumentStatus::Pending]);
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    app(FinalizeDocumentsUploadBatchAction::class)->handle($user, [$othersDocument->id]);
+    $rejectedCount = app(FinalizeDocumentsUploadBatchAction::class)->handle($user, [$othersDocument->id]);
 
+    expect($rejectedCount)->toBe(1);
     Bus::assertNothingBatched();
 });
 
@@ -78,8 +81,9 @@ test('excludes documents from another organization', function () {
     $othersDocument = Document::factory()->forOrganization($otherUser)->uploadedBy($otherUser)->create(['status' => DocumentStatus::Pending]);
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    app(FinalizeDocumentsUploadBatchAction::class)->handle($user, [$othersDocument->id]);
+    $rejectedCount = app(FinalizeDocumentsUploadBatchAction::class)->handle($user, [$othersDocument->id]);
 
+    expect($rejectedCount)->toBe(1);
     Bus::assertNothingBatched();
 });
 
@@ -89,9 +93,36 @@ test('dispatches nothing when no submitted document matches the filters', functi
     $completed = Document::factory()->forOrganization($user)->uploadedBy($user)->completed()->create();
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    app(FinalizeDocumentsUploadBatchAction::class)->handle($user, [$completed->id]);
+    $rejectedCount = app(FinalizeDocumentsUploadBatchAction::class)->handle($user, [$completed->id]);
 
+    expect($rejectedCount)->toBe(1);
     Bus::assertNothingBatched();
+});
+
+test('returns a partial rejected count when some submitted ids match and others do not', function () {
+    Bus::fake();
+    $user = User::factory()->withOrganization()->create();
+    $pending = Document::factory()->forOrganization($user)->uploadedBy($user)->create(['status' => DocumentStatus::Pending]);
+    $completed = Document::factory()->forOrganization($user)->uploadedBy($user)->completed()->create();
+
+    /** @noinspection PhpUnhandledExceptionInspection */
+    $rejectedCount = app(FinalizeDocumentsUploadBatchAction::class)->handle($user, [$pending->id, $completed->id]);
+
+    expect($rejectedCount)->toBe(1);
+    /** @noinspection PhpParamsInspection */
+    Bus::assertBatched(fn (PendingBatchFake $batch): bool => $batch->jobs->count() === 1
+        && $batch->hasJobs([fn (StoreDocumentJob $job): bool => $job->document->is($pending)]));
+});
+
+test('does not count a duplicate submitted id as rejected', function () {
+    Bus::fake();
+    $user = User::factory()->withOrganization()->create();
+    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create(['status' => DocumentStatus::Pending]);
+
+    /** @noinspection PhpUnhandledExceptionInspection */
+    $rejectedCount = app(FinalizeDocumentsUploadBatchAction::class)->handle($user, [$document->id, $document->id]);
+
+    expect($rejectedCount)->toBe(0);
 });
 
 test('notifies the uploader with the batch outcome once every job completes', function () {

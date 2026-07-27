@@ -17,10 +17,11 @@ final class FinalizeDocumentsUploadBatchAction
 {
     /**
      * @param  array<int, int>  $documentIds
+     * @return int the number of submitted IDs that were rejected (not owned by the user, wrong org, or no longer pending)
      *
      * @throws \Throwable
      */
-    public function handle(User $user, array $documentIds): void
+    public function handle(User $user, array $documentIds): int
     {
         $documents = Document::query()
             ->whereKey($documentIds)
@@ -30,8 +31,10 @@ final class FinalizeDocumentsUploadBatchAction
             ->with('documentable')
             ->get();
 
+        $rejectedCount = count(array_unique($documentIds)) - $documents->count();
+
         if ($documents->isEmpty()) {
-            return;
+            return $rejectedCount;
         }
 
         $ids = $documents->pluck('id');
@@ -50,5 +53,7 @@ final class FinalizeDocumentsUploadBatchAction
                 $user->notify(new DocumentsUploadBatchProcessed($outcome, $processedDocuments, $documentable));
             })
             ->dispatch();
+
+        return $rejectedCount;
     }
 }

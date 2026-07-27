@@ -34,3 +34,25 @@ test('dispatches a batch for the submitted pending documents', function () {
     /** @noinspection PhpParamsInspection */
     Bus::assertBatched(fn (PendingBatch $batch): bool => $batch->jobs->count() === 1);
 });
+
+test('does not flash a warning when every submitted document is accepted', function () {
+    Bus::fake();
+    $user = User::factory()->withOrganization()->create();
+    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create(['status' => DocumentStatus::Pending]);
+
+    $this->actingAs($user)
+        ->post(route('documents.batch'), ['document_ids' => [$document->id]])
+        ->assertRedirectBack()
+        ->assertSessionMissing('inertia.flash_data');
+});
+
+test('flashes a warning when a submitted document is rejected', function () {
+    Bus::fake();
+    $user = User::factory()->withOrganization()->create();
+    $completed = Document::factory()->forOrganization($user)->uploadedBy($user)->completed()->create();
+
+    $this->actingAs($user)
+        ->post(route('documents.batch'), ['document_ids' => [$completed->id]])
+        ->assertRedirectBack()
+        ->assertHasInertiaFlash('warning', 'Some files could not be submitted for processing.');
+});
