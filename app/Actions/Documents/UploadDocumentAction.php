@@ -39,6 +39,8 @@ final class UploadDocumentAction
             throw $exception;
         }
 
+        $document->loadMissing('uploadedBy');
+
         return $document;
     }
 }

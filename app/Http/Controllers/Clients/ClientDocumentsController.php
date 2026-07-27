@@ -50,7 +50,6 @@ final class ClientDocumentsController extends Controller
         $file = $request->validated('file');
 
         $document = $action->handle($user, $client, $file);
-        $document->loadMissing('uploadedBy');
 
         return DocumentResource::make($document);
     }
