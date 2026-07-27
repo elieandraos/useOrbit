@@ -10,6 +10,12 @@ use App\Models\Contracts\Documentable;
 use App\Models\Document;
 use App\Models\User;
 
+/**
+ * Access model: any org member may view, create, and finalize documents for
+ * clients in their organization. Delete is intentionally stricter (owner or
+ * uploader only) to limit accidental/malicious data loss; view/download stay
+ * org-wide by design for this small-agency use case.
+ */
 final class DocumentPolicy
 {
     public function viewAny(User $user, Documentable $documentable): bool
