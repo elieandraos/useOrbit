@@ -51,24 +51,14 @@ export function useTagCatalog(): UseTagCatalogReturn {
         delete state.tagsById[id];
     }
 
-    function createTag(name: string): Promise<TagResource> {
-        return new Promise((resolve, reject) => {
-            useHttp<{ name: string }, TagResource>({ name })
-                .post(storeTag().url, {
-                    onSuccess: (tag) => {
-                        state.tagsById[tag.id] = tag;
-                        resolve(tag);
-                    },
-                    onError: () => {
-                        reject(new Error('Failed to create tag.'));
-                    },
-                })
-                .catch(() => {
-                    // onError above already rejected this promise; useHttp
-                    // rethrows after that callback, so swallow it here to
-                    // avoid an unhandled promise rejection.
-                });
-        });
+    async function createTag(name: string): Promise<TagResource> {
+        const tag = await useHttp<{ name: string }, TagResource>({
+            name,
+        }).post(storeTag().url);
+
+        state.tagsById[tag.id] = tag;
+
+        return tag;
     }
 
     const tags = computed(() =>
