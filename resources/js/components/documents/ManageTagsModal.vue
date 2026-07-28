@@ -2,6 +2,7 @@
 import { useHttp } from '@inertiajs/vue3';
 import { Pencil, Trash2 } from '@lucide/vue';
 import { ref, watch } from 'vue';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -200,13 +201,12 @@ function deleteTag(tag: TagResource): void {
                         <span
                             class="size-1.5 shrink-0 rounded-full bg-accent"
                         />
-                        <span
-                            class="flex-1 truncate text-[13px] font-medium text-primary"
-                        >
-                            {{ tag.name }}
-                        </span>
-                        <span class="font-mono text-[11.5px] text-tertiary">
-                            {{ tag.usage_count ?? 0 }}
+                        <span class="flex flex-1 items-center gap-2 truncate">
+                            <span
+                                class="truncate text-[13px] font-medium text-primary"
+                                >{{ tag.name }}</span
+                            >
+                            <Badge>{{ tag.usage_count ?? 0 }}</Badge>
                         </span>
                         <button
                             type="button"
