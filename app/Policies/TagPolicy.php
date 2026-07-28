@@ -20,6 +20,12 @@ final class TagPolicy
         return $user->current_organization_id !== null;
     }
 
+    public function update(User $user, Tag $tag): bool
+    {
+        return $tag->organization_id === $user->current_organization_id
+            && ($user->organizationRole() === OrganizationRole::Owner || $tag->created_by === $user->id);
+    }
+
     public function delete(User $user, Tag $tag): bool
     {
         return $tag->organization_id === $user->current_organization_id

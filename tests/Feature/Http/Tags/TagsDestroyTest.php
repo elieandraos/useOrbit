@@ -21,8 +21,7 @@ test('the tag\'s creator can delete it', function () {
 
     $this->actingAs($user)
         ->delete(route('tags.destroy', $tag))
-        ->assertRedirectBack()
-        ->assertHasInertiaFlash('success', 'Tag deleted.');
+        ->assertNoContent();
 
     $this->assertModelMissing($tag);
 });
@@ -35,8 +34,7 @@ test('an org owner can delete anyone\'s tag', function () {
 
     $this->actingAs($owner)
         ->delete(route('tags.destroy', $tag))
-        ->assertRedirectBack()
-        ->assertHasInertiaFlash('success', 'Tag deleted.');
+        ->assertNoContent();
 
     $this->assertModelMissing($tag);
 });
@@ -73,7 +71,7 @@ test('deleting a tag attached to multiple documents removes all its pivot rows a
 
     $this->actingAs($user)
         ->delete(route('tags.destroy', $tag))
-        ->assertRedirectBack();
+        ->assertNoContent();
 
     $this->assertModelMissing($tag);
     $this->assertDatabaseCount('taggables', 0);

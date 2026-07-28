@@ -6,18 +6,19 @@ namespace App\Http\Controllers\Tags;
 
 use App\Actions\Tags\CreateTagAction;
 use App\Actions\Tags\DeleteTagAction;
+use App\Actions\Tags\UpdateTagAction;
 use App\Filters\TagFilter;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tags\IndexTagRequest;
 use App\Http\Requests\Tags\StoreTagRequest;
+use App\Http\Requests\Tags\UpdateTagRequest;
 use App\Http\Resources\TagResource;
 use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
-use Inertia\Inertia;
 
 final class TagsController extends Controller
 {
@@ -50,13 +51,19 @@ final class TagsController extends Controller
         return TagResource::make($tag);
     }
 
+    #[Authorize('update', 'tag')]
+    public function update(UpdateTagRequest $request, Tag $tag, UpdateTagAction $action): TagResource
+    {
+        $tag = $action->handle($tag, $request->validated('name'));
+
+        return TagResource::make($tag);
+    }
+
     #[Authorize('delete', 'tag')]
-    public function destroy(Tag $tag, DeleteTagAction $action): RedirectResponse
+    public function destroy(Tag $tag, DeleteTagAction $action): Response
     {
         $action->handle($tag);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Tag deleted.')]);
-
-        return back();
+        return response()->noContent();
     }
 }
