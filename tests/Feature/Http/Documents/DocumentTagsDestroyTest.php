@@ -84,3 +84,24 @@ test('response reflects the updated tag list and counts', function () {
     $counted = Tag::query()->withCount('taggables')->findOrFail($tag->id);
     expect($counted->taggables_count)->toBe(1);
 });
+
+test('usage_count ignores attachments belonging to a different owner type', function () {
+    $user = User::factory()->withOrganization()->create();
+    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create();
+    $otherDocument = Document::factory()->forOrganization($user)->uploadedBy($user)->create();
+    $policyDocument = Document::factory()->forOrganization($user)->uploadedBy($user)->create(['documentable_type' => 'policies']);
+    $tagToDetach = Tag::factory()->forOrganization($user)->createdBy($user)->create();
+    $tagToKeep = Tag::factory()->forOrganization($user)->createdBy($user)->create();
+
+    $document->tags()->attach($tagToDetach, ['organization_id' => $user->current_organization_id]);
+    $document->tags()->attach($tagToKeep, ['organization_id' => $user->current_organization_id]);
+    $otherDocument->tags()->attach($tagToKeep, ['organization_id' => $user->current_organization_id]);
+    $policyDocument->tags()->attach($tagToKeep, ['organization_id' => $user->current_organization_id]);
+
+    $response = $this->actingAs($user)
+        ->delete(route('documents.tags.destroy', [$document, $tagToDetach]))
+        ->assertOk();
+
+    expect($response->json())->toHaveCount(1)
+        ->and($response->json('0.usage_count'))->toBe(2);
+});

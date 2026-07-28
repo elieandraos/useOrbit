@@ -79,3 +79,18 @@ test('response includes the updated usage_count', function () {
 
     expect($response->json('0.usage_count'))->toBe(2);
 });
+
+test('usage_count ignores attachments belonging to a different owner type', function () {
+    $user = User::factory()->withOrganization()->create();
+    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create();
+    $policyDocument = Document::factory()->forOrganization($user)->uploadedBy($user)->create(['documentable_type' => 'policies']);
+    $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
+
+    $policyDocument->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
+
+    $response = $this->actingAs($user)
+        ->post(route('documents.tags.store', [$document, $tag]))
+        ->assertOk();
+
+    expect($response->json('0.usage_count'))->toBe(1);
+});
