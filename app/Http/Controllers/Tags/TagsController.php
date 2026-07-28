@@ -6,11 +6,14 @@ namespace App\Http\Controllers\Tags;
 
 use App\Actions\Tags\CreateTagAction;
 use App\Actions\Tags\DeleteTagAction;
+use App\Filters\TagFilter;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Tags\IndexTagRequest;
 use App\Http\Requests\Tags\StoreTagRequest;
 use App\Http\Resources\TagResource;
 use App\Models\Tag;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
@@ -19,10 +22,17 @@ use Inertia\Inertia;
 final class TagsController extends Controller
 {
     #[Authorize('viewAny', Tag::class)]
-    public function index(): AnonymousResourceCollection
+    public function index(IndexTagRequest $request): AnonymousResourceCollection
     {
+        $documentableType = $request->validated('documentable_type');
+
+        /** @noinspection PhpUndefinedMethodInspection */
         $tags = Tag::query()
-            ->withCount('taggables')
+            ->filter(new TagFilter($request->validated()))
+            ->withCount(['taggables' => function (Builder $query) use ($documentableType): void {
+                /** @noinspection PhpUndefinedMethodInspection */
+                $query->forDocumentableType($documentableType);
+            }])
             ->orderBy('name')
             ->get();
 
