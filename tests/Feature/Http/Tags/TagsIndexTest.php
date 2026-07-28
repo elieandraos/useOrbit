@@ -11,20 +11,44 @@ test('guests are redirected to the login page', function () {
         ->assertRedirect(route('login'));
 });
 
-test('documentable_type is required', function () {
+test('taggable_type is required', function () {
     $user = User::factory()->withOrganization()->create();
 
     $this->actingAs($user)
         ->get(route('tags.index'))
-        ->assertInvalid(['documentable_type']);
+        ->assertInvalid(['taggable_type']);
 });
 
-test('an unrecognized documentable_type is rejected', function () {
+test('a taggable_type that does not resolve via the morph map is rejected', function () {
     $user = User::factory()->withOrganization()->create();
 
     $this->actingAs($user)
-        ->get(route('tags.index', ['documentable_type' => 'invoices']))
-        ->assertInvalid(['documentable_type']);
+        ->get(route('tags.index', ['taggable_type' => 'invoices']))
+        ->assertInvalid(['taggable_type']);
+});
+
+test('a taggable_type that resolves via the morph map but does not implement Taggable is rejected', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('tags.index', ['taggable_type' => 'clients']))
+        ->assertInvalid(['taggable_type']);
+});
+
+test('owner_type is required when the taggable type is polymorphically owned', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('tags.index', ['taggable_type' => 'documents']))
+        ->assertInvalid(['owner_type']);
+});
+
+test('an owner_type that does not resolve via the morph map is rejected', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('tags.index', ['taggable_type' => 'documents', 'owner_type' => 'not-a-real-owner']))
+        ->assertInvalid(['owner_type']);
 });
 
 test('tags from another organization are excluded', function () {
@@ -40,7 +64,7 @@ test('tags from another organization are excluded', function () {
     $otherDocument->tags()->attach($otherTag, ['organization_id' => $otherUser->current_organization_id]);
 
     $response = $this->actingAs($user)
-        ->get(route('tags.index', ['documentable_type' => 'clients']))
+        ->get(route('tags.index', ['taggable_type' => 'documents', 'owner_type' => 'clients']))
         ->assertOk();
 
     expect(collect($response->json())->pluck('id'))->toEqual(collect([$ownTag->id]));
@@ -53,7 +77,18 @@ test('tags used only on a different owner type are excluded', function () {
     $policyDocument->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
 
     $response = $this->actingAs($user)
-        ->get(route('tags.index', ['documentable_type' => 'clients']))
+        ->get(route('tags.index', ['taggable_type' => 'documents', 'owner_type' => 'clients']))
+        ->assertOk();
+
+    expect($response->json())->toHaveCount(0);
+});
+
+test('a tag with no taggables at all is excluded', function () {
+    $user = User::factory()->withOrganization()->create();
+    Tag::factory()->forOrganization($user)->createdBy($user)->create();
+
+    $response = $this->actingAs($user)
+        ->get(route('tags.index', ['taggable_type' => 'documents', 'owner_type' => 'clients']))
         ->assertOk();
 
     expect($response->json())->toHaveCount(0);
@@ -70,7 +105,7 @@ test('usage_count only reflects documents of the requested owner type', function
     $policyDocument->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
 
     $response = $this->actingAs($user)
-        ->get(route('tags.index', ['documentable_type' => 'clients']))
+        ->get(route('tags.index', ['taggable_type' => 'documents', 'owner_type' => 'clients']))
         ->assertOk();
 
     expect($response->json('0.usage_count'))->toBe(2);
@@ -89,7 +124,7 @@ test('tags are ordered alphabetically by name', function () {
     }
 
     $response = $this->actingAs($user)
-        ->get(route('tags.index', ['documentable_type' => 'clients']))
+        ->get(route('tags.index', ['taggable_type' => 'documents', 'owner_type' => 'clients']))
         ->assertOk();
 
     expect(collect($response->json())->pluck('name'))->toEqual(collect(['Archived', 'Monthly', 'Weekly']));

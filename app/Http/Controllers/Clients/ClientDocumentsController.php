@@ -31,7 +31,12 @@ final class ClientDocumentsController extends Controller
         return inertia('ClientDocuments/Index', [
             'client' => ClientResource::make($client),
             'documents' => DocumentResource::collection($documents),
-            'tags' => TagResource::collection(Tag::query()->withCount('taggables')->orderBy('name')->get()),
+            'tags' => TagResource::collection(
+                Tag::query()
+                    ->withTaggableCount((new Document)->getMorphClass(), $client->getMorphClass())
+                    ->orderBy('name')
+                    ->get()
+            ),
             'uploadConfig' => [
                 'max_size_bytes' => config('documents.max_size'),
                 'allowed_extensions' => config('documents.allowed_mimes'),

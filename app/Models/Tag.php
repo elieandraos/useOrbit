@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToCurrentOrganization;
-use App\Models\Concerns\Filterable;
 use Carbon\CarbonImmutable;
 use Database\Factories\TagFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -28,7 +29,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 final class Tag extends Model
 {
     /** @use HasFactory<TagFactory> */
-    use BelongsToCurrentOrganization, Filterable, HasFactory;
+    use BelongsToCurrentOrganization, HasFactory;
 
     public function createdBy(): BelongsTo
     {
@@ -38,5 +39,14 @@ final class Tag extends Model
     public function taggables(): HasMany
     {
         return $this->hasMany(TagAttachment::class);
+    }
+
+    #[Scope]
+    protected function withTaggableCount(Builder $query, string $taggableType, ?string $ownerType = null): Builder
+    {
+        return $query->withCount(['taggables' => function (Builder $query) use ($taggableType, $ownerType): void {
+            /** @noinspection PhpUndefinedMethodInspection */
+            $query->forTaggableType($taggableType, $ownerType);
+        }]);
     }
 }

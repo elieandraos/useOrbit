@@ -12,4 +12,6 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
 interface Taggable
 {
     public function tags(): MorphToMany;
+
+    public static function ownerColumn(): ?string;
 }
