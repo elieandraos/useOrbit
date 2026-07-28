@@ -233,7 +233,7 @@ function deleteTag(tag: TagResource): void {
 
         <template #footer>
             <Button variant="secondary" size="sm" @click="open = false">
-                Done
+                Close
             </Button>
         </template>
     </Dialog>
