@@ -63,21 +63,23 @@ function handleCreate(): void {
             </Input>
         </div>
 
-        <label
-            v-for="tag in filteredTags"
-            :key="tag.id"
-            class="flex cursor-pointer items-center gap-2 rounded-[6px] px-2 py-1.5 text-sm text-primary hover:bg-sunken"
-            @click.stop
-        >
-            <Checkbox
-                :model-value="isAttached(tag.id)"
-                @update:model-value="emit('toggle', tag.id)"
-            />
-            <span class="flex-1 truncate">{{ tag.name }}</span>
-            <span class="font-mono text-[10.5px] text-tertiary">{{
-                tag.usage_count ?? 0
-            }}</span>
-        </label>
+        <div class="max-h-[104px] overflow-y-auto">
+            <label
+                v-for="tag in filteredTags"
+                :key="tag.id"
+                class="flex cursor-pointer items-center gap-2 rounded-[6px] px-2 py-1.5 text-sm text-primary hover:bg-sunken"
+                @click.stop
+            >
+                <Checkbox
+                    :model-value="isAttached(tag.id)"
+                    @update:model-value="emit('toggle', tag.id)"
+                />
+                <span class="flex-1 truncate">{{ tag.name }}</span>
+                <span class="font-mono text-[10.5px] text-tertiary">{{
+                    tag.usage_count ?? 0
+                }}</span>
+            </label>
+        </div>
 
         <p
             v-if="filteredTags.length === 0 && !showCreateRow"
