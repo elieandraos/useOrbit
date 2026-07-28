@@ -10,9 +10,10 @@ import { cn } from '@/lib/utils';
 withDefaults(
     defineProps<{
         align?: 'start' | 'end';
+        side?: 'top' | 'bottom';
         panelClass?: HTMLAttributes['class'];
     }>(),
-    { align: 'end' },
+    { align: 'end', side: 'bottom' },
 );
 
 const emit = defineEmits<{
@@ -67,8 +68,16 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 
         <div
             v-if="menuOpen"
-            class="absolute top-[calc(100%+2px)] z-20 min-w-[220px] rounded-[10px] border border-border bg-surface p-1 shadow-lg"
-            :class="cn(align === 'start' ? 'left-0' : 'right-0', panelClass)"
+            class="absolute z-20 min-w-[220px] rounded-[10px] border border-border bg-surface p-1 shadow-lg"
+            :class="
+                cn(
+                    side === 'top'
+                        ? 'bottom-[calc(100%+2px)]'
+                        : 'top-[calc(100%+2px)]',
+                    align === 'start' ? 'left-0' : 'right-0',
+                    panelClass,
+                )
+            "
         >
             <slot />
         </div>

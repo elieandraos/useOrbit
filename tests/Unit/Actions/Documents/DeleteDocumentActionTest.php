@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Actions\Documents\DeleteDocumentAction;
 use App\Models\Document;
+use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Log;
@@ -48,4 +49,18 @@ test('logs a warning when the file fails to delete from disk after the row is re
         'Failed to delete document file after removing its database row.',
         ['document_id' => $document->id, 'disk' => 'local', 'path' => $document->path],
     );
+});
+
+test('leaves no orphaned taggables rows when a tagged document is deleted', function () {
+    $user = User::factory()->withOrganization()->create();
+    $document = Document::factory()->forOrganization($user)->completed()->create();
+    $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
+    $document->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
+
+    /** @noinspection PhpUnhandledExceptionInspection */
+    app(DeleteDocumentAction::class)->handle($document);
+
+    $this->assertModelMissing($document);
+    $this->assertDatabaseCount('taggables', 0);
+    $this->assertModelExists($tag);
 });

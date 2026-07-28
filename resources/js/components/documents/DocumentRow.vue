@@ -1,19 +1,26 @@
 <script setup lang="ts">
-import { Clock, Download, Trash2, X } from '@lucide/vue';
+import { Clock, Download, Plus, Trash2, X } from '@lucide/vue';
 import { computed } from 'vue';
+import TagPickerMenu from '@/components/tags/TagPickerMenu.vue';
+import TagPill from '@/components/tags/TagPill.vue';
 import Badge from '@/components/ui/badge/Badge.vue';
+import { DropMenu } from '@/components/ui/drop-menu';
 import { Spinner } from '@/components/ui/spinner';
 import type { DocumentListItem, DocumentRowItem } from '@/types/document';
+import type { TagResource } from '@/types/tag';
 
 const props = defineProps<{
     item: DocumentListItem;
     hasActiveUploads?: boolean;
+    availableTags: TagResource[];
 }>();
 
 const emit = defineEmits<{
     cancel: [id: string];
     dismiss: [id: string];
     delete: [document: DocumentRowItem];
+    toggleTag: [documentId: number, tagId: number];
+    createTag: [documentId: number, name: string];
 }>();
 
 const FILE_KIND_STYLES: Record<string, string> = {
@@ -236,6 +243,48 @@ const kind = computed(() => fileKind(filename.value));
                 <span>·</span>
                 <span class="whitespace-nowrap">{{ item.created_at }}</span>
             </div>
+        </div>
+        <div class="flex shrink-0 items-center gap-1.5">
+            <TagPill
+                v-for="tag in item.tags"
+                :key="tag.id"
+                :name="tag.name"
+                removable
+                @remove="
+                    emit('toggleTag', (item as DocumentRowItem).id, tag.id)
+                "
+            />
+            <DropMenu align="end" side="top">
+                <template #trigger>
+                    <button
+                        type="button"
+                        class="inline-flex h-6 items-center gap-1 rounded-full border border-dashed border-border-strong px-2.5 font-mono text-[11.5px] text-tertiary hover:text-primary"
+                    >
+                        <Plus class="size-2.5" />
+                        Tag
+                    </button>
+                </template>
+                <TagPickerMenu
+                    :available-tags="availableTags"
+                    :attached-tag-ids="item.tags.map((tag) => tag.id)"
+                    @toggle="
+                        (tagId) =>
+                            emit(
+                                'toggleTag',
+                                (item as DocumentRowItem).id,
+                                tagId,
+                            )
+                    "
+                    @create="
+                        (name) =>
+                            emit(
+                                'createTag',
+                                (item as DocumentRowItem).id,
+                                name,
+                            )
+                    "
+                />
+            </DropMenu>
         </div>
         <a
             v-if="item.download_url"

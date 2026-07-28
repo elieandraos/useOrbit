@@ -2,9 +2,12 @@
 import { Head, router } from '@inertiajs/vue3';
 import { SearchIcon } from '@lucide/vue';
 import { onMounted, ref, watch } from 'vue';
+import { toast } from 'vue-sonner';
 import DeleteDocumentModal from '@/components/documents/DeleteDocumentModal.vue';
 import DocumentList from '@/components/documents/DocumentList.vue';
 import DocumentUploadDropzone from '@/components/documents/DocumentUploadDropzone.vue';
+import ManageTagsModal from '@/components/documents/ManageTagsModal.vue';
+import TagFilterChips from '@/components/tags/TagFilterChips.vue';
 import Badge from '@/components/ui/badge/Badge.vue';
 import {
     Card,
@@ -16,6 +19,7 @@ import {
 import Input from '@/components/ui/input/Input.vue';
 import { useDocumentUploads } from '@/composables/useDocumentUploads';
 import { useNotifications } from '@/composables/useNotifications';
+import { useTagCatalog } from '@/composables/useTagCatalog';
 import { DOCUMENTS_UPLOADED } from '@/lib/notificationTypes';
 import { store as storeDocument } from '@/routes/clients/documents';
 import type {
@@ -24,35 +28,82 @@ import type {
     DocumentUploadConfig,
 } from '@/types/document';
 import type { DocumentsUploadBatchProcessedData } from '@/types/notification';
+import type { TagResource } from '@/types/tag';
 import type { ClientResource } from '../Clients/partials/client';
 import ClientDetailShell from '../Clients/partials/ClientDetailShell.vue';
 
 const props = defineProps<{
     client: ClientResource;
     documents: DocumentResource[];
+    tags: TagResource[];
     uploadConfig: DocumentUploadConfig;
 }>();
 
 const policiesCount = 0;
 
 const {
+    documentsById,
     hasActiveUploads,
     search,
     searched,
+    activeTagId,
     listItems,
     headerCount,
+    documentsCount,
     syncDocuments,
     applyBatchUpdate,
     handleFiles,
     cancelUpload,
     dismissUpload,
     removeDocument,
+    attachTag,
+    detachTag,
 } = useDocumentUploads(
     `client-${props.client.id}`,
     storeDocument(props.client.slug).url,
 );
 
+const { tags: tagCatalog, syncTags, createTag } = useTagCatalog();
+
 watch(() => props.documents, syncDocuments, { immediate: true });
+watch(() => props.tags, syncTags, { immediate: true });
+
+async function handleToggleTag(
+    documentId: number,
+    tagId: number,
+): Promise<void> {
+    const document = documentsById[documentId];
+
+    if (!document) {
+        return;
+    }
+
+    const isAttached = document.tags.some((tag) => tag.id === tagId);
+
+    try {
+        if (isAttached) {
+            await detachTag(documentId, tagId);
+        } else {
+            await attachTag(documentId, tagId);
+        }
+    } catch {
+        toast.error(
+            isAttached ? 'Failed to remove tag.' : 'Failed to attach tag.',
+        );
+    }
+}
+
+async function handleCreateTag(
+    documentId: number,
+    name: string,
+): Promise<void> {
+    try {
+        const tag = await createTag(name);
+        await attachTag(documentId, tag.id);
+    } catch {
+        toast.error('Failed to create tag.');
+    }
+}
 
 // A stale history-cached visit (browser back/forward) or a batch that
 // finished while this page wasn't mounted (missing the live push) can both
@@ -93,6 +144,7 @@ watch(
 );
 
 const documentToDelete = ref<DocumentRowItem | null>(null);
+const manageTagsOpen = ref(false);
 </script>
 
 <template>
@@ -117,6 +169,25 @@ const documentToDelete = ref<DocumentRowItem | null>(null);
                 </CardAction>
             </CardHeader>
 
+            <div
+                v-if="tagCatalog.length > 0"
+                class="flex items-center justify-between gap-3 border-b border-border-subtle bg-sunken px-6 py-3"
+            >
+                <TagFilterChips
+                    :tags="tagCatalog"
+                    :total-count="documentsCount"
+                    :selected-tag-id="activeTagId"
+                    @select="activeTagId = $event"
+                />
+                <button
+                    type="button"
+                    class="shrink-0 text-[12.5px] font-medium text-tertiary hover:text-primary"
+                    @click="manageTagsOpen = true"
+                >
+                    Manage tags
+                </button>
+            </div>
+
             <DocumentUploadDropzone
                 :config="uploadConfig"
                 @files="handleFiles"
@@ -127,8 +198,11 @@ const documentToDelete = ref<DocumentRowItem | null>(null);
                     :items="listItems"
                     :searched="searched"
                     :has-active-uploads="hasActiveUploads"
+                    :available-tags="tagCatalog"
                     @cancel="cancelUpload"
                     @dismiss="dismissUpload"
+                    @toggle-tag="handleToggleTag"
+                    @create-tag="handleCreateTag"
                     @delete="documentToDelete = $event"
                 />
             </CardContent>
@@ -137,6 +211,11 @@ const documentToDelete = ref<DocumentRowItem | null>(null);
         <DeleteDocumentModal
             v-model="documentToDelete"
             @deleted="removeDocument"
+        />
+
+        <ManageTagsModal
+            v-model:open="manageTagsOpen"
+            documentable-type="clients"
         />
     </ClientDetailShell>
 </template>

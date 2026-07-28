@@ -1,18 +1,22 @@
 <script setup lang="ts">
 import { FileX2 } from '@lucide/vue';
 import type { DocumentListItem, DocumentRowItem } from '@/types/document';
+import type { TagResource } from '@/types/tag';
 import DocumentRow from './DocumentRow.vue';
 
 defineProps<{
     items: DocumentListItem[];
     searched: boolean;
     hasActiveUploads: boolean;
+    availableTags: TagResource[];
 }>();
 
 const emit = defineEmits<{
     cancel: [id: string];
     dismiss: [id: string];
     delete: [document: DocumentRowItem];
+    toggleTag: [documentId: number, tagId: number];
+    createTag: [documentId: number, name: string];
 }>();
 </script>
 
@@ -23,9 +27,16 @@ const emit = defineEmits<{
             :key="item.kind === 'upload' ? item.id : `document-${item.id}`"
             :item="item"
             :has-active-uploads="hasActiveUploads"
+            :available-tags="availableTags"
             @cancel="emit('cancel', $event)"
             @dismiss="emit('dismiss', $event)"
             @delete="emit('delete', $event)"
+            @toggle-tag="
+                (documentId, tagId) => emit('toggleTag', documentId, tagId)
+            "
+            @create-tag="
+                (documentId, name) => emit('createTag', documentId, name)
+            "
         />
 
         <div

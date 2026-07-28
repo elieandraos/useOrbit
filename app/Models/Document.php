@@ -6,7 +6,9 @@ namespace App\Models;
 
 use App\Enums\DocumentStatus;
 use App\Models\Concerns\BelongsToCurrentOrganization;
+use App\Models\Concerns\HasTags;
 use App\Models\Contracts\Documentable;
+use App\Models\Contracts\Taggable;
 use Carbon\CarbonImmutable;
 use Database\Factories\DocumentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -43,10 +45,10 @@ use Illuminate\Support\Facades\Storage;
     'original_filename', 'disk', 'path', 'mime_type', 'size_in_bytes', 'checksum',
     'status', 'stored_at', 'error_message',
 ])]
-final class Document extends Model
+final class Document extends Model implements Taggable
 {
     /** @use HasFactory<DocumentFactory> */
-    use BelongsToCurrentOrganization, HasFactory, Prunable;
+    use BelongsToCurrentOrganization, HasFactory, HasTags, Prunable;
 
     protected function casts(): array
     {

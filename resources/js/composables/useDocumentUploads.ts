@@ -1,6 +1,7 @@
 import { router, useHttp } from '@inertiajs/vue3';
 import type { ComputedRef, Ref } from 'vue';
 import { computed, reactive, ref, watch } from 'vue';
+import { useDocumentTags } from '@/composables/useDocumentTags';
 import {
     batch as finalizeBatch,
     download as downloadDocument,
@@ -19,6 +20,7 @@ export type UseDocumentUploadsReturn = {
     documentsCount: ComputedRef<number>;
     search: Ref<string>;
     searched: ComputedRef<boolean>;
+    activeTagId: Ref<number | null>;
     filteredDocuments: ComputedRef<DocumentRowItem[]>;
     listItems: ComputedRef<DocumentListItem[]>;
     headerCount: Ref<number>;
@@ -30,6 +32,8 @@ export type UseDocumentUploadsReturn = {
     cancelUpload: (id: string) => void;
     dismissUpload: (id: string) => void;
     removeDocument: (id: number) => void;
+    attachTag: (documentId: number, tagId: number) => Promise<void>;
+    detachTag: (documentId: number, tagId: number) => Promise<void>;
 };
 
 type ScopeUploadState = {
@@ -80,6 +84,7 @@ export function useDocumentUploads(
 ): UseDocumentUploadsReturn {
     const state = scopeState(scopeKey);
     const handles = scopeUploadHandles(scopeKey);
+    const { attachTag, detachTag } = useDocumentTags(state.documentsById);
 
     function syncDocuments(documents: DocumentResource[]): void {
         documents.forEach((document) => {
@@ -201,20 +206,27 @@ export function useDocumentUploads(
 
     const search = ref('');
     const searched = computed(() => search.value.trim().length > 0);
+    const activeTagId = ref<number | null>(null);
 
     const filteredDocuments = computed<DocumentRowItem[]>(() => {
         const query = search.value.trim().toLowerCase();
-        const documents = Object.values(state.documentsById).map(
+        let documents = Object.values(state.documentsById).map(
             (document): DocumentRowItem => ({ kind: 'document', ...document }),
         );
 
-        if (!query) {
-            return documents;
+        if (query) {
+            documents = documents.filter((document) =>
+                document.original_filename.toLowerCase().includes(query),
+            );
         }
 
-        return documents.filter((document) =>
-            document.original_filename.toLowerCase().includes(query),
-        );
+        if (activeTagId.value !== null) {
+            documents = documents.filter((document) =>
+                document.tags.some((tag) => tag.id === activeTagId.value),
+            );
+        }
+
+        return documents;
     });
 
     const listItems = computed<DocumentListItem[]>(() => [
@@ -247,6 +259,7 @@ export function useDocumentUploads(
         documentsCount,
         search,
         searched,
+        activeTagId,
         filteredDocuments,
         listItems,
         headerCount,
@@ -256,5 +269,7 @@ export function useDocumentUploads(
         cancelUpload,
         dismissUpload: removeUpload,
         removeDocument,
+        attachTag,
+        detachTag,
     };
 }

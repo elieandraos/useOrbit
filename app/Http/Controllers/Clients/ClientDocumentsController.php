@@ -9,8 +9,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Documents\UploadDocumentRequest;
 use App\Http\Resources\ClientResource;
 use App\Http\Resources\DocumentResource;
+use App\Http\Resources\TagResource;
 use App\Models\Client;
 use App\Models\Document;
+use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
@@ -22,13 +24,14 @@ final class ClientDocumentsController extends Controller
     public function index(Client $client): Response
     {
         $documents = $client->documents()
-            ->with('uploadedBy')
+            ->with(['uploadedBy', 'tags'])
             ->latest()
             ->get();
 
         return inertia('ClientDocuments/Index', [
             'client' => ClientResource::make($client),
             'documents' => DocumentResource::collection($documents),
+            'tags' => TagResource::collection(Tag::query()->withCount('taggables')->orderBy('name')->get()),
             'uploadConfig' => [
                 'max_size_bytes' => config('documents.max_size'),
                 'allowed_extensions' => config('documents.allowed_mimes'),
@@ -37,6 +40,9 @@ final class ClientDocumentsController extends Controller
         ]);
     }
 
+    /**
+     * @throws \Throwable
+     */
     #[Authorize('create', [Document::class, 'client'])]
     public function store(UploadDocumentRequest $request, Client $client, UploadDocumentAction $action): DocumentResource
     {
