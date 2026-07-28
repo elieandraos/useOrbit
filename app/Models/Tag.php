@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToCurrentOrganization;
+use App\Models\Concerns\Filterable;
 use Carbon\CarbonImmutable;
 use Database\Factories\TagFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -27,7 +28,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 final class Tag extends Model
 {
     /** @use HasFactory<TagFactory> */
-    use BelongsToCurrentOrganization, HasFactory;
+    use BelongsToCurrentOrganization, Filterable, HasFactory;
 
     public function createdBy(): BelongsTo
     {
