@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useHttp } from '@inertiajs/vue3';
+import { router, useHttp } from '@inertiajs/vue3';
 import { Pencil, Trash2 } from '@lucide/vue';
 import { ref, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
@@ -21,11 +21,6 @@ const props = defineProps<{
 
 const open = defineModel<boolean>('open', { default: false });
 
-const emit = defineEmits<{
-    renamed: [tagId: number, name: string];
-    deleted: [tagId: number];
-}>();
-
 const { upsertTag, removeTag } = useTagCatalog();
 
 const tags = ref<TagResource[]>([]);
@@ -38,6 +33,10 @@ const savingId = ref<number | null>(null);
 
 const confirmId = ref<number | null>(null);
 const deletingId = ref<number | null>(null);
+
+function reloadDocuments(): void {
+    router.reload({ only: ['documents'], showProgress: false });
+}
 
 function fetchTags(): void {
     loading.value = true;
@@ -95,7 +94,7 @@ function saveRename(tag: TagResource): void {
             onSuccess: (updated) => {
                 tag.name = updated.name;
                 upsertTag({ ...tag, name: updated.name });
-                emit('renamed', tag.id, updated.name);
+                reloadDocuments();
                 editingId.value = null;
             },
             onError: (errors) => {
@@ -125,7 +124,7 @@ function deleteTag(tag: TagResource): void {
         onSuccess: () => {
             tags.value = tags.value.filter((item) => item.id !== tag.id);
             removeTag(tag.id);
-            emit('deleted', tag.id);
+            reloadDocuments();
             confirmId.value = null;
         },
         onFinish: () => {

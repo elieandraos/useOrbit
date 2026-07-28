@@ -58,8 +58,6 @@ const {
     removeDocument,
     attachTag,
     detachTag,
-    renameTagInDocuments,
-    removeTagFromDocuments,
 } = useDocumentUploads(
     `client-${props.client.id}`,
     storeDocument(props.client.slug).url,
@@ -218,8 +216,6 @@ const manageTagsOpen = ref(false);
         <ManageTagsModal
             v-model:open="manageTagsOpen"
             documentable-type="clients"
-            @renamed="renameTagInDocuments"
-            @deleted="removeTagFromDocuments"
         />
     </ClientDetailShell>
 </template>
