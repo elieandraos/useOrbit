@@ -5,6 +5,7 @@ import { ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
 import { useTagCatalog } from '@/composables/useTagCatalog';
 import {
     destroy as destroyTag,
@@ -133,9 +134,13 @@ function deleteTag(tag: TagResource): void {
         description="Renaming or deleting a tag updates it across every document."
     >
         <div class="-mx-[22px] max-h-[360px] overflow-y-auto">
-            <p v-if="loading" class="px-[22px] py-5 text-sm text-tertiary">
+            <div
+                v-if="loading"
+                class="flex items-center justify-center gap-2 px-[22px] py-5 text-sm text-tertiary"
+            >
+                <Spinner class="size-4" />
                 Loading tags…
-            </p>
+            </div>
 
             <p
                 v-else-if="tags.length === 0"
