@@ -1,22 +1,17 @@
 import { router, useHttp } from '@inertiajs/vue3';
 import type { ComputedRef, Ref } from 'vue';
 import { computed, reactive, ref, watch } from 'vue';
-import { useTagCatalog } from '@/composables/useTagCatalog';
+import { useDocumentTags } from '@/composables/useDocumentTags';
 import {
     batch as finalizeBatch,
     download as downloadDocument,
 } from '@/routes/documents';
-import {
-    destroy as detachTagRoute,
-    store as attachTagRoute,
-} from '@/routes/documents/tags';
 import type {
     DocumentListItem,
     DocumentResource,
     DocumentRowItem,
     UploadRowItem,
 } from '@/types/document';
-import type { TagResource } from '@/types/tag';
 
 export type UseDocumentUploadsReturn = {
     documentsById: Record<number, DocumentResource>;
@@ -39,8 +34,6 @@ export type UseDocumentUploadsReturn = {
     removeDocument: (id: number) => void;
     attachTag: (documentId: number, tagId: number) => Promise<void>;
     detachTag: (documentId: number, tagId: number) => Promise<void>;
-    renameTagInDocuments: (tagId: number, name: string) => void;
-    removeTagFromDocuments: (tagId: number) => void;
 };
 
 type ScopeUploadState = {
@@ -91,7 +84,7 @@ export function useDocumentUploads(
 ): UseDocumentUploadsReturn {
     const state = scopeState(scopeKey);
     const handles = scopeUploadHandles(scopeKey);
-    const { tags: tagCatalog, upsertTag } = useTagCatalog();
+    const { attachTag, detachTag } = useDocumentTags(state.documentsById);
 
     function syncDocuments(documents: DocumentResource[]): void {
         documents.forEach((document) => {
@@ -120,22 +113,6 @@ export function useDocumentUploads(
 
     function removeDocument(id: number): void {
         delete state.documentsById[id];
-    }
-
-    function renameTagInDocuments(tagId: number, name: string): void {
-        Object.values(state.documentsById).forEach((document) => {
-            const tag = document.tags.find((item) => item.id === tagId);
-
-            if (tag) {
-                tag.name = name;
-            }
-        });
-    }
-
-    function removeTagFromDocuments(tagId: number): void {
-        Object.values(state.documentsById).forEach((document) => {
-            document.tags = document.tags.filter((tag) => tag.id !== tagId);
-        });
     }
 
     function removeUpload(id: string): void {
@@ -222,80 +199,6 @@ export function useDocumentUploads(
         handles.get(id)?.cancel();
     }
 
-    function attachTag(documentId: number, tagId: number): Promise<void> {
-        return new Promise((resolve, reject) => {
-            useHttp<Record<string, never>, TagResource[]>({})
-                .post(attachTagRoute([documentId, tagId]).url, {
-                    onSuccess: (tags) => {
-                        const document = state.documentsById[documentId];
-
-                        if (document) {
-                            document.tags = tags;
-                        }
-
-                        const attached = tags.find((tag) => tag.id === tagId);
-
-                        if (attached) {
-                            upsertTag(attached);
-                        }
-
-                        resolve();
-                    },
-                    onError: () => {
-                        reject(new Error('Failed to attach tag.'));
-                    },
-                })
-                .catch(() => {
-                    // onError above already rejected this promise; useHttp
-                    // rethrows after that callback, so swallow it here to
-                    // avoid an unhandled promise rejection.
-                });
-        });
-    }
-
-    function detachTag(documentId: number, tagId: number): Promise<void> {
-        return new Promise((resolve, reject) => {
-            useHttp<Record<string, never>, TagResource[]>({})
-                .delete(detachTagRoute([documentId, tagId]).url, {
-                    onSuccess: (tags) => {
-                        const document = state.documentsById[documentId];
-
-                        if (document) {
-                            document.tags = tags;
-                        }
-
-                        // The detached tag no longer appears in the response
-                        // (it's the document's remaining tags), so its fresh
-                        // usage_count isn't available here — patch the
-                        // catalog optimistically instead of a full refetch.
-                        const current = tagCatalog.value.find(
-                            (tag) => tag.id === tagId,
-                        );
-
-                        if (current) {
-                            upsertTag({
-                                ...current,
-                                usage_count: Math.max(
-                                    0,
-                                    (current.usage_count ?? 1) - 1,
-                                ),
-                            });
-                        }
-
-                        resolve();
-                    },
-                    onError: () => {
-                        reject(new Error('Failed to remove tag.'));
-                    },
-                })
-                .catch(() => {
-                    // onError above already rejected this promise; useHttp
-                    // rethrows after that callback, so swallow it here to
-                    // avoid an unhandled promise rejection.
-                });
-        });
-    }
-
     const hasActiveUploads = computed(() => state.uploads.length > 0);
     const documentsCount = computed(
         () => Object.keys(state.documentsById).length,
@@ -368,7 +271,5 @@ export function useDocumentUploads(
         removeDocument,
         attachTag,
         detachTag,
-        renameTagInDocuments,
-        removeTagFromDocuments,
     };
 }
