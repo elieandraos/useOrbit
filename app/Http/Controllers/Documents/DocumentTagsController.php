@@ -10,8 +10,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\TagResource;
 use App\Models\Document;
 use App\Models\Tag;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
 
@@ -22,7 +20,7 @@ final class DocumentTagsController extends Controller
     {
         $action->handle($document, $tag);
 
-        return TagResource::collection($this->tagsForDocument($document));
+        return TagResource::collection($document->tagsWithAttachmentCounts());
     }
 
     #[Authorize('view', 'document')]
@@ -30,17 +28,6 @@ final class DocumentTagsController extends Controller
     {
         $action->handle($document, $tag);
 
-        return TagResource::collection($this->tagsForDocument($document));
-    }
-
-    /** @return Collection<int, Tag> */
-    private function tagsForDocument(Document $document): Collection
-    {
-        return $document->tags()
-            ->withCount(['taggables' => function (Builder $query) use ($document): void {
-                /** @noinspection PhpUndefinedMethodInspection */
-                $query->forDocumentableType($document->documentable_type);
-            }])
-            ->get();
+        return TagResource::collection($document->tagsWithAttachmentCounts());
     }
 }

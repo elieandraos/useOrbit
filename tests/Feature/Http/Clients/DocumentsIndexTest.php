@@ -82,8 +82,35 @@ test('shares the organization tag catalog with usage counts', function () {
         ->assertOk()
         ->assertHasResource(
             'tags',
-            TagResource::collection(Tag::query()->withCount('taggables')->orderBy('name')->get())
+            TagResource::collection(
+                Tag::query()
+                    ->withTaggableCount($document->getMorphClass(), $client->getMorphClass())
+                    ->orderBy('name')
+                    ->get()
+            )
         );
+});
+
+test('tag usage counts only reflect documents owned by clients', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create();
+    $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
+
+    $clientDocument = Document::factory()->forOrganization($user)->uploadedBy($user)->create([
+        'documentable_type' => $client->getMorphClass(),
+        'documentable_id' => $client->id,
+    ]);
+    $clientDocument->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
+
+    $policyDocument = Document::factory()->forOrganization($user)->uploadedBy($user)->create([
+        'documentable_type' => 'policies',
+    ]);
+    $policyDocument->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
+
+    $this->actingAs($user)
+        ->get(route('clients.documents.index', $client))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('tags.0.usage_count', 1));
 });
 
 test('tag catalog excludes tags from another organization', function () {

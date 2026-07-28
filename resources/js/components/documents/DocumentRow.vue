@@ -254,7 +254,7 @@ const kind = computed(() => fileKind(filename.value));
                     emit('toggleTag', (item as DocumentRowItem).id, tag.id)
                 "
             />
-            <DropMenu align="end" side="top">
+            <DropMenu side="top">
                 <template #trigger>
                     <button
                         type="button"

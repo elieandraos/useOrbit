@@ -215,7 +215,9 @@ const manageTagsOpen = ref(false);
 
         <ManageTagsModal
             v-model:open="manageTagsOpen"
-            documentable-type="clients"
+            taggable-type="documents"
+            owner-type="clients"
+            :reload-only="['documents']"
         />
     </ClientDetailShell>
 </template>

@@ -7,7 +7,6 @@ namespace App\Http\Controllers\Tags;
 use App\Actions\Tags\CreateTagAction;
 use App\Actions\Tags\DeleteTagAction;
 use App\Actions\Tags\UpdateTagAction;
-use App\Filters\TagFilter;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tags\IndexTagRequest;
 use App\Http\Requests\Tags\StoreTagRequest;
@@ -25,15 +24,15 @@ final class TagsController extends Controller
     #[Authorize('viewAny', Tag::class)]
     public function index(IndexTagRequest $request): AnonymousResourceCollection
     {
-        $documentableType = $request->validated('documentable_type');
+        $taggableType = $request->validated('taggable_type');
+        $ownerType = $request->validated('owner_type');
 
-        /** @noinspection PhpUndefinedMethodInspection */
         $tags = Tag::query()
-            ->filter(new TagFilter($request->validated()))
-            ->withCount(['taggables' => function (Builder $query) use ($documentableType): void {
+            ->whereHas('taggables', function (Builder $query) use ($taggableType, $ownerType): void {
                 /** @noinspection PhpUndefinedMethodInspection */
-                $query->forDocumentableType($documentableType);
-            }])
+                $query->forTaggableType($taggableType, $ownerType);
+            })
+            ->withTaggableCount($taggableType, $ownerType)
             ->orderBy('name')
             ->get();
 
