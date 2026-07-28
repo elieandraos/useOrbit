@@ -10,7 +10,7 @@ use Illuminate\Database\QueryException;
 test('document tags resolve and round-trip through the taggables pivot', function () {
     $user = User::factory()->withOrganization()->create();
     $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create();
-    $tag = Tag::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
 
     $document->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
 
@@ -21,7 +21,7 @@ test('document tags resolve and round-trip through the taggables pivot', functio
 
 test('tag taggables counts attachments via withCount', function () {
     $user = User::factory()->withOrganization()->create();
-    $tag = Tag::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
     $documents = Document::factory()->forOrganization($user)->uploadedBy($user)->count(2)->create();
 
     $documents->each(fn (Document $document) => $document->tags()->attach($tag, ['organization_id' => $user->current_organization_id]));
@@ -35,8 +35,8 @@ test('current organization scope only returns tags for the acting user\'s curren
     $user = User::factory()->withOrganization()->create();
     $otherUser = User::factory()->withOrganization()->create();
 
-    $ownTag = Tag::factory()->forOrganization($user)->create(['created_by' => $user->id]);
-    Tag::factory()->forOrganization($otherUser)->create(['created_by' => $otherUser->id]);
+    $ownTag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
+    Tag::factory()->forOrganization($otherUser)->createdBy($otherUser)->create();
 
     $this->actingAs($user);
 
@@ -45,7 +45,7 @@ test('current organization scope only returns tags for the acting user\'s curren
 
 test('tag name is unique per organization at the database level', function () {
     $user = User::factory()->withOrganization()->create();
-    Tag::factory()->forOrganization($user)->create(['created_by' => $user->id, 'name' => 'Urgent']);
+    Tag::factory()->forOrganization($user)->createdBy($user)->create(['name' => 'Urgent']);
 
-    Tag::factory()->forOrganization($user)->create(['created_by' => $user->id, 'name' => 'Urgent']);
+    Tag::factory()->forOrganization($user)->createdBy($user)->create(['name' => 'Urgent']);
 })->throws(QueryException::class);

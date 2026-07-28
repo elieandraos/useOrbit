@@ -34,4 +34,11 @@ class TagFactory extends Factory
             'organization_id' => $user->current_organization_id,
         ]);
     }
+
+    public function createdBy(User $user): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'created_by' => $user->id,
+        ]);
+    }
 }
