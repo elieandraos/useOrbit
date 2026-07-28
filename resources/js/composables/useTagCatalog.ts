@@ -8,6 +8,7 @@ export type UseTagCatalogReturn = {
     tags: ComputedRef<TagResource[]>;
     syncTags: (tags: TagResource[]) => void;
     upsertTag: (tag: TagResource) => void;
+    removeTag: (id: number) => void;
     createTag: (name: string) => Promise<TagResource>;
 };
 
@@ -46,6 +47,10 @@ export function useTagCatalog(): UseTagCatalogReturn {
         state.tagsById[tag.id] = tag;
     }
 
+    function removeTag(id: number): void {
+        delete state.tagsById[id];
+    }
+
     function createTag(name: string): Promise<TagResource> {
         return new Promise((resolve, reject) => {
             useHttp<{ name: string }, TagResource>({ name })
@@ -76,6 +81,7 @@ export function useTagCatalog(): UseTagCatalogReturn {
         tags,
         syncTags,
         upsertTag,
+        removeTag,
         createTag,
     };
 }

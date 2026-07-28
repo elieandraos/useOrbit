@@ -6,6 +6,7 @@ import { toast } from 'vue-sonner';
 import DeleteDocumentModal from '@/components/documents/DeleteDocumentModal.vue';
 import DocumentList from '@/components/documents/DocumentList.vue';
 import DocumentUploadDropzone from '@/components/documents/DocumentUploadDropzone.vue';
+import ManageTagsModal from '@/components/documents/ManageTagsModal.vue';
 import TagFilterChips from '@/components/tags/TagFilterChips.vue';
 import Badge from '@/components/ui/badge/Badge.vue';
 import {
@@ -143,6 +144,7 @@ watch(
 );
 
 const documentToDelete = ref<DocumentRowItem | null>(null);
+const manageTagsOpen = ref(false);
 </script>
 
 <template>
@@ -169,7 +171,7 @@ const documentToDelete = ref<DocumentRowItem | null>(null);
 
             <div
                 v-if="tagCatalog.length > 0"
-                class="border-b border-border-subtle bg-sunken px-6 py-3"
+                class="flex items-center justify-between gap-3 border-b border-border-subtle bg-sunken px-6 py-3"
             >
                 <TagFilterChips
                     :tags="tagCatalog"
@@ -177,6 +179,13 @@ const documentToDelete = ref<DocumentRowItem | null>(null);
                     :selected-tag-id="activeTagId"
                     @select="activeTagId = $event"
                 />
+                <button
+                    type="button"
+                    class="shrink-0 text-[12.5px] font-medium text-tertiary hover:text-primary"
+                    @click="manageTagsOpen = true"
+                >
+                    Manage tags
+                </button>
             </div>
 
             <DocumentUploadDropzone
@@ -202,6 +211,11 @@ const documentToDelete = ref<DocumentRowItem | null>(null);
         <DeleteDocumentModal
             v-model="documentToDelete"
             @deleted="removeDocument"
+        />
+
+        <ManageTagsModal
+            v-model:open="manageTagsOpen"
+            documentable-type="clients"
         />
     </ClientDetailShell>
 </template>
