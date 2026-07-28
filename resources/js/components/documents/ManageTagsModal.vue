@@ -21,6 +21,11 @@ const props = defineProps<{
 
 const open = defineModel<boolean>('open', { default: false });
 
+const emit = defineEmits<{
+    renamed: [tagId: number, name: string];
+    deleted: [tagId: number];
+}>();
+
 const { upsertTag, removeTag } = useTagCatalog();
 
 const tags = ref<TagResource[]>([]);
@@ -90,6 +95,7 @@ function saveRename(tag: TagResource): void {
             onSuccess: (updated) => {
                 tag.name = updated.name;
                 upsertTag({ ...tag, name: updated.name });
+                emit('renamed', tag.id, updated.name);
                 editingId.value = null;
             },
             onError: (errors) => {
@@ -119,6 +125,7 @@ function deleteTag(tag: TagResource): void {
         onSuccess: () => {
             tags.value = tags.value.filter((item) => item.id !== tag.id);
             removeTag(tag.id);
+            emit('deleted', tag.id);
             confirmId.value = null;
         },
         onFinish: () => {

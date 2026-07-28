@@ -39,6 +39,8 @@ export type UseDocumentUploadsReturn = {
     removeDocument: (id: number) => void;
     attachTag: (documentId: number, tagId: number) => Promise<void>;
     detachTag: (documentId: number, tagId: number) => Promise<void>;
+    renameTagInDocuments: (tagId: number, name: string) => void;
+    removeTagFromDocuments: (tagId: number) => void;
 };
 
 type ScopeUploadState = {
@@ -118,6 +120,22 @@ export function useDocumentUploads(
 
     function removeDocument(id: number): void {
         delete state.documentsById[id];
+    }
+
+    function renameTagInDocuments(tagId: number, name: string): void {
+        Object.values(state.documentsById).forEach((document) => {
+            const tag = document.tags.find((item) => item.id === tagId);
+
+            if (tag) {
+                tag.name = name;
+            }
+        });
+    }
+
+    function removeTagFromDocuments(tagId: number): void {
+        Object.values(state.documentsById).forEach((document) => {
+            document.tags = document.tags.filter((tag) => tag.id !== tagId);
+        });
     }
 
     function removeUpload(id: string): void {
@@ -350,5 +368,7 @@ export function useDocumentUploads(
         removeDocument,
         attachTag,
         detachTag,
+        renameTagInDocuments,
+        removeTagFromDocuments,
     };
 }
