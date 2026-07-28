@@ -13,4 +13,5 @@ Route::middleware(['auth', 'verified', 'organization'])->prefix('tags')->name('t
 
 Route::middleware(['auth', 'verified', 'organization'])->group(function () {
     Route::post('documents/{document}/tags/{tag}', [DocumentTagsController::class, 'store'])->name('documents.tags.store');
+    Route::delete('documents/{document}/tags/{tag}', [DocumentTagsController::class, 'destroy'])->name('documents.tags.destroy');
 });

@@ -1,0 +1,86 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Models\Document;
+use App\Models\Organization;
+use App\Models\Tag;
+use App\Models\User;
+
+test('guests are redirected to the login page', function () {
+    $document = Document::factory()->create();
+    $tag = Tag::factory()->create(['organization_id' => $document->organization_id]);
+
+    $this->delete(route('documents.tags.destroy', [$document, $tag]))
+        ->assertRedirect(route('login'));
+});
+
+test('a member who can view the document can detach a tag', function () {
+    $user = User::factory()->withOrganization()->create();
+    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create();
+    $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
+    $document->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
+
+    $this->actingAs($user)
+        ->delete(route('documents.tags.destroy', [$document, $tag]))
+        ->assertOk();
+
+    $this->assertDatabaseMissing('taggables', [
+        'tag_id' => $tag->id,
+        'taggable_type' => $document->getMorphClass(),
+        'taggable_id' => $document->id,
+    ]);
+});
+
+test('a member from another organization gets 404 when the document belongs to another org', function () {
+    $user = User::factory()->withOrganization()->create();
+    $otherOrganization = Organization::factory()->create();
+    $document = Document::factory()->completed()->create(['organization_id' => $otherOrganization->id]);
+    $tag = Tag::factory()->create(['organization_id' => $otherOrganization->id]);
+
+    $this->actingAs($user)
+        ->delete(route('documents.tags.destroy', [$document, $tag]))
+        ->assertNotFound();
+});
+
+test('a member from another organization gets 404 when the tag belongs to another org', function () {
+    $user = User::factory()->withOrganization()->create();
+    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create();
+    $otherOrganization = Organization::factory()->create();
+    $tag = Tag::factory()->create(['organization_id' => $otherOrganization->id]);
+
+    $this->actingAs($user)
+        ->delete(route('documents.tags.destroy', [$document, $tag]))
+        ->assertNotFound();
+});
+
+test('detaching a tag that was never attached is a no-op', function () {
+    $user = User::factory()->withOrganization()->create();
+    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create();
+    $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
+
+    $this->actingAs($user)
+        ->delete(route('documents.tags.destroy', [$document, $tag]))
+        ->assertOk();
+
+    $this->assertDatabaseCount('taggables', 0);
+});
+
+test('response reflects the updated tag list and counts', function () {
+    $user = User::factory()->withOrganization()->create();
+    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create();
+    $otherDocument = Document::factory()->forOrganization($user)->uploadedBy($user)->create();
+    $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
+
+    $document->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
+    $otherDocument->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
+
+    $response = $this->actingAs($user)
+        ->delete(route('documents.tags.destroy', [$document, $tag]))
+        ->assertOk();
+
+    expect($response->json())->toHaveCount(0);
+
+    $counted = Tag::query()->withCount('taggables')->findOrFail($tag->id);
+    expect($counted->taggables_count)->toBe(1);
+});

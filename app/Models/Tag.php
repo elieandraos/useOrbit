@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read User $createdBy
+ * @property-read int $taggables_count
  */
 #[Fillable(['organization_id', 'name', 'created_by'])]
 final class Tag extends Model
