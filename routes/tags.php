@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth', 'verified', 'organization'])->prefix('tags')->name('tags.')->group(function () {
     Route::get('/', [TagsController::class, 'index'])->name('index');
     Route::post('/', [TagsController::class, 'store'])->name('store');
+    Route::delete('{tag}', [TagsController::class, 'destroy'])->name('destroy');
 });
 
 Route::middleware(['auth', 'verified', 'organization'])->group(function () {
