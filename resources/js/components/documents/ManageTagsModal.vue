@@ -16,7 +16,9 @@ import {
 import type { TagResource } from '@/types/tag';
 
 const props = defineProps<{
-    documentableType: string;
+    taggableType: string;
+    ownerType?: string;
+    reloadOnly: string[];
 }>();
 
 const open = defineModel<boolean>('open', { default: false });
@@ -34,15 +36,20 @@ const savingId = ref<number | null>(null);
 const confirmId = ref<number | null>(null);
 const deletingId = ref<number | null>(null);
 
-function reloadDocuments(): void {
-    router.reload({ only: ['documents'], showProgress: false });
+function reloadItems(): void {
+    router.reload({ only: props.reloadOnly, showProgress: false });
 }
 
 function fetchTags(): void {
     loading.value = true;
 
     useHttp<Record<string, never>, TagResource[]>({}).get(
-        indexTags({ query: { documentable_type: props.documentableType } }).url,
+        indexTags({
+            query: {
+                taggable_type: props.taggableType,
+                owner_type: props.ownerType,
+            },
+        }).url,
         {
             onSuccess: (response) => {
                 tags.value = response;
@@ -94,7 +101,7 @@ function saveRename(tag: TagResource): void {
             onSuccess: (updated) => {
                 tag.name = updated.name;
                 upsertTag({ ...tag, name: updated.name });
-                reloadDocuments();
+                reloadItems();
                 editingId.value = null;
             },
             onError: (errors) => {
@@ -124,7 +131,7 @@ function deleteTag(tag: TagResource): void {
         onSuccess: () => {
             tags.value = tags.value.filter((item) => item.id !== tag.id);
             removeTag(tag.id);
-            reloadDocuments();
+            reloadItems();
             confirmId.value = null;
         },
         onFinish: () => {
