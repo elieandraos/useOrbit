@@ -1,3 +1,5 @@
+import type { TagResource } from '@/types/tag';
+
 export interface DocumentResource {
     id: number;
     original_filename: string;
@@ -9,6 +11,7 @@ export interface DocumentResource {
     error_message?: string;
     created_at: string;
     can_delete: boolean;
+    tags: TagResource[];
 }
 
 export interface DocumentUploadConfig {
