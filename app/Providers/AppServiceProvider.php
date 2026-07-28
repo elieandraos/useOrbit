@@ -51,6 +51,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Relation::enforceMorphMap([
             'clients' => Client::class,
+            'documents' => Document::class,
             'users' => User::class,
         ]);
     }
