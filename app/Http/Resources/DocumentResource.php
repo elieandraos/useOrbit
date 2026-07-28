@@ -25,6 +25,7 @@ final class DocumentResource extends JsonResource
             'error_message' => $this->when($this->status === DocumentStatus::Failed, fn () => $this->error_message),
             'created_at' => $this->created_at->format('M j, Y · g:i A'),
             'can_delete' => $request->user()?->can('delete', $this->resource) ?? false,
+            'tags' => TagResource::collection($this->whenLoaded('tags')),
         ];
     }
 }

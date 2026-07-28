@@ -7,6 +7,7 @@ and whether it showcases the engineering decisions that make the feature worth t
 backlog brainstorming:
 ----------------------
 tests that test laravel built-in: pruning, note test relations
+some actions with no db transactions and multiple db transactions (like deletedocumentaction)
 deletes on the db level: migrations cascadesOnDelete(), restrictOnDelete()
 what falls in unit/feature tests ? define structure once for all.
 notification redesign like mymusic website

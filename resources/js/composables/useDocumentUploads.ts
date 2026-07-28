@@ -1,16 +1,22 @@
 import { router, useHttp } from '@inertiajs/vue3';
 import type { ComputedRef, Ref } from 'vue';
 import { computed, reactive, ref, watch } from 'vue';
+import { useTagCatalog } from '@/composables/useTagCatalog';
 import {
     batch as finalizeBatch,
     download as downloadDocument,
 } from '@/routes/documents';
+import {
+    destroy as detachTagRoute,
+    store as attachTagRoute,
+} from '@/routes/documents/tags';
 import type {
     DocumentListItem,
     DocumentResource,
     DocumentRowItem,
     UploadRowItem,
 } from '@/types/document';
+import type { TagResource } from '@/types/tag';
 
 export type UseDocumentUploadsReturn = {
     documentsById: Record<number, DocumentResource>;
@@ -19,6 +25,7 @@ export type UseDocumentUploadsReturn = {
     documentsCount: ComputedRef<number>;
     search: Ref<string>;
     searched: ComputedRef<boolean>;
+    activeTagId: Ref<number | null>;
     filteredDocuments: ComputedRef<DocumentRowItem[]>;
     listItems: ComputedRef<DocumentListItem[]>;
     headerCount: Ref<number>;
@@ -30,6 +37,8 @@ export type UseDocumentUploadsReturn = {
     cancelUpload: (id: string) => void;
     dismissUpload: (id: string) => void;
     removeDocument: (id: number) => void;
+    attachTag: (documentId: number, tagId: number) => Promise<void>;
+    detachTag: (documentId: number, tagId: number) => Promise<void>;
 };
 
 type ScopeUploadState = {
@@ -80,6 +89,7 @@ export function useDocumentUploads(
 ): UseDocumentUploadsReturn {
     const state = scopeState(scopeKey);
     const handles = scopeUploadHandles(scopeKey);
+    const { tags: tagCatalog, upsertTag } = useTagCatalog();
 
     function syncDocuments(documents: DocumentResource[]): void {
         documents.forEach((document) => {
@@ -194,6 +204,80 @@ export function useDocumentUploads(
         handles.get(id)?.cancel();
     }
 
+    function attachTag(documentId: number, tagId: number): Promise<void> {
+        return new Promise((resolve, reject) => {
+            useHttp<Record<string, never>, TagResource[]>({})
+                .post(attachTagRoute([documentId, tagId]).url, {
+                    onSuccess: (tags) => {
+                        const document = state.documentsById[documentId];
+
+                        if (document) {
+                            document.tags = tags;
+                        }
+
+                        const attached = tags.find((tag) => tag.id === tagId);
+
+                        if (attached) {
+                            upsertTag(attached);
+                        }
+
+                        resolve();
+                    },
+                    onError: () => {
+                        reject(new Error('Failed to attach tag.'));
+                    },
+                })
+                .catch(() => {
+                    // onError above already rejected this promise; useHttp
+                    // rethrows after that callback, so swallow it here to
+                    // avoid an unhandled promise rejection.
+                });
+        });
+    }
+
+    function detachTag(documentId: number, tagId: number): Promise<void> {
+        return new Promise((resolve, reject) => {
+            useHttp<Record<string, never>, TagResource[]>({})
+                .delete(detachTagRoute([documentId, tagId]).url, {
+                    onSuccess: (tags) => {
+                        const document = state.documentsById[documentId];
+
+                        if (document) {
+                            document.tags = tags;
+                        }
+
+                        // The detached tag no longer appears in the response
+                        // (it's the document's remaining tags), so its fresh
+                        // usage_count isn't available here — patch the
+                        // catalog optimistically instead of a full refetch.
+                        const current = tagCatalog.value.find(
+                            (tag) => tag.id === tagId,
+                        );
+
+                        if (current) {
+                            upsertTag({
+                                ...current,
+                                usage_count: Math.max(
+                                    0,
+                                    (current.usage_count ?? 1) - 1,
+                                ),
+                            });
+                        }
+
+                        resolve();
+                    },
+                    onError: () => {
+                        reject(new Error('Failed to remove tag.'));
+                    },
+                })
+                .catch(() => {
+                    // onError above already rejected this promise; useHttp
+                    // rethrows after that callback, so swallow it here to
+                    // avoid an unhandled promise rejection.
+                });
+        });
+    }
+
     const hasActiveUploads = computed(() => state.uploads.length > 0);
     const documentsCount = computed(
         () => Object.keys(state.documentsById).length,
@@ -201,20 +285,27 @@ export function useDocumentUploads(
 
     const search = ref('');
     const searched = computed(() => search.value.trim().length > 0);
+    const activeTagId = ref<number | null>(null);
 
     const filteredDocuments = computed<DocumentRowItem[]>(() => {
         const query = search.value.trim().toLowerCase();
-        const documents = Object.values(state.documentsById).map(
+        let documents = Object.values(state.documentsById).map(
             (document): DocumentRowItem => ({ kind: 'document', ...document }),
         );
 
-        if (!query) {
-            return documents;
+        if (query) {
+            documents = documents.filter((document) =>
+                document.original_filename.toLowerCase().includes(query),
+            );
         }
 
-        return documents.filter((document) =>
-            document.original_filename.toLowerCase().includes(query),
-        );
+        if (activeTagId.value !== null) {
+            documents = documents.filter((document) =>
+                document.tags.some((tag) => tag.id === activeTagId.value),
+            );
+        }
+
+        return documents;
     });
 
     const listItems = computed<DocumentListItem[]>(() => [
@@ -247,6 +338,7 @@ export function useDocumentUploads(
         documentsCount,
         search,
         searched,
+        activeTagId,
         filteredDocuments,
         listItems,
         headerCount,
@@ -256,5 +348,7 @@ export function useDocumentUploads(
         cancelUpload,
         dismissUpload: removeUpload,
         removeDocument,
+        attachTag,
+        detachTag,
     };
 }
