@@ -147,10 +147,10 @@ function deleteTag(tag: TagResource): void {
         title="Manage document tags"
         description="Renaming or deleting a tag updates it across every document."
     >
-        <div class="-mx-[22px] max-h-[360px] min-h-[220px] overflow-y-auto">
+        <div class="-mx-[22px] h-[300px] overflow-y-auto">
             <div
                 v-if="loading"
-                class="flex min-h-[220px] items-center justify-center gap-2 text-sm text-tertiary"
+                class="flex h-full items-center justify-center gap-2 text-sm text-tertiary"
             >
                 <Spinner class="size-4" />
                 Loading tags…
@@ -158,7 +158,7 @@ function deleteTag(tag: TagResource): void {
 
             <p
                 v-else-if="tags.length === 0"
-                class="flex min-h-[220px] items-center justify-center px-[22px] text-sm text-tertiary"
+                class="flex h-full items-center justify-center px-[22px] text-sm text-tertiary"
             >
                 No tags left.
             </p>
