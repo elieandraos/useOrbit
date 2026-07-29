@@ -68,7 +68,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 
         <div
             v-if="menuOpen"
-            class="absolute z-20 min-w-[220px] rounded-[10px] border border-border bg-surface p-1 shadow-lg"
+            class="absolute z-20 min-w-[220px] rounded-[10px] border border-border bg-surface p-2 shadow-lg"
             :class="
                 cn(
                     side === 'top'
