@@ -170,7 +170,7 @@ const manageTagsOpen = ref(false);
             </CardHeader>
 
             <div
-                v-if="tagCatalog.length > 0"
+                v-if="documentsCount > 0 && tagCatalog.length > 0"
                 class="flex items-center justify-between gap-3 border-b border-border-subtle bg-sunken px-6 py-3"
             >
                 <TagFilterChips
