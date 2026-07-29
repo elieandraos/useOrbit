@@ -51,7 +51,7 @@ const mobileNavOpen = defineModel<boolean>('mobileNavOpen', {
 
 <template>
     <header
-        class="flex h-14 items-center border-b border-border bg-surface px-4 md:px-8"
+        class="sticky top-0 z-10 flex h-14 items-center border-b border-border bg-surface/75 px-4 backdrop-blur-md md:px-8"
     >
         <button
             type="button"
