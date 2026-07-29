@@ -53,7 +53,9 @@ test('notes are listed pinned-first then newest', function () {
         ->assertHasResource('client', ClientResource::make($client))
         ->assertHasResource(
             'notes',
-            NoteResource::collection($client->notes()->with('createdBy')->orderByDesc('pinned')->latest()->get())
+            NoteResource::collection(
+                $client->notes()->with('createdBy')->orderByDesc('pinned')->latest()->orderByDesc('id')->get()
+            )
         )
         ->assertInertia(fn ($page) => $page->where('notes.0.id', $pinned->id)
             ->where('notes.1.id', $newer->id)

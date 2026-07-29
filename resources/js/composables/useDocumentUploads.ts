@@ -175,7 +175,9 @@ export function useDocumentUploads(
             }),
         );
 
-        state.uploads.push(...items);
+        // Prepend so the most recently dropped batch stays above any batch
+        // that's still uploading from an earlier drop.
+        state.uploads.unshift(...items);
 
         const results = await Promise.allSettled(
             items.map((item, index) => stageFile(item, files[index])),
@@ -226,7 +228,11 @@ export function useDocumentUploads(
             );
         }
 
-        return documents;
+        // documentsById insertion order doesn't track recency — a newly
+        // staged upload lands wherever its key happens to be added, so sort
+        // explicitly by id (newest documents have the highest id) to keep
+        // the list newest-first regardless of insertion order.
+        return documents.sort((a, b) => b.id - a.id);
     });
 
     const listItems = computed<DocumentListItem[]>(() => [

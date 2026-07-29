@@ -25,6 +25,7 @@ final class ClientNotesController extends Controller
             ->with('createdBy')
             ->orderByDesc('pinned')
             ->latest()
+            ->orderByDesc('id')
             ->get();
 
         return inertia('ClientNotes/Index', [

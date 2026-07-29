@@ -26,6 +26,7 @@ final class ClientDocumentsController extends Controller
         $documents = $client->documents()
             ->with(['uploadedBy', 'tags'])
             ->latest()
+            ->orderByDesc('id')
             ->get();
 
         return inertia('ClientDocuments/Index', [

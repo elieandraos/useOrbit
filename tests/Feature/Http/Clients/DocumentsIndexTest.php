@@ -32,7 +32,9 @@ test('authenticated user can list a client documents', function () {
         ->assertHasResource('client', ClientResource::make($client))
         ->assertHasResource(
             'documents',
-            DocumentResource::collection($client->documents()->with(['uploadedBy', 'tags'])->latest()->get())
+            DocumentResource::collection(
+                $client->documents()->with(['uploadedBy', 'tags'])->latest()->orderByDesc('id')->get()
+            )
         );
 });
 
