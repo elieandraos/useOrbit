@@ -21,7 +21,7 @@ const emit = defineEmits<{
             v-if="removable"
             type="button"
             title="Remove tag"
-            class="-ml-0.5 inline-flex shrink-0 items-center text-accent opacity-60 hover:opacity-100"
+            class="-ml-0.5 inline-flex shrink-0 cursor-pointer items-center text-accent opacity-60 hover:opacity-100"
             @click="emit('remove')"
         >
             <X class="size-2.5" />

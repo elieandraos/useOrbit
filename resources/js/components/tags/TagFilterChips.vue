@@ -19,7 +19,7 @@ const emit = defineEmits<{
             type="button"
             :class="
                 cn(
-                    'inline-flex h-[30px] items-center gap-1.5 rounded-full border px-3 text-[12.5px] font-medium',
+                    'inline-flex h-[30px] cursor-pointer items-center gap-1.5 rounded-full border px-3 text-[12.5px] font-medium',
                     selectedTagId === null
                         ? 'border-accent bg-accent-bg text-accent'
                         : 'border-border bg-surface text-secondary hover:text-primary',
@@ -43,7 +43,7 @@ const emit = defineEmits<{
             type="button"
             :class="
                 cn(
-                    'inline-flex h-[30px] items-center gap-1.5 rounded-full border px-3 text-[12.5px] font-medium',
+                    'inline-flex h-[30px] cursor-pointer items-center gap-1.5 rounded-full border px-3 text-[12.5px] font-medium',
                     selectedTagId === tag.id
                         ? 'border-accent bg-accent-bg text-accent'
                         : 'border-border bg-surface text-secondary hover:text-primary',

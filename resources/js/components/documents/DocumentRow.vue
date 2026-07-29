@@ -258,7 +258,7 @@ const kind = computed(() => fileKind(filename.value));
                 <template #trigger>
                     <button
                         type="button"
-                        class="inline-flex h-6 items-center gap-1 rounded-full border border-dashed border-border-strong px-2.5 font-mono text-[11.5px] text-tertiary hover:text-primary"
+                        class="inline-flex h-6 cursor-pointer items-center gap-1 rounded-full border border-dashed border-border-strong px-2.5 font-mono text-[11.5px] text-tertiary hover:text-primary"
                     >
                         <Plus class="size-2.5" />
                         Tag
@@ -290,7 +290,7 @@ const kind = computed(() => fileKind(filename.value));
             v-if="item.download_url"
             :href="item.download_url"
             title="Download"
-            class="shrink-0 p-1 text-tertiary hover:text-primary"
+            class="shrink-0 cursor-pointer p-1 text-tertiary hover:text-primary"
         >
             <Download class="size-3.5" />
         </a>
@@ -298,7 +298,7 @@ const kind = computed(() => fileKind(filename.value));
             v-if="item.can_delete"
             type="button"
             title="Delete"
-            class="shrink-0 p-1 text-tertiary hover:text-danger"
+            class="shrink-0 cursor-pointer p-1 text-tertiary hover:text-danger"
             @click="emit('delete', item as DocumentRowItem)"
         >
             <Trash2 class="size-3.5" />

@@ -224,7 +224,7 @@ function deleteTag(tag: TagResource): void {
                         <button
                             type="button"
                             title="Rename"
-                            class="p-1 text-tertiary hover:text-primary"
+                            class="cursor-pointer p-1 text-tertiary hover:text-primary"
                             @click="startRename(tag)"
                         >
                             <Pencil class="size-3.5" />
@@ -232,7 +232,7 @@ function deleteTag(tag: TagResource): void {
                         <button
                             type="button"
                             title="Delete"
-                            class="p-1 text-tertiary hover:text-danger"
+                            class="cursor-pointer p-1 text-tertiary hover:text-danger"
                             @click="confirmDelete(tag)"
                         >
                             <Trash2 class="size-3.5" />

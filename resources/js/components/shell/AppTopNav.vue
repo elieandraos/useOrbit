@@ -91,7 +91,7 @@ const mobileNavOpen = defineModel<boolean>('mobileNavOpen', {
                 <template #trigger>
                     <button
                         type="button"
-                        class="flex size-9 items-center justify-center rounded-md text-secondary transition-colors hover:bg-sunken hover:text-primary"
+                        class="flex size-9 cursor-pointer items-center justify-center rounded-md text-secondary transition-colors hover:bg-sunken hover:text-primary"
                     >
                         <span class="relative inline-flex">
                             <Bell class="size-[18px]" />
@@ -145,7 +145,7 @@ const mobileNavOpen = defineModel<boolean>('mobileNavOpen', {
                 <template #trigger>
                     <button
                         type="button"
-                        class="flex items-center gap-2 rounded-pill p-1 transition-colors hover:bg-sunken"
+                        class="flex cursor-pointer items-center gap-2 rounded-pill p-1 transition-colors hover:bg-sunken"
                     >
                         <Avatar
                             :name="user.name"

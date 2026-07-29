@@ -49,7 +49,7 @@ const emit = defineEmits<{
                         v-if="note.can_update"
                         type="button"
                         title="Edit"
-                        class="shrink-0 p-1 text-tertiary hover:text-primary"
+                        class="shrink-0 cursor-pointer p-1 text-tertiary hover:text-primary"
                         @click="emit('edit', note)"
                     >
                         <Pencil class="size-3.5" />
@@ -58,7 +58,7 @@ const emit = defineEmits<{
                         v-if="note.can_delete"
                         type="button"
                         title="Delete"
-                        class="shrink-0 p-1 text-tertiary hover:text-danger"
+                        class="shrink-0 cursor-pointer p-1 text-tertiary hover:text-danger"
                         @click="emit('delete', note)"
                     >
                         <Trash2 class="size-3.5" />

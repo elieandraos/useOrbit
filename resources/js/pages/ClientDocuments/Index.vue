@@ -181,7 +181,7 @@ const manageTagsOpen = ref(false);
                 />
                 <button
                     type="button"
-                    class="shrink-0 text-[12.5px] font-medium text-tertiary hover:text-primary"
+                    class="shrink-0 cursor-pointer text-[12.5px] font-medium text-tertiary hover:text-primary"
                     @click="manageTagsOpen = true"
                 >
                     Manage tags
