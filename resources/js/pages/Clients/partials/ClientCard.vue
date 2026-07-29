@@ -79,7 +79,7 @@ function goToClient(client: ClientResource) {
                             <template #leading
                                 ><Trash2 class="size-4"
                             /></template>
-                            Delete
+                            Delete permanently
                         </DropMenuItem>
                     </template>
                     <DropMenuItem

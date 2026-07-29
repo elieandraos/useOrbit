@@ -275,7 +275,7 @@ function sortBy(column: string) {
                                                 <template #leading
                                                     ><Trash2 class="size-4"
                                                 /></template>
-                                                Delete
+                                                Delete permanently
                                             </DropMenuItem>
                                         </template>
                                         <DropMenuItem
