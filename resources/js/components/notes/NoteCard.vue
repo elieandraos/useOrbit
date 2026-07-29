@@ -2,10 +2,12 @@
 import { Pencil, Pin, Trash2 } from '@lucide/vue';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import type { NoteResource } from '@/types/note';
 
 defineProps<{
     note: NoteResource;
+    flash?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -16,11 +18,14 @@ const emit = defineEmits<{
 
 <template>
     <div
-        class="rounded-lg border p-[18px] shadow-sm"
         :class="
-            note.pinned
-                ? 'border-warning-bg bg-warning-bg/40'
-                : 'border-border bg-surface'
+            cn(
+                'rounded-lg border p-[18px] shadow-sm',
+                note.pinned
+                    ? 'border-warning-bg bg-warning-bg/40'
+                    : 'border-border bg-surface',
+                flash && 'animate-flash-highlight',
+            )
         "
     >
         <div class="flex items-start gap-3">

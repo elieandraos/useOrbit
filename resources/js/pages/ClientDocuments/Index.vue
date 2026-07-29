@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/card';
 import Input from '@/components/ui/input/Input.vue';
 import { useDocumentUploads } from '@/composables/useDocumentUploads';
+import { useFlashHighlight } from '@/composables/useFlashHighlight';
 import { useNotifications } from '@/composables/useNotifications';
 import { useTagCatalog } from '@/composables/useTagCatalog';
 import { DOCUMENTS_UPLOADED } from '@/lib/notificationTypes';
@@ -41,6 +42,8 @@ const props = defineProps<{
 
 const policiesCount = 0;
 
+const { flash, isFlashing } = useFlashHighlight();
+
 const {
     documentsById,
     hasActiveUploads,
@@ -61,6 +64,7 @@ const {
 } = useDocumentUploads(
     `client-${props.client.id}`,
     storeDocument(props.client.slug).url,
+    flash,
 );
 
 const { tags: tagCatalog, syncTags, createTag } = useTagCatalog();
@@ -193,12 +197,13 @@ const manageTagsOpen = ref(false);
                 @files="handleFiles"
             />
 
-            <CardContent class="p-0">
+            <CardContent class="min-h-[488px] p-0">
                 <DocumentList
                     :items="listItems"
                     :searched="searched"
                     :has-active-uploads="hasActiveUploads"
                     :available-tags="tagCatalog"
+                    :is-flashing="isFlashing"
                     @cancel="cancelUpload"
                     @dismiss="dismissUpload"
                     @toggle-tag="handleToggleTag"

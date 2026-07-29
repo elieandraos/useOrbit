@@ -10,12 +10,11 @@
 @theme inline {
     /* ── Fonts ──────────────────────────────────────────────────── */
     --font-sans:
-        'Geist', ui-sans-serif, system-ui, sans-serif,
-        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
-        'Noto Color Emoji';
+        'Geist', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+        'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
     --font-mono:
-        'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco,
-        Consolas, 'Liberation Mono', 'Courier New', monospace;
+        'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        'Liberation Mono', 'Courier New', monospace;
 
     /* ── Backgrounds ────────────────────────────────────────────── */
     --color-app: var(--app);
@@ -60,8 +59,7 @@
 
     /* ── Shadow ─────────────────────────────────────────────────── */
     --shadow-card:
-        0 1px 3px 0 rgb(0 0 0 / 0.1),
-        0 1px 2px -1px rgb(0 0 0 / 0.1);
+        0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
 
     /* ── Legacy shadcn (backward compat) ────────────────────────── */
     --color-background: var(--background);
@@ -252,4 +250,17 @@
         -webkit-text-fill-color: var(--primary);
         caret-color: var(--primary);
     }
+}
+
+@keyframes flash-highlight {
+    0% {
+        background-color: var(--color-accent-bg);
+    }
+    100% {
+        background-color: transparent;
+    }
+}
+
+@utility animate-flash-highlight {
+    animation: flash-highlight 1.8s ease-out;
 }

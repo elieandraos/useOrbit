@@ -9,6 +9,7 @@ defineProps<{
     searched: boolean;
     hasActiveUploads: boolean;
     availableTags: TagResource[];
+    isFlashing?: (id: number) => boolean;
 }>();
 
 const emit = defineEmits<{
@@ -28,6 +29,9 @@ const emit = defineEmits<{
             :item="item"
             :has-active-uploads="hasActiveUploads"
             :available-tags="availableTags"
+            :flash="
+                item.kind === 'document' && (isFlashing?.(item.id) ?? false)
+            "
             @cancel="emit('cancel', $event)"
             @dismiss="emit('dismiss', $event)"
             @delete="emit('delete', $event)"

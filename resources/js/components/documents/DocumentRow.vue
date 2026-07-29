@@ -6,6 +6,7 @@ import TagPill from '@/components/tags/TagPill.vue';
 import Badge from '@/components/ui/badge/Badge.vue';
 import { DropMenu } from '@/components/ui/drop-menu';
 import { Spinner } from '@/components/ui/spinner';
+import { cn } from '@/lib/utils';
 import type { DocumentListItem, DocumentRowItem } from '@/types/document';
 import type { TagResource } from '@/types/tag';
 
@@ -13,6 +14,7 @@ const props = defineProps<{
     item: DocumentListItem;
     hasActiveUploads?: boolean;
     availableTags: TagResource[];
+    flash?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -219,7 +221,12 @@ const kind = computed(() => fileKind(filename.value));
     <!-- Persisted document: completed -->
     <div
         v-else-if="item.kind === 'document' && item.status === 'completed'"
-        class="flex items-center gap-3.5 rounded-md border border-border bg-surface px-3.5 py-3"
+        :class="
+            cn(
+                'flex items-center gap-3.5 rounded-md border border-border bg-surface px-3.5 py-3',
+                flash && 'animate-flash-highlight',
+            )
+        "
     >
         <span
             class="flex size-[38px] shrink-0 items-center justify-center rounded-md font-mono text-[10px] font-bold tracking-wide text-white"

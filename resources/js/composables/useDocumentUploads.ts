@@ -81,6 +81,7 @@ function scopeUploadHandles(
 export function useDocumentUploads(
     scopeKey: string,
     uploadUrl: string,
+    onDocumentCompleted?: (id: number) => void,
 ): UseDocumentUploadsReturn {
     const state = scopeState(scopeKey);
     const handles = scopeUploadHandles(scopeKey);
@@ -108,6 +109,10 @@ export function useDocumentUploads(
             // DocumentsUploadBatchProcessed only notifies the uploader, so once a
             // document leaves "pending" every DocumentPolicy::delete condition holds.
             document.can_delete = true;
+
+            if (status === 'completed') {
+                onDocumentCompleted?.(id);
+            }
         });
     }
 
