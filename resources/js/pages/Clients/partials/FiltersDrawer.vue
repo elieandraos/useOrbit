@@ -15,7 +15,7 @@ import { index as clientsIndex } from '@/routes/clients';
 
 const AGE_MIN_BOUND = 18;
 const AGE_MAX_BOUND = 90;
-const AGE_DEFAULT_RANGE: [number, number] = [25, 50];
+const AGE_DEFAULT_RANGE: [number, number] = [AGE_MIN_BOUND, AGE_MAX_BOUND];
 
 function isTruthy(value: string | number | boolean | null): boolean {
     return value === true || value === 1 || value === '1';
