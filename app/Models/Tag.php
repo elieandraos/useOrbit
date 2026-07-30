@@ -49,4 +49,12 @@ final class Tag extends Model
             $query->forTaggableType($taggableType, $ownerType, $ownerId);
         }]);
     }
+
+    #[Scope]
+    protected function relevantToTaggableType(Builder $query, string $taggableType): Builder
+    {
+        return $query->where(fn (Builder $query): Builder => $query
+            ->whereDoesntHave('taggables')
+            ->orWhereHas('taggables', fn (Builder $query): Builder => $query->where('taggable_type', $taggableType)));
+    }
 }

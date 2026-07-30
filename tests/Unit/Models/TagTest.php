@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\Document;
 use App\Models\Tag;
+use App\Models\TagAttachment;
 use App\Models\User;
 use Illuminate\Database\QueryException;
 
@@ -49,3 +50,33 @@ test('tag name is unique per organization at the database level', function () {
 
     Tag::factory()->forOrganization($user)->createdBy($user)->create(['name' => 'Urgent']);
 })->throws(QueryException::class);
+
+test('relevantToTaggableType includes a tag with no taggables at all', function () {
+    $user = User::factory()->withOrganization()->create();
+    $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
+
+    expect(Tag::query()->relevantToTaggableType('documents')->pluck('id'))->toEqual(collect([$tag->id]));
+});
+
+test('relevantToTaggableType includes a tag used on the requested taggable type', function () {
+    $user = User::factory()->withOrganization()->create();
+    $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
+    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create();
+    $document->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
+
+    expect(Tag::query()->relevantToTaggableType('documents')->pluck('id'))->toEqual(collect([$tag->id]));
+});
+
+test('relevantToTaggableType excludes a tag used only on a different taggable type', function () {
+    $user = User::factory()->withOrganization()->create();
+    $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
+
+    TagAttachment::query()->forceCreate([
+        'organization_id' => $user->current_organization_id,
+        'tag_id' => $tag->id,
+        'taggable_type' => 'notes',
+        'taggable_id' => 1,
+    ]);
+
+    expect(Tag::query()->relevantToTaggableType('documents')->pluck('id'))->toBeEmpty();
+});

@@ -31,6 +31,7 @@ final class ClientDocumentsController extends Controller
 
         /** @noinspection PhpUndefinedMethodInspection */
         $tags = Tag::query()
+            ->relevantToTaggableType((new Document)->getMorphClass())
             ->withTaggableCount((new Document)->getMorphClass(), $client->getMorphClass(), $client->id)
             ->orderBy('name')
             ->get();

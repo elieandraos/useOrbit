@@ -14,7 +14,6 @@ use App\Http\Requests\Tags\UpdateTagRequest;
 use App\Http\Resources\TagResource;
 use App\Models\Tag;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
@@ -30,10 +29,7 @@ final class TagsController extends Controller
 
         /** @noinspection PhpUndefinedMethodInspection */
         $tags = Tag::query()
-            ->whereHas('taggables', function (Builder $query) use ($taggableType, $ownerType): void {
-                /** @noinspection PhpUndefinedMethodInspection */
-                $query->forTaggableType($taggableType, $ownerType);
-            })
+            ->relevantToTaggableType($taggableType)
             ->withTaggableCount($taggableType, $ownerType, $ownerId)
             ->orderBy('name')
             ->get();

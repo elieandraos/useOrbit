@@ -9,6 +9,7 @@ use App\Models\Client;
 use App\Models\Document;
 use App\Models\Organization;
 use App\Models\Tag;
+use App\Models\TagAttachment;
 use App\Models\User;
 
 test('guests are redirected to the login page', function () {
@@ -86,6 +87,7 @@ test('shares the organization tag catalog with usage counts', function () {
             'tags',
             TagResource::collection(
                 Tag::query()
+                    ->relevantToTaggableType($document->getMorphClass())
                     ->withTaggableCount($document->getMorphClass(), $client->getMorphClass(), $client->id)
                     ->orderBy('name')
                     ->get()
@@ -131,6 +133,24 @@ test('tag usage counts are scoped to the client being viewed, not leaked from ot
         ->get(route('clients.documents.index', $client))
         ->assertOk()
         ->assertInertia(fn ($page) => $page->where('tags.0.usage_count', 0));
+});
+
+test('tag catalog excludes tags used only for a different taggable type', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create();
+    $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
+
+    TagAttachment::query()->forceCreate([
+        'organization_id' => $user->current_organization_id,
+        'tag_id' => $tag->id,
+        'taggable_type' => 'notes',
+        'taggable_id' => 1,
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('clients.documents.index', $client))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->has('tags', 0));
 });
 
 test('tag catalog excludes tags from another organization', function () {

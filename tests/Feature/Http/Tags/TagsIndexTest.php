@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\Client;
 use App\Models\Document;
 use App\Models\Tag;
+use App\Models\TagAttachment;
 use App\Models\User;
 
 test('guests are redirected to the login page', function () {
@@ -92,7 +93,7 @@ test('tags from another organization are excluded', function () {
     expect(collect($response->json())->pluck('id'))->toEqual(collect([$ownTag->id]));
 });
 
-test('tags used only on a different owner type are excluded', function () {
+test('a tag used only on a different owner type is included with a zero usage_count', function () {
     $user = User::factory()->withOrganization()->create();
     $client = Client::factory()->forOrganization($user)->create();
     $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
@@ -103,13 +104,34 @@ test('tags used only on a different owner type are excluded', function () {
         ->get(route('tags.index', ['taggable_type' => 'documents', 'owner_type' => 'clients', 'owner_id' => $client->id]))
         ->assertOk();
 
-    expect($response->json())->toHaveCount(0);
+    expect($response->json())->toHaveCount(1)
+        ->and($response->json('0.usage_count'))->toBe(0);
 });
 
-test('a tag with no taggables at all is excluded', function () {
+test('a tag with no taggables at all is included with a zero usage_count, matching the filter chips catalog', function () {
     $user = User::factory()->withOrganization()->create();
     $client = Client::factory()->forOrganization($user)->create();
     Tag::factory()->forOrganization($user)->createdBy($user)->create();
+
+    $response = $this->actingAs($user)
+        ->get(route('tags.index', ['taggable_type' => 'documents', 'owner_type' => 'clients', 'owner_id' => $client->id]))
+        ->assertOk();
+
+    expect($response->json())->toHaveCount(1)
+        ->and($response->json('0.usage_count'))->toBe(0);
+});
+
+test('a tag used only on a different taggable type is excluded from the documents pool', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create();
+    $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
+
+    TagAttachment::query()->forceCreate([
+        'organization_id' => $user->current_organization_id,
+        'tag_id' => $tag->id,
+        'taggable_type' => 'notes',
+        'taggable_id' => 1,
+    ]);
 
     $response = $this->actingAs($user)
         ->get(route('tags.index', ['taggable_type' => 'documents', 'owner_type' => 'clients', 'owner_id' => $client->id]))
