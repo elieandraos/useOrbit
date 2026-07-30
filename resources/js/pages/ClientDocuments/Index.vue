@@ -222,6 +222,7 @@ const manageTagsOpen = ref(false);
             v-model:open="manageTagsOpen"
             taggable-type="documents"
             owner-type="clients"
+            :owner-id="client.id"
             :reload-only="['documents']"
         />
     </ClientDetailShell>

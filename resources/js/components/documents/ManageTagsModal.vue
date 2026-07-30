@@ -18,6 +18,7 @@ import type { TagResource } from '@/types/tag';
 const props = defineProps<{
     taggableType: string;
     ownerType?: string;
+    ownerId?: number;
     reloadOnly: string[];
 }>();
 
@@ -48,6 +49,7 @@ function fetchTags(): void {
             query: {
                 taggable_type: props.taggableType,
                 owner_type: props.ownerType,
+                owner_id: props.ownerId,
             },
         }).url,
         {
