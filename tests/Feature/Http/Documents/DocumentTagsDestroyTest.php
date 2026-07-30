@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Client;
 use App\Models\Document;
 use App\Models\Organization;
 use App\Models\Tag;
@@ -68,8 +69,15 @@ test('detaching a tag that was never attached is a no-op', function () {
 
 test('response reflects the updated tag list and counts', function () {
     $user = User::factory()->withOrganization()->create();
-    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create();
-    $otherDocument = Document::factory()->forOrganization($user)->uploadedBy($user)->create();
+    $client = Client::factory()->forOrganization($user)->create();
+    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create([
+        'documentable_type' => $client->getMorphClass(),
+        'documentable_id' => $client->id,
+    ]);
+    $otherDocument = Document::factory()->forOrganization($user)->uploadedBy($user)->create([
+        'documentable_type' => $client->getMorphClass(),
+        'documentable_id' => $client->id,
+    ]);
     $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
 
     $document->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
@@ -87,8 +95,15 @@ test('response reflects the updated tag list and counts', function () {
 
 test('usage_count ignores attachments belonging to a different owner type', function () {
     $user = User::factory()->withOrganization()->create();
-    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create();
-    $otherDocument = Document::factory()->forOrganization($user)->uploadedBy($user)->create();
+    $client = Client::factory()->forOrganization($user)->create();
+    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create([
+        'documentable_type' => $client->getMorphClass(),
+        'documentable_id' => $client->id,
+    ]);
+    $otherDocument = Document::factory()->forOrganization($user)->uploadedBy($user)->create([
+        'documentable_type' => $client->getMorphClass(),
+        'documentable_id' => $client->id,
+    ]);
     $policyDocument = Document::factory()->forOrganization($user)->uploadedBy($user)->create(['documentable_type' => 'policies']);
     $tagToDetach = Tag::factory()->forOrganization($user)->createdBy($user)->create();
     $tagToKeep = Tag::factory()->forOrganization($user)->createdBy($user)->create();
@@ -104,4 +119,31 @@ test('usage_count ignores attachments belonging to a different owner type', func
 
     expect($response->json())->toHaveCount(1)
         ->and($response->json('0.usage_count'))->toBe(2);
+});
+
+test('usage_count ignores attachments belonging to a different client', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create();
+    $otherClient = Client::factory()->forOrganization($user)->create();
+    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create([
+        'documentable_type' => $client->getMorphClass(),
+        'documentable_id' => $client->id,
+    ]);
+    $otherClientDocument = Document::factory()->forOrganization($user)->uploadedBy($user)->create([
+        'documentable_type' => $otherClient->getMorphClass(),
+        'documentable_id' => $otherClient->id,
+    ]);
+    $tagToDetach = Tag::factory()->forOrganization($user)->createdBy($user)->create();
+    $tagToKeep = Tag::factory()->forOrganization($user)->createdBy($user)->create();
+
+    $document->tags()->attach($tagToDetach, ['organization_id' => $user->current_organization_id]);
+    $document->tags()->attach($tagToKeep, ['organization_id' => $user->current_organization_id]);
+    $otherClientDocument->tags()->attach($tagToKeep, ['organization_id' => $user->current_organization_id]);
+
+    $response = $this->actingAs($user)
+        ->delete(route('documents.tags.destroy', [$document, $tagToDetach]))
+        ->assertOk();
+
+    expect($response->json())->toHaveCount(1)
+        ->and($response->json('0.usage_count'))->toBe(1);
 });

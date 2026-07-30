@@ -42,11 +42,11 @@ final class Tag extends Model
     }
 
     #[Scope]
-    protected function withTaggableCount(Builder $query, string $taggableType, ?string $ownerType = null): Builder
+    protected function withTaggableCount(Builder $query, string $taggableType, ?string $ownerType = null, ?int $ownerId = null): Builder
     {
-        return $query->withCount(['taggables' => function (Builder $query) use ($taggableType, $ownerType): void {
+        return $query->withCount(['taggables' => function (Builder $query) use ($taggableType, $ownerType, $ownerId): void {
             /** @noinspection PhpUndefinedMethodInspection */
-            $query->forTaggableType($taggableType, $ownerType);
+            $query->forTaggableType($taggableType, $ownerType, $ownerId);
         }]);
     }
 }

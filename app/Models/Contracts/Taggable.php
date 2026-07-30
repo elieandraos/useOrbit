@@ -14,4 +14,6 @@ interface Taggable
     public function tags(): MorphToMany;
 
     public static function ownerColumn(): ?string;
+
+    public static function ownerIdColumn(): ?string;
 }

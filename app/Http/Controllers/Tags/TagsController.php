@@ -26,13 +26,15 @@ final class TagsController extends Controller
     {
         $taggableType = $request->validated('taggable_type');
         $ownerType = $request->validated('owner_type');
+        $ownerId = $request->validated('owner_id');
 
+        /** @noinspection PhpUndefinedMethodInspection */
         $tags = Tag::query()
             ->whereHas('taggables', function (Builder $query) use ($taggableType, $ownerType): void {
                 /** @noinspection PhpUndefinedMethodInspection */
                 $query->forTaggableType($taggableType, $ownerType);
             })
-            ->withTaggableCount($taggableType, $ownerType)
+            ->withTaggableCount($taggableType, $ownerType, $ownerId)
             ->orderBy('name')
             ->get();
 

@@ -14,6 +14,8 @@ final class IndexTagRequest extends FormRequest
 {
     public function rules(): array
     {
+        $ownerTable = $this->ownerTable();
+
         return [
             'taggable_type' => [
                 'required',
@@ -36,6 +38,15 @@ final class IndexTagRequest extends FormRequest
                     }
                 },
             ],
+            'owner_id' => [
+                'nullable',
+                'integer',
+                Rule::requiredIf(fn (): bool => $this->ownerColumn() !== null),
+                Rule::when(
+                    $ownerTable !== null,
+                    [Rule::exists($ownerTable, 'id')->where('organization_id', $this->user()?->current_organization_id)],
+                ),
+            ],
         ];
     }
 
@@ -49,5 +60,16 @@ final class IndexTagRequest extends FormRequest
 
         /** @var class-string<Taggable> $modelClass */
         return $modelClass::ownerColumn();
+    }
+
+    private function ownerTable(): ?string
+    {
+        $modelClass = Relation::getMorphedModel((string) $this->input('owner_type'));
+
+        if ($modelClass === null) {
+            return null;
+        }
+
+        return (new $modelClass)->getTable();
     }
 }

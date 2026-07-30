@@ -20,11 +20,16 @@ trait HasTags
     public function tagsWithAttachmentCounts(): Collection
     {
         $ownerColumn = static::ownerColumn();
+        $ownerIdColumn = static::ownerIdColumn();
 
         return $this->tags()
-            ->withCount(['taggables' => function (Builder $query) use ($ownerColumn): void {
+            ->withCount(['taggables' => function (Builder $query) use ($ownerColumn, $ownerIdColumn): void {
                 /** @noinspection PhpUndefinedMethodInspection */
-                $query->forTaggableType($this->getMorphClass(), $ownerColumn !== null ? $this->{$ownerColumn} : null);
+                $query->forTaggableType(
+                    $this->getMorphClass(),
+                    $ownerColumn !== null ? $this->{$ownerColumn} : null,
+                    $ownerIdColumn !== null ? $this->{$ownerIdColumn} : null,
+                );
             }])
             ->get();
     }

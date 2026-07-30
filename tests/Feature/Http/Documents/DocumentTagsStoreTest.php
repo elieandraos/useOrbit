@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Client;
 use App\Models\Document;
 use App\Models\Organization;
 use App\Models\Tag;
@@ -67,8 +68,15 @@ test('attaching the same tag twice does not error or duplicate the pivot row', f
 
 test('response includes the updated usage_count', function () {
     $user = User::factory()->withOrganization()->create();
-    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create();
-    $otherDocument = Document::factory()->forOrganization($user)->uploadedBy($user)->create();
+    $client = Client::factory()->forOrganization($user)->create();
+    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create([
+        'documentable_type' => $client->getMorphClass(),
+        'documentable_id' => $client->id,
+    ]);
+    $otherDocument = Document::factory()->forOrganization($user)->uploadedBy($user)->create([
+        'documentable_type' => $client->getMorphClass(),
+        'documentable_id' => $client->id,
+    ]);
     $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
 
     $otherDocument->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
@@ -78,6 +86,29 @@ test('response includes the updated usage_count', function () {
         ->assertOk();
 
     expect($response->json('0.usage_count'))->toBe(2);
+});
+
+test('usage_count ignores attachments belonging to a different client', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create();
+    $otherClient = Client::factory()->forOrganization($user)->create();
+    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create([
+        'documentable_type' => $client->getMorphClass(),
+        'documentable_id' => $client->id,
+    ]);
+    $otherClientDocument = Document::factory()->forOrganization($user)->uploadedBy($user)->create([
+        'documentable_type' => $otherClient->getMorphClass(),
+        'documentable_id' => $otherClient->id,
+    ]);
+    $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
+
+    $otherClientDocument->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
+
+    $response = $this->actingAs($user)
+        ->post(route('documents.tags.store', [$document, $tag]))
+        ->assertOk();
+
+    expect($response->json('0.usage_count'))->toBe(1);
 });
 
 test('usage_count ignores attachments belonging to a different owner type', function () {

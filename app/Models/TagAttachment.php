@@ -15,17 +15,24 @@ final class TagAttachment extends Model
     protected $table = 'taggables';
 
     #[Scope]
-    protected function forTaggableType(Builder $query, string $taggableType, ?string $ownerType = null): Builder
+    protected function forTaggableType(Builder $query, string $taggableType, ?string $ownerType = null, ?int $ownerId = null): Builder
     {
         $query->where('taggable_type', $taggableType);
 
         /** @var class-string<Taggable&Model> $modelClass */
         $modelClass = Relation::getMorphedModel($taggableType);
         $ownerColumn = $modelClass::ownerColumn();
+        $ownerIdColumn = $modelClass::ownerIdColumn();
 
         return $query->when(
             $ownerType !== null && $ownerColumn !== null,
-            fn (Builder $query): Builder => $query->whereIn('taggable_id', $modelClass::query()->where($ownerColumn, $ownerType)->select('id')),
+            fn (Builder $query): Builder => $query->whereIn('taggable_id', $modelClass::query()
+                ->where($ownerColumn, $ownerType)
+                ->when(
+                    $ownerId !== null && $ownerIdColumn !== null,
+                    fn (Builder $query): Builder => $query->where($ownerIdColumn, $ownerId),
+                )
+                ->select('id')),
         );
     }
 }

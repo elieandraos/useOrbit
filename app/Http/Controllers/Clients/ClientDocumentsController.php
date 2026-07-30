@@ -29,15 +29,16 @@ final class ClientDocumentsController extends Controller
             ->orderByDesc('id')
             ->get();
 
+        /** @noinspection PhpUndefinedMethodInspection */
+        $tags = Tag::query()
+            ->withTaggableCount((new Document)->getMorphClass(), $client->getMorphClass(), $client->id)
+            ->orderBy('name')
+            ->get();
+
         return inertia('ClientDocuments/Index', [
             'client' => ClientResource::make($client),
             'documents' => DocumentResource::collection($documents),
-            'tags' => TagResource::collection(
-                Tag::query()
-                    ->withTaggableCount((new Document)->getMorphClass(), $client->getMorphClass())
-                    ->orderBy('name')
-                    ->get()
-            ),
+            'tags' => TagResource::collection($tags),
             'uploadConfig' => [
                 'max_size_bytes' => config('documents.max_size'),
                 'allowed_extensions' => config('documents.allowed_mimes'),

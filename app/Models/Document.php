@@ -68,6 +68,11 @@ final class Document extends Model implements Taggable
         return 'documentable_type';
     }
 
+    public static function ownerIdColumn(): ?string
+    {
+        return 'documentable_id';
+    }
+
     public function uploadedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'uploaded_by');
