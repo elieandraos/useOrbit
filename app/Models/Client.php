@@ -107,6 +107,6 @@ final class Client extends Model implements Documentable, Notable
 
     public function documentableName(): string
     {
-        return "{$this->first_name} {$this->last_name}";
+        return "$this->first_name $this->last_name";
     }
 }
