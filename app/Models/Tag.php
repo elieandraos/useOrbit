@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  * @property int $id
@@ -23,7 +23,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read User $createdBy
- * @property-read int $taggables_count
+ * @property-read int $documents_count
  */
 #[Fillable(['organization_id', 'name', 'created_by'])]
 final class Tag extends Model
@@ -36,25 +36,16 @@ final class Tag extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function taggables(): HasMany
+    public function documents(): BelongsToMany
     {
-        return $this->hasMany(TagAttachment::class);
+        return $this->belongsToMany(Document::class)->withTimestamps();
     }
 
     #[Scope]
-    protected function withTaggableCount(Builder $query, string $taggableType, ?string $ownerType = null, ?int $ownerId = null): Builder
+    protected function withDocumentCount(Builder $query, string $ownerType, int $ownerId): Builder
     {
-        return $query->withCount(['taggables' => function (Builder $query) use ($taggableType, $ownerType, $ownerId): void {
-            /** @noinspection PhpUndefinedMethodInspection */
-            $query->forTaggableType($taggableType, $ownerType, $ownerId);
-        }]);
-    }
-
-    #[Scope]
-    protected function relevantToTaggableType(Builder $query, string $taggableType): Builder
-    {
-        return $query->where(fn (Builder $query): Builder => $query
-            ->whereDoesntHave('taggables')
-            ->orWhereHas('taggables', fn (Builder $query): Builder => $query->where('taggable_type', $taggableType)));
+        return $query->withCount(['documents' => fn (Builder $query): Builder => $query
+            ->where('documentable_type', $ownerType)
+            ->where('documentable_id', $ownerId)]);
     }
 }

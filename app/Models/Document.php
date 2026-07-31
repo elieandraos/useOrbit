@@ -6,17 +6,17 @@ namespace App\Models;
 
 use App\Enums\DocumentStatus;
 use App\Models\Concerns\BelongsToCurrentOrganization;
-use App\Models\Concerns\HasTags;
 use App\Models\Contracts\Documentable;
-use App\Models\Contracts\Taggable;
 use Carbon\CarbonImmutable;
 use Database\Factories\DocumentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Facades\Storage;
 
@@ -45,10 +45,10 @@ use Illuminate\Support\Facades\Storage;
     'original_filename', 'disk', 'path', 'mime_type', 'size_in_bytes', 'checksum',
     'status', 'stored_at', 'error_message',
 ])]
-final class Document extends Model implements Taggable
+final class Document extends Model
 {
     /** @use HasFactory<DocumentFactory> */
-    use BelongsToCurrentOrganization, HasFactory, HasTags, Prunable;
+    use BelongsToCurrentOrganization, HasFactory, Prunable;
 
     protected function casts(): array
     {
@@ -63,19 +63,23 @@ final class Document extends Model implements Taggable
         return $this->morphTo();
     }
 
-    public static function ownerColumn(): ?string
-    {
-        return 'documentable_type';
-    }
-
-    public static function ownerIdColumn(): ?string
-    {
-        return 'documentable_id';
-    }
-
     public function uploadedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'uploaded_by');
+    }
+
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class)->withTimestamps();
+    }
+
+    /** @return Collection<int, Tag> */
+    public function tagsWithUsageCounts(): Collection
+    {
+        /** @noinspection PhpUndefinedMethodInspection */
+        return $this->tags()
+            ->withDocumentCount($this->documentable_type, $this->documentable_id)
+            ->get();
     }
 
     public function prunable(): Builder

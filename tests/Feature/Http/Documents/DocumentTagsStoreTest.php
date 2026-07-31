@@ -25,11 +25,9 @@ test('a member who can view the document can attach a tag', function () {
         ->post(route('documents.tags.store', [$document, $tag]))
         ->assertOk();
 
-    $this->assertDatabaseHas('taggables', [
+    $this->assertDatabaseHas('document_tag', [
         'tag_id' => $tag->id,
-        'taggable_type' => $document->getMorphClass(),
-        'taggable_id' => $document->id,
-        'organization_id' => $user->current_organization_id,
+        'document_id' => $document->id,
     ]);
 });
 
@@ -63,7 +61,7 @@ test('attaching the same tag twice does not error or duplicate the pivot row', f
     $this->actingAs($user)->post(route('documents.tags.store', [$document, $tag]))->assertOk();
     $this->actingAs($user)->post(route('documents.tags.store', [$document, $tag]))->assertOk();
 
-    $this->assertDatabaseCount('taggables', 1);
+    $this->assertDatabaseCount('document_tag', 1);
 });
 
 test('response includes the updated usage_count', function () {
@@ -79,7 +77,7 @@ test('response includes the updated usage_count', function () {
     ]);
     $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
 
-    $otherDocument->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
+    $otherDocument->tags()->attach($tag);
 
     $response = $this->actingAs($user)
         ->post(route('documents.tags.store', [$document, $tag]))
@@ -102,7 +100,7 @@ test('usage_count ignores attachments belonging to a different client', function
     ]);
     $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
 
-    $otherClientDocument->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
+    $otherClientDocument->tags()->attach($tag);
 
     $response = $this->actingAs($user)
         ->post(route('documents.tags.store', [$document, $tag]))
@@ -117,7 +115,7 @@ test('usage_count ignores attachments belonging to a different owner type', func
     $policyDocument = Document::factory()->forOrganization($user)->uploadedBy($user)->create(['documentable_type' => 'policies']);
     $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
 
-    $policyDocument->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
+    $policyDocument->tags()->attach($tag);
 
     $response = $this->actingAs($user)
         ->post(route('documents.tags.store', [$document, $tag]))

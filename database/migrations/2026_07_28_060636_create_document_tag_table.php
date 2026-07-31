@@ -13,15 +13,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('taggables', function (Blueprint $table) {
+        Schema::create('document_tag', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('organization_id')->constrained()->restrictOnDelete();
             $table->foreignId('tag_id')->constrained()->cascadeOnDelete();
-            $table->morphs('taggable');
+            $table->foreignId('document_id')->constrained()->cascadeOnDelete();
             $table->timestamps();
 
-            $table->unique(['tag_id', 'taggable_type', 'taggable_id']);
-            $table->index(['organization_id', 'tag_id']);
+            $table->unique(['tag_id', 'document_id']);
         });
     }
 
@@ -30,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('taggables');
+        Schema::dropIfExists('document_tag');
     }
 };

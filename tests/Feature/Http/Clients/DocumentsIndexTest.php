@@ -9,7 +9,6 @@ use App\Models\Client;
 use App\Models\Document;
 use App\Models\Organization;
 use App\Models\Tag;
-use App\Models\TagAttachment;
 use App\Models\User;
 
 test('guests are redirected to the login page', function () {
@@ -78,21 +77,18 @@ test('shares the organization tag catalog with usage counts', function () {
         'documentable_type' => $client->getMorphClass(),
         'documentable_id' => $client->id,
     ]);
-    $document->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
+    $document->tags()->attach($tag);
+
+    /** @noinspection PhpUndefinedMethodInspection */
+    $tags = Tag::query()
+        ->withDocumentCount($client->getMorphClass(), $client->id)
+        ->orderBy('name')
+        ->get();
 
     $this->actingAs($user)
         ->get(route('clients.documents.index', $client))
         ->assertOk()
-        ->assertHasResource(
-            'tags',
-            TagResource::collection(
-                Tag::query()
-                    ->relevantToTaggableType($document->getMorphClass())
-                    ->withTaggableCount($document->getMorphClass(), $client->getMorphClass(), $client->id)
-                    ->orderBy('name')
-                    ->get()
-            )
-        );
+        ->assertHasResource('tags', TagResource::collection($tags));
 });
 
 test('tag usage counts only reflect documents owned by clients', function () {
@@ -104,12 +100,12 @@ test('tag usage counts only reflect documents owned by clients', function () {
         'documentable_type' => $client->getMorphClass(),
         'documentable_id' => $client->id,
     ]);
-    $clientDocument->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
+    $clientDocument->tags()->attach($tag);
 
     $policyDocument = Document::factory()->forOrganization($user)->uploadedBy($user)->create([
         'documentable_type' => 'policies',
     ]);
-    $policyDocument->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
+    $policyDocument->tags()->attach($tag);
 
     $this->actingAs($user)
         ->get(route('clients.documents.index', $client))
@@ -127,30 +123,12 @@ test('tag usage counts are scoped to the client being viewed, not leaked from ot
         'documentable_type' => $otherClient->getMorphClass(),
         'documentable_id' => $otherClient->id,
     ]);
-    $otherClientDocument->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
+    $otherClientDocument->tags()->attach($tag);
 
     $this->actingAs($user)
         ->get(route('clients.documents.index', $client))
         ->assertOk()
         ->assertInertia(fn ($page) => $page->where('tags.0.usage_count', 0));
-});
-
-test('tag catalog excludes tags used only for a different taggable type', function () {
-    $user = User::factory()->withOrganization()->create();
-    $client = Client::factory()->forOrganization($user)->create();
-    $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
-
-    TagAttachment::query()->forceCreate([
-        'organization_id' => $user->current_organization_id,
-        'tag_id' => $tag->id,
-        'taggable_type' => 'notes',
-        'taggable_id' => 1,
-    ]);
-
-    $this->actingAs($user)
-        ->get(route('clients.documents.index', $client))
-        ->assertOk()
-        ->assertInertia(fn ($page) => $page->has('tags', 0));
 });
 
 test('tag catalog excludes tags from another organization', function () {

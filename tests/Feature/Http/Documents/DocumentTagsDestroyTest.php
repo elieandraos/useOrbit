@@ -20,16 +20,15 @@ test('a member who can view the document can detach a tag', function () {
     $user = User::factory()->withOrganization()->create();
     $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create();
     $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
-    $document->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
+    $document->tags()->attach($tag);
 
     $this->actingAs($user)
         ->delete(route('documents.tags.destroy', [$document, $tag]))
         ->assertOk();
 
-    $this->assertDatabaseMissing('taggables', [
+    $this->assertDatabaseMissing('document_tag', [
         'tag_id' => $tag->id,
-        'taggable_type' => $document->getMorphClass(),
-        'taggable_id' => $document->id,
+        'document_id' => $document->id,
     ]);
 });
 
@@ -64,7 +63,7 @@ test('detaching a tag that was never attached is a no-op', function () {
         ->delete(route('documents.tags.destroy', [$document, $tag]))
         ->assertOk();
 
-    $this->assertDatabaseCount('taggables', 0);
+    $this->assertDatabaseCount('document_tag', 0);
 });
 
 test('response reflects the updated tag list and counts', function () {
@@ -80,8 +79,8 @@ test('response reflects the updated tag list and counts', function () {
     ]);
     $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
 
-    $document->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
-    $otherDocument->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
+    $document->tags()->attach($tag);
+    $otherDocument->tags()->attach($tag);
 
     $response = $this->actingAs($user)
         ->delete(route('documents.tags.destroy', [$document, $tag]))
@@ -89,8 +88,8 @@ test('response reflects the updated tag list and counts', function () {
 
     expect($response->json())->toHaveCount(0);
 
-    $counted = Tag::query()->withCount('taggables')->findOrFail($tag->id);
-    expect($counted->taggables_count)->toBe(1);
+    $counted = Tag::query()->withCount('documents')->findOrFail($tag->id);
+    expect($counted->documents_count)->toBe(1);
 });
 
 test('usage_count ignores attachments belonging to a different owner type', function () {
@@ -108,10 +107,10 @@ test('usage_count ignores attachments belonging to a different owner type', func
     $tagToDetach = Tag::factory()->forOrganization($user)->createdBy($user)->create();
     $tagToKeep = Tag::factory()->forOrganization($user)->createdBy($user)->create();
 
-    $document->tags()->attach($tagToDetach, ['organization_id' => $user->current_organization_id]);
-    $document->tags()->attach($tagToKeep, ['organization_id' => $user->current_organization_id]);
-    $otherDocument->tags()->attach($tagToKeep, ['organization_id' => $user->current_organization_id]);
-    $policyDocument->tags()->attach($tagToKeep, ['organization_id' => $user->current_organization_id]);
+    $document->tags()->attach($tagToDetach);
+    $document->tags()->attach($tagToKeep);
+    $otherDocument->tags()->attach($tagToKeep);
+    $policyDocument->tags()->attach($tagToKeep);
 
     $response = $this->actingAs($user)
         ->delete(route('documents.tags.destroy', [$document, $tagToDetach]))
@@ -136,9 +135,9 @@ test('usage_count ignores attachments belonging to a different client', function
     $tagToDetach = Tag::factory()->forOrganization($user)->createdBy($user)->create();
     $tagToKeep = Tag::factory()->forOrganization($user)->createdBy($user)->create();
 
-    $document->tags()->attach($tagToDetach, ['organization_id' => $user->current_organization_id]);
-    $document->tags()->attach($tagToKeep, ['organization_id' => $user->current_organization_id]);
-    $otherClientDocument->tags()->attach($tagToKeep, ['organization_id' => $user->current_organization_id]);
+    $document->tags()->attach($tagToDetach);
+    $document->tags()->attach($tagToKeep);
+    $otherClientDocument->tags()->attach($tagToKeep);
 
     $response = $this->actingAs($user)
         ->delete(route('documents.tags.destroy', [$document, $tagToDetach]))

@@ -51,16 +51,16 @@ test('logs a warning when the file fails to delete from disk after the row is re
     );
 });
 
-test('leaves no orphaned taggables rows when a tagged document is deleted', function () {
+test('leaves no orphaned document_tag rows when a tagged document is deleted', function () {
     $user = User::factory()->withOrganization()->create();
     $document = Document::factory()->forOrganization($user)->completed()->create();
     $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
-    $document->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
+    $document->tags()->attach($tag);
 
     /** @noinspection PhpUnhandledExceptionInspection */
     app(DeleteDocumentAction::class)->handle($document);
 
     $this->assertModelMissing($document);
-    $this->assertDatabaseCount('taggables', 0);
+    $this->assertDatabaseCount('document_tag', 0);
     $this->assertModelExists($tag);
 });

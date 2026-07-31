@@ -16,7 +16,6 @@ final class DeleteDocumentAction
         $disk = $document->disk;
         $path = $document->path;
 
-        $document->tags()->detach();
         $document->delete();
 
         if (! Storage::disk($disk)->delete($path)) {

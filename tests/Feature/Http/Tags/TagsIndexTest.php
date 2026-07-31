@@ -5,7 +5,6 @@ declare(strict_types=1);
 use App\Models\Client;
 use App\Models\Document;
 use App\Models\Tag;
-use App\Models\TagAttachment;
 use App\Models\User;
 
 test('guests are redirected to the login page', function () {
@@ -13,43 +12,19 @@ test('guests are redirected to the login page', function () {
         ->assertRedirect(route('login'));
 });
 
-test('taggable_type is required', function () {
+test('owner_type is required', function () {
     $user = User::factory()->withOrganization()->create();
 
     $this->actingAs($user)
         ->get(route('tags.index'))
-        ->assertInvalid(['taggable_type']);
-});
-
-test('a taggable_type that does not resolve via the morph map is rejected', function () {
-    $user = User::factory()->withOrganization()->create();
-
-    $this->actingAs($user)
-        ->get(route('tags.index', ['taggable_type' => 'invoices']))
-        ->assertInvalid(['taggable_type']);
-});
-
-test('a taggable_type that resolves via the morph map but does not implement Taggable is rejected', function () {
-    $user = User::factory()->withOrganization()->create();
-
-    $this->actingAs($user)
-        ->get(route('tags.index', ['taggable_type' => 'clients']))
-        ->assertInvalid(['taggable_type']);
-});
-
-test('owner_type is required when the taggable type is polymorphically owned', function () {
-    $user = User::factory()->withOrganization()->create();
-
-    $this->actingAs($user)
-        ->get(route('tags.index', ['taggable_type' => 'documents']))
         ->assertInvalid(['owner_type']);
 });
 
-test('owner_id is required when the taggable type is polymorphically owned', function () {
+test('owner_id is required', function () {
     $user = User::factory()->withOrganization()->create();
 
     $this->actingAs($user)
-        ->get(route('tags.index', ['taggable_type' => 'documents', 'owner_type' => 'clients']))
+        ->get(route('tags.index', ['owner_type' => 'clients']))
         ->assertInvalid(['owner_id']);
 });
 
@@ -57,7 +32,16 @@ test('an owner_type that does not resolve via the morph map is rejected', functi
     $user = User::factory()->withOrganization()->create();
 
     $this->actingAs($user)
-        ->get(route('tags.index', ['taggable_type' => 'documents', 'owner_type' => 'not-a-real-owner']))
+        ->get(route('tags.index', ['owner_type' => 'not-a-real-owner', 'owner_id' => 1]))
+        ->assertInvalid(['owner_type']);
+});
+
+test('an owner_type that resolves via the morph map but does not implement Documentable is rejected', function () {
+    $user = User::factory()->withOrganization()->create();
+    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create();
+
+    $this->actingAs($user)
+        ->get(route('tags.index', ['owner_type' => 'documents', 'owner_id' => $document->id]))
         ->assertInvalid(['owner_type']);
 });
 
@@ -66,7 +50,7 @@ test('an owner_id that does not belong to the current organization is rejected',
     $otherClient = Client::factory()->create();
 
     $this->actingAs($user)
-        ->get(route('tags.index', ['taggable_type' => 'documents', 'owner_type' => 'clients', 'owner_id' => $otherClient->id]))
+        ->get(route('tags.index', ['owner_type' => 'clients', 'owner_id' => $otherClient->id]))
         ->assertInvalid(['owner_id']);
 });
 
@@ -80,14 +64,14 @@ test('tags from another organization are excluded', function () {
         'documentable_type' => $client->getMorphClass(),
         'documentable_id' => $client->id,
     ]);
-    $ownDocument->tags()->attach($ownTag, ['organization_id' => $user->current_organization_id]);
+    $ownDocument->tags()->attach($ownTag);
 
     $otherTag = Tag::factory()->forOrganization($otherUser)->createdBy($otherUser)->create();
     $otherDocument = Document::factory()->forOrganization($otherUser)->uploadedBy($otherUser)->create();
-    $otherDocument->tags()->attach($otherTag, ['organization_id' => $otherUser->current_organization_id]);
+    $otherDocument->tags()->attach($otherTag);
 
     $response = $this->actingAs($user)
-        ->get(route('tags.index', ['taggable_type' => 'documents', 'owner_type' => 'clients', 'owner_id' => $client->id]))
+        ->get(route('tags.index', ['owner_type' => 'clients', 'owner_id' => $client->id]))
         ->assertOk();
 
     expect(collect($response->json())->pluck('id'))->toEqual(collect([$ownTag->id]));
@@ -98,46 +82,27 @@ test('a tag used only on a different owner type is included with a zero usage_co
     $client = Client::factory()->forOrganization($user)->create();
     $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
     $policyDocument = Document::factory()->forOrganization($user)->uploadedBy($user)->create(['documentable_type' => 'policies']);
-    $policyDocument->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
+    $policyDocument->tags()->attach($tag);
 
     $response = $this->actingAs($user)
-        ->get(route('tags.index', ['taggable_type' => 'documents', 'owner_type' => 'clients', 'owner_id' => $client->id]))
+        ->get(route('tags.index', ['owner_type' => 'clients', 'owner_id' => $client->id]))
         ->assertOk();
 
     expect($response->json())->toHaveCount(1)
         ->and($response->json('0.usage_count'))->toBe(0);
 });
 
-test('a tag with no taggables at all is included with a zero usage_count, matching the filter chips catalog', function () {
+test('a tag with no documents at all is included with a zero usage_count, matching the filter chips catalog', function () {
     $user = User::factory()->withOrganization()->create();
     $client = Client::factory()->forOrganization($user)->create();
     Tag::factory()->forOrganization($user)->createdBy($user)->create();
 
     $response = $this->actingAs($user)
-        ->get(route('tags.index', ['taggable_type' => 'documents', 'owner_type' => 'clients', 'owner_id' => $client->id]))
+        ->get(route('tags.index', ['owner_type' => 'clients', 'owner_id' => $client->id]))
         ->assertOk();
 
     expect($response->json())->toHaveCount(1)
         ->and($response->json('0.usage_count'))->toBe(0);
-});
-
-test('a tag used only on a different taggable type is excluded from the documents pool', function () {
-    $user = User::factory()->withOrganization()->create();
-    $client = Client::factory()->forOrganization($user)->create();
-    $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
-
-    TagAttachment::query()->forceCreate([
-        'organization_id' => $user->current_organization_id,
-        'tag_id' => $tag->id,
-        'taggable_type' => 'notes',
-        'taggable_id' => 1,
-    ]);
-
-    $response = $this->actingAs($user)
-        ->get(route('tags.index', ['taggable_type' => 'documents', 'owner_type' => 'clients', 'owner_id' => $client->id]))
-        ->assertOk();
-
-    expect($response->json())->toHaveCount(0);
 });
 
 test('usage_count only reflects documents of the requested owner type', function () {
@@ -149,13 +114,13 @@ test('usage_count only reflects documents of the requested owner type', function
         'documentable_type' => $client->getMorphClass(),
         'documentable_id' => $client->id,
     ]);
-    $clientDocuments->each(fn (Document $document) => $document->tags()->attach($tag, ['organization_id' => $user->current_organization_id]));
+    $clientDocuments->each(fn (Document $document) => $document->tags()->attach($tag));
 
     $policyDocument = Document::factory()->forOrganization($user)->uploadedBy($user)->create(['documentable_type' => 'policies']);
-    $policyDocument->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
+    $policyDocument->tags()->attach($tag);
 
     $response = $this->actingAs($user)
-        ->get(route('tags.index', ['taggable_type' => 'documents', 'owner_type' => 'clients', 'owner_id' => $client->id]))
+        ->get(route('tags.index', ['owner_type' => 'clients', 'owner_id' => $client->id]))
         ->assertOk();
 
     expect($response->json('0.usage_count'))->toBe(2);
@@ -171,16 +136,16 @@ test('usage_count only reflects documents owned by the requested owner_id, not o
         'documentable_type' => $client->getMorphClass(),
         'documentable_id' => $client->id,
     ]);
-    $clientDocuments->each(fn (Document $document) => $document->tags()->attach($tag, ['organization_id' => $user->current_organization_id]));
+    $clientDocuments->each(fn (Document $document) => $document->tags()->attach($tag));
 
     $otherClientDocument = Document::factory()->forOrganization($user)->uploadedBy($user)->create([
         'documentable_type' => $otherClient->getMorphClass(),
         'documentable_id' => $otherClient->id,
     ]);
-    $otherClientDocument->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
+    $otherClientDocument->tags()->attach($tag);
 
     $response = $this->actingAs($user)
-        ->get(route('tags.index', ['taggable_type' => 'documents', 'owner_type' => 'clients', 'owner_id' => $client->id]))
+        ->get(route('tags.index', ['owner_type' => 'clients', 'owner_id' => $client->id]))
         ->assertOk();
 
     expect($response->json())->toHaveCount(1)
@@ -200,11 +165,11 @@ test('tags are ordered alphabetically by name', function () {
             'documentable_type' => $client->getMorphClass(),
             'documentable_id' => $client->id,
         ]);
-        $document->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
+        $document->tags()->attach($tag);
     }
 
     $response = $this->actingAs($user)
-        ->get(route('tags.index', ['taggable_type' => 'documents', 'owner_type' => 'clients', 'owner_id' => $client->id]))
+        ->get(route('tags.index', ['owner_type' => 'clients', 'owner_id' => $client->id]))
         ->assertOk();
 
     expect(collect($response->json())->pluck('name'))->toEqual(collect(['Archived', 'Monthly', 'Weekly']));
