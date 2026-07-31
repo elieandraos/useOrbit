@@ -155,7 +155,7 @@ const manageTagsOpen = ref(false);
     <ClientDetailShell :client="client" :policies-count="policiesCount">
         <Head :title="`${client.full_name} · Documents`" />
 
-        <Card class="mt-6">
+        <Card class="mt-6 min-h-[488px]">
             <CardHeader bordered>
                 <CardTitle>Documents</CardTitle>
                 <Badge v-if="headerCount > 0" tone="accent">{{
@@ -197,7 +197,7 @@ const manageTagsOpen = ref(false);
                 @files="handleFiles"
             />
 
-            <CardContent class="min-h-[488px] p-0">
+            <CardContent class="p-0">
                 <DocumentList
                     :items="listItems"
                     :searched="searched"

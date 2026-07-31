@@ -73,7 +73,7 @@ function saveNote(
     <ClientDetailShell :client="client" :policies-count="0">
         <Head :title="`${client.full_name} · Notes`" />
 
-        <Card class="mt-6">
+        <Card class="mt-6 min-h-[488px]">
             <CardHeader bordered>
                 <CardTitle>Notes</CardTitle>
             </CardHeader>
@@ -84,7 +84,7 @@ function saveNote(
                     @submit="createNote"
                 />
 
-                <div class="flex min-h-[488px] flex-col gap-4">
+                <div class="flex flex-col gap-4">
                     <template v-if="notes.length > 0">
                         <template v-for="note in notes" :key="note.id">
                             <NoteEditor
