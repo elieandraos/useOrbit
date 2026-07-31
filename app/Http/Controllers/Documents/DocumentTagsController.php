@@ -20,7 +20,7 @@ final class DocumentTagsController extends Controller
     {
         $action->handle($document, $tag);
 
-        return TagResource::collection($document->tagsWithAttachmentCounts());
+        return TagResource::collection($document->tagsWithUsageCounts());
     }
 
     #[Authorize('view', 'document')]
@@ -28,6 +28,6 @@ final class DocumentTagsController extends Controller
     {
         $action->handle($document, $tag);
 
-        return TagResource::collection($document->tagsWithAttachmentCounts());
+        return TagResource::collection($document->tagsWithUsageCounts());
     }
 }

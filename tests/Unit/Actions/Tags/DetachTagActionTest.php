@@ -7,19 +7,18 @@ use App\Models\Document;
 use App\Models\Tag;
 use App\Models\User;
 
-test('removes the pivot row without touching the tag or the taggable', function () {
+test('removes the pivot row without touching the tag or the document', function () {
     $user = User::factory()->withOrganization()->create();
     $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create();
     $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
-    $document->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
+    $document->tags()->attach($tag);
 
     /** @noinspection PhpUnhandledExceptionInspection */
     app(DetachTagAction::class)->handle($document, $tag);
 
-    $this->assertDatabaseMissing('taggables', [
+    $this->assertDatabaseMissing('document_tag', [
         'tag_id' => $tag->id,
-        'taggable_type' => $document->getMorphClass(),
-        'taggable_id' => $document->id,
+        'document_id' => $document->id,
     ]);
     $this->assertDatabaseHas('tags', ['id' => $tag->id]);
     $this->assertDatabaseHas('documents', ['id' => $document->id]);
@@ -33,5 +32,5 @@ test('detaching a tag that was never attached is a no-op', function () {
     /** @noinspection PhpUnhandledExceptionInspection */
     app(DetachTagAction::class)->handle($document, $tag);
 
-    $this->assertDatabaseCount('taggables', 0);
+    $this->assertDatabaseCount('document_tag', 0);
 });

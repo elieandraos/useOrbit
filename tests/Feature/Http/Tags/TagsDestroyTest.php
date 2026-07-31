@@ -67,13 +67,13 @@ test('deleting a tag attached to multiple documents removes all its pivot rows a
     $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
     $documents = Document::factory()->forOrganization($user)->uploadedBy($user)->count(2)->create();
 
-    $documents->each(fn (Document $document) => $document->tags()->attach($tag, ['organization_id' => $user->current_organization_id]));
+    $documents->each(fn (Document $document) => $document->tags()->attach($tag));
 
     $this->actingAs($user)
         ->delete(route('tags.destroy', $tag))
         ->assertNoContent();
 
     $this->assertModelMissing($tag);
-    $this->assertDatabaseCount('taggables', 0);
+    $this->assertDatabaseCount('document_tag', 0);
     $documents->each(fn (Document $document) => $this->assertModelExists($document));
 });

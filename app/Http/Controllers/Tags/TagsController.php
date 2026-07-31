@@ -23,14 +23,12 @@ final class TagsController extends Controller
     #[Authorize('viewAny', Tag::class)]
     public function index(IndexTagRequest $request): AnonymousResourceCollection
     {
-        $taggableType = $request->validated('taggable_type');
         $ownerType = $request->validated('owner_type');
         $ownerId = $request->validated('owner_id');
 
         /** @noinspection PhpUndefinedMethodInspection */
         $tags = Tag::query()
-            ->relevantToTaggableType($taggableType)
-            ->withTaggableCount($taggableType, $ownerType, $ownerId)
+            ->withDocumentCount($ownerType, $ownerId)
             ->orderBy('name')
             ->get();
 
@@ -51,7 +49,10 @@ final class TagsController extends Controller
     #[Authorize('update', 'tag')]
     public function update(UpdateTagRequest $request, Tag $tag, UpdateTagAction $action): TagResource
     {
-        $tag = $action->handle($tag, $request->validated('name'));
+        /** @var User $user */
+        $user = $request->user();
+
+        $tag = $action->handle($user, $tag, $request->validated('name'));
 
         return TagResource::make($tag);
     }

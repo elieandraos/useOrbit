@@ -20,7 +20,7 @@ final class CreateTagAction
             ->first();
 
         if ($tag !== null) {
-            return $tag->loadCount('taggables');
+            return $tag->loadCount('documents');
         }
 
         /** @var Tag $tag */
@@ -30,6 +30,6 @@ final class CreateTagAction
             'created_by' => $user->id,
         ]);
 
-        return $tag->loadCount('taggables');
+        return $tag->loadCount('documents');
     }
 }

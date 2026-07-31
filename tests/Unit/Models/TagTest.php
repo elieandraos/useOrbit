@@ -2,34 +2,46 @@
 
 declare(strict_types=1);
 
+use App\Models\Client;
 use App\Models\Document;
 use App\Models\Tag;
-use App\Models\TagAttachment;
 use App\Models\User;
 use Illuminate\Database\QueryException;
 
-test('document tags resolve and round-trip through the taggables pivot', function () {
+test('document tags resolve and round-trip through the document_tag pivot', function () {
     $user = User::factory()->withOrganization()->create();
     $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create();
     $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
 
-    $document->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
+    $document->tags()->attach($tag);
 
     expect($document->fresh()->tags)->toHaveCount(1)
         ->and($document->fresh()->tags->first()->is($tag))->toBeTrue()
-        ->and($tag->taggables()->where('taggable_id', $document->id)->where('taggable_type', $document->getMorphClass())->exists())->toBeTrue();
+        ->and($tag->documents()->where('document_id', $document->id)->exists())->toBeTrue();
 });
 
-test('tag taggables counts attachments via withCount', function () {
+test('withDocumentCount only counts documents belonging to the given owner', function () {
     $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create();
+    $otherClient = Client::factory()->forOrganization($user)->create();
     $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
-    $documents = Document::factory()->forOrganization($user)->uploadedBy($user)->count(2)->create();
 
-    $documents->each(fn (Document $document) => $document->tags()->attach($tag, ['organization_id' => $user->current_organization_id]));
+    $clientDocuments = Document::factory()->forOrganization($user)->uploadedBy($user)->count(2)->create([
+        'documentable_type' => $client->getMorphClass(),
+        'documentable_id' => $client->id,
+    ]);
+    $clientDocuments->each(fn (Document $document) => $document->tags()->attach($tag));
 
-    $counted = Tag::query()->withCount('taggables')->findOrFail($tag->id);
+    $otherDocument = Document::factory()->forOrganization($user)->uploadedBy($user)->create([
+        'documentable_type' => $otherClient->getMorphClass(),
+        'documentable_id' => $otherClient->id,
+    ]);
+    $otherDocument->tags()->attach($tag);
 
-    expect($counted->taggables_count)->toBe(2);
+    /** @noinspection PhpUndefinedMethodInspection */
+    $counted = Tag::query()->withDocumentCount($client->getMorphClass(), $client->id)->findOrFail($tag->id);
+
+    expect($counted->documents_count)->toBe(2);
 });
 
 test('current organization scope only returns tags for the acting user\'s current organization', function () {
@@ -50,33 +62,3 @@ test('tag name is unique per organization at the database level', function () {
 
     Tag::factory()->forOrganization($user)->createdBy($user)->create(['name' => 'Urgent']);
 })->throws(QueryException::class);
-
-test('relevantToTaggableType includes a tag with no taggables at all', function () {
-    $user = User::factory()->withOrganization()->create();
-    $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
-
-    expect(Tag::query()->relevantToTaggableType('documents')->pluck('id'))->toEqual(collect([$tag->id]));
-});
-
-test('relevantToTaggableType includes a tag used on the requested taggable type', function () {
-    $user = User::factory()->withOrganization()->create();
-    $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
-    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create();
-    $document->tags()->attach($tag, ['organization_id' => $user->current_organization_id]);
-
-    expect(Tag::query()->relevantToTaggableType('documents')->pluck('id'))->toEqual(collect([$tag->id]));
-});
-
-test('relevantToTaggableType excludes a tag used only on a different taggable type', function () {
-    $user = User::factory()->withOrganization()->create();
-    $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
-
-    TagAttachment::query()->forceCreate([
-        'organization_id' => $user->current_organization_id,
-        'tag_id' => $tag->id,
-        'taggable_type' => 'notes',
-        'taggable_id' => 1,
-    ]);
-
-    expect(Tag::query()->relevantToTaggableType('documents')->pluck('id'))->toBeEmpty();
-});

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Actions\Tags;
 
-use App\Models\Contracts\Taggable;
+use App\Models\Document;
 use App\Models\Tag;
 
 final class DetachTagAction
 {
-    public function handle(Taggable $taggable, Tag $tag): void
+    public function handle(Document $document, Tag $tag): void
     {
-        $taggable->tags()->detach($tag->id);
+        $document->tags()->detach($tag->id);
     }
 }
