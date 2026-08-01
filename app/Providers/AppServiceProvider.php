@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Inertia\ExceptionResponse;
+use Inertia\Inertia;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -40,6 +42,7 @@ class AppServiceProvider extends ServiceProvider
         $this->configureDefaults();
         $this->registerPolicies();
         $this->registerMorphMap();
+        $this->configureExceptionHandling();
     }
 
     protected function registerPolicies(): void
@@ -81,5 +84,26 @@ class AppServiceProvider extends ServiceProvider
                 ->uncompromised()
             : null,
         );
+    }
+
+    /**
+     * Render an in-app Inertia error page for unhandled 4xx/5xx responses instead of falling back
+     * to Laravel's default HTML error page.
+     */
+    protected function configureExceptionHandling(): void
+    {
+        Inertia::handleExceptionsUsing(function (ExceptionResponse $response) {
+            if (config('app.debug')) {
+                return null;
+            }
+
+            if (in_array($response->statusCode(), [403, 404, 500, 503], true)) {
+                return $response->render('ErrorPage', [
+                    'status' => $response->statusCode(),
+                ])->withSharedData();
+            }
+
+            return null;
+        });
     }
 }

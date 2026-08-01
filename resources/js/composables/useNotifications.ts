@@ -1,6 +1,7 @@
 import { useHttp, usePage } from '@inertiajs/vue3';
 import type { ComputedRef } from 'vue';
 import { computed, reactive } from 'vue';
+import { toast } from 'vue-sonner';
 import { read, readAll, recent } from '@/routes/notifications';
 import type {
     NotificationItem,
@@ -86,6 +87,7 @@ export function useNotifications(): UseNotificationsReturn {
             },
             onError: () => {
                 itemsRequested = false;
+                toast.error("Couldn't load notifications.");
             },
         });
     }
@@ -106,6 +108,7 @@ export function useNotifications(): UseNotificationsReturn {
             },
             onError: () => {
                 state.loadingMore = false;
+                toast.error("Couldn't load more notifications.");
             },
         });
     }
@@ -130,6 +133,7 @@ export function useNotifications(): UseNotificationsReturn {
                 }
 
                 state.unreadCount += 1;
+                toast.error("Couldn't mark notification as read.");
             },
         });
     }
@@ -156,6 +160,7 @@ export function useNotifications(): UseNotificationsReturn {
                     notification.read_at = null;
                 });
                 state.unreadCount = previousUnreadCount;
+                toast.error("Couldn't mark all notifications as read.");
             },
         });
     }
