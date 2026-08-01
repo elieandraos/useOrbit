@@ -336,7 +336,11 @@ watch(countryId, () => {
                             v-model="emergencyContactPhone"
                             name="emergency_contact_phone"
                             type="tel"
-                        />
+                        >
+                            <template #leading>
+                                <Phone />
+                            </template>
+                        </Input>
                     </FormField>
                 </FormSection>
             </div>
