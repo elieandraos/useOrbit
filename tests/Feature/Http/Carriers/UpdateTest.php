@@ -43,7 +43,7 @@ test('edit page renders with carrier and branch data', function () {
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('Carriers/Edit')
-            ->hasResource('carrier', CarrierResource::make($carrier->load('hqBranch')))
+            ->hasResource('carrier', CarrierResource::make($carrier->load(['hqBranch.state', 'hqBranch.country', 'updatedBy'])))
         );
 });
 

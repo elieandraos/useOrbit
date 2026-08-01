@@ -71,10 +71,11 @@ final class CarriersController extends Controller
     #[Authorize('update', 'carrier')]
     public function edit(Carrier $carrier): Response
     {
-        $carrier->load('hqBranch');
+        $carrier->load(['hqBranch.state', 'hqBranch.country', 'updatedBy']);
 
         return inertia('Carriers/Edit', [
             'carrier' => CarrierResource::make($carrier),
+            'countries' => CountryResource::collection(Country::query()->orderBy('name')->get()),
         ]);
     }
 
