@@ -59,6 +59,23 @@ test('current organization scope only returns tags for the acting user\'s curren
     expect(Tag::query()->pluck('id'))->toEqual(collect([$ownTag->id]));
 });
 
+test('createdBy resolves the user who created the tag', function () {
+    $user = User::factory()->withOrganization()->create();
+    $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
+
+    expect($tag->createdBy)->toBeInstanceOf(User::class)
+        ->and($tag->createdBy->is($user))->toBeTrue();
+});
+
+test('updatedBy resolves the user who last updated the tag', function () {
+    $user = User::factory()->withOrganization()->create();
+    $updater = User::factory()->withOrganization()->create();
+    $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create(['updated_by' => $updater->id]);
+
+    expect($tag->updatedBy)->toBeInstanceOf(User::class)
+        ->and($tag->updatedBy->is($updater))->toBeTrue();
+});
+
 test('tag name is unique per organization at the database level', function () {
     $user = User::factory()->withOrganization()->create();
     Tag::factory()->forOrganization($user)->createdBy($user)->create(['name' => 'Urgent']);
