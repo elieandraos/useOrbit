@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
 import { SearchIcon } from '@lucide/vue';
-import { computed, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 import Button from '@/components/ui/button/Button.vue';
 import DateInput from '@/components/ui/date-input/DateInput.vue';
 import Drawer from '@/components/ui/drawer/Drawer.vue';
@@ -79,16 +79,6 @@ watch(open, (isOpen) => {
     ];
     archived.value = isTruthy(props.filters.archived);
 });
-
-const clientTypeOptions = computed(() => [
-    { label: 'Any', value: '' },
-    ...props.clientTypes,
-]);
-
-const genderOptions = computed(() => [
-    { label: 'Any', value: '' },
-    ...props.genders,
-]);
 
 function applyFilters() {
     const query: Record<string, string | number> = {};
@@ -186,12 +176,12 @@ function clearFilters() {
             </FormField>
 
             <FormField label="Client type" :error="formErrors.client_type">
-                <RadioChips v-model="clientType" :options="clientTypeOptions" />
+                <RadioChips v-model="clientType" :options="clientTypes" />
             </FormField>
 
             <template v-if="clientType === 'individual'">
                 <FormField label="Gender" :error="formErrors.gender">
-                    <RadioPills v-model="gender" :options="genderOptions" />
+                    <RadioPills v-model="gender" :options="genders" />
                 </FormField>
 
                 <FormField
