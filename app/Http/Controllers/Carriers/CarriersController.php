@@ -88,4 +88,14 @@ final class CarriersController extends Controller
 
         return to_route('carriers.show', $carrier);
     }
+
+    #[Authorize('delete', 'carrier')]
+    public function destroy(Carrier $carrier): RedirectResponse
+    {
+        $carrier->delete();
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Carrier deleted.')]);
+
+        return to_route('carriers.index');
+    }
 }

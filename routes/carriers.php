@@ -16,4 +16,5 @@ Route::middleware(['auth', 'verified', 'organization'])->group(function () {
     Route::patch('carriers/{carrier:slug}', [CarriersController::class, 'update'])->name('carriers.update');
     Route::patch('carriers/{carrier:slug}/archive', CarriersArchiveController::class)->name('carriers.archive');
     Route::patch('carriers/{carrier:slug}/unarchive', CarriersUnarchiveController::class)->name('carriers.unarchive');
+    Route::delete('carriers/{carrier:slug}', [CarriersController::class, 'destroy'])->name('carriers.destroy');
 });
