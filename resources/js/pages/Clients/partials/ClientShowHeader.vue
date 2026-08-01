@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { Calendar, Download, Mail, Pencil, Phone, Plus } from '@lucide/vue';
+import { Calendar, Download, Mail, Pencil, Phone } from '@lucide/vue';
 import { computed } from 'vue';
 import Avatar from '@/components/ui/avatar/Avatar.vue';
 import Badge from '@/components/ui/badge/Badge.vue';
@@ -156,10 +156,6 @@ function exportClient(): Promise<void> {
                         Edit
                     </Button>
                 </Link>
-                <Button variant="primary" size="md" disabled>
-                    <template #leading><Plus /></template>
-                    New policy
-                </Button>
             </div>
         </div>
     </div>
