@@ -46,3 +46,15 @@ test('debug mode falls back to the default exception response', function () {
 
     expect($response->headers->get('X-Inertia'))->toBeNull();
 });
+
+test('unhandled status codes fall back to the default exception response', function () {
+    config(['app.debug' => false]);
+
+    $user = User::factory()->withOrganization()->create();
+
+    $response = $this->actingAs($user)
+        ->delete(route('clients.index'))
+        ->assertStatus(405);
+
+    expect($response->headers->get('X-Inertia'))->toBeNull();
+});
