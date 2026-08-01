@@ -39,6 +39,7 @@ use Illuminate\Support\Facades\Storage;
  * @property CarbonImmutable|null $updated_at
  * @property-read User $uploadedBy
  * @property-read Documentable $documentable
+ * @property-read Collection<int, Tag> $tags
  */
 #[Fillable([
     'organization_id', 'documentable_type', 'documentable_id', 'uploaded_by',

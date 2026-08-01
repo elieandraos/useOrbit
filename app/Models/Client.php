@@ -20,6 +20,7 @@ use App\Models\Contracts\Notable;
 use Carbon\CarbonImmutable;
 use Database\Factories\ClientFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -59,6 +60,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read User|null $updatedBy
  * @property-read Country|null $country
  * @property-read State|null $state
+ * @property-read Collection<int, Note> $notes
  *
  * When client_type is Company, first_name/last_name/phone/email hold the contact person's info, not the client's own.
  */

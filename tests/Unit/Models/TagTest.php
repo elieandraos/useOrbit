@@ -15,8 +15,11 @@ test('document tags resolve and round-trip through the document_tag pivot', func
 
     $document->tags()->attach($tag);
 
-    expect($document->fresh()->tags)->toHaveCount(1)
-        ->and($document->fresh()->tags->first()->is($tag))->toBeTrue()
+    /** @var Document $document */
+    $document = $document->fresh();
+
+    expect($document->tags)->toHaveCount(1)
+        ->and($document->tags->first()->is($tag))->toBeTrue()
         ->and($tag->documents()->where('document_id', $document->id)->exists())->toBeTrue();
 });
 
