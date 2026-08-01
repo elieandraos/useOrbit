@@ -1,15 +1,21 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
+import { Shield, ChevronRight, Plus } from '@lucide/vue';
 import { codeToHtml } from 'shiki';
 import { onMounted, ref } from 'vue';
-import { Shield, ChevronRight, Plus } from '@lucide/vue';
-import DesignFoundationLayout from '@/layouts/DesignFoundationLayout.vue';
-import { Card, CardHeader, CardTitle, CardAction, CardContent } from '@/components/ui/card';
 import Avatar from '@/components/ui/avatar/Avatar.vue';
 import Badge from '@/components/ui/badge/Badge.vue';
 import Button from '@/components/ui/button/Button.vue';
-import enrollmentCode from './snippets/enrollment.md?raw';
+import {
+    Card,
+    CardHeader,
+    CardTitle,
+    CardAction,
+    CardContent,
+} from '@/components/ui/card';
+import DesignFoundationLayout from '@/layouts/DesignFoundationLayout.vue';
 import emergencyContactCode from './snippets/emergency-contact.md?raw';
+import enrollmentCode from './snippets/enrollment.md?raw';
 import policiesCode from './snippets/policies.md?raw';
 
 defineOptions({ layout: DesignFoundationLayout });
@@ -22,7 +28,9 @@ const sections = [
     { id: 'policies', label: 'Policies' },
 ];
 
-const views = ref<Record<string, ViewMode>>(Object.fromEntries(sections.map((s) => [s.id, 'preview'])));
+const views = ref<Record<string, ViewMode>>(
+    Object.fromEntries(sections.map((s) => [s.id, 'preview'])),
+);
 
 const codeSnippets: Record<string, string> = {
     enrollment: enrollmentCode,
@@ -35,7 +43,11 @@ const highlighted = ref<Record<string, string>>({});
 onMounted(async () => {
     const entries = await Promise.all(
         Object.entries(codeSnippets).map(async ([id, code]) => {
-            const html = await codeToHtml(code, { lang: 'vue', theme: 'github-dark' });
+            const html = await codeToHtml(code, {
+                lang: 'vue',
+                theme: 'github-dark',
+            });
+
             return [id, html] as [string, string];
         }),
     );
@@ -43,14 +55,38 @@ onMounted(async () => {
 });
 
 const policies = [
-    { id: 'POL-2042', line: 'Medicare Advantage', carrier: 'Humana', premium: '$184.20 / mo', status: 'Active' },
-    { id: 'POL-2043', line: 'Auto · Full coverage', carrier: 'Progressive', premium: '$1,840 / yr', status: 'Active' },
-    { id: 'POL-2044', line: 'Homeowners', carrier: 'Travelers', premium: '$1,205 / yr', status: 'Renewing' },
+    {
+        id: 'POL-2042',
+        line: 'Medicare Advantage',
+        carrier: 'Humana',
+        premium: '$184.20 / mo',
+        status: 'Active',
+    },
+    {
+        id: 'POL-2043',
+        line: 'Auto · Full coverage',
+        carrier: 'Progressive',
+        premium: '$1,840 / yr',
+        status: 'Active',
+    },
+    {
+        id: 'POL-2044',
+        line: 'Homeowners',
+        carrier: 'Travelers',
+        premium: '$1,205 / yr',
+        status: 'Renewing',
+    },
 ];
 
 function statusTone(status: string): 'success' | 'warning' | 'neutral' {
-    if (status === 'Active') return 'success';
-    if (status === 'Renewing') return 'warning';
+    if (status === 'Active') {
+        return 'success';
+    }
+
+    if (status === 'Renewing') {
+        return 'warning';
+    }
+
     return 'neutral';
 }
 </script>
@@ -58,28 +94,43 @@ function statusTone(status: string): 'success' | 'warning' | 'neutral' {
 <template>
     <Head title="Card — Design Foundation" />
 
-    <h1 class="text-2xl font-semibold mb-10">Card</h1>
+    <h1 class="mb-10 text-2xl font-semibold">Card</h1>
 
     <div class="flex flex-col gap-10">
-        <div v-for="section in sections" :id="section.id" :key="section.id" class="flex flex-col gap-3">
+        <div
+            v-for="section in sections"
+            :id="section.id"
+            :key="section.id"
+            class="flex flex-col gap-3"
+        >
             <!-- Section header -->
             <div class="flex items-center justify-between">
-                <p class="text-xs font-mono text-tertiary uppercase tracking-widest">{{ section.label }}</p>
+                <p
+                    class="font-mono text-xs tracking-widest text-tertiary uppercase"
+                >
+                    {{ section.label }}
+                </p>
 
-                <div class="flex items-center gap-0.5 rounded-md border border-border p-0.5 text-xs">
+                <div
+                    class="flex items-center gap-0.5 rounded-md border border-border p-0.5 text-xs"
+                >
                     <button
-                        class="px-2.5 py-1 rounded transition-colors"
+                        class="rounded px-2.5 py-1 transition-colors"
                         :class="
-                            views[section.id] === 'preview' ? 'bg-surface text-primary' : 'text-tertiary hover:text-secondary'
+                            views[section.id] === 'preview'
+                                ? 'bg-surface text-primary'
+                                : 'text-tertiary hover:text-secondary'
                         "
                         @click="views[section.id] = 'preview'"
                     >
                         Preview
                     </button>
                     <button
-                        class="px-2.5 py-1 rounded transition-colors"
+                        class="rounded px-2.5 py-1 transition-colors"
                         :class="
-                            views[section.id] === 'code' ? 'bg-surface text-primary' : 'text-tertiary hover:text-secondary'
+                            views[section.id] === 'code'
+                                ? 'bg-surface text-primary'
+                                : 'text-tertiary hover:text-secondary'
                         "
                         @click="views[section.id] = 'code'"
                     >
@@ -91,7 +142,7 @@ function statusTone(status: string): 'success' | 'warning' | 'neutral' {
             <!-- Preview panel -->
             <div
                 v-if="views[section.id] === 'preview'"
-                class="rounded-lg border border-border p-6 h-[300px] overflow-y-auto"
+                class="h-[300px] overflow-y-auto rounded-lg border border-border p-6"
                 style="background: #f8f8f8"
             >
                 <!-- Enrollment -->
@@ -103,12 +154,24 @@ function statusTone(status: string): 'success' | 'warning' | 'neutral' {
                         <CardContent>
                             <div class="grid grid-cols-2 gap-x-3.5 gap-y-4">
                                 <div class="flex flex-col gap-1">
-                                    <p class="text-[10.5px] font-mono font-semibold text-tertiary uppercase tracking-[0.06em]">Enrolled</p>
-                                    <p class="text-[13.5px] text-primary">Feb 8, 2024</p>
+                                    <p
+                                        class="font-mono text-[10.5px] font-semibold tracking-[0.06em] text-tertiary uppercase"
+                                    >
+                                        Enrolled
+                                    </p>
+                                    <p class="text-[13.5px] text-primary">
+                                        Feb 8, 2024
+                                    </p>
                                 </div>
                                 <div class="flex flex-col gap-1">
-                                    <p class="text-[10.5px] font-mono font-semibold text-tertiary uppercase tracking-[0.06em]">Lead source</p>
-                                    <p class="text-[13.5px] text-primary">Referral</p>
+                                    <p
+                                        class="font-mono text-[10.5px] font-semibold tracking-[0.06em] text-tertiary uppercase"
+                                    >
+                                        Lead source
+                                    </p>
+                                    <p class="text-[13.5px] text-primary">
+                                        Referral
+                                    </p>
                                 </div>
                             </div>
                         </CardContent>
@@ -116,7 +179,10 @@ function statusTone(status: string): 'success' | 'warning' | 'neutral' {
                 </div>
 
                 <!-- Emergency contact -->
-                <div v-else-if="section.id === 'emergency-contact'" class="max-w-sm">
+                <div
+                    v-else-if="section.id === 'emergency-contact'"
+                    class="max-w-sm"
+                >
                     <Card>
                         <CardHeader>
                             <CardTitle>Emergency contact</CardTitle>
@@ -127,10 +193,17 @@ function statusTone(status: string): 'success' | 'warning' | 'neutral' {
                         <CardContent>
                             <div class="flex items-center gap-3">
                                 <Avatar name="David Hartwell" size="md" />
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-[13.5px] font-semibold text-primary leading-none">David Hartwell</p>
-                                    <p class="text-xs text-secondary mt-1">
-                                        Spouse · <span class="font-mono">(415) 555-0144</span>
+                                <div class="min-w-0 flex-1">
+                                    <p
+                                        class="text-[13.5px] leading-none font-semibold text-primary"
+                                    >
+                                        David Hartwell
+                                    </p>
+                                    <p class="mt-1 text-xs text-secondary">
+                                        Spouse ·
+                                        <span class="font-mono"
+                                            >(415) 555-0144</span
+                                        >
                                     </p>
                                 </div>
                             </div>
@@ -154,20 +227,39 @@ function statusTone(status: string): 'success' | 'warning' | 'neutral' {
                             <div
                                 v-for="policy in policies"
                                 :key="policy.id"
-                                class="flex items-center gap-3.5 px-6 py-3 border-b border-border-subtle last:border-b-0 hover:bg-sunken transition-colors cursor-pointer"
+                                class="flex cursor-pointer items-center gap-3.5 border-b border-border-subtle px-6 py-3 transition-colors last:border-b-0 hover:bg-sunken"
                             >
-                                <div class="flex size-8 items-center justify-center rounded-[10px] bg-accent-bg text-accent shrink-0">
+                                <div
+                                    class="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-accent-bg text-accent"
+                                >
                                     <Shield class="size-4" />
                                 </div>
-                                <div class="flex-1 min-w-0">
+                                <div class="min-w-0 flex-1">
                                     <div class="flex items-center gap-2">
-                                        <span class="text-[13.5px] font-semibold text-primary">{{ policy.line }}</span>
-                                        <Badge :tone="statusTone(policy.status)" dot>{{ policy.status }}</Badge>
+                                        <span
+                                            class="text-[13.5px] font-semibold text-primary"
+                                            >{{ policy.line }}</span
+                                        >
+                                        <Badge
+                                            :tone="statusTone(policy.status)"
+                                            dot
+                                            >{{ policy.status }}</Badge
+                                        >
                                     </div>
-                                    <p class="text-[11.5px] font-mono text-tertiary mt-0.5">{{ policy.id }} · {{ policy.carrier }}</p>
+                                    <p
+                                        class="mt-0.5 font-mono text-[11.5px] text-tertiary"
+                                    >
+                                        {{ policy.id }} · {{ policy.carrier }}
+                                    </p>
                                 </div>
-                                <p class="text-[13px] font-mono font-medium text-primary shrink-0">{{ policy.premium }}</p>
-                                <ChevronRight class="size-4 text-tertiary shrink-0" />
+                                <p
+                                    class="shrink-0 font-mono text-[13px] font-medium text-primary"
+                                >
+                                    {{ policy.premium }}
+                                </p>
+                                <ChevronRight
+                                    class="size-4 shrink-0 text-tertiary"
+                                />
                             </div>
                         </CardContent>
                     </Card>
@@ -177,7 +269,7 @@ function statusTone(status: string): 'success' | 'warning' | 'neutral' {
             <!-- Code panel -->
             <div
                 v-else
-                class="rounded-lg overflow-hidden border border-border text-sm h-[300px] overflow-y-auto [&>pre]:!m-0 [&>pre]:min-h-full [&>pre]:p-5 [&>pre]:leading-relaxed"
+                class="h-[300px] overflow-hidden overflow-y-auto rounded-lg border border-border text-sm [&>pre]:!m-0 [&>pre]:min-h-full [&>pre]:p-5 [&>pre]:leading-relaxed"
                 v-html="highlighted[section.id] ?? ''"
             />
         </div>
