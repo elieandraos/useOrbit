@@ -51,4 +51,14 @@ final class CarriersController extends Controller
 
         return to_route('carriers.show', $carrier);
     }
+
+    #[Authorize('view', 'carrier')]
+    public function show(Carrier $carrier): Response
+    {
+        $carrier->load('hqBranch');
+
+        return inertia('Carriers/Show', [
+            'carrier' => CarrierResource::make($carrier),
+        ]);
+    }
 }
