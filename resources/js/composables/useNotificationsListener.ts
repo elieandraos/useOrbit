@@ -19,7 +19,16 @@ export function useNotificationsListener(): void {
             const { id, type, ...data } = notification;
 
             receiveNotification({ id, type, data });
-            toast.success(data.summary);
+
+            const { failed, completed } = data.meta;
+
+            if (failed > 0 && completed === 0) {
+                toast.error(data.summary);
+            } else if (failed > 0) {
+                toast.warning(data.summary);
+            } else {
+                toast.success(data.summary);
+            }
         },
     );
 }

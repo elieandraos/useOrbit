@@ -3,11 +3,11 @@ import { Head } from '@inertiajs/vue3';
 import { Copy, MoreHorizontal, Pencil, Search, Tag, Trash2 } from '@lucide/vue';
 import { codeToHtml } from 'shiki';
 import { onMounted, ref } from 'vue';
-import DesignFoundationLayout from '@/layouts/DesignFoundationLayout.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DropMenu, DropMenuItem } from '@/components/ui/drop-menu';
 import { Separator } from '@/components/ui/separator';
+import DesignFoundationLayout from '@/layouts/DesignFoundationLayout.vue';
 import basicLinksCode from './snippets/basic-links.md?raw';
 import withCheckboxesCode from './snippets/with-checkboxes.md?raw';
 import withIconsCode from './snippets/with-icons.md?raw';
@@ -24,7 +24,9 @@ const sections = [
     { id: 'with-checkboxes', label: 'With checkboxes' },
 ];
 
-const views = ref<Record<string, ViewMode>>(Object.fromEntries(sections.map((s) => [s.id, 'preview'])));
+const views = ref<Record<string, ViewMode>>(
+    Object.fromEntries(sections.map((s) => [s.id, 'preview'])),
+);
 
 const codeSnippets: Record<string, string> = {
     'basic-links': basicLinksCode,
@@ -38,7 +40,10 @@ const highlighted = ref<Record<string, string>>({});
 onMounted(async () => {
     const entries = await Promise.all(
         Object.entries(codeSnippets).map(async ([id, code]) => {
-            const html = await codeToHtml(code, { lang: 'vue', theme: 'github-dark' });
+            const html = await codeToHtml(code, {
+                lang: 'vue',
+                theme: 'github-dark',
+            });
 
             return [id, html] as [string, string];
         }),
@@ -69,25 +74,44 @@ function toggleFilter(value: string) {
 <template>
     <Head title="DropMenu — Design Foundation" />
 
-    <h1 class="text-2xl font-semibold mb-10">DropMenu</h1>
+    <h1 class="mb-10 text-2xl font-semibold">DropMenu</h1>
 
     <div class="flex flex-col gap-10">
-        <div v-for="section in sections" :id="section.id" :key="section.id" class="flex flex-col gap-3">
+        <div
+            v-for="section in sections"
+            :id="section.id"
+            :key="section.id"
+            class="flex flex-col gap-3"
+        >
             <!-- Section header -->
             <div class="flex items-center justify-between">
-                <p class="text-xs font-mono text-tertiary uppercase tracking-widest">{{ section.label }}</p>
+                <p
+                    class="font-mono text-xs tracking-widest text-tertiary uppercase"
+                >
+                    {{ section.label }}
+                </p>
 
-                <div class="flex items-center gap-0.5 rounded-md border border-border p-0.5 text-xs">
+                <div
+                    class="flex items-center gap-0.5 rounded-md border border-border p-0.5 text-xs"
+                >
                     <button
-                        class="px-2.5 py-1 rounded transition-colors"
-                        :class="views[section.id] === 'preview' ? 'bg-surface text-primary' : 'text-tertiary hover:text-secondary'"
+                        class="rounded px-2.5 py-1 transition-colors"
+                        :class="
+                            views[section.id] === 'preview'
+                                ? 'bg-surface text-primary'
+                                : 'text-tertiary hover:text-secondary'
+                        "
                         @click="views[section.id] = 'preview'"
                     >
                         Preview
                     </button>
                     <button
-                        class="px-2.5 py-1 rounded transition-colors"
-                        :class="views[section.id] === 'code' ? 'bg-surface text-primary' : 'text-tertiary hover:text-secondary'"
+                        class="rounded px-2.5 py-1 transition-colors"
+                        :class="
+                            views[section.id] === 'code'
+                                ? 'bg-surface text-primary'
+                                : 'text-tertiary hover:text-secondary'
+                        "
                         @click="views[section.id] = 'code'"
                     >
                         Code
@@ -98,7 +122,7 @@ function toggleFilter(value: string) {
             <!-- Preview panel -->
             <div
                 v-if="views[section.id] === 'preview'"
-                class="rounded-lg border border-border p-6 h-[300px] overflow-visible flex items-start justify-start"
+                class="flex h-[300px] items-start justify-start overflow-visible rounded-lg border border-border p-6"
                 style="background: #f8f8f8"
             >
                 <!-- Basic links -->
@@ -107,8 +131,12 @@ function toggleFilter(value: string) {
                         <template #trigger>
                             <Button variant="secondary">Options</Button>
                         </template>
-                        <DropMenuItem href="/design-foundation">Settings</DropMenuItem>
-                        <DropMenuItem href="/design-foundation">Profile</DropMenuItem>
+                        <DropMenuItem href="/design-foundation"
+                            >Settings</DropMenuItem
+                        >
+                        <DropMenuItem href="/design-foundation"
+                            >Profile</DropMenuItem
+                        >
                         <Separator class="my-1" />
                         <DropMenuItem>Log out</DropMenuItem>
                     </DropMenu>
@@ -118,21 +146,29 @@ function toggleFilter(value: string) {
                 <div v-else-if="section.id === 'with-icons'">
                     <DropMenu>
                         <template #trigger>
-                            <button class="flex items-center justify-center rounded-md p-1.5 hover:bg-sunken transition-colors">
+                            <button
+                                class="flex items-center justify-center rounded-md p-1.5 transition-colors hover:bg-sunken"
+                            >
                                 <MoreHorizontal class="size-4 text-secondary" />
                             </button>
                         </template>
                         <DropMenuItem href="/design-foundation">
-                            <template #leading><Pencil class="size-4" /></template>
+                            <template #leading
+                                ><Pencil class="size-4"
+                            /></template>
                             Edit
                         </DropMenuItem>
                         <DropMenuItem href="/design-foundation">
-                            <template #leading><Copy class="size-4" /></template>
+                            <template #leading
+                                ><Copy class="size-4"
+                            /></template>
                             Duplicate
                         </DropMenuItem>
                         <Separator class="my-1" />
                         <DropMenuItem danger>
-                            <template #leading><Trash2 class="size-4" /></template>
+                            <template #leading
+                                ><Trash2 class="size-4"
+                            /></template>
                             Delete
                         </DropMenuItem>
                     </DropMenu>
@@ -143,11 +179,15 @@ function toggleFilter(value: string) {
                     <DropMenu align="start">
                         <template #trigger>
                             <Button variant="secondary">
-                                <template #leading><Tag class="size-4" /></template>
+                                <template #leading
+                                    ><Tag class="size-4"
+                                /></template>
                                 Add tag
                             </Button>
                         </template>
-                        <div class="flex items-center gap-1.5 rounded-md border border-border px-2 py-1.5 mx-1 mb-1">
+                        <div
+                            class="mx-1 mb-1 flex items-center gap-1.5 rounded-md border border-border px-2 py-1.5"
+                        >
                             <Search class="size-3.5 shrink-0 text-tertiary" />
                             <input
                                 type="text"
@@ -168,7 +208,9 @@ function toggleFilter(value: string) {
                         <template #trigger>
                             <Button variant="secondary">Filter</Button>
                         </template>
-                        <div class="px-2 py-1.5 text-[10.5px] font-mono text-tertiary uppercase tracking-widest">
+                        <div
+                            class="px-2 py-1.5 font-mono text-[10.5px] tracking-widest text-tertiary uppercase"
+                        >
                             Status
                         </div>
                         <label
@@ -178,7 +220,9 @@ function toggleFilter(value: string) {
                             @click.stop
                         >
                             <Checkbox
-                                :model-value="selectedFilters.includes(option.value)"
+                                :model-value="
+                                    selectedFilters.includes(option.value)
+                                "
                                 @update:model-value="toggleFilter(option.value)"
                             />
                             {{ option.label }}
@@ -190,7 +234,7 @@ function toggleFilter(value: string) {
             <!-- Code panel -->
             <div
                 v-else
-                class="rounded-lg overflow-hidden border border-border text-sm h-[300px] overflow-y-auto [&>pre]:!m-0 [&>pre]:min-h-full [&>pre]:p-5 [&>pre]:leading-relaxed"
+                class="h-[300px] overflow-hidden overflow-y-auto rounded-lg border border-border text-sm [&>pre]:!m-0 [&>pre]:min-h-full [&>pre]:p-5 [&>pre]:leading-relaxed"
                 v-html="highlighted[section.id] ?? ''"
             />
         </div>
