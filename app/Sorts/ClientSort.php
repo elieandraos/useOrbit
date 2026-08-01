@@ -19,6 +19,12 @@ final class ClientSort extends Sort
     }
 
     /** @noinspection PhpUnused */
+    public function type(string $direction): Builder
+    {
+        return $this->builder->orderBy('client_type', $direction);
+    }
+
+    /** @noinspection PhpUnused */
     public function enrollmentDate(string $direction): Builder
     {
         return $this->builder->orderBy('enrollment_date', $direction);

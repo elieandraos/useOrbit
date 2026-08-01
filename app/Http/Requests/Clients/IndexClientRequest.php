@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Clients;
 
+use App\Enums\ClientType;
 use App\Enums\Gender;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
@@ -14,13 +15,14 @@ final class IndexClientRequest extends FormRequest
     {
         $rules = [
             'search' => ['nullable', 'string', 'max:255'],
+            'client_type' => ['nullable', new Enum(ClientType::class)],
             'gender' => ['nullable', new Enum(Gender::class)],
             'enrolled_from' => ['nullable', 'date'],
             'enrolled_to' => ['nullable', 'date', 'after_or_equal:enrolled_from'],
             'age_min' => ['nullable', 'integer', 'min:0'],
             'age_max' => ['nullable', 'integer', 'min:0'],
             'archived' => ['boolean'],
-            'sort' => ['nullable', 'in:name,enrollment_date'],
+            'sort' => ['nullable', 'in:name,enrollment_date,type'],
             'direction' => ['in:asc,desc'],
         ];
 

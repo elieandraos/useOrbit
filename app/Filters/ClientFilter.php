@@ -23,6 +23,12 @@ final class ClientFilter extends QueryFilter
     }
 
     /** @noinspection PhpUnused */
+    public function clientType(string $value): Builder
+    {
+        return $this->builder->where('client_type', $value);
+    }
+
+    /** @noinspection PhpUnused */
     public function gender(string $value): Builder
     {
         return $this->builder->where('gender', $value);

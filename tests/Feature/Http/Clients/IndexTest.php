@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\ClientType;
 use App\Enums\Gender;
 use App\Http\Resources\ClientResource;
 use App\Models\Client;
@@ -91,6 +92,14 @@ test('an invalid gender is rejected', function () {
         ->assertInvalid(['gender']);
 });
 
+test('an invalid client_type is rejected', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('clients.index', ['client_type' => 'other']))
+        ->assertInvalid(['client_type']);
+});
+
 test('enrolled_to before enrolled_from is rejected', function () {
     $user = User::factory()->withOrganization()->create();
 
@@ -175,12 +184,26 @@ test('the index page includes the gender options for the filters drawer', functi
             ));
 });
 
+test('the index page includes the client type options for the filters drawer', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('clients.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where(
+                'clientTypes',
+                ClientType::all(),
+            ));
+});
+
 test('the index page echoes back the applied filters', function () {
     $user = User::factory()->withOrganization()->create();
 
     $this->actingAs($user)
         ->get(route('clients.index', [
             'search' => 'Aline',
+            'client_type' => 'individual',
             'gender' => 'female',
             'enrolled_from' => '2024-01-01',
             'enrolled_to' => '2024-06-01',
@@ -191,6 +214,7 @@ test('the index page echoes back the applied filters', function () {
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->where('filters.search', 'Aline')
+            ->where('filters.client_type', 'individual')
             ->where('filters.gender', 'female')
             ->where('filters.enrolled_from', '2024-01-01')
             ->where('filters.enrolled_to', '2024-06-01')
@@ -207,6 +231,7 @@ test('the index page returns null filters when none are applied', function () {
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->where('filters.search', null)
+            ->where('filters.client_type', null)
             ->where('filters.gender', null)
             ->where('filters.enrolled_from', null)
             ->where('filters.enrolled_to', null)

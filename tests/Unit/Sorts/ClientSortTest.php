@@ -45,6 +45,30 @@ test('name sorts a mixed individual/company set by the displayed name', function
     expect($clients->pluck('id')->all())->toBe([$acme->id, $bravo->id, $zenith->id]);
 });
 
+test('type sorts individual before company alphabetically', function () {
+    /** @var Client $company */
+    $company = Client::factory()->company()->create();
+    /** @var Client $individual */
+    $individual = Client::factory()->create();
+
+    /** @noinspection PhpUndefinedMethodInspection */
+    $clients = Client::query()->sort(new ClientSort('type', 'asc'))->get();
+
+    expect($clients->pluck('id')->all())->toBe([$company->id, $individual->id]);
+});
+
+test('type sort direction can be reversed', function () {
+    /** @var Client $company */
+    $company = Client::factory()->company()->create();
+    /** @var Client $individual */
+    $individual = Client::factory()->create();
+
+    /** @noinspection PhpUndefinedMethodInspection */
+    $clients = Client::query()->sort(new ClientSort('type', 'desc'))->get();
+
+    expect($clients->pluck('id')->all())->toBe([$individual->id, $company->id]);
+});
+
 test('enrollmentDate sorts chronologically', function () {
     /** @var Client $newest */
     $newest = Client::factory()->create(['enrollment_date' => '2024-06-01']);

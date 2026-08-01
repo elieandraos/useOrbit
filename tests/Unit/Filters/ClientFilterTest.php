@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\ClientStatus;
+use App\Enums\ClientType;
 use App\Enums\Gender;
 use App\Filters\ClientFilter;
 use App\Models\Client;
@@ -143,6 +144,17 @@ test('search excludes non-matching clients', function () {
     $clients = Client::query()->filter(new ClientFilter(['search' => 'nonexistent']))->get();
 
     expect($clients)->toHaveCount(0);
+});
+
+test('clientType narrows to the exact matching type only', function () {
+    /** @var Client $match */
+    $match = Client::factory()->company()->create();
+    Client::factory()->create(['client_type' => ClientType::Individual->value]);
+
+    /** @noinspection PhpUndefinedMethodInspection */
+    $clients = Client::query()->filter(new ClientFilter(['client_type' => ClientType::Company->value]))->get();
+
+    expect($clients->pluck('id')->all())->toBe([$match->id]);
 });
 
 test('gender narrows to the exact matching value only', function () {
