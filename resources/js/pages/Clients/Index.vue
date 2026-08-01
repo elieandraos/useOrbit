@@ -58,13 +58,6 @@ function exportClients(): Promise<void> {
     });
 }
 
-const activeFilterCount = computed(
-    () =>
-        Object.values(props.filters).filter(
-            (value) => value !== null && value !== '',
-        ).length,
-);
-
 const otherFilterCount = computed(
     () =>
         Object.entries(props.filters).filter(
@@ -78,6 +71,10 @@ const isArchivedView = computed(
         props.filters.archived === true ||
         props.filters.archived === 1 ||
         props.filters.archived === '1',
+);
+
+const activeFilterCount = computed(
+    () => otherFilterCount.value + (isArchivedView.value ? 1 : 0),
 );
 
 const sortColumnLabels: Record<string, string> = {
