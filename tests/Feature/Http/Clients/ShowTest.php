@@ -43,3 +43,13 @@ test('an archived client can still be shown', function () {
         ->get(route('clients.show', $client))
         ->assertOk();
 });
+
+test('a company client can be shown without a date of birth or gender', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->company()->create();
+
+    $this->actingAs($user)
+        ->get(route('clients.show', $client))
+        ->assertOk()
+        ->assertHasResource('client', ClientResource::make($client->load(['country', 'state'])));
+});

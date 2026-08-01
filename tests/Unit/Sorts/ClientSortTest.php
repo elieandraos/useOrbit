@@ -31,16 +31,18 @@ test('name sort direction can be reversed', function () {
     expect($clients->pluck('id')->all())->toBe([$bravo->id, $alpha->id]);
 });
 
-test('email sorts alphabetically', function () {
-    /** @var Client $zebra */
-    $zebra = Client::factory()->create(['email' => 'zebra@example.com']);
-    /** @var Client $apple */
-    $apple = Client::factory()->create(['email' => 'apple@example.com']);
+test('name sorts a mixed individual/company set by the displayed name', function () {
+    /** @var Client $acme */
+    $acme = Client::factory()->company()->create(['company_name' => 'Acme Logistics']);
+    /** @var Client $bravo */
+    $bravo = Client::factory()->create(['first_name' => 'Bravo', 'last_name' => 'Zulu']);
+    /** @var Client $zenith */
+    $zenith = Client::factory()->company()->create(['company_name' => 'Zenith Traders']);
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $clients = Client::query()->sort(new ClientSort('email', 'asc'))->get();
+    $clients = Client::query()->sort(new ClientSort('name', 'asc'))->get();
 
-    expect($clients->pluck('id')->all())->toBe([$apple->id, $zebra->id]);
+    expect($clients->pluck('id')->all())->toBe([$acme->id, $bravo->id, $zenith->id]);
 });
 
 test('enrollmentDate sorts chronologically', function () {

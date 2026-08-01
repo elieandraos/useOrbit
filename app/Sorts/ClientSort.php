@@ -11,15 +11,11 @@ final class ClientSort extends Sort
     /** @noinspection PhpUnused */
     public function name(string $direction): Builder
     {
-        return $this->builder
-            ->orderBy('first_name', $direction)
-            ->orderBy('last_name', $direction);
-    }
+        $direction = $direction === 'desc' ? 'desc' : 'asc';
 
-    /** @noinspection PhpUnused */
-    public function email(string $direction): Builder
-    {
-        return $this->builder->orderBy('email', $direction);
+        return $this->builder
+            ->orderByRaw("CASE WHEN client_type = 'company' THEN company_name ELSE first_name END $direction")
+            ->orderByRaw("CASE WHEN client_type = 'company' THEN company_name ELSE last_name END $direction");
     }
 
     /** @noinspection PhpUnused */

@@ -16,6 +16,7 @@ final class ClientFilter extends QueryFilter
             $query->where('first_name', 'like', "%$value%")
                 ->orWhere('middle_name', 'like', "%$value%")
                 ->orWhere('last_name', 'like', "%$value%")
+                ->orWhere('company_name', 'like', "%$value%")
                 ->orWhere('phone', 'like', "%$value%")
                 ->orWhere('email', 'like', "%$value%");
         });

@@ -85,6 +85,23 @@ test('search matches last name', function () {
     expect($clients->pluck('id')->all())->toBe([$match->id]);
 });
 
+test('search matches company name', function () {
+    /** @var Client $match */
+    $match = Client::factory()->company()->create(['company_name' => 'Acme Logistics']);
+    Client::factory()->create([
+        'first_name' => 'Karim',
+        'middle_name' => 'Nasser',
+        'last_name' => 'Saad',
+        'phone' => '+96170999999',
+        'email' => 'john@example.com',
+    ]);
+
+    /** @noinspection PhpUndefinedMethodInspection */
+    $clients = Client::query()->filter(new ClientFilter(['search' => 'Acme']))->get();
+
+    expect($clients->pluck('id')->all())->toBe([$match->id]);
+});
+
 test('search matches phone', function () {
     /** @var Client $match */
     $match = Client::factory()->create(['phone' => '+96170123456']);

@@ -20,7 +20,7 @@ final class IndexClientRequest extends FormRequest
             'age_min' => ['nullable', 'integer', 'min:0'],
             'age_max' => ['nullable', 'integer', 'min:0'],
             'archived' => ['boolean'],
-            'sort' => ['nullable', 'in:name,email,enrollment_date'],
+            'sort' => ['nullable', 'in:name,enrollment_date'],
             'direction' => ['in:asc,desc'],
         ];
 
