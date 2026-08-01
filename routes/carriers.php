@@ -10,4 +10,6 @@ Route::middleware(['auth', 'verified', 'organization'])->group(function () {
     Route::get('carriers/create', [CarriersController::class, 'create'])->name('carriers.create');
     Route::post('carriers', [CarriersController::class, 'store'])->name('carriers.store');
     Route::get('carriers/{carrier:slug}', [CarriersController::class, 'show'])->name('carriers.show');
+    Route::get('carriers/{carrier:slug}/edit', [CarriersController::class, 'edit'])->name('carriers.edit');
+    Route::patch('carriers/{carrier:slug}', [CarriersController::class, 'update'])->name('carriers.update');
 });

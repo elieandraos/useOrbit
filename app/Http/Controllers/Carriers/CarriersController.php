@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Carriers;
 
 use App\Actions\Carriers\CreateCarrierAction;
+use App\Actions\Carriers\UpdateCarrierAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Carriers\StoreCarrierRequest;
+use App\Http\Requests\Carriers\UpdateCarrierRequest;
 use App\Http\Resources\CarrierResource;
 use App\Models\Carrier;
 use App\Models\User;
@@ -60,5 +62,30 @@ final class CarriersController extends Controller
         return inertia('Carriers/Show', [
             'carrier' => CarrierResource::make($carrier),
         ]);
+    }
+
+    #[Authorize('update', 'carrier')]
+    public function edit(Carrier $carrier): Response
+    {
+        $carrier->load('hqBranch');
+
+        return inertia('Carriers/Edit', [
+            'carrier' => CarrierResource::make($carrier),
+        ]);
+    }
+
+    /**
+     * @throws \Throwable
+     */
+    #[Authorize('update', 'carrier')]
+    public function update(UpdateCarrierRequest $request, Carrier $carrier, UpdateCarrierAction $action): RedirectResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        $carrier = $action->handle($user, $carrier, $request->validated());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Carrier updated.')]);
+
+        return to_route('carriers.show', $carrier);
     }
 }
