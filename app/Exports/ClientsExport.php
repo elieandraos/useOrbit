@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Exports;
 
+use App\Enums\ClientType;
 use App\Filters\ClientFilter;
 use App\Models\Client;
 use App\Sorts\ClientSort;
@@ -34,6 +35,7 @@ final readonly class ClientsExport implements FromQuery, WithHeadings, WithMappi
     {
         return [
             'Name',
+            'Type',
             'Email',
             'Phone',
             'Gender',
@@ -49,13 +51,16 @@ final readonly class ClientsExport implements FromQuery, WithHeadings, WithMappi
     public function map($row): array
     {
         /** @var Client $row */
+        $isCompany = $row->client_type === ClientType::Company;
+
         return [
-            "$row->first_name $row->last_name",
+            $isCompany ? $row->company_name : "$row->first_name $row->last_name",
+            $row->client_type->label(),
             $row->email,
             $row->phone,
-            $row->gender->label(),
-            $row->date_of_birth->format('Y-m-d'),
-            $row->date_of_birth->age,
+            $row->gender?->label(),
+            $row->date_of_birth?->format('Y-m-d'),
+            $row->date_of_birth?->age,
             collect([$row->street, $row->building_floor, $row->city, $row->state?->name, $row->country?->name])->filter()->implode(', '),
             $row->enrollment_date->format('Y-m-d'),
             $row->lead_source->label(),

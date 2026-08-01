@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>{{ $client->first_name }} {{ $client->last_name }}</title>
+    <title>{{ $client->client_type->value === 'company' ? $client->company_name : "$client->first_name $client->last_name" }}</title>
     <style>
         body {
             font-family: 'Helvetica', 'Arial', sans-serif;
@@ -60,64 +60,100 @@
     </style>
 </head>
 <body>
-    <h1>{{ $client->first_name }} {{ $client->last_name }}</h1>
+    <h1>{{ $client->client_type->value === 'company' ? $client->company_name : "$client->first_name $client->last_name" }}</h1>
     <p class="subtitle">Client profile</p>
 
-    <h2>Personal information</h2>
-    <table>
-        <tr>
-            <td>
-                <span class="label">First name</span>
-                <span class="value">{{ $client->first_name }}</span>
-            </td>
-            <td>
-                <span class="label">Middle name</span>
-                <span class="value">{{ $client->middle_name ?? '—' }}</span>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <span class="label">Last name</span>
-                <span class="value">{{ $client->last_name }}</span>
-            </td>
-            <td>
-                <span class="label">Mother's name</span>
-                <span class="value">{{ $client->mothers_name ?? '—' }}</span>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <span class="label">Date of birth</span>
-                <span class="value">{{ $client->date_of_birth->format('M j, Y') }} ({{ $client->date_of_birth->age }} yrs)</span>
-            </td>
-            <td>
-                <span class="label">Gender</span>
-                <span class="value">{{ $client->gender->label() }}</span>
-            </td>
-        </tr>
-    </table>
+    @if ($client->client_type->value === 'company')
+        <h2>Company information</h2>
+        <table>
+            <tr>
+                <td colspan="2">
+                    <span class="label">Company name</span>
+                    <span class="value">{{ $client->company_name }}</span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <span class="label">Contact person</span>
+                    <span class="value">{{ $client->first_name }} {{ $client->last_name }}</span>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <span class="label">Phone</span>
+                    <span class="value">{{ $client->phone }}</span>
+                </td>
+                <td>
+                    <span class="label">Email</span>
+                    <span class="value">{{ $client->email ?? '—' }}</span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <span class="label">Address</span>
+                    <span class="value">
+                        {!! nl2br(e(collect([$client->street, $client->building_floor, $client->city, $client->state?->name, $client->country?->name])->filter()->implode("\n"))) ?: '—' !!}
+                    </span>
+                </td>
+            </tr>
+        </table>
+    @else
+        <h2>Personal information</h2>
+        <table>
+            <tr>
+                <td>
+                    <span class="label">First name</span>
+                    <span class="value">{{ $client->first_name }}</span>
+                </td>
+                <td>
+                    <span class="label">Middle name</span>
+                    <span class="value">{{ $client->middle_name ?? '—' }}</span>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <span class="label">Last name</span>
+                    <span class="value">{{ $client->last_name }}</span>
+                </td>
+                <td>
+                    <span class="label">Mother's name</span>
+                    <span class="value">{{ $client->mothers_name ?? '—' }}</span>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <span class="label">Date of birth</span>
+                    <span class="value">{{ $client->date_of_birth->format('M j, Y') }} ({{ $client->date_of_birth->age }} yrs)</span>
+                </td>
+                <td>
+                    <span class="label">Gender</span>
+                    <span class="value">{{ $client->gender->label() }}</span>
+                </td>
+            </tr>
+        </table>
 
-    <h2>Contact</h2>
-    <table>
-        <tr>
-            <td>
-                <span class="label">Phone</span>
-                <span class="value">{{ $client->phone }}</span>
-            </td>
-            <td>
-                <span class="label">Email</span>
-                <span class="value">{{ $client->email ?? '—' }}</span>
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2">
-                <span class="label">Address</span>
-                <span class="value">
-                    {!! nl2br(e(collect([$client->street, $client->building_floor, $client->city, $client->state?->name, $client->country?->name])->filter()->implode("\n"))) ?: '—' !!}
-                </span>
-            </td>
-        </tr>
-    </table>
+        <h2>Contact</h2>
+        <table>
+            <tr>
+                <td>
+                    <span class="label">Phone</span>
+                    <span class="value">{{ $client->phone }}</span>
+                </td>
+                <td>
+                    <span class="label">Email</span>
+                    <span class="value">{{ $client->email ?? '—' }}</span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <span class="label">Address</span>
+                    <span class="value">
+                        {!! nl2br(e(collect([$client->street, $client->building_floor, $client->city, $client->state?->name, $client->country?->name])->filter()->implode("\n"))) ?: '—' !!}
+                    </span>
+                </td>
+            </tr>
+        </table>
+    @endif
 
     <h2>Enrollment</h2>
     <table>
@@ -133,28 +169,30 @@
         </tr>
     </table>
 
-    <h2>Emergency contact</h2>
-    @if ($client->emergency_contact_name)
-        <table>
-            <tr>
-                <td>
-                    <span class="label">Name</span>
-                    <span class="value">{{ $client->emergency_contact_name }}</span>
-                </td>
-                <td>
-                    <span class="label">Relationship</span>
-                    <span class="value">{{ $client->emergency_contact_relationship?->label() ?? '—' }}</span>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <span class="label">Phone</span>
-                    <span class="value">{{ $client->emergency_contact_phone ?? '—' }}</span>
-                </td>
-            </tr>
-        </table>
-    @else
-        <p class="value-empty">No emergency contact on file.</p>
+    @if ($client->client_type->value !== 'company')
+        <h2>Emergency contact</h2>
+        @if ($client->emergency_contact_name)
+            <table>
+                <tr>
+                    <td>
+                        <span class="label">Name</span>
+                        <span class="value">{{ $client->emergency_contact_name }}</span>
+                    </td>
+                    <td>
+                        <span class="label">Relationship</span>
+                        <span class="value">{{ $client->emergency_contact_relationship?->label() ?? '—' }}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <span class="label">Phone</span>
+                        <span class="value">{{ $client->emergency_contact_phone ?? '—' }}</span>
+                    </td>
+                </tr>
+            </table>
+        @else
+            <p class="value-empty">No emergency contact on file.</p>
+        @endif
     @endif
 </body>
 </html>
