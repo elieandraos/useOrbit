@@ -13,12 +13,14 @@ import FiltersDrawer from './partials/FiltersDrawer.vue';
 const props = defineProps<{
     clients: Paginated<ClientResource>;
     genders: { label: string; value: string }[];
+    clientTypes: { label: string; value: string }[];
     sort: {
         column: string;
         direction: 'asc' | 'desc';
     };
     filters: {
         search: string | null;
+        client_type: string | null;
         gender: string | null;
         enrolled_from: string | null;
         enrolled_to: string | null;
@@ -80,6 +82,7 @@ const isArchivedView = computed(
 
 const sortColumnLabels: Record<string, string> = {
     name: 'name',
+    type: 'type',
     enrollment_date: 'enrollment date',
 };
 
@@ -138,6 +141,7 @@ const sortLabelShort = computed(() => {
         <FiltersDrawer
             v-model:open="filtersOpen"
             :genders="genders"
+            :client-types="clientTypes"
             :filters="filters"
         />
     </div>

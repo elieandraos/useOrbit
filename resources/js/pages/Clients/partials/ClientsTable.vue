@@ -137,9 +137,23 @@ function sortBy(column: string) {
                                 Phone
                             </th>
                             <th
-                                class="px-4 py-2.5 text-left font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase"
+                                class="cursor-pointer px-4 py-2.5 text-left font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase select-none"
+                                @click="sortBy('type')"
                             >
-                                Type
+                                <span class="inline-flex items-center gap-1">
+                                    Type
+                                    <ChevronUp
+                                        v-if="
+                                            sort.column === 'type' &&
+                                            sort.direction === 'asc'
+                                        "
+                                        class="size-3"
+                                    />
+                                    <ChevronDown
+                                        v-else-if="sort.column === 'type'"
+                                        class="size-3"
+                                    />
+                                </span>
                             </th>
                             <th
                                 class="cursor-pointer px-4 py-2.5 text-left font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase select-none"
