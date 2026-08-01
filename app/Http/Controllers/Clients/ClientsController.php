@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Clients;
 
 use App\Actions\Clients\CreateClientAction;
 use App\Actions\Clients\UpdateClientAction;
+use App\Enums\ClientType;
 use App\Enums\EmergencyContactRelationship;
 use App\Enums\Gender;
 use App\Enums\LeadSource;
@@ -70,6 +71,7 @@ final class ClientsController extends Controller
             'genders' => collect(Gender::all()),
             'leadSources' => collect(LeadSource::all()),
             'emergencyContactRelationships' => collect(EmergencyContactRelationship::all()),
+            'clientTypes' => collect(ClientType::all()),
             'defaultCountryId' => $user->country_id,
         ]);
     }
