@@ -20,6 +20,17 @@ $attributes = [
     'status' => ClientStatus::Active->value,
 ];
 
+$companyAttributes = [
+    'company_name' => 'Beta Traders',
+    'first_name' => 'Nora',
+    'last_name' => 'Khalil',
+    'phone' => '555-0500',
+    'email' => 'nora@beta.test',
+    'enrollment_date' => '2024-06-01',
+    'lead_source' => LeadSource::Referral->value,
+    'status' => ClientStatus::Active->value,
+];
+
 test('updates the client fields in the database', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
     /** @var Client $client */
@@ -80,4 +91,36 @@ test('keeps existing slug when name does not change', function () use ($attribut
     /** @var Client $fresh */
     $fresh = $client->fresh();
     expect($fresh->slug)->toBe('jane-smith');
+});
+
+test('regenerates slug from company_name when it changes', function () use ($companyAttributes) {
+    $user = User::factory()->withOrganization()->create();
+    /** @var Client $client */
+    $client = Client::factory()->forOrganization($user)->company()->create([
+        'company_name' => 'Acme Logistics',
+        'slug' => 'acme-logistics',
+    ]);
+
+    /** @noinspection PhpUnhandledExceptionInspection */
+    app(UpdateClientAction::class)->handle($user, $client, $companyAttributes);
+
+    /** @var Client $fresh */
+    $fresh = $client->fresh();
+    expect($fresh->slug)->toBe('beta-traders');
+});
+
+test('keeps existing slug when company_name does not change', function () use ($companyAttributes) {
+    $user = User::factory()->withOrganization()->create();
+    /** @var Client $client */
+    $client = Client::factory()->forOrganization($user)->company()->create([
+        'company_name' => 'Beta Traders',
+        'slug' => 'beta-traders',
+    ]);
+
+    /** @noinspection PhpUnhandledExceptionInspection */
+    app(UpdateClientAction::class)->handle($user, $client, $companyAttributes);
+
+    /** @var Client $fresh */
+    $fresh = $client->fresh();
+    expect($fresh->slug)->toBe('beta-traders');
 });
