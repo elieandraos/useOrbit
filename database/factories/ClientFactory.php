@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Database\Factories;
 
 use App\Enums\ClientStatus;
+use App\Enums\ClientType;
 use App\Enums\Gender;
 use App\Enums\LeadSource;
 use App\Models\Client;
@@ -45,6 +46,8 @@ class ClientFactory extends Factory
         return [
             'organization_id' => Organization::factory(),
             'slug' => Str::slug($firstName.'-'.$lastName.'-'.fake()->unique()->numerify()),
+            'client_type' => ClientType::Individual->value,
+            'company_name' => null,
             'first_name' => $firstName,
             'middle_name' => $middleName,
             'last_name' => $lastName,
@@ -69,6 +72,17 @@ class ClientFactory extends Factory
     {
         return $this->state(fn (array $attributes): array => [
             'status' => ClientStatus::Archived->value,
+        ]);
+    }
+
+    public function company(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'client_type' => ClientType::Company->value,
+            'company_name' => fake()->company(),
+            'date_of_birth' => null,
+            'gender' => null,
+            'mothers_name' => null,
         ]);
     }
 

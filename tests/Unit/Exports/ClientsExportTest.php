@@ -15,6 +15,7 @@ test('headings returns the export column labels', function () {
 
     expect($export->headings())->toBe([
         'Name',
+        'Type',
         'Email',
         'Phone',
         'Gender',
@@ -56,6 +57,7 @@ test('map transforms a client into an export row', function () {
 
     expect($export->map($client))->toBe([
         'Aline Haddad',
+        'Individual',
         'aline@example.com',
         '+96170123456',
         'Female',
@@ -78,5 +80,21 @@ test('map omits blank address parts', function () {
     $export = new ClientsExport([], null, 'asc');
     $row = $export->map($client);
 
-    expect($row[6])->toBe(collect([$client->street, $client->city, $client->state?->name])->filter()->implode(', '));
+    expect($row[7])->toBe(collect([$client->street, $client->city, $client->state?->name])->filter()->implode(', '));
+});
+
+test('map returns a blank date of birth, gender, and age for a company client', function () {
+    /** @var Client $client */
+    $client = Client::factory()->company()->create([
+        'company_name' => 'Acme Logistics',
+    ])->load(['country', 'state']);
+
+    $export = new ClientsExport([], null, 'asc');
+    $row = $export->map($client);
+
+    expect($row[0])->toBe('Acme Logistics')
+        ->and($row[1])->toBe('Company')
+        ->and($row[4])->toBeNull()
+        ->and($row[5])->toBeNull()
+        ->and($row[6])->toBeNull();
 });

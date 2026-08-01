@@ -2,6 +2,7 @@
 import type { ClientResource } from './partials/client';
 import ClientDetailShell from './partials/ClientDetailShell.vue';
 import ClientPoliciesCard from './partials/ClientPoliciesCard.vue';
+import CompanyInformationCard from './partials/CompanyInformationCard.vue';
 import ContactCard from './partials/ContactCard.vue';
 import EmergencyContactCard from './partials/EmergencyContactCard.vue';
 import EnrollmentCard from './partials/EnrollmentCard.vue';
@@ -24,10 +25,18 @@ const policiesCount = 0;
         >
             <!-- Left column -->
             <div class="flex flex-col gap-4">
-                <PersonalInformationCard :client="client" />
-                <ContactCard :client="client" />
+                <template v-if="client.client_type === 'company'">
+                    <CompanyInformationCard :client="client" />
+                </template>
+                <template v-else>
+                    <PersonalInformationCard :client="client" />
+                    <ContactCard :client="client" />
+                </template>
                 <EnrollmentCard :client="client" />
-                <EmergencyContactCard :client="client" />
+                <EmergencyContactCard
+                    v-if="client.client_type !== 'company'"
+                    :client="client"
+                />
             </div>
 
             <!-- Right column -->

@@ -12,6 +12,7 @@ import {
 } from '@lucide/vue';
 import { ref } from 'vue';
 import { Avatar } from '@/components/ui/avatar';
+import Badge from '@/components/ui/badge/Badge.vue';
 import { DropMenu, DropMenuItem } from '@/components/ui/drop-menu';
 import { Pagination } from '@/components/ui/pagination';
 import { Separator } from '@/components/ui/separator';
@@ -137,19 +138,19 @@ function sortBy(column: string) {
                             </th>
                             <th
                                 class="cursor-pointer px-4 py-2.5 text-left font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase select-none"
-                                @click="sortBy('email')"
+                                @click="sortBy('type')"
                             >
                                 <span class="inline-flex items-center gap-1">
-                                    Email
+                                    Type
                                     <ChevronUp
                                         v-if="
-                                            sort.column === 'email' &&
+                                            sort.column === 'type' &&
                                             sort.direction === 'asc'
                                         "
                                         class="size-3"
                                     />
                                     <ChevronDown
-                                        v-else-if="sort.column === 'email'"
+                                        v-else-if="sort.column === 'type'"
                                         class="size-3"
                                     />
                                 </span>
@@ -206,6 +207,10 @@ function sortBy(column: string) {
                                             {{ client.full_name }}
                                         </div>
                                         <div
+                                            v-if="
+                                                client.client_type ===
+                                                'individual'
+                                            "
                                             class="mt-0.5 font-mono text-[11.5px] text-tertiary"
                                         >
                                             {{ client.age }} yrs
@@ -218,10 +223,17 @@ function sortBy(column: string) {
                             >
                                 {{ client.phone }}
                             </td>
-                            <td
-                                class="truncate px-4 py-3 text-[13px] text-secondary"
-                            >
-                                {{ client.email }}
+                            <td class="px-4 py-3">
+                                <Badge
+                                    :tone="
+                                        client.client_type === 'company'
+                                            ? 'accent'
+                                            : 'neutral'
+                                    "
+                                    dot
+                                >
+                                    {{ client.client_type_label }}
+                                </Badge>
                             </td>
                             <td class="px-4 py-3 text-[13px] text-primary">
                                 {{ client.enrollment_date_formatted }}

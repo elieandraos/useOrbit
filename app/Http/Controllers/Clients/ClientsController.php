@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Clients;
 
 use App\Actions\Clients\CreateClientAction;
 use App\Actions\Clients\UpdateClientAction;
+use App\Enums\ClientType;
 use App\Enums\EmergencyContactRelationship;
 use App\Enums\Gender;
 use App\Enums\LeadSource;
@@ -43,12 +44,14 @@ final class ClientsController extends Controller
         return inertia('Clients/Index', [
             'clients' => ClientResource::collection($clients),
             'genders' => collect(Gender::all()),
+            'clientTypes' => collect(ClientType::all()),
             'sort' => [
                 'column' => $sortColumn ?? 'enrollment_date',
                 'direction' => $request->validated('direction'),
             ],
             'filters' => [
                 'search' => $request->validated('search'),
+                'client_type' => $request->validated('client_type'),
                 'gender' => $request->validated('gender'),
                 'enrolled_from' => $request->validated('enrolled_from'),
                 'enrolled_to' => $request->validated('enrolled_to'),
@@ -70,6 +73,7 @@ final class ClientsController extends Controller
             'genders' => collect(Gender::all()),
             'leadSources' => collect(LeadSource::all()),
             'emergencyContactRelationships' => collect(EmergencyContactRelationship::all()),
+            'clientTypes' => collect(ClientType::all()),
             'defaultCountryId' => $user->country_id,
         ]);
     }

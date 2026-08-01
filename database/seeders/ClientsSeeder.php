@@ -21,7 +21,12 @@ final class ClientsSeeder extends Seeder
         $organization = Organization::query()->firstOrFail();
         $user = $organization->owner();
 
-        Client::factory()->count(25)->create([
+        Client::factory()->count(28)->create([
+            'organization_id' => $organization->id,
+            'created_by' => $user->id,
+        ]);
+
+        Client::factory()->count(12)->company()->create([
             'organization_id' => $organization->id,
             'created_by' => $user->id,
         ]);

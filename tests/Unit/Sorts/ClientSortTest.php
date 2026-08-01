@@ -31,16 +31,42 @@ test('name sort direction can be reversed', function () {
     expect($clients->pluck('id')->all())->toBe([$bravo->id, $alpha->id]);
 });
 
-test('email sorts alphabetically', function () {
-    /** @var Client $zebra */
-    $zebra = Client::factory()->create(['email' => 'zebra@example.com']);
-    /** @var Client $apple */
-    $apple = Client::factory()->create(['email' => 'apple@example.com']);
+test('name sorts a mixed individual/company set by the displayed name', function () {
+    /** @var Client $acme */
+    $acme = Client::factory()->company()->create(['company_name' => 'Acme Logistics']);
+    /** @var Client $bravo */
+    $bravo = Client::factory()->create(['first_name' => 'Bravo', 'last_name' => 'Zulu']);
+    /** @var Client $zenith */
+    $zenith = Client::factory()->company()->create(['company_name' => 'Zenith Traders']);
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $clients = Client::query()->sort(new ClientSort('email', 'asc'))->get();
+    $clients = Client::query()->sort(new ClientSort('name', 'asc'))->get();
 
-    expect($clients->pluck('id')->all())->toBe([$apple->id, $zebra->id]);
+    expect($clients->pluck('id')->all())->toBe([$acme->id, $bravo->id, $zenith->id]);
+});
+
+test('type sorts individual before company alphabetically', function () {
+    /** @var Client $company */
+    $company = Client::factory()->company()->create();
+    /** @var Client $individual */
+    $individual = Client::factory()->create();
+
+    /** @noinspection PhpUndefinedMethodInspection */
+    $clients = Client::query()->sort(new ClientSort('type', 'asc'))->get();
+
+    expect($clients->pluck('id')->all())->toBe([$company->id, $individual->id]);
+});
+
+test('type sort direction can be reversed', function () {
+    /** @var Client $company */
+    $company = Client::factory()->company()->create();
+    /** @var Client $individual */
+    $individual = Client::factory()->create();
+
+    /** @noinspection PhpUndefinedMethodInspection */
+    $clients = Client::query()->sort(new ClientSort('type', 'desc'))->get();
+
+    expect($clients->pluck('id')->all())->toBe([$individual->id, $company->id]);
 });
 
 test('enrollmentDate sorts chronologically', function () {

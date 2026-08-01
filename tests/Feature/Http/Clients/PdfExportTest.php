@@ -28,6 +28,21 @@ test('authenticated user can export a client from their organization to pdf', fu
         ->toContain("$client->slug.pdf");
 });
 
+test('authenticated user can export a company client to pdf without a date of birth or gender', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    /** @var Client $client */
+    $client = Client::factory()->forOrganization($user)->company()->create(['company_name' => 'Acme Logistics']);
+
+    $response = $this->actingAs($user)
+        ->get(route('clients.export-pdf', $client))
+        ->assertOk()
+        ->assertHeader('content-type', 'application/pdf');
+
+    expect($response->headers->get('content-disposition'))
+        ->toContain("$client->slug.pdf");
+});
+
 test('authenticated user gets 404 for a client from another organization', function () {
     $user = User::factory()->withOrganization()->create();
 

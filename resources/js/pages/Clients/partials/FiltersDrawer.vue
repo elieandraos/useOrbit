@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
 import { SearchIcon } from '@lucide/vue';
-import { computed, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 import Button from '@/components/ui/button/Button.vue';
 import DateInput from '@/components/ui/date-input/DateInput.vue';
 import Drawer from '@/components/ui/drawer/Drawer.vue';
 import FormField from '@/components/ui/form-field/FormField.vue';
 import Input from '@/components/ui/input/Input.vue';
+import RadioChips from '@/components/ui/radio-chips/RadioChips.vue';
 import RadioPills from '@/components/ui/radio-pills/RadioPills.vue';
 import RangeSlider from '@/components/ui/range-slider/RangeSlider.vue';
 import Switch from '@/components/ui/switch/Switch.vue';
@@ -23,6 +24,7 @@ function isTruthy(value: string | number | boolean | null): boolean {
 
 interface Filters {
     search: string | null;
+    client_type: string | null;
     gender: string | null;
     enrolled_from: string | null;
     enrolled_to: string | null;
@@ -33,12 +35,14 @@ interface Filters {
 
 const props = defineProps<{
     genders: { label: string; value: string }[];
+    clientTypes: { label: string; value: string }[];
     filters: Filters;
 }>();
 
 const open = defineModel<boolean>('open', { default: false });
 
 const search = ref(props.filters.search ?? '');
+const clientType = ref(props.filters.client_type ?? '');
 const gender = ref(props.filters.gender ?? '');
 const enrolledFrom = ref(props.filters.enrolled_from ?? '');
 const enrolledTo = ref(props.filters.enrolled_to ?? '');
@@ -61,6 +65,7 @@ watch(open, (isOpen) => {
     }
 
     search.value = props.filters.search ?? '';
+    clientType.value = props.filters.client_type ?? '';
     gender.value = props.filters.gender ?? '';
     enrolledFrom.value = props.filters.enrolled_from ?? '';
     enrolledTo.value = props.filters.enrolled_to ?? '';
@@ -75,11 +80,6 @@ watch(open, (isOpen) => {
     archived.value = isTruthy(props.filters.archived);
 });
 
-const genderOptions = computed(() => [
-    { label: 'Any', value: '' },
-    ...props.genders,
-]);
-
 function applyFilters() {
     const query: Record<string, string | number> = {};
 
@@ -87,8 +87,8 @@ function applyFilters() {
         query.search = search.value;
     }
 
-    if (gender.value) {
-        query.gender = gender.value;
+    if (clientType.value) {
+        query.client_type = clientType.value;
     }
 
     if (enrolledFrom.value) {
@@ -99,12 +99,18 @@ function applyFilters() {
         query.enrolled_to = enrolledTo.value;
     }
 
-    if (ageRange.value[0] > AGE_MIN_BOUND) {
-        query.age_min = ageRange.value[0];
-    }
+    if (clientType.value === 'individual') {
+        if (gender.value) {
+            query.gender = gender.value;
+        }
 
-    if (ageRange.value[1] < AGE_MAX_BOUND) {
-        query.age_max = ageRange.value[1];
+        if (ageRange.value[0] > AGE_MIN_BOUND) {
+            query.age_min = ageRange.value[0];
+        }
+
+        if (ageRange.value[1] < AGE_MAX_BOUND) {
+            query.age_max = ageRange.value[1];
+        }
     }
 
     if (archived.value) {
@@ -153,10 +159,6 @@ function clearFilters() {
                 </Input>
             </FormField>
 
-            <FormField label="Gender" :error="formErrors.gender">
-                <RadioPills v-model="gender" :options="genderOptions" />
-            </FormField>
-
             <FormField
                 label="Enrollment date"
                 :error="formErrors.enrolled_to ?? formErrors.enrolled_from"
@@ -173,17 +175,27 @@ function clearFilters() {
                 </div>
             </FormField>
 
-            <FormField
-                label="Age range"
-                :error="formErrors.age_max ?? formErrors.age_min"
-            >
-                <RangeSlider
-                    v-model="ageRange"
-                    :min="AGE_MIN_BOUND"
-                    :max="AGE_MAX_BOUND"
-                    label-suffix=" yrs"
-                />
+            <FormField label="Client type" :error="formErrors.client_type">
+                <RadioChips v-model="clientType" :options="clientTypes" />
             </FormField>
+
+            <template v-if="clientType === 'individual'">
+                <FormField label="Gender" :error="formErrors.gender">
+                    <RadioPills v-model="gender" :options="genders" />
+                </FormField>
+
+                <FormField
+                    label="Age range"
+                    :error="formErrors.age_max ?? formErrors.age_min"
+                >
+                    <RangeSlider
+                        v-model="ageRange"
+                        :min="AGE_MIN_BOUND"
+                        :max="AGE_MAX_BOUND"
+                        label-suffix=" yrs"
+                    />
+                </FormField>
+            </template>
 
             <SwitchField
                 label="Show archived clients"

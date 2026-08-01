@@ -3,18 +3,25 @@ import { Head, setLayoutProps } from '@inertiajs/vue3';
 import PageHeader from '@/components/shell/PageHeader.vue';
 import AuditStrip from '@/components/ui/audit-strip/AuditStrip.vue';
 import Avatar from '@/components/ui/avatar/Avatar.vue';
-import { index as clientsIndex, show as clientsShow, update as clientsUpdate } from '@/routes/clients';
+import {
+    index as clientsIndex,
+    show as clientsShow,
+    update as clientsUpdate,
+} from '@/routes/clients';
 import ClientForm from './partials/ClientForm.vue';
 
 interface ClientResource {
     id: number;
     slug: string;
+    client_type: string;
+    company_name: string | null;
     first_name: string;
     middle_name: string | null;
     last_name: string;
+    full_name: string;
     mothers_name: string | null;
-    date_of_birth: string;
-    gender: string;
+    date_of_birth: string | null;
+    gender: string | null;
     photo: string | null;
     phone: string;
     email: string | null;
@@ -46,7 +53,7 @@ const props = defineProps<{
     emergencyContactRelationships: { label: string; value: string }[];
 }>();
 
-const fullName = `${props.client.first_name} ${props.client.last_name}`;
+const fullName = props.client.full_name;
 
 setLayoutProps({
     breadcrumbs: [
@@ -69,14 +76,22 @@ setLayoutProps({
     <Head :title="`Edit ${fullName}`" />
 
     <div class="flex flex-1 flex-col">
-        <PageHeader :title="`Edit ${fullName}`" subtitle="Update personal details, contact info, and emergency contact. Linked policies stay attached." :divider="false">
+        <PageHeader
+            :title="`Edit ${fullName}`"
+            subtitle="Update personal details, contact info, and emergency contact. Linked policies stay attached."
+            :divider="false"
+        >
             <template #avatar>
                 <Avatar :name="fullName" :size="48" />
             </template>
         </PageHeader>
 
         <div class="mx-auto mb-4 w-full max-w-[1100px]">
-            <AuditStrip :created="client.created_at" :updated="client.updated_at" :by="client.updated_by_name ?? '—'" />
+            <AuditStrip
+                :created="client.created_at"
+                :updated="client.updated_at"
+                :by="client.updated_by_name ?? '—'"
+            />
         </div>
 
         <ClientForm

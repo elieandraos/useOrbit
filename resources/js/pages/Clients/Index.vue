@@ -13,12 +13,14 @@ import FiltersDrawer from './partials/FiltersDrawer.vue';
 const props = defineProps<{
     clients: Paginated<ClientResource>;
     genders: { label: string; value: string }[];
+    clientTypes: { label: string; value: string }[];
     sort: {
         column: string;
         direction: 'asc' | 'desc';
     };
     filters: {
         search: string | null;
+        client_type: string | null;
         gender: string | null;
         enrolled_from: string | null;
         enrolled_to: string | null;
@@ -56,13 +58,6 @@ function exportClients(): Promise<void> {
     });
 }
 
-const activeFilterCount = computed(
-    () =>
-        Object.values(props.filters).filter(
-            (value) => value !== null && value !== '',
-        ).length,
-);
-
 const otherFilterCount = computed(
     () =>
         Object.entries(props.filters).filter(
@@ -78,9 +73,13 @@ const isArchivedView = computed(
         props.filters.archived === '1',
 );
 
+const activeFilterCount = computed(
+    () => otherFilterCount.value + (isArchivedView.value ? 1 : 0),
+);
+
 const sortColumnLabels: Record<string, string> = {
     name: 'name',
-    email: 'email',
+    type: 'type',
     enrollment_date: 'enrollment date',
 };
 
@@ -99,7 +98,9 @@ const sortLabelShort = computed(() => {
     const column = sortColumnLabels[props.sort.column] ?? props.sort.column;
 
     if (props.sort.column === 'enrollment_date') {
-        return props.sort.direction === 'desc' ? 'Newest first' : 'Oldest first';
+        return props.sort.direction === 'desc'
+            ? 'Newest first'
+            : 'Oldest first';
     }
 
     return `${column} ${props.sort.direction === 'desc' ? 'Z–A' : 'A–Z'}`;
@@ -137,6 +138,7 @@ const sortLabelShort = computed(() => {
         <FiltersDrawer
             v-model:open="filtersOpen"
             :genders="genders"
+            :client-types="clientTypes"
             :filters="filters"
         />
     </div>

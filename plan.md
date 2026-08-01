@@ -171,3 +171,109 @@ devtools console should trigger the toast without any code changes.
 - Run `npm run lint` / `vue-tsc --noEmit` after the frontend changes (new `ErrorPage.vue`, edits to
   `app.ts`, `useNotifications.ts`, `useNotificationsListener.ts`).
 
+---
+
+## Pest 5 Upgrade + Tia Engine + Browser Testing
+
+### Context
+Pest 5 was released at Laracon US 2026 (currently v5.0.2 on Packagist). It brings the **Tia Engine**
+(Test Impact Analysis — re-runs only tests affected by a change; a Laravel Cloud suite of 19k+ tests
+went from 3 min to 5 sec), new expectation matchers, and Pest-native browser testing improvements.
+The app is currently on Pest v4.7.5 / PHPUnit 12.5.30 with no browser tests at all — no
+`tests/Browser/`, no Dusk/Playwright, and CI (`.github/workflows/tests.yml`) runs
+`./vendor/bin/pest` with no browser install step.
+
+Decisions made with the user:
+- Bundle the Pest 5 upgrade and browser-testing adoption into **one combined PR** (not split).
+- Enable Tia in **local-only opt-in mode** to start — no CI baseline sharing yet.
+- First browser-test pass = **smoke tests + one critical flow** (login), not full flow coverage.
+
+PHP 8.4.8 is already installed (satisfies Pest 5's `^8.4` requirement). CI already runs with
+`coverage: xdebug`, which is what Tia needs to record its baseline.
+
+### 1. Upgrade Pest 4 → Pest 5
+Update `composer.json` require-dev versions:
+- `pestphp/pest`: `^4.7` → `^5.0`
+- `pestphp/pest-plugin-laravel`: `^4.1` → `^5.0`
+- `pestphp/pest-dev-tools`, `mrpunyapal/peststan`, `pestphp/pest-plugin-type-coverage` → bump to
+  `^5.0`-compatible versions Composer resolves
+- Let Composer pull PHPUnit `^13.0` transitively (Pest 5 requires it)
+
+Run `composer update pestphp/* phpunit/phpunit --with-all-dependencies` and resolve any conflicts.
+
+**Verification**: `php artisan test --compact` — full suite (38 Feature + 28 Unit files) passes
+unchanged. Check PHPUnit 13's changelog for anything that could affect existing tests; fix any
+breakage inline, don't suppress.
+
+### 2. Add Browser Testing
+Install the plugin and Playwright, per Pest's docs:
+```bash
+composer require pestphp/pest-plugin-browser --dev
+npm install playwright@latest
+npx playwright install
+```
+- Add `tests/Browser/Screenshots` to `.gitignore`.
+- Create `tests/Browser/` directory.
+- Add a `Browser` testsuite entry to `phpunit.xml` (mirroring `Unit`/`Feature`):
+  ```xml
+  <testsuite name="Browser">
+      <directory>tests/Browser</directory>
+  </testsuite>
+  ```
+- In `tests/Pest.php`, extend `.in('Browser')` too (alongside `Feature`, `Unit`) so
+  `RefreshDatabase`/`TestCase` apply — browser tests hit real routes backed by the DB.
+
+**First tests:**
+- **Smoke test** (`tests/Browser/SmokeTest.php`): `actingAs(User::factory()->create())`, then
+  `visit([...])` a handful of key authenticated pages (dashboard, clients index, a client show page,
+  settings) and assert `assertNoJavaScriptErrors()` / `assertNoConsoleLogs()`.
+- **Critical flow test** (`tests/Browser/LoginTest.php`): full interaction test —
+  `visit('/login')->fill(...)->click('Submit')->assertSee(...)`, then `$this->assertAuthenticated()`.
+
+Both follow the `pest-testing` skill conventions already documented in
+`.claude/skills/pest-testing`.
+
+**CI changes** (`.github/workflows/tests.yml`) — add before the Tests step:
+```yaml
+- name: Install Playwright Browsers
+  run: npx playwright install --with-deps chromium
+```
+
+**Verification**: `./vendor/bin/pest tests/Browser` locally, then confirm the GitHub Actions run
+passes with the new step.
+
+### 3. Enable Tia Engine (local-only, opt-in)
+In `tests/Pest.php`:
+```php
+pest()->tia()->locally();
+```
+Makes Tia available via `--tia` on developer machines without changing CI behavior. No baseline
+sharing (`--baselined`, `gh` CLI auth, artifact upload) for now.
+
+**Verification**: run `./vendor/bin/pest --tia` twice locally — first run is the baseline (full
+suite), second run (after touching one file) should show most tests served from cache/skipped.
+
+### 4. New Expectations (awareness only)
+Pest 5 adds `toBeEmail()`, `toBeUlid()`, `toBeIpAddress()`, `toBeMacAddress()`, `toBeHostname()`,
+`toBeDomain()`, `toBeBase64()`, `toBeHexadecimal()`. No existing test currently needs these — apply
+opportunistically where relevant (e.g. client email validation tests), not as a sweep.
+
+### Files touched
+- `composer.json` / `composer.lock` — version bumps + new `pestphp/pest-plugin-browser` dependency
+- `package.json` / lockfile — `playwright` dependency
+- `.gitignore` — add `tests/Browser/Screenshots`
+- `phpunit.xml` — new `Browser` testsuite
+- `tests/Pest.php` — `.in('Browser')` extension + `pest()->tia()->locally()`
+- `tests/Browser/SmokeTest.php` (new)
+- `tests/Browser/LoginTest.php` (new)
+- `.github/workflows/tests.yml` — Playwright install step
+
+### Verification Summary
+1. `composer install` / `npm install` succeed with no version conflicts.
+2. `php artisan test --compact` — full existing suite passes on Pest 5 / PHPUnit 13.
+3. `./vendor/bin/pest tests/Browser --compact` — new smoke + login tests pass locally.
+4. `./vendor/bin/pest --tia` — confirm baseline then cached-replay behavior across two runs.
+5. Push branch, confirm GitHub Actions `tests` workflow passes end-to-end including the Playwright
+   install step.
+6. `vendor/bin/pint --dirty --format agent` — run since PHP files changed.
+

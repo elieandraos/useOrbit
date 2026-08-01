@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { Calendar, Download, Mail, Pencil, Phone, Plus } from '@lucide/vue';
+import { Calendar, Download, Mail, Pencil, Phone } from '@lucide/vue';
 import { computed } from 'vue';
 import Avatar from '@/components/ui/avatar/Avatar.vue';
 import Badge from '@/components/ui/badge/Badge.vue';
@@ -42,12 +42,20 @@ function exportClient(): Promise<void> {
                 {{ client.full_name }}
             </h1>
 
-            <div class="mt-1.5 flex flex-wrap items-center justify-center gap-2">
+            <div
+                class="mt-1.5 flex flex-wrap items-center justify-center gap-2"
+            >
                 <Badge v-if="client.status === 'active'" tone="success" dot
                     >Active client</Badge
                 >
                 <Badge v-else-if="client.status === 'archived'" tone="warning"
                     >Archived</Badge
+                >
+                <Badge
+                    :tone="
+                        client.client_type === 'company' ? 'accent' : 'neutral'
+                    "
+                    >{{ client.client_type_label }}</Badge
                 >
                 <Badge tone="accent">{{ policiesCount }} policies</Badge>
             </div>
@@ -95,6 +103,14 @@ function exportClient(): Promise<void> {
                             tone="warning"
                             >Archived</Badge
                         >
+                        <Badge
+                            :tone="
+                                client.client_type === 'company'
+                                    ? 'accent'
+                                    : 'neutral'
+                            "
+                            >{{ client.client_type_label }}</Badge
+                        >
                         <Badge tone="accent"
                             >{{ policiesCount }} policies</Badge
                         >
@@ -140,10 +156,6 @@ function exportClient(): Promise<void> {
                         Edit
                     </Button>
                 </Link>
-                <Button variant="primary" size="md" disabled>
-                    <template #leading><Plus /></template>
-                    New policy
-                </Button>
             </div>
         </div>
     </div>

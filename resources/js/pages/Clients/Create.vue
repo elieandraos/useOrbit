@@ -9,6 +9,7 @@ defineProps<{
     genders: { label: string; value: string }[];
     leadSources: { label: string; value: string }[];
     emergencyContactRelationships: { label: string; value: string }[];
+    clientTypes: { label: string; value: string }[];
     defaultCountryId: number | null;
 }>();
 
@@ -42,6 +43,7 @@ defineOptions({
             :genders="genders"
             :lead-sources="leadSources"
             :emergency-contact-relationships="emergencyContactRelationships"
+            :client-types="clientTypes"
             :default-country-id="defaultCountryId"
             :route="clientsStore.form()"
             submit-label="Create client"
