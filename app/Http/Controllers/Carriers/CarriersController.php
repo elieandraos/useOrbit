@@ -24,7 +24,7 @@ final class CarriersController extends Controller
     {
         $carriers = Carrier::query()
             ->with('hqBranch')
-            ->latest('onboarded_date')
+            ->orderBy('name')
             ->paginate(7)
             ->withQueryString();
 
