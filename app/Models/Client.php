@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\ClientStatus;
+use App\Enums\ClientType;
 use App\Enums\EmergencyContactRelationship;
 use App\Enums\Gender;
 use App\Enums\LeadSource;
@@ -28,12 +29,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $id
  * @property int $organization_id
  * @property string $slug
+ * @property ClientType $client_type
+ * @property string|null $company_name
  * @property string $first_name
  * @property string|null $middle_name
  * @property string $last_name
  * @property string|null $mothers_name
- * @property CarbonImmutable $date_of_birth
- * @property Gender $gender
+ * @property CarbonImmutable|null $date_of_birth
+ * @property Gender|null $gender
  * @property string|null $photo
  * @property string $phone
  * @property string|null $email
@@ -56,9 +59,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read User|null $updatedBy
  * @property-read Country|null $country
  * @property-read State|null $state
+ *
+ * When client_type is Company, first_name/last_name/phone/email hold the contact person's info, not the client's own.
  */
 #[Fillable([
-    'organization_id', 'slug', 'first_name', 'middle_name', 'last_name', 'mothers_name',
+    'organization_id', 'slug', 'client_type', 'company_name', 'first_name', 'middle_name', 'last_name', 'mothers_name',
     'date_of_birth', 'gender', 'photo', 'phone', 'email', 'street', 'building_floor',
     'country_id', 'state_id', 'city', 'emergency_contact_name', 'emergency_contact_relationship',
     'emergency_contact_phone', 'enrollment_date', 'lead_source', 'status', 'created_by', 'updated_by',
@@ -73,6 +78,7 @@ final class Client extends Model implements Documentable, Notable
         return [
             'date_of_birth' => 'date',
             'enrollment_date' => 'date',
+            'client_type' => ClientType::class,
             'emergency_contact_relationship' => EmergencyContactRelationship::class,
             'gender' => Gender::class,
             'lead_source' => LeadSource::class,
@@ -107,6 +113,8 @@ final class Client extends Model implements Documentable, Notable
 
     public function documentableName(): string
     {
-        return "$this->first_name $this->last_name";
+        return $this->client_type === ClientType::Company
+            ? (string) $this->company_name
+            : "$this->first_name $this->last_name";
     }
 }
