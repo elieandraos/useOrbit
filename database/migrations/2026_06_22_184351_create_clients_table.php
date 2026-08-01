@@ -17,12 +17,14 @@ return new class extends Migration
             $table->id();
             $table->foreignId('organization_id')->constrained()->restrictOnDelete();
             $table->string('slug');
+            $table->string('client_type', 20)->default('individual')->after('slug');
+            $table->string('company_name', 150)->nullable()->after('client_type');
             $table->string('first_name', 100);
             $table->string('middle_name', 100)->nullable();
             $table->string('last_name', 100);
             $table->string('mothers_name', 100)->nullable();
-            $table->date('date_of_birth');
-            $table->string('gender', 30);
+            $table->date('date_of_birth')->nullable();
+            $table->string('gender', 30)->nullable();
             $table->string('photo', 500)->nullable();
             $table->string('phone', 30);
             $table->string('email')->nullable();
