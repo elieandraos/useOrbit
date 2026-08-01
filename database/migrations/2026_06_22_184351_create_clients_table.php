@@ -17,8 +17,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('organization_id')->constrained()->restrictOnDelete();
             $table->string('slug');
-            $table->string('client_type', 20)->default('individual')->after('slug');
-            $table->string('company_name', 150)->nullable()->after('client_type');
+            $table->string('client_type', 20)->default('individual');
+            $table->string('company_name', 150)->nullable();
             $table->string('first_name', 100);
             $table->string('middle_name', 100)->nullable();
             $table->string('last_name', 100);
