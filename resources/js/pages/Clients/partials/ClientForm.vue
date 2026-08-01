@@ -86,17 +86,6 @@ const countryOptions = computed<TypeaheadOption[]>(() =>
 const { options: stateOptions, loading: stateLoading } =
     useStateOptions(countryId);
 
-const clientTypeOptions = computed(() =>
-    (props.clientTypes ?? []).map((type) => ({
-        label: type.label,
-        value: type.value,
-        desc:
-            type.value === 'company'
-                ? 'A business client with a contact person.'
-                : 'A single policyholder or household.',
-    })),
-);
-
 watch(countryId, () => {
     stateId.value = null;
 });
@@ -116,8 +105,7 @@ watch(countryId, () => {
             <RadioChips
                 v-model="clientType"
                 name="client_type"
-                direction="vertical"
-                :options="clientTypeOptions"
+                :options="clientTypes ?? []"
             />
         </FormSection>
 
