@@ -10,7 +10,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Carriers\StoreCarrierRequest;
 use App\Http\Requests\Carriers\UpdateCarrierRequest;
 use App\Http\Resources\CarrierResource;
+use App\Http\Resources\CountryResource;
 use App\Models\Carrier;
+use App\Models\Country;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
@@ -36,7 +38,9 @@ final class CarriersController extends Controller
     #[Authorize('create', Carrier::class)]
     public function create(): Response
     {
-        return inertia('Carriers/Create');
+        return inertia('Carriers/Create', [
+            'countries' => CountryResource::collection(Country::query()->orderBy('name')->get()),
+        ]);
     }
 
     /**

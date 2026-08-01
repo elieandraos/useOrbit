@@ -5,6 +5,8 @@ export interface CarrierBranchResource {
     city: string | null;
     state_id: number | null;
     country_id: number | null;
+    state_name: string | null;
+    country_name: string | null;
     phone: string | null;
     contact_name: string;
     contact_role: string | null;
