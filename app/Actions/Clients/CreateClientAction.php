@@ -6,6 +6,7 @@ namespace App\Actions\Clients;
 
 use App\Concerns\GeneratesUniqueSlug;
 use App\Enums\ClientStatus;
+use App\Enums\ClientType;
 use App\Models\Client;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -15,14 +16,20 @@ final class CreateClientAction
     use GeneratesUniqueSlug;
 
     /**
-     * @param  array{first_name: string, last_name: string, phone: string, date_of_birth: string, gender: string, enrollment_date: string, lead_source: string, middle_name?: string|null, mothers_name?: string|null, email?: string|null, photo?: string|null, street?: string|null, building_floor?: string|null, country_id?: int|null, state_id?: int|null, city_id?: int|null, emergency_contact_name?: string|null, emergency_contact_relationship?: string|null, emergency_contact_phone?: string|null}  $attributes
+     * @param  array{client_type: string, company_name?: string|null, first_name: string, last_name: string, phone: string, date_of_birth?: string|null, gender?: string|null, enrollment_date: string, lead_source: string, middle_name?: string|null, mothers_name?: string|null, email?: string|null, photo?: string|null, street?: string|null, building_floor?: string|null, country_id?: int|null, state_id?: int|null, city?: string|null, emergency_contact_name?: string|null, emergency_contact_relationship?: string|null, emergency_contact_phone?: string|null}  $attributes
      */
     public function handle(User $user, array $attributes): Client
     {
         return DB::transaction(function () use ($user, $attributes): Client {
+            $isCompany = $attributes['client_type'] === ClientType::Company->value;
+
+            $nameSource = $isCompany
+                ? $attributes['company_name']
+                : "{$attributes['first_name']} {$attributes['last_name']}";
+
             $slug = $this->generateUniqueSlug(
                 Client::class,
-                "{$attributes['first_name']} {$attributes['last_name']}",
+                $nameSource,
                 $user->current_organization_id,
             );
 

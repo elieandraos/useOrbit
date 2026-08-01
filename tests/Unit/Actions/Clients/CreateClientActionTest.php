@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 use App\Actions\Clients\CreateClientAction;
 use App\Enums\ClientStatus;
+use App\Enums\ClientType;
 use App\Enums\Gender;
 use App\Enums\LeadSource;
 use App\Models\User;
 
 $attributes = [
+    'client_type' => ClientType::Individual->value,
     'first_name' => 'John',
     'last_name' => 'Doe',
     'phone' => '555-0100',
@@ -16,6 +18,17 @@ $attributes = [
     'gender' => Gender::Male->value,
     'enrollment_date' => '2024-01-01',
     'lead_source' => LeadSource::Referral->value,
+];
+
+$companyAttributes = [
+    'client_type' => ClientType::Company->value,
+    'company_name' => 'Acme Logistics',
+    'first_name' => 'Rita',
+    'last_name' => 'Haddad',
+    'phone' => '555-0300',
+    'email' => 'rita@acme.test',
+    'enrollment_date' => '2024-01-01',
+    'lead_source' => LeadSource::Website->value,
 ];
 
 test('sets status to active by default', function () use ($attributes) {
@@ -77,4 +90,26 @@ test('appends counter when slug already exists in the same organization', functi
 
     expect($first->slug)->toBe('john-doe')
         ->and($second->slug)->toBe('john-doe-1');
+});
+
+test('generates slug from company_name for a company client', function () use ($companyAttributes) {
+    $user = User::factory()->withOrganization()->create();
+
+    /** @noinspection PhpUnhandledExceptionInspection */
+    $client = app(CreateClientAction::class)->handle($user, $companyAttributes);
+
+    expect($client->slug)->toBe('acme-logistics');
+});
+
+test('two organizations can each have the same company slug without collision', function () use ($companyAttributes) {
+    $userA = User::factory()->withOrganization()->create();
+    $userB = User::factory()->withOrganization()->create();
+
+    /** @noinspection PhpUnhandledExceptionInspection */
+    $clientA = app(CreateClientAction::class)->handle($userA, $companyAttributes);
+    /** @noinspection PhpUnhandledExceptionInspection */
+    $clientB = app(CreateClientAction::class)->handle($userB, $companyAttributes);
+
+    expect($clientA->slug)->toBe('acme-logistics')
+        ->and($clientB->slug)->toBe('acme-logistics');
 });
