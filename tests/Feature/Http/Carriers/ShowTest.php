@@ -23,7 +23,7 @@ test('authenticated user can view a carrier from their organization', function (
     $this->actingAs($user)
         ->get(route('carriers.show', $carrier))
         ->assertOk()
-        ->assertHasResource('carrier', CarrierResource::make($carrier->load('hqBranch')));
+        ->assertHasResource('carrier', CarrierResource::make($carrier->load(['hqBranch.state', 'hqBranch.country'])));
 
     $this->assertDatabaseHas('carriers', ['slug' => $carrier->slug]);
 });

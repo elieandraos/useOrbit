@@ -61,7 +61,7 @@ final class CarriersController extends Controller
     #[Authorize('view', 'carrier')]
     public function show(Carrier $carrier): Response
     {
-        $carrier->load('hqBranch');
+        $carrier->load(['hqBranch.state', 'hqBranch.country']);
 
         return inertia('Carriers/Show', [
             'carrier' => CarrierResource::make($carrier),

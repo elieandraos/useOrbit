@@ -24,20 +24,31 @@ final class CarrierResource extends JsonResource
             'status' => $this->status,
             'created_by' => $this->created_by,
             'updated_by' => $this->updated_by,
-            'branch' => $this->whenLoaded('hqBranch', fn () => $this->hqBranch === null ? null : [
-                'id' => $this->hqBranch->id,
-                'street' => $this->hqBranch->street,
-                'building_floor' => $this->hqBranch->building_floor,
-                'city' => $this->hqBranch->city,
-                'state_id' => $this->hqBranch->state_id,
-                'country_id' => $this->hqBranch->country_id,
-                'phone' => $this->hqBranch->phone,
-                'contact_name' => $this->hqBranch->contact_name,
-                'contact_role' => $this->hqBranch->contact_role,
-                'contact_email' => $this->hqBranch->contact_email,
-                'contact_phone' => $this->hqBranch->contact_phone,
-                'contact_department' => $this->hqBranch->contact_department,
-            ]),
+            'branch' => $this->whenLoaded('hqBranch', function () {
+                if ($this->hqBranch === null) {
+                    return null;
+                }
+
+                $stateName = $this->hqBranch->relationLoaded('state') ? $this->hqBranch->state?->name : null;
+                $countryName = $this->hqBranch->relationLoaded('country') ? $this->hqBranch->country?->name : null;
+
+                return [
+                    'id' => $this->hqBranch->id,
+                    'street' => $this->hqBranch->street,
+                    'building_floor' => $this->hqBranch->building_floor,
+                    'city' => $this->hqBranch->city,
+                    'state_id' => $this->hqBranch->state_id,
+                    'country_id' => $this->hqBranch->country_id,
+                    'state_name' => $stateName,
+                    'country_name' => $countryName,
+                    'phone' => $this->hqBranch->phone,
+                    'contact_name' => $this->hqBranch->contact_name,
+                    'contact_role' => $this->hqBranch->contact_role,
+                    'contact_email' => $this->hqBranch->contact_email,
+                    'contact_phone' => $this->hqBranch->contact_phone,
+                    'contact_department' => $this->hqBranch->contact_department,
+                ];
+            }),
         ];
     }
 }
