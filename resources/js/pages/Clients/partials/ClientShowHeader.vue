@@ -42,12 +42,20 @@ function exportClient(): Promise<void> {
                 {{ client.full_name }}
             </h1>
 
-            <div class="mt-1.5 flex flex-wrap items-center justify-center gap-2">
+            <div
+                class="mt-1.5 flex flex-wrap items-center justify-center gap-2"
+            >
                 <Badge v-if="client.status === 'active'" tone="success" dot
                     >Active client</Badge
                 >
                 <Badge v-else-if="client.status === 'archived'" tone="warning"
                     >Archived</Badge
+                >
+                <Badge
+                    :tone="
+                        client.client_type === 'company' ? 'accent' : 'neutral'
+                    "
+                    >{{ client.client_type_label }}</Badge
                 >
                 <Badge tone="accent">{{ policiesCount }} policies</Badge>
             </div>
@@ -94,6 +102,14 @@ function exportClient(): Promise<void> {
                             v-else-if="client.status === 'archived'"
                             tone="warning"
                             >Archived</Badge
+                        >
+                        <Badge
+                            :tone="
+                                client.client_type === 'company'
+                                    ? 'accent'
+                                    : 'neutral'
+                            "
+                            >{{ client.client_type_label }}</Badge
                         >
                         <Badge tone="accent"
                             >{{ policiesCount }} policies</Badge

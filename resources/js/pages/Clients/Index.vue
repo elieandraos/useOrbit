@@ -80,7 +80,6 @@ const isArchivedView = computed(
 
 const sortColumnLabels: Record<string, string> = {
     name: 'name',
-    email: 'email',
     enrollment_date: 'enrollment date',
 };
 
@@ -99,7 +98,9 @@ const sortLabelShort = computed(() => {
     const column = sortColumnLabels[props.sort.column] ?? props.sort.column;
 
     if (props.sort.column === 'enrollment_date') {
-        return props.sort.direction === 'desc' ? 'Newest first' : 'Oldest first';
+        return props.sort.direction === 'desc'
+            ? 'Newest first'
+            : 'Oldest first';
     }
 
     return `${column} ${props.sort.direction === 'desc' ? 'Z–A' : 'A–Z'}`;

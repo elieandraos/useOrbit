@@ -3,15 +3,17 @@ import { router } from '@inertiajs/vue3';
 import {
     Archive,
     ArchiveRestore,
+    Building2,
     Calendar,
     Eye,
-    Mail,
     MoreHorizontal,
     Pencil,
     Phone,
     Trash2,
+    Users,
 } from '@lucide/vue';
 import { Avatar } from '@/components/ui/avatar';
+import Badge from '@/components/ui/badge/Badge.vue';
 import { DropMenu, DropMenuItem } from '@/components/ui/drop-menu';
 import { Separator } from '@/components/ui/separator';
 import { edit as clientsEdit, show as clientsShow } from '@/routes/clients';
@@ -44,7 +46,10 @@ function goToClient(client: ClientResource) {
                 <div class="truncate text-[14px] font-medium text-primary">
                     {{ client.full_name }}
                 </div>
-                <div class="mt-0.5 font-mono text-[11.5px] text-tertiary">
+                <div
+                    v-if="client.client_type === 'individual'"
+                    class="mt-0.5 font-mono text-[11.5px] text-tertiary"
+                >
                     {{ client.age }} yrs
                 </div>
             </div>
@@ -104,10 +109,19 @@ function goToClient(client: ClientResource) {
                 </span>
             </div>
             <div class="flex min-w-0 items-center gap-2">
-                <Mail class="size-3.5 shrink-0 text-tertiary" />
-                <span class="truncate text-[13px] text-secondary">
-                    {{ client.email }}
-                </span>
+                <Building2
+                    v-if="client.client_type === 'company'"
+                    class="size-3.5 shrink-0 text-tertiary"
+                />
+                <Users v-else class="size-3.5 shrink-0 text-tertiary" />
+                <Badge
+                    :tone="
+                        client.client_type === 'company' ? 'accent' : 'neutral'
+                    "
+                    dot
+                >
+                    {{ client.client_type_label }}
+                </Badge>
             </div>
             <div class="flex min-w-0 items-center gap-2">
                 <Calendar class="size-3.5 shrink-0 text-tertiary" />
