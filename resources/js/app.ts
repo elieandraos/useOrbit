@@ -46,7 +46,9 @@ initializeTheme();
 initializeFlashToast();
 
 // This will catch unhandled promise rejections that Vue's errorHandler won't see...
-window.addEventListener('unhandledrejection', (event) => {
-    console.error(event.reason);
-    toast.error('Something went wrong.');
-});
+if (typeof window !== 'undefined') {
+    window.addEventListener('unhandledrejection', (event) => {
+        console.error(event.reason);
+        toast.error('Something went wrong.');
+    });
+}
