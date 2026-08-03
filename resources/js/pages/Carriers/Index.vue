@@ -91,7 +91,7 @@ function exportCarriers(): Promise<void> {
             :divider="false"
         >
             <template v-if="hasCarriers" #meta>
-                <div class="flex flex-wrap items-center gap-2.5">
+                <div class="hidden flex-wrap items-center gap-2.5 sm:flex">
                     <Badge :tone="isArchivedView ? 'warning' : 'neutral'">
                         {{ carriers.meta.total }}
                         {{ isArchivedView ? 'archived carriers' : 'carriers' }}
@@ -102,10 +102,51 @@ function exportCarriers(): Promise<void> {
             </template>
 
             <template #actions>
+                <!-- Mobile: Add new carrier leads, Filters + icon-only Export trail on the right -->
+                <div
+                    class="flex w-full items-center justify-between gap-2 sm:hidden"
+                >
+                    <Link v-if="hasCarriers" :href="carriersCreate().url">
+                        <Button variant="primary" size="md">
+                            <template #leading><Plus /></template>
+                            Add new carrier
+                        </Button>
+                    </Link>
+                    <div v-else />
+
+                    <div class="flex items-center gap-1.5">
+                        <Button
+                            v-if="hasCarriers || activeFilterCount > 0"
+                            variant="secondary"
+                            size="md"
+                            @click="filtersOpen = true"
+                        >
+                            <template #leading><Filter /></template>
+                            Filters
+                            <Badge v-if="activeFilterCount > 0" tone="accent">{{
+                                activeFilterCount
+                            }}</Badge>
+                        </Button>
+                        <button
+                            v-if="hasCarriers"
+                            type="button"
+                            title="Export"
+                            :disabled="isExporting"
+                            class="inline-flex size-[34px] shrink-0 items-center justify-center rounded-md border border-border bg-surface text-secondary shadow-card transition-colors hover:bg-sunken disabled:pointer-events-none disabled:opacity-50"
+                            @click="exportCarriers"
+                        >
+                            <Spinner v-if="isExporting" />
+                            <Download v-else class="size-4" />
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Desktop (`sm` and above): Filters, Export, Add new carrier -->
                 <Button
                     v-if="hasCarriers || activeFilterCount > 0"
                     variant="secondary"
                     size="md"
+                    class="hidden sm:inline-flex"
                     @click="filtersOpen = true"
                 >
                     <template #leading><Filter /></template>
@@ -118,6 +159,7 @@ function exportCarriers(): Promise<void> {
                     <Button
                         variant="secondary"
                         size="md"
+                        class="hidden sm:inline-flex"
                         :disabled="isExporting"
                         @click="exportCarriers"
                     >
@@ -127,13 +169,16 @@ function exportCarriers(): Promise<void> {
                         </template>
                         Export
                     </Button>
+                    <Link
+                        :href="carriersCreate().url"
+                        class="hidden sm:inline-flex"
+                    >
+                        <Button variant="primary" size="md">
+                            <template #leading><Plus /></template>
+                            Add new carrier
+                        </Button>
+                    </Link>
                 </template>
-                <Link :href="carriersCreate().url">
-                    <Button variant="primary" size="md">
-                        <template #leading><Plus /></template>
-                        Add new carrier
-                    </Button>
-                </Link>
             </template>
         </PageHeader>
 
