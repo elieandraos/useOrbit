@@ -31,11 +31,11 @@ onBeforeUnmount(() =>
         @click.self="close"
     >
         <div
-            class="w-full max-w-[460px] overflow-hidden rounded-[12px] border border-border bg-surface shadow-2xl"
+            class="flex max-h-[86vh] w-full max-w-[460px] flex-col overflow-hidden rounded-[12px] border border-border bg-surface shadow-2xl"
         >
             <div
                 v-if="title || description"
-                class="px-[22px] pt-[18px] pb-[14px]"
+                class="shrink-0 px-[22px] pt-[18px] pb-[14px]"
             >
                 <h2
                     v-if="title"
@@ -51,13 +51,13 @@ onBeforeUnmount(() =>
                 </p>
             </div>
 
-            <div class="px-[22px] pb-[18px]">
+            <div class="overflow-y-auto px-[22px] pb-[18px]">
                 <slot />
             </div>
 
             <div
                 v-if="$slots.footer"
-                class="flex justify-end gap-2 border-t border-border bg-sunken px-[22px] py-[14px]"
+                class="flex shrink-0 justify-end gap-2 border-t border-border bg-sunken px-[22px] py-[14px]"
             >
                 <slot name="footer" />
             </div>

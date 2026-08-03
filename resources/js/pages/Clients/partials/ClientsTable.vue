@@ -176,11 +176,7 @@ function sortBy(column: string) {
                                     />
                                 </span>
                             </th>
-                            <th
-                                class="rounded-tr-lg px-4 py-2.5 text-right font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase"
-                            >
-                                Actions
-                            </th>
+                            <th class="rounded-tr-lg px-4 py-2.5"></th>
                         </tr>
                     </thead>
                     <tbody>
