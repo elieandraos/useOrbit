@@ -31,7 +31,6 @@ class CarrierFactory extends Factory
             'name' => $name,
             'phone' => fake()->phoneNumber(),
             'website' => Str::slug($name, '').'.com',
-            'onboarded_date' => fake()->dateTimeBetween('-3 years')->format('Y-m-d'),
             'status' => CarrierStatus::Active->value,
             'created_by' => User::factory(),
         ];

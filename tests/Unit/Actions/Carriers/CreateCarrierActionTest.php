@@ -10,7 +10,6 @@ $attributes = [
     'name' => 'Bankers Assurance',
     'phone' => '+961 1 423 423',
     'website' => 'bankers.com.lb',
-    'onboarded_date' => '2024-02-08',
     'branch' => [
         'street' => 'Saloumeh Square',
         'building_floor' => 'Bankers Tower',
@@ -86,7 +85,7 @@ test('appends counter when slug already exists in the same organization', functi
         ->and($second->slug)->toBe('bankers-assurance-1');
 });
 
-test('creates exactly one HQ branch with the submitted branch and contact fields', function () use ($attributes) {
+test('creates exactly one branch with the submitted branch and contact fields', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
 
     /** @noinspection PhpUnhandledExceptionInspection */
@@ -95,8 +94,7 @@ test('creates exactly one HQ branch with the submitted branch and contact fields
     expect($carrier->branches)->toHaveCount(1);
 
     $branch = $carrier->branches->first();
-    expect($branch->is_hq)->toBeTrue()
-        ->and($branch->street)->toBe('Saloumeh Square')
+    expect($branch->street)->toBe('Saloumeh Square')
         ->and($branch->building_floor)->toBe('Bankers Tower')
         ->and($branch->city)->toBe('Beirut')
         ->and($branch->contact_name)->toBe('Lina Karam')

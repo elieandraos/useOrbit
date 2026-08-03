@@ -9,7 +9,6 @@ $validPayload = [
     'name' => 'Bankers Assurance',
     'phone' => '+961 1 423 423',
     'website' => 'bankers.com.lb',
-    'onboarded_date' => '2024-02-08',
     'branch' => [
         'street' => 'Saloumeh Square',
         'building_floor' => 'Bankers Tower',
@@ -45,7 +44,7 @@ test('store returns validation errors when required fields are missing', functio
 
     $this->actingAs($user)
         ->post(route('carriers.store'))
-        ->assertSessionHasErrors(['name', 'onboarded_date', 'branch.city', 'contact.name']);
+        ->assertSessionHasErrors(['name', 'branch.city', 'contact.name']);
 });
 
 test('store redirects to carriers.show with toast on success', function () use ($validPayload) {
@@ -59,7 +58,7 @@ test('store redirects to carriers.show with toast on success', function () use (
     expect(Carrier::query()->count())->toBe(1);
 });
 
-test('store creates the HQ branch with the submitted branch and contact fields', function () use ($validPayload) {
+test('store creates the branch with the submitted branch and contact fields', function () use ($validPayload) {
     $user = User::factory()->withOrganization()->create();
 
     $this->actingAs($user)
@@ -71,7 +70,6 @@ test('store creates the HQ branch with the submitted branch and contact fields',
     $branch = $carrier->branches->first();
 
     expect($carrier->branches)->toHaveCount(1)
-        ->and($branch->is_hq)->toBeTrue()
         ->and($branch->city)->toBe('Beirut')
         ->and($branch->contact_name)->toBe('Lina Karam')
         ->and($branch->contact_email)->toBe('lina.karam@bankers.com.lb');

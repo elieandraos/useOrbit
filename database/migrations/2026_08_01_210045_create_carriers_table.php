@@ -20,7 +20,6 @@ return new class extends Migration
             $table->string('name', 150);
             $table->string('phone', 30)->nullable();
             $table->string('website')->nullable();
-            $table->date('onboarded_date');
             $table->string('status', 20)->default('active');
             $table->foreignId('created_by')->constrained('users')->restrictOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();

@@ -35,18 +35,15 @@ class CarrierBranchFactory extends Factory
 
         return [
             'carrier_id' => Carrier::factory(),
-            'is_hq' => true,
             'street' => fake()->buildingNumber().' '.fake()->streetName(),
             'building_floor' => fake()->randomElement(['Ground Floor', '1st Floor', '2nd Floor', '3rd Floor']),
             'city' => 'Beirut',
             'state_id' => $state->id,
             'country_id' => $country->id,
-            'phone' => fake()->phoneNumber(),
             'contact_name' => $contactName,
             'contact_role' => fake()->jobTitle(),
             'contact_email' => str(preg_replace('/[^a-z\s]/', '', mb_strtolower($contactName)))->slug('.').'@'.$emailDomain,
             'contact_phone' => fake()->phoneNumber(),
-            'contact_department' => fake()->randomElement(['Operations', 'Underwriting', 'Broker Relations', 'Claims']),
         ];
     }
 

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Carriers\CarriersArchiveController;
+use App\Http\Controllers\Carriers\CarriersBranchController;
 use App\Http\Controllers\Carriers\CarriersController;
 use App\Http\Controllers\Carriers\CarriersUnarchiveController;
 use Illuminate\Support\Facades\Route;
@@ -17,4 +18,10 @@ Route::middleware(['auth', 'verified', 'organization'])->group(function () {
     Route::patch('carriers/{carrier:slug}/archive', CarriersArchiveController::class)->name('carriers.archive');
     Route::patch('carriers/{carrier:slug}/unarchive', CarriersUnarchiveController::class)->name('carriers.unarchive');
     Route::delete('carriers/{carrier:slug}', [CarriersController::class, 'destroy'])->name('carriers.destroy');
+    Route::post('carriers/{carrier:slug}/branches', [CarriersBranchController::class, 'store'])->name('carriers.branches.store');
+});
+
+Route::middleware(['auth', 'verified', 'organization'])->prefix('carriers/branches')->name('carriers.branches.')->group(function () {
+    Route::patch('{branch}', [CarriersBranchController::class, 'update'])->name('update');
+    Route::delete('{branch}', [CarriersBranchController::class, 'destroy'])->name('destroy');
 });

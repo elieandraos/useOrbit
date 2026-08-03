@@ -6,7 +6,9 @@ namespace App\Models;
 
 use App\Enums\CarrierStatus;
 use App\Models\Concerns\BelongsToCurrentOrganization;
+use App\Models\Concerns\Filterable;
 use App\Models\Concerns\HasSlug;
+use App\Models\Concerns\Sortable;
 use Carbon\CarbonImmutable;
 use Database\Factories\CarrierFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -15,7 +17,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -25,7 +26,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $name
  * @property string|null $phone
  * @property string|null $website
- * @property CarbonImmutable $onboarded_date
  * @property CarrierStatus $status
  * @property int $created_by
  * @property int|null $updated_by
@@ -35,32 +35,25 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read User $createdBy
  * @property-read User|null $updatedBy
  * @property-read Collection<int, CarrierBranch> $branches
- * @property-read CarrierBranch|null $hqBranch
  */
 #[Fillable([
-    'organization_id', 'slug', 'name', 'phone', 'website', 'onboarded_date', 'status', 'created_by', 'updated_by',
+    'organization_id', 'slug', 'name', 'phone', 'website', 'status', 'created_by', 'updated_by',
 ])]
 final class Carrier extends Model
 {
     /** @use HasFactory<CarrierFactory> */
-    use BelongsToCurrentOrganization, HasFactory, HasSlug, SoftDeletes;
+    use BelongsToCurrentOrganization, Filterable, HasFactory, HasSlug, SoftDeletes, Sortable;
 
     protected function casts(): array
     {
         return [
-            'onboarded_date' => 'date',
             'status' => CarrierStatus::class,
         ];
     }
 
     public function branches(): HasMany
     {
-        return $this->hasMany(CarrierBranch::class);
-    }
-
-    public function hqBranch(): HasOne
-    {
-        return $this->hasOne(CarrierBranch::class)->where('is_hq', true);
+        return $this->hasMany(CarrierBranch::class)->orderBy('id');
     }
 
     public function createdBy(): BelongsTo
