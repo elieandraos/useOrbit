@@ -18,6 +18,7 @@ $attributes = [
 test('updates the branch fields in the database', function () use ($attributes) {
     $branch = CarrierBranch::factory()->create();
 
+    /** @noinspection PhpUnhandledExceptionInspection */
     $updated = app(UpdateCarrierBranchAction::class)->handle($branch, $attributes);
 
     expect($updated->street)->toBe('Boulevard Riad El Solh')
@@ -32,6 +33,7 @@ test('updates the branch fields in the database', function () use ($attributes) 
 test('does not affect the branch carrier_id', function () use ($attributes) {
     $branch = CarrierBranch::factory()->create();
 
+    /** @noinspection PhpUnhandledExceptionInspection */
     $updated = app(UpdateCarrierBranchAction::class)->handle($branch, $attributes);
 
     expect($updated->carrier_id)->toBe($branch->carrier_id);

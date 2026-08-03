@@ -19,6 +19,7 @@ $attributes = [
 test('creates a branch under the given carrier with the submitted fields', function () use ($attributes) {
     $carrier = Carrier::factory()->create();
 
+    /** @noinspection PhpUnhandledExceptionInspection */
     $branch = app(CreateCarrierBranchAction::class)->handle($carrier, $attributes);
 
     expect($branch->carrier_id)->toBe($carrier->id)
@@ -35,6 +36,7 @@ test('adds an additional branch without touching existing branches', function ()
     $carrier = Carrier::factory()->create();
     $existingBranch = CarrierBranch::factory()->forCarrier($carrier)->create();
 
+    /** @noinspection PhpUnhandledExceptionInspection */
     app(CreateCarrierBranchAction::class)->handle($carrier, $attributes);
 
     expect($carrier->fresh()->branches)->toHaveCount(2)
