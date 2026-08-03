@@ -1,25 +1,65 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
-import { Archive, Eye, MoreHorizontal, Pencil, Plus } from '@lucide/vue';
+import {
+    Archive,
+    ArchiveRestore,
+    ChevronDown,
+    ChevronUp,
+    Eye,
+    MoreHorizontal,
+    Pencil,
+} from '@lucide/vue';
 import { ref } from 'vue';
 import { Avatar } from '@/components/ui/avatar';
 import { DropMenu, DropMenuItem } from '@/components/ui/drop-menu';
 import { Pagination } from '@/components/ui/pagination';
 import { Separator } from '@/components/ui/separator';
-import { edit as carriersEdit, show as carriersShow } from '@/routes/carriers';
+import {
+    edit as carriersEdit,
+    index as carriersIndex,
+    show as carriersShow,
+    unarchive as carriersUnarchive,
+} from '@/routes/carriers';
 import type { Paginated } from '@/types';
 import ArchiveCarrierModal from './ArchiveCarrierModal.vue';
 import type { CarrierResource } from './carrier';
 import CarrierCard from './CarrierCard.vue';
 
-defineProps<{
+interface Sort {
+    column: string;
+    direction: 'asc' | 'desc';
+}
+
+const props = defineProps<{
     carriers: Paginated<CarrierResource>;
+    sort: Sort;
 }>();
 
 const carrierToArchive = ref<CarrierResource | null>(null);
 
 function goToCarrier(carrier: CarrierResource) {
     router.visit(carriersShow(carrier.slug).url);
+}
+
+function unarchiveCarrier(carrier: CarrierResource) {
+    router.patch(
+        carriersUnarchive.url(carrier.slug),
+        {},
+        { preserveScroll: true },
+    );
+}
+
+function sortBy(column: string) {
+    const direction =
+        props.sort.column === column && props.sort.direction === 'asc'
+            ? 'desc'
+            : 'asc';
+
+    router.get(
+        carriersIndex.url({ mergeQuery: { sort: column, direction } }),
+        {},
+        { preserveState: true, preserveScroll: true },
+    );
 }
 </script>
 
@@ -30,7 +70,7 @@ function goToCarrier(carrier: CarrierResource) {
             class="mb-2.5 flex items-center justify-between font-mono text-[11px] tracking-wider text-tertiary uppercase md:hidden"
         >
             <span>{{ carriers.meta.total }} carriers</span>
-            <span>Name A→Z</span>
+            <span>Name {{ sort.direction === 'desc' ? 'Z→A' : 'A→Z' }}</span>
         </div>
 
         <!-- Mobile: stacked carrier cards, replaces the table below `md` -->
@@ -40,6 +80,7 @@ function goToCarrier(carrier: CarrierResource) {
                 :key="carrier.id"
                 :carrier="carrier"
                 @archive="carrierToArchive = $event"
+                @unarchive="unarchiveCarrier"
             />
         </div>
 
@@ -57,29 +98,37 @@ function goToCarrier(carrier: CarrierResource) {
             <div class="min-h-[488px]">
                 <table class="w-full table-fixed border-collapse">
                     <colgroup>
-                        <col style="width: 36%" />
-                        <col style="width: 20%" />
-                        <col style="width: 18%" />
-                        <col style="width: 11%" />
-                        <col style="width: 11%" />
+                        <col style="width: 38%" />
+                        <col style="width: 24%" />
+                        <col style="width: 15%" />
+                        <col style="width: 15%" />
                         <col class="w-[56px]" />
                     </colgroup>
                     <thead>
                         <tr class="border-b border-border bg-sunken">
                             <th
-                                class="rounded-tl-lg px-4 py-2.5 text-left font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase"
+                                class="cursor-pointer rounded-tl-lg px-4 py-2.5 text-left font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase select-none"
+                                @click="sortBy('name')"
                             >
-                                Carrier
+                                <span class="inline-flex items-center gap-1">
+                                    Name
+                                    <ChevronUp
+                                        v-if="
+                                            sort.column === 'name' &&
+                                            sort.direction === 'asc'
+                                        "
+                                        class="size-3"
+                                    />
+                                    <ChevronDown
+                                        v-else-if="sort.column === 'name'"
+                                        class="size-3"
+                                    />
+                                </span>
                             </th>
                             <th
                                 class="px-4 py-2.5 text-left font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase"
                             >
-                                Primary contact
-                            </th>
-                            <th
-                                class="px-4 py-2.5 text-left font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase"
-                            >
-                                HQ
+                                Phone
                             </th>
                             <th
                                 class="px-4 py-2.5 text-right font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase"
@@ -91,11 +140,7 @@ function goToCarrier(carrier: CarrierResource) {
                             >
                                 Policies
                             </th>
-                            <th
-                                class="rounded-tr-lg px-4 py-2.5 text-right font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase"
-                            >
-                                Actions
-                            </th>
+                            <th class="rounded-tr-lg px-4 py-2.5"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -127,23 +172,10 @@ function goToCarrier(carrier: CarrierResource) {
                                     </div>
                                 </div>
                             </td>
-                            <td class="min-w-0 px-4 py-3">
-                                <div
-                                    class="truncate text-[13px] font-medium text-primary"
-                                >
-                                    {{ carrier.branch?.contact_name ?? '—' }}
-                                </div>
-                                <div
-                                    v-if="carrier.branch?.contact_role"
-                                    class="mt-0.5 truncate text-[11.5px] text-tertiary"
-                                >
-                                    {{ carrier.branch.contact_role }}
-                                </div>
-                            </td>
                             <td
-                                class="truncate px-4 py-3 text-[13px] text-secondary"
+                                class="px-4 py-3 font-mono text-[12.5px] text-secondary"
                             >
-                                {{ carrier.branch?.city ?? '—' }}
+                                {{ carrier.phone ?? '—' }}
                             </td>
                             <td
                                 class="px-4 py-3 text-right font-mono text-[13px] text-primary"
@@ -171,7 +203,7 @@ function goToCarrier(carrier: CarrierResource) {
                                         <template #leading
                                             ><Eye class="size-4"
                                         /></template>
-                                        View carrier
+                                        View
                                     </DropMenuItem>
                                     <DropMenuItem
                                         :href="carriersEdit(carrier.slug).url"
@@ -181,17 +213,18 @@ function goToCarrier(carrier: CarrierResource) {
                                         /></template>
                                         Edit
                                     </DropMenuItem>
-                                    <DropMenuItem
-                                        disabled
-                                        class="pointer-events-none opacity-50"
-                                    >
-                                        <template #leading
-                                            ><Plus class="size-4"
-                                        /></template>
-                                        Add policy
-                                    </DropMenuItem>
                                     <Separator class="my-1" />
                                     <DropMenuItem
+                                        v-if="carrier.status === 'archived'"
+                                        @click="unarchiveCarrier(carrier)"
+                                    >
+                                        <template #leading
+                                            ><ArchiveRestore class="size-4"
+                                        /></template>
+                                        Unarchive
+                                    </DropMenuItem>
+                                    <DropMenuItem
+                                        v-else
                                         danger
                                         @click="carrierToArchive = carrier"
                                     >

@@ -2,11 +2,11 @@
 import { router } from '@inertiajs/vue3';
 import {
     Archive,
+    ArchiveRestore,
     Building2,
     Eye,
     MoreHorizontal,
     Pencil,
-    Plus,
 } from '@lucide/vue';
 import { Avatar } from '@/components/ui/avatar';
 import { DropMenu, DropMenuItem } from '@/components/ui/drop-menu';
@@ -20,6 +20,7 @@ defineProps<{
 
 const emit = defineEmits<{
     archive: [carrier: CarrierResource];
+    unarchive: [carrier: CarrierResource];
 }>();
 
 function goToCarrier(carrier: CarrierResource) {
@@ -59,21 +60,28 @@ function goToCarrier(carrier: CarrierResource) {
 
                     <DropMenuItem :href="carriersShow(carrier.slug).url">
                         <template #leading><Eye class="size-4" /></template>
-                        View carrier
+                        View
                     </DropMenuItem>
                     <DropMenuItem :href="carriersEdit(carrier.slug).url">
                         <template #leading><Pencil class="size-4" /></template>
                         Edit
                     </DropMenuItem>
-                    <DropMenuItem disabled class="pointer-events-none opacity-50">
-                        <template #leading><Plus class="size-4" /></template>
-                        Add policy
-                    </DropMenuItem>
                     <Separator class="my-1" />
-                    <DropMenuItem danger @click="emit('archive', carrier)">
+                    <DropMenuItem
+                        v-if="carrier.status === 'archived'"
+                        @click="emit('unarchive', carrier)"
+                    >
                         <template #leading
-                            ><Archive class="size-4"
+                            ><ArchiveRestore class="size-4"
                         /></template>
+                        Unarchive
+                    </DropMenuItem>
+                    <DropMenuItem
+                        v-else
+                        danger
+                        @click="emit('archive', carrier)"
+                    >
+                        <template #leading><Archive class="size-4" /></template>
                         Archive
                     </DropMenuItem>
                 </DropMenu>
@@ -83,18 +91,24 @@ function goToCarrier(carrier: CarrierResource) {
         <div
             class="mt-3 flex flex-col gap-1.5 border-t border-border-subtle pt-2.5"
         >
-            <div v-if="carrier.branch?.contact_name" class="flex min-w-0 items-center gap-2">
+            <div
+                v-if="carrier.branches?.[0]?.contact_name"
+                class="flex min-w-0 items-center gap-2"
+            >
                 <span class="truncate text-[13px] text-secondary">
-                    {{ carrier.branch.contact_name }}
-                    <template v-if="carrier.branch.contact_role"
-                        >· {{ carrier.branch.contact_role }}</template
+                    {{ carrier.branches[0].contact_name }}
+                    <template v-if="carrier.branches[0].contact_role"
+                        >· {{ carrier.branches[0].contact_role }}</template
                     >
                 </span>
             </div>
-            <div v-if="carrier.branch?.city" class="flex min-w-0 items-center gap-2">
+            <div
+                v-if="carrier.branches?.[0]?.city"
+                class="flex min-w-0 items-center gap-2"
+            >
                 <Building2 class="size-3.5 shrink-0 text-tertiary" />
                 <span class="truncate text-[13px] text-secondary">
-                    {{ carrier.branch.city }}
+                    {{ carrier.branches[0].city }}
                 </span>
             </div>
         </div>
