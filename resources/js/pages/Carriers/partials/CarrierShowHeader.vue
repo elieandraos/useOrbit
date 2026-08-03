@@ -1,16 +1,30 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { Globe, Pencil, Phone } from '@lucide/vue';
+import { Download, Globe, Pencil, Phone } from '@lucide/vue';
+import { computed } from 'vue';
 import { Avatar } from '@/components/ui/avatar';
 import Badge from '@/components/ui/badge/Badge.vue';
 import Button from '@/components/ui/button/Button.vue';
-import { edit as carriersEdit } from '@/routes/carriers';
+import { Spinner } from '@/components/ui/spinner';
+import { useFileExport } from '@/composables/useFileExport';
+import { edit as carriersEdit, exportPdf as carriersExportPdf } from '@/routes/carriers';
 import type { CarrierResource } from './carrier';
 
-defineProps<{
+const props = defineProps<{
     carrier: CarrierResource;
     policiesCount: number;
 }>();
+
+const { isExporting, exportFile } = useFileExport();
+
+const exportUrl = computed(() => carriersExportPdf(props.carrier.slug).url);
+
+function exportCarrier(): Promise<void> {
+    return exportFile(exportUrl.value, `${props.carrier.slug}.pdf`, {
+        success: 'Carrier exported.',
+        error: 'Failed to export carrier. Please try again.',
+    });
+}
 </script>
 
 <template>
@@ -51,6 +65,18 @@ defineProps<{
         </div>
 
         <div class="flex shrink-0 items-center gap-2">
+            <Button
+                variant="secondary"
+                size="md"
+                :disabled="isExporting"
+                @click="exportCarrier"
+            >
+                <template #leading>
+                    <Spinner v-if="isExporting" />
+                    <Download v-else />
+                </template>
+                Export
+            </Button>
             <Link :href="carriersEdit(carrier.slug).url">
                 <Button variant="secondary" size="md">
                     <template #leading><Pencil /></template>
