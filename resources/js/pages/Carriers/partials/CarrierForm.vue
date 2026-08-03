@@ -2,7 +2,6 @@
 import { Form, Link } from '@inertiajs/vue3';
 import { Mail, MapPin, Phone } from '@lucide/vue';
 import { computed, ref } from 'vue';
-import Badge from '@/components/ui/badge/Badge.vue';
 import Button from '@/components/ui/button/Button.vue';
 import FormField from '@/components/ui/form-field/FormField.vue';
 import FormSection from '@/components/ui/form-section/FormSection.vue';
@@ -184,9 +183,6 @@ const { options: stateOptions, loading: stateLoading } =
             title="Primary contact"
             subtitle="The person you'll work with most. They'll receive policy updates by default. More contacts can be added later."
         >
-            <template #badge>
-                <Badge tone="accent" dot>Primary</Badge>
-            </template>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormField
                     label="Full name"

@@ -8,13 +8,15 @@ import {
     MoreHorizontal,
     Pencil,
 } from '@lucide/vue';
+import { computed } from 'vue';
 import { Avatar } from '@/components/ui/avatar';
+import Badge from '@/components/ui/badge/Badge.vue';
 import { DropMenu, DropMenuItem } from '@/components/ui/drop-menu';
 import { Separator } from '@/components/ui/separator';
 import { edit as carriersEdit, show as carriersShow } from '@/routes/carriers';
 import type { CarrierResource } from './carrier';
 
-defineProps<{
+const props = defineProps<{
     carrier: CarrierResource;
 }>();
 
@@ -26,6 +28,13 @@ const emit = defineEmits<{
 function goToCarrier(carrier: CarrierResource) {
     router.visit(carriersShow(carrier.slug).url);
 }
+
+const branchCities = computed(() =>
+    (props.carrier.branches ?? [])
+        .map((branch) => branch.city)
+        .filter((city): city is string => !!city)
+        .join(', '),
+);
 </script>
 
 <template>
@@ -89,26 +98,19 @@ function goToCarrier(carrier: CarrierResource) {
         </div>
 
         <div
-            class="mt-3 flex flex-col gap-1.5 border-t border-border-subtle pt-2.5"
+            class="mt-3 flex items-center justify-between gap-3 border-t border-border-subtle pt-2.5"
         >
-            <div
-                v-if="carrier.branches?.[0]?.contact_name"
-                class="flex min-w-0 items-center gap-2"
-            >
-                <span class="truncate text-[13px] text-secondary">
-                    {{ carrier.branches[0].contact_name }}
-                    <template v-if="carrier.branches[0].contact_role"
-                        >· {{ carrier.branches[0].contact_role }}</template
-                    >
-                </span>
+            <div class="flex shrink-0 items-center gap-1.5">
+                <Badge tone="neutral">0 clients</Badge>
+                <Badge tone="accent">0 policies</Badge>
             </div>
             <div
-                v-if="carrier.branches?.[0]?.city"
-                class="flex min-w-0 items-center gap-2"
+                v-if="branchCities"
+                class="flex min-w-0 items-center gap-1.5"
             >
                 <Building2 class="size-3.5 shrink-0 text-tertiary" />
-                <span class="truncate text-[13px] text-secondary">
-                    {{ carrier.branches[0].city }}
+                <span class="truncate text-[12px] text-secondary">
+                    {{ branchCities }}
                 </span>
             </div>
         </div>
