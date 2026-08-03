@@ -1,5 +1,10 @@
 <script setup lang="ts">
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import type { CarrierResource } from './carrier';
+
+defineProps<{
+    carrier: CarrierResource;
+}>();
 </script>
 
 <template>
@@ -25,38 +30,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
                     <p
                         class="font-mono text-[10.5px] tracking-[0.06em] text-tertiary uppercase"
                     >
-                        Branches
-                    </p>
-                    <p
-                        class="mt-1 font-mono text-lg font-semibold text-primary"
-                    >
-                        1
-                    </p>
-                </div>
-                <div class="border-t border-border-subtle px-[18px] py-3.5">
-                    <p
-                        class="font-mono text-[10.5px] tracking-[0.06em] text-tertiary uppercase"
-                    >
-                        Active policies
+                        Policies
                     </p>
                     <p
                         class="mt-1 font-mono text-lg font-semibold text-primary"
                     >
                         0
-                    </p>
-                </div>
-                <div
-                    class="border-t border-l border-border-subtle px-[18px] py-3.5"
-                >
-                    <p
-                        class="font-mono text-[10.5px] tracking-[0.06em] text-tertiary uppercase"
-                    >
-                        Annual premium
-                    </p>
-                    <p
-                        class="mt-1 font-mono text-lg font-semibold text-primary"
-                    >
-                        —
                     </p>
                 </div>
             </div>
