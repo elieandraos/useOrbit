@@ -39,7 +39,7 @@ setLayoutProps({
     <div class="flex flex-1 flex-col">
         <PageHeader
             :title="`Edit ${carrier.name}`"
-            subtitle="Update identity, headquarters, and primary contact details."
+            subtitle="Update the carrier's name and contact details."
             :divider="false"
         >
             <template #avatar>

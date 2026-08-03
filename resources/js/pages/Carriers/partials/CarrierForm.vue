@@ -4,7 +4,6 @@ import { Mail, MapPin, Phone } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import Badge from '@/components/ui/badge/Badge.vue';
 import Button from '@/components/ui/button/Button.vue';
-import DateInput from '@/components/ui/date-input/DateInput.vue';
 import FormField from '@/components/ui/form-field/FormField.vue';
 import FormSection from '@/components/ui/form-section/FormSection.vue';
 import Input from '@/components/ui/input/Input.vue';
@@ -22,31 +21,32 @@ const props = defineProps<{
     submitLabel: string;
 }>();
 
-const today = new Date().toISOString().slice(0, 10);
+const isEditing = computed(() => !!props.carrier);
 
 const name = ref(props.carrier?.name ?? '');
 const phone = ref(props.carrier?.phone ?? '');
 const website = ref(props.carrier?.website ?? '');
-const onboardedDate = ref(props.carrier?.onboarded_date ?? today);
 
 const defaultCountryId = computed(
-    () => props.countries.find((country) => country.name === 'Lebanon')?.id ?? null,
+    () =>
+        props.countries.find((country) => country.name === 'Lebanon')?.id ??
+        null,
 );
 
-const branchPhone = ref(props.carrier?.branch?.phone ?? '');
-const branchBuildingFloor = ref(props.carrier?.branch?.building_floor ?? '');
-const branchStreet = ref(props.carrier?.branch?.street ?? '');
-const branchCity = ref(props.carrier?.branch?.city ?? '');
+const branch = computed(() => props.carrier?.branches?.[0]);
+
+const branchBuildingFloor = ref(branch.value?.building_floor ?? '');
+const branchStreet = ref(branch.value?.street ?? '');
+const branchCity = ref(branch.value?.city ?? '');
 const branchCountryId = ref<number | null>(
-    props.carrier?.branch?.country_id ?? defaultCountryId.value,
+    branch.value?.country_id ?? defaultCountryId.value,
 );
-const branchStateId = ref<number | null>(props.carrier?.branch?.state_id ?? null);
+const branchStateId = ref<number | null>(branch.value?.state_id ?? null);
 
-const contactName = ref(props.carrier?.branch?.contact_name ?? '');
-const contactRole = ref(props.carrier?.branch?.contact_role ?? '');
-const contactEmail = ref(props.carrier?.branch?.contact_email ?? '');
-const contactPhone = ref(props.carrier?.branch?.contact_phone ?? '');
-const contactDepartment = ref(props.carrier?.branch?.contact_department ?? '');
+const contactName = ref(branch.value?.contact_name ?? '');
+const contactRole = ref(branch.value?.contact_role ?? '');
+const contactEmail = ref(branch.value?.contact_email ?? '');
+const contactPhone = ref(branch.value?.contact_phone ?? '');
 
 const countryOptions = computed<TypeaheadOption[]>(() =>
     props.countries.map((country) => ({
@@ -66,7 +66,7 @@ const { options: stateOptions, loading: stateLoading } =
     >
         <FormSection
             title="Identity"
-            subtitle="The carrier's name, contact, and onboarding date."
+            subtitle="The carrier's name and contact details."
         >
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <FormField
@@ -98,45 +98,14 @@ const { options: stateOptions, loading: stateLoading } =
                     <Input id="website" v-model="website" name="website" />
                 </FormField>
             </div>
-            <FormField
-                label="Onboarded date"
-                required
-                :error="errors.onboarded_date"
-            >
-                <div class="max-w-[360px]">
-                    <DateInput
-                        v-model="onboardedDate"
-                        name="onboarded_date"
-                    />
-                </div>
-            </FormField>
         </FormSection>
 
         <FormSection
-            title="Headquarters"
+            v-if="!isEditing"
+            title="Address"
             subtitle="Where is the carrier based? You can add more branches from the carrier page after creating it."
         >
-            <template #badge>
-                <Badge tone="accent" dot>Primary</Badge>
-            </template>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <FormField
-                    label="Phone"
-                    for="branch_phone"
-                    optional
-                    :error="errors['branch.phone']"
-                >
-                    <Input
-                        id="branch_phone"
-                        v-model="branchPhone"
-                        name="branch[phone]"
-                        type="tel"
-                    >
-                        <template #leading>
-                            <Phone />
-                        </template>
-                    </Input>
-                </FormField>
                 <FormField
                     label="Building / Floor"
                     for="branch_building_floor"
@@ -178,7 +147,7 @@ const { options: stateOptions, loading: stateLoading } =
                     />
                 </FormField>
                 <FormField
-                    label="Governorate"
+                    label="State"
                     for="branch_state_id"
                     optional
                     :error="errors['branch.state_id']"
@@ -189,7 +158,7 @@ const { options: stateOptions, loading: stateLoading } =
                         name="branch[state_id]"
                         :options="stateOptions"
                         :loading="stateLoading"
-                        :initial-label="carrier?.branch?.state_name"
+                        :initial-label="branch?.state_name"
                         placeholder="Select"
                     />
                 </FormField>
@@ -211,6 +180,7 @@ const { options: stateOptions, loading: stateLoading } =
         </FormSection>
 
         <FormSection
+            v-if="!isEditing"
             title="Primary contact"
             subtitle="The person you'll work with most. They'll receive policy updates by default. More contacts can be added later."
         >
@@ -275,18 +245,6 @@ const { options: stateOptions, loading: stateLoading } =
                             <Phone />
                         </template>
                     </Input>
-                </FormField>
-                <FormField
-                    label="Department"
-                    for="contact_department"
-                    optional
-                    :error="errors['contact.department']"
-                >
-                    <Input
-                        id="contact_department"
-                        v-model="contactDepartment"
-                        name="contact[department]"
-                    />
                 </FormField>
             </div>
         </FormSection>
