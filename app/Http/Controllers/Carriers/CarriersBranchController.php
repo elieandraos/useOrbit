@@ -18,7 +18,7 @@ use Inertia\Inertia;
 
 final class CarriersBranchController extends Controller
 {
-    #[Authorize('update', 'carrier')]
+    #[Authorize('create', [CarrierBranch::class, 'carrier'])]
     public function store(StoreCarrierBranchRequest $request, Carrier $carrier, CreateCarrierBranchAction $action): RedirectResponse
     {
         $action->handle($carrier, $request->validated());
