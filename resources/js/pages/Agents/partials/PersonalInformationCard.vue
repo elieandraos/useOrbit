@@ -31,6 +31,10 @@ defineProps<{
                         <Badge tone="success">{{ agent.age }} yrs</Badge>
                     </div>
                 </div>
+                <DetailField
+                    label="Joined"
+                    :value="agent.joined_at_formatted"
+                />
             </div>
         </CardContent>
     </Card>

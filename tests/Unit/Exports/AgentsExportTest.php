@@ -13,6 +13,7 @@ test('headings returns the export column labels', function () {
         'Name',
         'Phone',
         'Email',
+        'Joined',
         'Clients',
         'Policies',
         'Status',
@@ -26,6 +27,7 @@ test('map transforms an agent into an export row', function () {
         'last_name' => 'Olsen',
         'phone' => '+96170123456',
         'email' => 'mira.olsen@useorbit.com',
+        'joined_at' => '2020-06-01',
         'status' => AgentStatus::Active->value,
     ]);
 
@@ -35,6 +37,7 @@ test('map transforms an agent into an export row', function () {
         'Mira Olsen',
         '+96170123456',
         'mira.olsen@useorbit.com',
+        'Jun 1, 2020',
         0,
         0,
         'Active',

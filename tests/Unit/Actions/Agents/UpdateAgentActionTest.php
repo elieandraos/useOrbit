@@ -10,6 +10,7 @@ $attributes = [
     'first_name' => 'Nadia',
     'last_name' => 'Fares',
     'date_of_birth' => '1988-09-02',
+    'joined_at' => '2019-03-15',
     'phone' => '+961 3 555 555',
     'email' => 'nadia.fares@useorbit.com',
     'street' => 'Hamra Street',

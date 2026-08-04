@@ -16,6 +16,7 @@ final class UpdateAgentRequest extends FormRequest
             'first_name' => ['required', 'string', 'max:100'],
             'last_name' => ['required', 'string', 'max:100'],
             'date_of_birth' => ['required', 'date'],
+            'joined_at' => ['required', 'date'],
             'phone' => ['required', 'string', 'max:30'],
             'email' => ['required', 'email', 'max:255'],
             'street' => ['nullable', 'string', 'max:255'],

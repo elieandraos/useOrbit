@@ -14,7 +14,7 @@ final class UpdateAgentAction
     use GeneratesUniqueSlug;
 
     /**
-     * @param  array{first_name: string, last_name: string, date_of_birth: string, phone: string, email: string, street?: string|null, building_floor?: string|null, country_id?: int|null, state_id?: int|null, city?: string|null}  $attributes
+     * @param  array{first_name: string, last_name: string, date_of_birth: string, joined_at: string, phone: string, email: string, street?: string|null, building_floor?: string|null, country_id?: int|null, state_id?: int|null, city?: string|null}  $attributes
      *
      * @throws \Throwable
      */

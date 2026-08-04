@@ -9,6 +9,7 @@ $validPayload = [
     'first_name' => 'Mira',
     'last_name' => 'Olsen',
     'date_of_birth' => '1990-04-12',
+    'joined_at' => '2020-06-01',
     'phone' => '+961 3 188 422',
     'email' => 'mira.olsen@useorbit.com',
     'street' => 'Rue Gouraud',
@@ -38,7 +39,7 @@ test('store returns validation errors when required fields are missing', functio
 
     $this->actingAs($user)
         ->post(route('agents.store'))
-        ->assertSessionHasErrors(['first_name', 'last_name', 'date_of_birth', 'phone', 'email']);
+        ->assertSessionHasErrors(['first_name', 'last_name', 'date_of_birth', 'joined_at', 'phone', 'email']);
 });
 
 test('store redirects to agents.show with toast on success', function () use ($validPayload) {

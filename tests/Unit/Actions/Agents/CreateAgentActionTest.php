@@ -10,6 +10,7 @@ $attributes = [
     'first_name' => 'Mira',
     'last_name' => 'Olsen',
     'date_of_birth' => '1990-04-12',
+    'joined_at' => '2020-06-01',
     'phone' => '+961 3 188 422',
     'email' => 'mira.olsen@useorbit.com',
     'street' => 'Rue Gouraud',

@@ -95,8 +95,10 @@ function sortBy(column: string) {
             <div class="min-h-[488px]">
                 <table class="w-full table-fixed border-collapse">
                     <colgroup>
-                        <col style="width: 42%" />
-                        <col style="width: 25%" />
+                        <col style="width: 32%" />
+                        <col style="width: 18%" />
+                        <col style="width: 12%" />
+                        <col style="width: 12%" />
                         <col style="width: 18%" />
                         <col class="w-[56px]" />
                     </colgroup>
@@ -125,6 +127,16 @@ function sortBy(column: string) {
                                 class="px-4 py-2.5 text-left font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase"
                             >
                                 Phone
+                            </th>
+                            <th
+                                class="px-4 py-2.5 text-right font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase"
+                            >
+                                Clients
+                            </th>
+                            <th
+                                class="px-4 py-2.5 text-right font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase"
+                            >
+                                Policies
                             </th>
                             <th
                                 class="px-4 py-2.5 text-left font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase"
@@ -169,6 +181,16 @@ function sortBy(column: string) {
                                 class="px-4 py-3 font-mono text-[12.5px] text-secondary"
                             >
                                 {{ agent.phone }}
+                            </td>
+                            <td
+                                class="px-4 py-3 text-right font-mono text-[13px] text-primary"
+                            >
+                                0
+                            </td>
+                            <td
+                                class="px-4 py-3 text-right font-mono text-[13px] text-primary"
+                            >
+                                0
                             </td>
                             <td class="px-4 py-3">
                                 <Badge

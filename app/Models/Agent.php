@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $first_name
  * @property string $last_name
  * @property CarbonImmutable $date_of_birth
+ * @property CarbonImmutable $joined_at
  * @property string $phone
  * @property string $email
  * @property string|null $street
@@ -43,7 +44,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read State|null $state
  */
 #[Fillable([
-    'organization_id', 'slug', 'first_name', 'last_name', 'date_of_birth', 'phone', 'email',
+    'organization_id', 'slug', 'first_name', 'last_name', 'date_of_birth', 'joined_at', 'phone', 'email',
     'street', 'building_floor', 'city', 'state_id', 'country_id', 'status', 'created_by', 'updated_by',
 ])]
 final class Agent extends Model
@@ -55,6 +56,7 @@ final class Agent extends Model
     {
         return [
             'date_of_birth' => 'date',
+            'joined_at' => 'date',
             'status' => AgentStatus::class,
         ];
     }

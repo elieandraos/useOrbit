@@ -30,6 +30,7 @@ const defaultCountryId = computed(
 const firstName = ref(props.agent?.first_name ?? '');
 const lastName = ref(props.agent?.last_name ?? '');
 const dateOfBirth = ref(props.agent?.date_of_birth ?? '');
+const joinedAt = ref(props.agent?.joined_at ?? '');
 const phone = ref(props.agent?.phone ?? '');
 const email = ref(props.agent?.email ?? '');
 const street = ref(props.agent?.street ?? '');
@@ -62,9 +63,9 @@ watch(countryId, () => {
     >
         <FormSection
             title="Personal information"
-            subtitle="The agent's legal name and date of birth."
+            subtitle="The agent's legal name, date of birth, and start date."
         >
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormField
                     label="First name"
                     for="first_name"
@@ -91,6 +92,9 @@ watch(countryId, () => {
                     :error="errors.date_of_birth"
                 >
                     <DateInput v-model="dateOfBirth" name="date_of_birth" />
+                </FormField>
+                <FormField label="Joined" required :error="errors.joined_at">
+                    <DateInput v-model="joinedAt" name="joined_at" />
                 </FormField>
             </div>
         </FormSection>

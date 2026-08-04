@@ -67,6 +67,12 @@
                 <span class="value">{{ $agent->date_of_birth->format('M j, Y') }}</span>
             </td>
             <td>
+                <span class="label">Joined</span>
+                <span class="value">{{ $agent->joined_at->format('M j, Y') }}</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
                 <span class="label">Status</span>
                 <span class="value">{{ ucfirst($agent->status->value) }}</span>
             </td>
