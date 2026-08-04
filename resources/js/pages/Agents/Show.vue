@@ -30,7 +30,7 @@ setLayoutProps({
     <div class="flex flex-1 flex-col">
         <AgentShowHeader :agent="agent" />
 
-        <div class="grid grid-cols-1 gap-4 pt-6 lg:grid-cols-2">
+        <div class="grid grid-cols-1 items-start gap-5 pt-6 lg:grid-cols-2">
             <PersonalInformationCard :agent="agent" />
             <ContactCard :agent="agent" />
         </div>

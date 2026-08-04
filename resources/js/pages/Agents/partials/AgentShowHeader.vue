@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { Download, Pencil } from '@lucide/vue';
+import { Download, Mail, Pencil, Phone } from '@lucide/vue';
 import { computed } from 'vue';
 import { Avatar } from '@/components/ui/avatar';
 import Badge from '@/components/ui/badge/Badge.vue';
@@ -93,10 +93,14 @@ function exportAgent(): Promise<void> {
                     <div
                         class="mt-1.5 flex flex-wrap items-center gap-4 text-[13px] text-secondary"
                     >
-                        <span class="font-mono">{{ agent.phone }}</span>
-                        <span class="font-mono lowercase">{{
-                            agent.email
-                        }}</span>
+                        <span class="inline-flex items-center gap-1.5">
+                            <Phone class="size-3.5 text-tertiary" />
+                            <span class="font-mono">{{ agent.phone }}</span>
+                        </span>
+                        <span class="inline-flex items-center gap-1.5">
+                            <Mail class="size-3.5 text-tertiary" />
+                            {{ agent.email }}
+                        </span>
                     </div>
                 </div>
             </div>
