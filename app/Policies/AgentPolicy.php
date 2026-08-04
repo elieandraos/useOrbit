@@ -12,4 +12,9 @@ final class AgentPolicy
     {
         return $user->current_organization_id !== null;
     }
+
+    public function create(User $user): bool
+    {
+        return $user->current_organization_id !== null;
+    }
 }
