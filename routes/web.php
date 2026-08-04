@@ -10,6 +10,7 @@ Route::middleware(['auth', 'verified', 'organization'])->group(function () {
     Route::get('dashboard', fn () => inertia('Dashboard'))->name('dashboard');
 });
 
+require __DIR__.'/agents.php';
 require __DIR__.'/carriers.php';
 require __DIR__.'/clients.php';
 require __DIR__.'/documents.php';
