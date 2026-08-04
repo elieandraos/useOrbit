@@ -9,6 +9,7 @@ test('soft deletes the agent', function () {
     /** @var Agent $agent */
     $agent = Agent::factory()->create();
 
+    /** @noinspection PhpUnhandledExceptionInspection */
     app(DestroyAgentAction::class)->handle($agent);
 
     $this->assertSoftDeleted($agent);
