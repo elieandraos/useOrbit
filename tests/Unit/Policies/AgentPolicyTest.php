@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Enums\OrganizationRole;
 use App\Models\Agent;
+use App\Models\Organization;
 use App\Models\User;
 
 test('user with a current organization can viewAny agents', function () {
@@ -55,4 +57,27 @@ test('user cannot update an agent from a different organization', function () {
     $agent = Agent::factory()->create();
 
     expect($user->can('update', $agent))->toBeFalse();
+});
+
+test('owner can archive an agent from their organization', function () {
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+    $agent = Agent::factory()->forOrganization($owner)->create();
+
+    expect($owner->can('archive', $agent))->toBeTrue();
+});
+
+test('non-owner member cannot archive an agent', function () {
+    $user = User::factory()->withOrganization()->create();
+    $agent = Agent::factory()->forOrganization($user)->create();
+
+    expect($user->can('archive', $agent))->toBeFalse();
+});
+
+test('owner cannot archive an agent from a different organization', function () {
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+    $agent = Agent::factory()->create();
+
+    expect($owner->can('archive', $agent))->toBeFalse();
 });
