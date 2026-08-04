@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Models\Agent;
 use App\Models\Carrier;
 use App\Models\CarrierBranch;
 use App\Models\Client;
@@ -11,6 +12,7 @@ use App\Models\Document;
 use App\Models\Note;
 use App\Models\Tag;
 use App\Models\User;
+use App\Policies\AgentPolicy;
 use App\Policies\CarrierBranchPolicy;
 use App\Policies\CarrierPolicy;
 use App\Policies\ClientPolicy;
@@ -51,6 +53,7 @@ class AppServiceProvider extends ServiceProvider
 
     protected function registerPolicies(): void
     {
+        Gate::policy(Agent::class, AgentPolicy::class);
         Gate::policy(Carrier::class, CarrierPolicy::class);
         Gate::policy(CarrierBranch::class, CarrierBranchPolicy::class);
         Gate::policy(Client::class, ClientPolicy::class);
