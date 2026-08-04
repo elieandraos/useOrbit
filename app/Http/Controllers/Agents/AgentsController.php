@@ -55,4 +55,14 @@ final class AgentsController extends Controller
 
         return to_route('agents.show', $agent);
     }
+
+    #[Authorize('view', 'agent')]
+    public function show(Agent $agent): Response
+    {
+        $agent->load(['country', 'state']);
+
+        return inertia('Agents/Show', [
+            'agent' => AgentResource::make($agent),
+        ]);
+    }
 }

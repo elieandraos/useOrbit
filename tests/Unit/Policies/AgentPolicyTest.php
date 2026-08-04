@@ -28,3 +28,17 @@ test('user without a current organization cannot create agents', function () {
 
     expect($user->can('create', Agent::class))->toBeFalse();
 });
+
+test('user can view an agent from their own organization', function () {
+    $user = User::factory()->withOrganization()->create();
+    $agent = Agent::factory()->forOrganization($user)->create();
+
+    expect($user->can('view', $agent))->toBeTrue();
+});
+
+test('user cannot view an agent from a different organization', function () {
+    $user = User::factory()->withOrganization()->create();
+    $agent = Agent::factory()->create();
+
+    expect($user->can('view', $agent))->toBeFalse();
+});
