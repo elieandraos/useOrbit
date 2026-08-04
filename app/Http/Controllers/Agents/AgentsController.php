@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Agents;
 
 use App\Actions\Agents\CreateAgentAction;
+use App\Actions\Agents\DestroyAgentAction;
 use App\Actions\Agents\UpdateAgentAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Agents\StoreAgentRequest;
@@ -92,5 +93,15 @@ final class AgentsController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Agent updated.')]);
 
         return to_route('agents.show', $agent);
+    }
+
+    #[Authorize('delete', 'agent')]
+    public function destroy(Agent $agent, DestroyAgentAction $action): RedirectResponse
+    {
+        $action->handle($agent);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Agent deleted.')]);
+
+        return to_route('agents.index');
     }
 }

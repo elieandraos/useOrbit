@@ -16,4 +16,5 @@ Route::middleware(['auth', 'verified', 'organization'])->group(function () {
     Route::patch('agents/{agent:slug}', [AgentsController::class, 'update'])->name('agents.update');
     Route::patch('agents/{agent:slug}/archive', AgentsArchiveController::class)->name('agents.archive');
     Route::patch('agents/{agent:slug}/unarchive', AgentsUnarchiveController::class)->name('agents.unarchive');
+    Route::delete('agents/{agent:slug}', [AgentsController::class, 'destroy'])->name('agents.destroy');
 });

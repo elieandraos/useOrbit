@@ -104,3 +104,26 @@ test('owner cannot unarchive an agent from a different organization', function (
 
     expect($owner->can('unarchive', $agent))->toBeFalse();
 });
+
+test('owner can delete an agent from their organization', function () {
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+    $agent = Agent::factory()->forOrganization($owner)->create();
+
+    expect($owner->can('delete', $agent))->toBeTrue();
+});
+
+test('non-owner member cannot delete an agent', function () {
+    $user = User::factory()->withOrganization()->create();
+    $agent = Agent::factory()->forOrganization($user)->create();
+
+    expect($user->can('delete', $agent))->toBeFalse();
+});
+
+test('owner cannot delete an agent from a different organization', function () {
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+    $agent = Agent::factory()->create();
+
+    expect($owner->can('delete', $agent))->toBeFalse();
+});
