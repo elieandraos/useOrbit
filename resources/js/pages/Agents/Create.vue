@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import { index as agentsIndex } from '@/routes/agents';
+import PageHeader from '@/components/shell/PageHeader.vue';
+import { index as agentsIndex, store as agentsStore } from '@/routes/agents';
+import AgentForm from './partials/AgentForm.vue';
+
+defineProps<{
+    countries: { id: number; name: string }[];
+}>();
 
 defineOptions({
     layout: {
@@ -18,9 +24,19 @@ defineOptions({
 </script>
 
 <template>
-    <Head title="Create Agent" />
+    <Head title="Add Agent" />
 
-    <div class="flex flex-1 flex-col gap-4">
-        <pre>{{ $page.props }}</pre>
+    <div class="flex flex-1 flex-col">
+        <PageHeader
+            title="Add Agent"
+            subtitle="Capture the agent's personal information, contact details, and address."
+            :divider="false"
+        />
+
+        <AgentForm
+            :countries="countries"
+            :route="agentsStore.form()"
+            submit-label="Create agent"
+        />
     </div>
 </template>
