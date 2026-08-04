@@ -23,4 +23,9 @@ final class AgentPolicy
     {
         return $user->current_organization_id !== null;
     }
+
+    public function update(User $user, Agent $agent): bool
+    {
+        return $agent->organization_id === $user->current_organization_id;
+    }
 }

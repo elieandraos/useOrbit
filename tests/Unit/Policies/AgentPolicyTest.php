@@ -42,3 +42,17 @@ test('user cannot view an agent from a different organization', function () {
 
     expect($user->can('view', $agent))->toBeFalse();
 });
+
+test('user can update an agent from their own organization', function () {
+    $user = User::factory()->withOrganization()->create();
+    $agent = Agent::factory()->forOrganization($user)->create();
+
+    expect($user->can('update', $agent))->toBeTrue();
+});
+
+test('user cannot update an agent from a different organization', function () {
+    $user = User::factory()->withOrganization()->create();
+    $agent = Agent::factory()->create();
+
+    expect($user->can('update', $agent))->toBeFalse();
+});

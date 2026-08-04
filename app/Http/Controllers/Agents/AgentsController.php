@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Agents;
 
 use App\Actions\Agents\CreateAgentAction;
+use App\Actions\Agents\UpdateAgentAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Agents\StoreAgentRequest;
+use App\Http\Requests\Agents\UpdateAgentRequest;
 use App\Http\Resources\AgentResource;
 use App\Http\Resources\CountryResource;
 use App\Models\Agent;
@@ -64,5 +66,31 @@ final class AgentsController extends Controller
         return inertia('Agents/Show', [
             'agent' => AgentResource::make($agent),
         ]);
+    }
+
+    #[Authorize('update', 'agent')]
+    public function edit(Agent $agent): Response
+    {
+        $agent->load(['updatedBy', 'country', 'state']);
+
+        return inertia('Agents/Edit', [
+            'agent' => AgentResource::make($agent),
+            'countries' => CountryResource::collection(Country::query()->orderBy('name')->get()),
+        ]);
+    }
+
+    /**
+     * @throws \Throwable
+     */
+    #[Authorize('update', 'agent')]
+    public function update(UpdateAgentRequest $request, Agent $agent, UpdateAgentAction $action): RedirectResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        $agent = $action->handle($user, $agent, $request->validated());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Agent updated.')]);
+
+        return to_route('agents.show', $agent);
     }
 }
