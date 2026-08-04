@@ -1,24 +1,30 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
 import {
+    Archive,
+    ArchiveRestore,
     ChevronDown,
     ChevronUp,
     Eye,
     MoreHorizontal,
     Pencil,
 } from '@lucide/vue';
+import { ref } from 'vue';
 import { Avatar } from '@/components/ui/avatar';
 import Badge from '@/components/ui/badge/Badge.vue';
 import { DropMenu, DropMenuItem } from '@/components/ui/drop-menu';
 import { Pagination } from '@/components/ui/pagination';
+import { Separator } from '@/components/ui/separator';
 import {
     edit as agentsEdit,
     index as agentsIndex,
     show as agentsShow,
+    unarchive as agentsUnarchive,
 } from '@/routes/agents';
 import type { Paginated } from '@/types';
 import type { AgentResource } from './agent';
 import AgentCard from './AgentCard.vue';
+import ArchiveAgentModal from './ArchiveAgentModal.vue';
 
 interface Sort {
     column: string;
@@ -30,8 +36,14 @@ const props = defineProps<{
     sort: Sort;
 }>();
 
+const agentToArchive = ref<AgentResource | null>(null);
+
 function goToAgent(agent: AgentResource) {
     router.visit(agentsShow(agent.slug).url);
+}
+
+function unarchiveAgent(agent: AgentResource) {
+    router.patch(agentsUnarchive.url(agent.slug), {}, { preserveScroll: true });
 }
 
 function sortBy(column: string) {
@@ -64,6 +76,8 @@ function sortBy(column: string) {
                 v-for="agent in agents.data"
                 :key="agent.id"
                 :agent="agent"
+                @archive="agentToArchive = $event"
+                @unarchive="unarchiveAgent"
             />
         </div>
 
@@ -198,6 +212,26 @@ function sortBy(column: string) {
                                         /></template>
                                         Edit
                                     </DropMenuItem>
+                                    <Separator class="my-1" />
+                                    <DropMenuItem
+                                        v-if="agent.status === 'archived'"
+                                        @click="unarchiveAgent(agent)"
+                                    >
+                                        <template #leading
+                                            ><ArchiveRestore class="size-4"
+                                        /></template>
+                                        Unarchive
+                                    </DropMenuItem>
+                                    <DropMenuItem
+                                        v-else
+                                        danger
+                                        @click="agentToArchive = agent"
+                                    >
+                                        <template #leading
+                                            ><Archive class="size-4"
+                                        /></template>
+                                        Archive
+                                    </DropMenuItem>
                                 </DropMenu>
                             </td>
                         </tr>
@@ -207,5 +241,7 @@ function sortBy(column: string) {
 
             <Pagination :meta="agents.meta" item-label="agents" />
         </div>
+
+        <ArchiveAgentModal v-model="agentToArchive" />
     </div>
 </template>

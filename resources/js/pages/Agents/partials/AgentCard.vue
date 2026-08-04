@@ -1,14 +1,26 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
-import { Eye, MoreHorizontal, Pencil } from '@lucide/vue';
+import {
+    Archive,
+    ArchiveRestore,
+    Eye,
+    MoreHorizontal,
+    Pencil,
+} from '@lucide/vue';
 import { Avatar } from '@/components/ui/avatar';
 import Badge from '@/components/ui/badge/Badge.vue';
 import { DropMenu, DropMenuItem } from '@/components/ui/drop-menu';
+import { Separator } from '@/components/ui/separator';
 import { edit as agentsEdit, show as agentsShow } from '@/routes/agents';
 import type { AgentResource } from './agent';
 
 defineProps<{
     agent: AgentResource;
+}>();
+
+const emit = defineEmits<{
+    archive: [agent: AgentResource];
+    unarchive: [agent: AgentResource];
 }>();
 
 function goToAgent(agent: AgentResource) {
@@ -52,6 +64,20 @@ function goToAgent(agent: AgentResource) {
                     <DropMenuItem :href="agentsEdit(agent.slug).url">
                         <template #leading><Pencil class="size-4" /></template>
                         Edit
+                    </DropMenuItem>
+                    <Separator class="my-1" />
+                    <DropMenuItem
+                        v-if="agent.status === 'archived'"
+                        @click="emit('unarchive', agent)"
+                    >
+                        <template #leading
+                            ><ArchiveRestore class="size-4"
+                        /></template>
+                        Unarchive
+                    </DropMenuItem>
+                    <DropMenuItem v-else danger @click="emit('archive', agent)">
+                        <template #leading><Archive class="size-4" /></template>
+                        Archive
                     </DropMenuItem>
                 </DropMenu>
             </div>
