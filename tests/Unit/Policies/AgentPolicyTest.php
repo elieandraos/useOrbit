@@ -81,3 +81,26 @@ test('owner cannot archive an agent from a different organization', function () 
 
     expect($owner->can('archive', $agent))->toBeFalse();
 });
+
+test('owner can unarchive an agent from their organization', function () {
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+    $agent = Agent::factory()->forOrganization($owner)->archived()->create();
+
+    expect($owner->can('unarchive', $agent))->toBeTrue();
+});
+
+test('non-owner member cannot unarchive an agent', function () {
+    $user = User::factory()->withOrganization()->create();
+    $agent = Agent::factory()->forOrganization($user)->archived()->create();
+
+    expect($user->can('unarchive', $agent))->toBeFalse();
+});
+
+test('owner cannot unarchive an agent from a different organization', function () {
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+    $agent = Agent::factory()->archived()->create();
+
+    expect($owner->can('unarchive', $agent))->toBeFalse();
+});

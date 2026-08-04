@@ -35,4 +35,10 @@ final class AgentPolicy
         return $agent->organization_id === $user->current_organization_id
             && $user->organizationRole() === OrganizationRole::Owner;
     }
+
+    public function unarchive(User $user, Agent $agent): bool
+    {
+        return $agent->organization_id === $user->current_organization_id
+            && $user->organizationRole() === OrganizationRole::Owner;
+    }
 }

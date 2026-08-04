@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Agents\AgentsArchiveController;
 use App\Http\Controllers\Agents\AgentsController;
+use App\Http\Controllers\Agents\AgentsUnarchiveController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified', 'organization'])->group(function () {
@@ -14,4 +15,5 @@ Route::middleware(['auth', 'verified', 'organization'])->group(function () {
     Route::get('agents/{agent:slug}/edit', [AgentsController::class, 'edit'])->name('agents.edit');
     Route::patch('agents/{agent:slug}', [AgentsController::class, 'update'])->name('agents.update');
     Route::patch('agents/{agent:slug}/archive', AgentsArchiveController::class)->name('agents.archive');
+    Route::patch('agents/{agent:slug}/unarchive', AgentsUnarchiveController::class)->name('agents.unarchive');
 });
