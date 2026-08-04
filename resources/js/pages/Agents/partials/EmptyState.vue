@@ -41,16 +41,15 @@ function clearFilters() {
                 class="mx-auto mt-2 max-w-[380px] text-sm leading-relaxed text-secondary"
             >
                 <template v-if="archived && !filtered"
-                    >Agents that have been archived will appear
-                    here.</template
+                    >Agents that have been archived will appear here.</template
                 >
                 <template v-else-if="filtered"
                     >Try adjusting or clearing your filters to see more
                     results.</template
                 >
                 <template v-else
-                    >Add your first producer or sub-agent. Track who's
-                    working which clients and policies.</template
+                    >Add your first producer or sub-agent. Track who's working
+                    which clients and policies.</template
                 >
             </p>
             <div class="mt-6 flex justify-center">
