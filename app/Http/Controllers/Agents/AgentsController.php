@@ -15,7 +15,9 @@ use App\Http\Resources\CountryResource;
 use App\Models\Agent;
 use App\Models\Country;
 use App\Models\User;
+use App\Sorts\AgentSort;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -23,16 +25,23 @@ use Inertia\Response;
 final class AgentsController extends Controller
 {
     #[Authorize('viewAny', Agent::class)]
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $sortColumn = $request->query('sort');
+        $sortDirection = $request->query('direction', 'asc');
+
+        /** @noinspection PhpUndefinedMethodInspection */
         $agents = Agent::query()
-            ->orderBy('last_name')
-            ->orderBy('first_name')
+            ->sort(new AgentSort($sortColumn, $sortDirection))
             ->paginate(7)
             ->withQueryString();
 
         return inertia('Agents/Index', [
             'agents' => AgentResource::collection($agents),
+            'sort' => [
+                'column' => $sortColumn ?? 'name',
+                'direction' => $sortDirection,
+            ],
         ]);
     }
 

@@ -47,6 +47,37 @@ test('agents are ordered by last name then first name', function () {
         );
 });
 
+test('a sort query param reorders the agents and is echoed back to the page', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    /** @var Agent $bravo */
+    $bravo = Agent::factory()->forOrganization($user)->create(['last_name' => 'Bravo']);
+    /** @var Agent $alpha */
+    $alpha = Agent::factory()->forOrganization($user)->create(['last_name' => 'Alpha']);
+
+    $this->actingAs($user)
+        ->get(route('agents.index', ['sort' => 'name', 'direction' => 'desc']))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('agents.data.0.id', $bravo->id)
+            ->where('agents.data.1.id', $alpha->id)
+            ->where('sort.column', 'name')
+            ->where('sort.direction', 'desc')
+        );
+});
+
+test('the index page echoes the default sort when none is applied', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('agents.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('sort.column', 'name')
+            ->where('sort.direction', 'asc')
+        );
+});
+
 test('agents from another organization are not included', function () {
     $user = User::factory()->withOrganization()->create();
     Agent::factory(2)->forOrganization($user)->create();
