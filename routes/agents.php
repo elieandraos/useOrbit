@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Agents\AgentsArchiveController;
 use App\Http\Controllers\Agents\AgentsController;
 use App\Http\Controllers\Agents\AgentsExcelExportController;
+use App\Http\Controllers\Agents\AgentsPdfExportController;
 use App\Http\Controllers\Agents\AgentsUnarchiveController;
 use Illuminate\Support\Facades\Route;
 
@@ -19,4 +20,5 @@ Route::middleware(['auth', 'verified', 'organization'])->group(function () {
     Route::patch('agents/{agent:slug}/archive', AgentsArchiveController::class)->name('agents.archive');
     Route::patch('agents/{agent:slug}/unarchive', AgentsUnarchiveController::class)->name('agents.unarchive');
     Route::delete('agents/{agent:slug}', [AgentsController::class, 'destroy'])->name('agents.destroy');
+    Route::get('agents/{agent:slug}/export', AgentsPdfExportController::class)->name('agents.export-pdf');
 });
