@@ -6,6 +6,7 @@ import {
     Eye,
     MoreHorizontal,
     Pencil,
+    Phone,
 } from '@lucide/vue';
 import { Avatar } from '@/components/ui/avatar';
 import Badge from '@/components/ui/badge/Badge.vue';
@@ -84,17 +85,26 @@ function goToAgent(agent: AgentResource) {
         </div>
 
         <div
-            class="mt-3 flex items-center justify-between gap-3 border-t border-border-subtle pt-2.5"
+            class="mt-3 flex flex-col gap-1.5 border-t border-border-subtle pt-2.5"
         >
-            <span class="font-mono text-[12px] text-secondary">{{
-                agent.phone
-            }}</span>
-            <Badge
-                :tone="agent.status === 'active' ? 'success' : 'warning'"
-                dot
-            >
-                {{ agent.status === 'active' ? 'Active' : 'Archived' }}
-            </Badge>
+            <div class="flex min-w-0 items-center gap-2">
+                <Phone class="size-3.5 shrink-0 text-tertiary" />
+                <span class="truncate font-mono text-[12.5px] text-secondary">
+                    {{ agent.phone }}
+                </span>
+            </div>
+            <div class="flex items-center justify-between gap-3">
+                <div class="flex shrink-0 items-center gap-1.5">
+                    <Badge tone="neutral">0 clients</Badge>
+                    <Badge tone="accent">0 policies</Badge>
+                </div>
+                <Badge
+                    :tone="agent.status === 'active' ? 'success' : 'warning'"
+                    dot
+                >
+                    {{ agent.status === 'active' ? 'Active' : 'Archived' }}
+                </Badge>
+            </div>
         </div>
     </div>
 </template>

@@ -28,6 +28,8 @@ class AgentFactory extends Factory
         $firstName = fake()->firstName();
         $lastName = fake()->lastName();
         $emailDomain = fake()->randomElement(['gmail.com', 'outlook.com', 'yahoo.com', 'hotmail.com', 'icloud.com']);
+        $dateOfBirth = fake()->dateTimeBetween('-60 years', '-21 years');
+        $joinedAt = fake()->dateTimeBetween((clone $dateOfBirth)->modify('+21 years'), 'now');
 
         $country = Country::query()->firstOrCreate(
             ['iso2' => 'LB'],
@@ -42,7 +44,8 @@ class AgentFactory extends Factory
             'slug' => Str::slug($firstName.'-'.$lastName.'-'.fake()->unique()->numerify()),
             'first_name' => $firstName,
             'last_name' => $lastName,
-            'date_of_birth' => fake()->dateTimeBetween('-60 years', '-21 years')->format('Y-m-d'),
+            'date_of_birth' => $dateOfBirth->format('Y-m-d'),
+            'joined_at' => $joinedAt->format('Y-m-d'),
             'phone' => fake()->phoneNumber(),
             'email' => Str::slug($firstName, '_').'_'.Str::slug($lastName, '_').'@'.$emailDomain,
             'street' => fake()->buildingNumber().' '.fake()->streetName(),

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { Download, Mail, Pencil, Phone } from '@lucide/vue';
+import { Calendar, Download, Mail, Pencil, Phone } from '@lucide/vue';
 import { computed } from 'vue';
 import { Avatar } from '@/components/ui/avatar';
 import Badge from '@/components/ui/badge/Badge.vue';
@@ -15,6 +15,8 @@ import type { AgentResource } from './agent';
 
 const props = defineProps<{
     agent: AgentResource;
+    clientsCount: number;
+    policiesCount: number;
 }>();
 
 const { isExporting, exportFile } = useFileExport();
@@ -48,6 +50,8 @@ function exportAgent(): Promise<void> {
                     >Active</Badge
                 >
                 <Badge v-else tone="warning">Archived</Badge>
+                <Badge tone="accent">{{ clientsCount }} clients</Badge>
+                <Badge tone="neutral">{{ policiesCount }} policies</Badge>
             </div>
 
             <div class="mt-5 flex items-center gap-2">
@@ -89,6 +93,10 @@ function exportAgent(): Promise<void> {
                             >Active</Badge
                         >
                         <Badge v-else tone="warning">Archived</Badge>
+                        <Badge tone="accent">{{ clientsCount }} clients</Badge>
+                        <Badge tone="neutral"
+                            >{{ policiesCount }} policies</Badge
+                        >
                     </div>
                     <div
                         class="mt-1.5 flex flex-wrap items-center gap-4 text-[13px] text-secondary"
@@ -100,6 +108,10 @@ function exportAgent(): Promise<void> {
                         <span class="inline-flex items-center gap-1.5">
                             <Mail class="size-3.5 text-tertiary" />
                             {{ agent.email }}
+                        </span>
+                        <span class="inline-flex items-center gap-1.5">
+                            <Calendar class="size-3.5 text-tertiary" />
+                            Joined {{ agent.joined_at_formatted }}
                         </span>
                     </div>
                 </div>

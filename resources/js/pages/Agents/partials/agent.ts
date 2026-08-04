@@ -7,6 +7,9 @@ export interface AgentResource {
     date_of_birth: string;
     date_of_birth_formatted: string;
     age: number;
+    joined_at: string;
+    joined_at_formatted: string;
+    tenure: string;
     phone: string;
     email: string;
     street: string | null;
