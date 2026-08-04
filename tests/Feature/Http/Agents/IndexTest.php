@@ -47,6 +47,22 @@ test('agents are ordered by last name then first name', function () {
         );
 });
 
+test('an invalid sort column is rejected', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('agents.index', ['sort' => 'phone']))
+        ->assertInvalid(['sort']);
+});
+
+test('an invalid sort direction is rejected', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('agents.index', ['direction' => 'sideways']))
+        ->assertInvalid(['direction']);
+});
+
 test('a sort query param reorders the agents and is echoed back to the page', function () {
     $user = User::factory()->withOrganization()->create();
 
@@ -75,6 +91,57 @@ test('the index page echoes the default sort when none is applied', function () 
         ->assertInertia(fn ($page) => $page
             ->where('sort.column', 'name')
             ->where('sort.direction', 'asc')
+        );
+});
+
+test('a search query param narrows the agents and is echoed back to the page', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    /** @var Agent $match */
+    $match = Agent::factory()->forOrganization($user)->create(['first_name' => 'Mira', 'last_name' => 'Olsen']);
+    Agent::factory()->forOrganization($user)->create(['first_name' => 'Nadia', 'last_name' => 'Fares']);
+
+    $this->actingAs($user)
+        ->get(route('agents.index', ['search' => 'Mira']))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('agents.data', 1)
+            ->where('agents.data.0.id', $match->id)
+            ->where('filters.search', 'Mira')
+        );
+});
+
+test('the index only shows active agents by default', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    /** @var Agent $active */
+    $active = Agent::factory()->forOrganization($user)->create();
+    Agent::factory()->forOrganization($user)->archived()->create();
+
+    $this->actingAs($user)
+        ->get(route('agents.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('agents.data', 1)
+            ->where('agents.data.0.id', $active->id)
+            ->where('filters.archived', false)
+        );
+});
+
+test('an archived query param shows only archived agents', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    Agent::factory()->forOrganization($user)->create();
+    /** @var Agent $archived */
+    $archived = Agent::factory()->forOrganization($user)->archived()->create();
+
+    $this->actingAs($user)
+        ->get(route('agents.index', ['archived' => 1]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('agents.data', 1)
+            ->where('agents.data.0.id', $archived->id)
+            ->where('filters.archived', true)
         );
 });
 

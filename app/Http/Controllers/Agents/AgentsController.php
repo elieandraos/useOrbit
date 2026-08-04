@@ -7,7 +7,9 @@ namespace App\Http\Controllers\Agents;
 use App\Actions\Agents\CreateAgentAction;
 use App\Actions\Agents\DestroyAgentAction;
 use App\Actions\Agents\UpdateAgentAction;
+use App\Filters\AgentFilter;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Agents\IndexAgentRequest;
 use App\Http\Requests\Agents\StoreAgentRequest;
 use App\Http\Requests\Agents\UpdateAgentRequest;
 use App\Http\Resources\AgentResource;
@@ -17,7 +19,6 @@ use App\Models\Country;
 use App\Models\User;
 use App\Sorts\AgentSort;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -25,14 +26,14 @@ use Inertia\Response;
 final class AgentsController extends Controller
 {
     #[Authorize('viewAny', Agent::class)]
-    public function index(Request $request): Response
+    public function index(IndexAgentRequest $request): Response
     {
-        $sortColumn = $request->query('sort');
-        $sortDirection = $request->query('direction', 'asc');
+        $sortColumn = $request->validated('sort');
 
         /** @noinspection PhpUndefinedMethodInspection */
         $agents = Agent::query()
-            ->sort(new AgentSort($sortColumn, $sortDirection))
+            ->filter(new AgentFilter($request->validated()))
+            ->sort(new AgentSort($sortColumn, $request->validated('direction')))
             ->paginate(7)
             ->withQueryString();
 
@@ -40,7 +41,11 @@ final class AgentsController extends Controller
             'agents' => AgentResource::collection($agents),
             'sort' => [
                 'column' => $sortColumn ?? 'name',
-                'direction' => $sortDirection,
+                'direction' => $request->validated('direction'),
+            ],
+            'filters' => [
+                'search' => $request->validated('search'),
+                'archived' => $request->validated('archived'),
             ],
         ]);
     }
