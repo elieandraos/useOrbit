@@ -24,6 +24,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $email_verified_at
  * @property int|null $current_organization_id
  * @property int|null $country_id
+ * @property OrganizationMember $pivot
  * @property-read Country|null $country
  * @property-read Organization|null $currentOrganization
  */
