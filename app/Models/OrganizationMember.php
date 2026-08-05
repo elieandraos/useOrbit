@@ -7,10 +7,13 @@ namespace App\Models;
 use App\Enums\OrganizationMemberStatus;
 use App\Enums\OrganizationRole;
 use Illuminate\Database\Eloquent\Relations\Pivot;
+use Illuminate\Support\Carbon;
 
 /**
  * @property OrganizationRole $role
  * @property OrganizationMemberStatus $status
+ * @property Carbon|null $joined_at
+ * @property Carbon|null $expires_at
  */
 final class OrganizationMember extends Pivot
 {
@@ -19,6 +22,8 @@ final class OrganizationMember extends Pivot
         return [
             'role' => OrganizationRole::class,
             'status' => OrganizationMemberStatus::class,
+            'joined_at' => 'datetime',
+            'expires_at' => 'datetime',
         ];
     }
 }
