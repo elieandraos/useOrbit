@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import type { AgentResource } from './agent';
 
 defineProps<{
@@ -9,11 +9,8 @@ defineProps<{
 
 <template>
     <Card>
-        <CardHeader bordered>
-            <CardTitle>Quick stats</CardTitle>
-        </CardHeader>
         <CardContent class="p-0">
-            <div class="grid grid-cols-2">
+            <div class="grid grid-cols-4">
                 <div class="px-[18px] py-3.5">
                     <p
                         class="font-mono text-[10.5px] tracking-[0.06em] text-tertiary uppercase"
@@ -38,7 +35,7 @@ defineProps<{
                         0
                     </p>
                 </div>
-                <div class="border-t border-border-subtle px-[18px] py-3.5">
+                <div class="border-l border-border-subtle px-[18px] py-3.5">
                     <p
                         class="font-mono text-[10.5px] tracking-[0.06em] text-tertiary uppercase"
                     >
@@ -50,9 +47,7 @@ defineProps<{
                         $0
                     </p>
                 </div>
-                <div
-                    class="border-t border-l border-border-subtle px-[18px] py-3.5"
-                >
+                <div class="border-l border-border-subtle px-[18px] py-3.5">
                     <p
                         class="font-mono text-[10.5px] tracking-[0.06em] text-tertiary uppercase"
                     >
