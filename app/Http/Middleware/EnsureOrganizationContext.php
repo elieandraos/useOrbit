@@ -33,7 +33,7 @@ final class EnsureOrganizationContext
             ->wherePivot('organization_id', $user->current_organization_id)
             ->first();
 
-        if (! $membership || $membership->pivot->status !== OrganizationMemberStatus::Active->value) {
+        if (! $membership || $membership->pivot->status !== OrganizationMemberStatus::Active) {
             return redirect()->route('home')
                 ->with('error', 'Your membership in this organization is not active.');
         }

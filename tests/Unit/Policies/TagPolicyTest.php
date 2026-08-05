@@ -38,6 +38,15 @@ test('owner can delete a tag created by another member of their organization', f
     expect($owner->can('delete', $tag))->toBeTrue();
 });
 
+test('admin can delete a tag created by another member of their organization', function () {
+    $organization = Organization::factory()->create();
+    $admin = User::factory()->forOrganization($organization, OrganizationRole::Admin)->create();
+    $member = User::factory()->forOrganization($organization)->create();
+    $tag = Tag::factory()->forOrganization($member)->createdBy($member)->create();
+
+    expect($admin->can('delete', $tag))->toBeTrue();
+});
+
 test('member cannot delete a tag created by another member', function () {
     $organization = Organization::factory()->create();
     $member = User::factory()->forOrganization($organization)->create();
@@ -72,6 +81,15 @@ test('owner can update a tag created by another member of their organization', f
     $tag = Tag::factory()->forOrganization($member)->createdBy($member)->create();
 
     expect($owner->can('update', $tag))->toBeTrue();
+});
+
+test('admin can update a tag created by another member of their organization', function () {
+    $organization = Organization::factory()->create();
+    $admin = User::factory()->forOrganization($organization, OrganizationRole::Admin)->create();
+    $member = User::factory()->forOrganization($organization)->create();
+    $tag = Tag::factory()->forOrganization($member)->createdBy($member)->create();
+
+    expect($admin->can('update', $tag))->toBeTrue();
 });
 
 test('member cannot update a tag created by another member', function () {

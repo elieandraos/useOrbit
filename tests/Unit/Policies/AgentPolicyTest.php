@@ -67,6 +67,14 @@ test('owner can archive an agent from their organization', function () {
     expect($owner->can('archive', $agent))->toBeTrue();
 });
 
+test('admin can archive an agent from their organization', function () {
+    $organization = Organization::factory()->create();
+    $admin = User::factory()->forOrganization($organization, OrganizationRole::Admin)->create();
+    $agent = Agent::factory()->forOrganization($admin)->create();
+
+    expect($admin->can('archive', $agent))->toBeTrue();
+});
+
 test('non-owner member cannot archive an agent', function () {
     $user = User::factory()->withOrganization()->create();
     $agent = Agent::factory()->forOrganization($user)->create();
@@ -90,6 +98,14 @@ test('owner can unarchive an agent from their organization', function () {
     expect($owner->can('unarchive', $agent))->toBeTrue();
 });
 
+test('admin can unarchive an agent from their organization', function () {
+    $organization = Organization::factory()->create();
+    $admin = User::factory()->forOrganization($organization, OrganizationRole::Admin)->create();
+    $agent = Agent::factory()->forOrganization($admin)->archived()->create();
+
+    expect($admin->can('unarchive', $agent))->toBeTrue();
+});
+
 test('non-owner member cannot unarchive an agent', function () {
     $user = User::factory()->withOrganization()->create();
     $agent = Agent::factory()->forOrganization($user)->archived()->create();
@@ -111,6 +127,14 @@ test('owner can delete an agent from their organization', function () {
     $agent = Agent::factory()->forOrganization($owner)->create();
 
     expect($owner->can('delete', $agent))->toBeTrue();
+});
+
+test('admin can delete an agent from their organization', function () {
+    $organization = Organization::factory()->create();
+    $admin = User::factory()->forOrganization($organization, OrganizationRole::Admin)->create();
+    $agent = Agent::factory()->forOrganization($admin)->create();
+
+    expect($admin->can('delete', $agent))->toBeTrue();
 });
 
 test('non-owner member cannot delete an agent', function () {

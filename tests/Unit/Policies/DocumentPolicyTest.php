@@ -40,6 +40,15 @@ test('owner can delete a completed document uploaded by another member of their 
     expect($owner->can('delete', $document))->toBeTrue();
 });
 
+test('admin can delete a completed document uploaded by another member of their organization', function () {
+    $organization = Organization::factory()->create();
+    $admin = User::factory()->forOrganization($organization, OrganizationRole::Admin)->create();
+    $member = User::factory()->forOrganization($organization)->create();
+    $document = Document::factory()->forOrganization($member)->uploadedBy($member)->completed()->create();
+
+    expect($admin->can('delete', $document))->toBeTrue();
+});
+
 test('member can delete their own completed document', function () {
     $organization = Organization::factory()->create();
     $member = User::factory()->forOrganization($organization)->create();

@@ -4,16 +4,15 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
-use App\Enums\OrganizationRole;
 use App\Models\Contracts\Documentable;
 use App\Models\Document;
 use App\Models\User;
 
 /**
  * Access model: any org member may view, create, and finalize documents for
- * clients in their organization. Delete is intentionally stricter (owner or
- * uploader only) to limit accidental/malicious data loss; view/download stay
- * org-wide by design for this small-agency use case.
+ * clients in their organization. Delete is intentionally stricter (owner,
+ * admin, or uploader only) to limit accidental/malicious data loss;
+ * view/download stay org-wide by design for this small-agency use case.
  */
 final class DocumentPolicy
 {
@@ -41,6 +40,6 @@ final class DocumentPolicy
     {
         return $document->organization_id === $user->current_organization_id
             && $document->status->isSettled()
-            && ($user->organizationRole() === OrganizationRole::Owner || $document->uploaded_by === $user->id);
+            && (($user->organizationRole()?->isPrivileged() ?? false) || $document->uploaded_by === $user->id);
     }
 }

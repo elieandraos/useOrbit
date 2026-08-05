@@ -21,6 +21,20 @@ test('owner can viewAny, view, create, update, delete, archive, and unarchive cl
         ->and($owner->can('unarchive', $client))->toBeTrue();
 });
 
+test('admin can viewAny, view, create, update, delete, archive, and unarchive clients in their organization', function () {
+    $organization = Organization::factory()->create();
+    $admin = User::factory()->forOrganization($organization, OrganizationRole::Admin)->create();
+    $client = Client::factory()->forOrganization($admin)->create();
+
+    expect($admin->can('viewAny', Client::class))->toBeTrue()
+        ->and($admin->can('view', $client))->toBeTrue()
+        ->and($admin->can('create', Client::class))->toBeTrue()
+        ->and($admin->can('update', $client))->toBeTrue()
+        ->and($admin->can('delete', $client))->toBeTrue()
+        ->and($admin->can('archive', $client))->toBeTrue()
+        ->and($admin->can('unarchive', $client))->toBeTrue();
+});
+
 test('member can viewAny, view, create, and update clients but cannot delete, archive, or unarchive', function () {
     $organization = Organization::factory()->create();
     $member = User::factory()->forOrganization($organization)->create();

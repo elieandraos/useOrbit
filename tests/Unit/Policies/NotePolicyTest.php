@@ -50,6 +50,16 @@ test('owner can update and delete a note authored by another member of their org
         ->and($owner->can('delete', $note))->toBeTrue();
 });
 
+test('admin can update and delete a note authored by another member of their organization', function () {
+    $organization = Organization::factory()->create();
+    $admin = User::factory()->forOrganization($organization, OrganizationRole::Admin)->create();
+    $member = User::factory()->forOrganization($organization)->create();
+    $note = Note::factory()->forOrganization($member)->createdBy($member)->create();
+
+    expect($admin->can('update', $note))->toBeTrue()
+        ->and($admin->can('delete', $note))->toBeTrue();
+});
+
 test('member cannot update or delete a note authored by another member', function () {
     $organization = Organization::factory()->create();
     $member = User::factory()->forOrganization($organization)->create();

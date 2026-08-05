@@ -21,6 +21,8 @@ return new class extends Migration
             $table->string('status', 20);
             $table->foreignId('invited_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('joined_at')->nullable();
+            $table->string('token')->nullable()->unique();
+            $table->timestamp('expires_at')->nullable();
             $table->timestamps();
         });
     }

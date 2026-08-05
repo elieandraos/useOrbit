@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\OrganizationMemberStatus;
 use App\Enums\OrganizationRole;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
 /**
  * @property OrganizationRole $role
- * @property string $status
+ * @property OrganizationMemberStatus $status
  */
 final class OrganizationMember extends Pivot
 {
@@ -17,6 +18,7 @@ final class OrganizationMember extends Pivot
     {
         return [
             'role' => OrganizationRole::class,
+            'status' => OrganizationMemberStatus::class,
         ];
     }
 }
