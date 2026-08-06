@@ -41,7 +41,7 @@ final class OrganizationInvitationNotification extends Notification implements S
                 'organization' => $this->organization->name,
                 'app' => config('app.name'),
             ]))
-            ->action(__('Accept Invitation'), url("/invitations/$this->token"))
+            ->action(__('Accept Invitation'), route('invitations.show', $this->token))
             ->line(__('This invitation will expire in 7 days.'));
     }
 }

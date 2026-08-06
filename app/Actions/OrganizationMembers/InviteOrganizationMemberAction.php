@@ -8,7 +8,6 @@ use App\Enums\OrganizationMemberStatus;
 use App\Models\User;
 use App\Notifications\OrganizationInvitationNotification;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 final class InviteOrganizationMemberAction
@@ -34,7 +33,7 @@ final class InviteOrganizationMemberAction
                 'role' => $attributes['role'],
                 'status' => OrganizationMemberStatus::Invited->value,
                 'invited_by' => $invitedBy->id,
-                'token' => Hash::make($token),
+                'token' => hash('sha256', $token),
                 'expires_at' => now()->addDays(7),
             ]);
 

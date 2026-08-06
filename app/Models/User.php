@@ -9,6 +9,7 @@ use App\Enums\OrganizationRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -27,6 +28,7 @@ use Illuminate\Support\Carbon;
  * @property OrganizationMember $pivot
  * @property-read Country|null $country
  * @property-read Organization|null $currentOrganization
+ * @property-read Collection<int, Organization> $organizations
  */
 #[Fillable(['name', 'email', 'password', 'current_organization_id', 'country_id', 'email_verified_at'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]

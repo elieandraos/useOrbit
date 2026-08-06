@@ -8,7 +8,6 @@ use App\Enums\OrganizationRole;
 use App\Models\Organization;
 use App\Models\User;
 use App\Notifications\OrganizationInvitationNotification;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 
 $attributes = [
@@ -58,7 +57,7 @@ test('stores a hashed token that matches the plaintext token sent in the notific
     Notification::assertSentTo(
         $invitee,
         OrganizationInvitationNotification::class,
-        fn (OrganizationInvitationNotification $notification): bool => Hash::check($notification->token, $pivot->token),
+        fn (OrganizationInvitationNotification $notification): bool => hash('sha256', $notification->token) === $pivot->token,
     );
 });
 
