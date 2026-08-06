@@ -164,3 +164,60 @@ test('owner cannot remove a member in another organization', function () {
 
     expect($owner->can('remove', [OrganizationMember::class, $memberElsewhere]))->toBeFalse();
 });
+
+test('owner can revoke a pending invitation', function () {
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+    $invitee = User::factory()->create(['password' => null]);
+    $invitee->organizations()->attach($organization, [
+        'role' => OrganizationRole::Member->value,
+        'status' => OrganizationMemberStatus::Invited->value,
+    ]);
+
+    expect($owner->can('revoke', [OrganizationMember::class, $invitee]))->toBeTrue();
+});
+
+test('admin can revoke a pending invitation', function () {
+    $organization = Organization::factory()->create();
+    $admin = User::factory()->forOrganization($organization, OrganizationRole::Admin)->create();
+    $invitee = User::factory()->create(['password' => null]);
+    $invitee->organizations()->attach($organization, [
+        'role' => OrganizationRole::Member->value,
+        'status' => OrganizationMemberStatus::Invited->value,
+    ]);
+
+    expect($admin->can('revoke', [OrganizationMember::class, $invitee]))->toBeTrue();
+});
+
+test('member cannot revoke a pending invitation', function () {
+    $organization = Organization::factory()->create();
+    $member = User::factory()->forOrganization($organization)->create();
+    $invitee = User::factory()->create(['password' => null]);
+    $invitee->organizations()->attach($organization, [
+        'role' => OrganizationRole::Member->value,
+        'status' => OrganizationMemberStatus::Invited->value,
+    ]);
+
+    expect($member->can('revoke', [OrganizationMember::class, $invitee]))->toBeFalse();
+});
+
+test('owner cannot revoke an active member', function () {
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+    $member = User::factory()->forOrganization($organization)->create();
+
+    expect($owner->can('revoke', [OrganizationMember::class, $member]))->toBeFalse();
+});
+
+test('owner cannot revoke an invitation in another organization', function () {
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+    $otherOrganization = Organization::factory()->create();
+    $invitee = User::factory()->create(['password' => null]);
+    $invitee->organizations()->attach($otherOrganization, [
+        'role' => OrganizationRole::Member->value,
+        'status' => OrganizationMemberStatus::Invited->value,
+    ]);
+
+    expect($owner->can('revoke', [OrganizationMember::class, $invitee]))->toBeFalse();
+});

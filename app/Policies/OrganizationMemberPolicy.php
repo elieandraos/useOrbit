@@ -60,4 +60,18 @@ final class OrganizationMemberPolicy
             && $pivot->role !== OrganizationRole::Owner
             && $pivot->status === OrganizationMemberStatus::Active;
     }
+
+    public function revoke(User $user, User $member): bool
+    {
+        if (! ($user->organizationRole()?->isPrivileged() ?? false)) {
+            return false;
+        }
+
+        $pivot = $member->organizations()
+            ->wherePivot('organization_id', $user->current_organization_id)
+            ->first()
+            ?->pivot;
+
+        return $pivot !== null && $pivot->status === OrganizationMemberStatus::Invited;
+    }
 }
