@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('organization_user', function (Blueprint $table) {
             $table->id();
             $table->foreignId('organization_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();
             $table->string('role', 20);
             $table->string('status', 20);
             $table->foreignId('invited_by')->nullable()->constrained('users')->nullOnDelete();
