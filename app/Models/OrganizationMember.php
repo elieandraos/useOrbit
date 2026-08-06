@@ -13,12 +13,17 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Support\Carbon;
 
 /**
+ * @property int $id
+ * @property int $organization_id
  * @property OrganizationRole $role
  * @property OrganizationMemberStatus $status
  * @property int|null $invited_by
  * @property Carbon|null $joined_at
  * @property string|null $token
  * @property Carbon|null $expires_at
+ * @property-read User $user
+ * @property-read Organization $organization
+ * @property-read User|null $inviter
  */
 final class OrganizationMember extends Pivot
 {
