@@ -105,3 +105,62 @@ test('owner cannot change the role of a member in another organization', functio
 
     expect($owner->can('changeRole', [OrganizationMember::class, $memberElsewhere]))->toBeFalse();
 });
+
+test('owner can remove an active member', function () {
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+    $member = User::factory()->forOrganization($organization)->create();
+
+    expect($owner->can('remove', [OrganizationMember::class, $member]))->toBeTrue();
+});
+
+test('admin can remove an active member', function () {
+    $organization = Organization::factory()->create();
+    $admin = User::factory()->forOrganization($organization, OrganizationRole::Admin)->create();
+    $member = User::factory()->forOrganization($organization)->create();
+
+    expect($admin->can('remove', [OrganizationMember::class, $member]))->toBeTrue();
+});
+
+test('member cannot remove another member', function () {
+    $organization = Organization::factory()->create();
+    $member = User::factory()->forOrganization($organization)->create();
+    $otherMember = User::factory()->forOrganization($organization)->create();
+
+    expect($member->can('remove', [OrganizationMember::class, $otherMember]))->toBeFalse();
+});
+
+test('owner cannot remove the owner', function () {
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+    $otherOwner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+
+    expect($owner->can('remove', [OrganizationMember::class, $otherOwner]))->toBeFalse();
+});
+
+test('owner cannot remove themselves', function () {
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+
+    expect($owner->can('remove', [OrganizationMember::class, $owner]))->toBeFalse();
+});
+
+test('owner cannot remove an invited member', function () {
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+    $invitee = User::factory()->create(['password' => null]);
+    $invitee->organizations()->attach($organization, [
+        'role' => OrganizationRole::Member->value,
+        'status' => OrganizationMemberStatus::Invited->value,
+    ]);
+
+    expect($owner->can('remove', [OrganizationMember::class, $invitee]))->toBeFalse();
+});
+
+test('owner cannot remove a member in another organization', function () {
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+    $memberElsewhere = User::factory()->withOrganization()->create();
+
+    expect($owner->can('remove', [OrganizationMember::class, $memberElsewhere]))->toBeFalse();
+});

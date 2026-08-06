@@ -40,4 +40,24 @@ final class OrganizationMemberPolicy
             && $pivot->role !== OrganizationRole::Owner
             && $pivot->status === OrganizationMemberStatus::Active;
     }
+
+    public function remove(User $user, User $member): bool
+    {
+        if ($member->is($user)) {
+            return false;
+        }
+
+        if (! ($user->organizationRole()?->isPrivileged() ?? false)) {
+            return false;
+        }
+
+        $pivot = $member->organizations()
+            ->wherePivot('organization_id', $user->current_organization_id)
+            ->first()
+            ?->pivot;
+
+        return $pivot !== null
+            && $pivot->role !== OrganizationRole::Owner
+            && $pivot->status === OrganizationMemberStatus::Active;
+    }
 }
