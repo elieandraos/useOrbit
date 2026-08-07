@@ -13,6 +13,7 @@ import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { useNotifications } from '@/composables/useNotifications';
 import { dashboard, logout } from '@/routes';
 import { index as notificationsIndex } from '@/routes/notifications';
+import { index as organizationMembersIndex } from '@/routes/organization-members';
 import { edit } from '@/routes/profile';
 
 const SCROLL_LOAD_THRESHOLD_PX = 48;
@@ -161,6 +162,9 @@ const mobileNavOpen = defineModel<boolean>('mobileNavOpen', {
                 </div>
                 <Separator class="my-1" />
                 <DropMenuItem :href="edit()">Settings</DropMenuItem>
+                <DropMenuItem :href="organizationMembersIndex()"
+                    >Members</DropMenuItem
+                >
                 <Separator class="my-1" />
                 <DropMenuItem
                     :href="logout()"
