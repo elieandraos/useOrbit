@@ -12,6 +12,7 @@ import { Avatar } from '@/components/ui/avatar';
 import Badge from '@/components/ui/badge/Badge.vue';
 import { DropMenu, DropMenuItem } from '@/components/ui/drop-menu';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/composables/useAuth';
 import { edit as agentsEdit, show as agentsShow } from '@/routes/agents';
 import type { AgentResource } from './agent';
 
@@ -23,6 +24,8 @@ const emit = defineEmits<{
     archive: [agent: AgentResource];
     unarchive: [agent: AgentResource];
 }>();
+
+const { isPrivileged } = useAuth();
 
 function goToAgent(agent: AgentResource) {
     router.visit(agentsShow(agent.slug).url);
@@ -66,9 +69,9 @@ function goToAgent(agent: AgentResource) {
                         <template #leading><Pencil class="size-4" /></template>
                         Edit
                     </DropMenuItem>
-                    <Separator class="my-1" />
+                    <Separator v-if="isPrivileged" class="my-1" />
                     <DropMenuItem
-                        v-if="agent.status === 'archived'"
+                        v-if="agent.status === 'archived' && isPrivileged"
                         @click="emit('unarchive', agent)"
                     >
                         <template #leading
@@ -76,7 +79,11 @@ function goToAgent(agent: AgentResource) {
                         /></template>
                         Unarchive
                     </DropMenuItem>
-                    <DropMenuItem v-else danger @click="emit('archive', agent)">
+                    <DropMenuItem
+                        v-else-if="agent.status !== 'archived' && isPrivileged"
+                        danger
+                        @click="emit('archive', agent)"
+                    >
                         <template #leading><Archive class="size-4" /></template>
                         Archive
                     </DropMenuItem>

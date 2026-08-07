@@ -32,11 +32,9 @@ const memberToRemove = ref<OrganizationMemberResource | null>(null);
 const memberToRevoke = ref<OrganizationMemberResource | null>(null);
 
 function canManageMember(member: OrganizationMemberResource): boolean {
-    return (
-        !member.is_you &&
-        member.role !== 'owner' &&
-        member.status !== 'suspended'
-    );
+    return member.status === 'invited'
+        ? member.can_revoke
+        : member.can_change_role || member.can_remove;
 }
 </script>
 
@@ -126,14 +124,24 @@ function canManageMember(member: OrganizationMemberResource): boolean {
                         Revoke Invitation
                     </DropMenuItem>
                     <template v-else>
-                        <DropMenuItem @click="memberToChangeRole = member">
+                        <DropMenuItem
+                            v-if="member.can_change_role"
+                            @click="memberToChangeRole = member"
+                        >
                             <template #leading
                                 ><ArrowLeftRight class="size-4"
                             /></template>
                             Change Role
                         </DropMenuItem>
-                        <Separator class="my-1" />
-                        <DropMenuItem danger @click="memberToRemove = member">
+                        <Separator
+                            v-if="member.can_change_role && member.can_remove"
+                            class="my-1"
+                        />
+                        <DropMenuItem
+                            v-if="member.can_remove"
+                            danger
+                            @click="memberToRemove = member"
+                        >
                             <template #leading
                                 ><Trash2 class="size-4"
                             /></template>
@@ -270,6 +278,7 @@ function canManageMember(member: OrganizationMemberResource): boolean {
                             </DropMenuItem>
                             <template v-else>
                                 <DropMenuItem
+                                    v-if="member.can_change_role"
                                     @click="memberToChangeRole = member"
                                 >
                                     <template #leading
@@ -277,8 +286,15 @@ function canManageMember(member: OrganizationMemberResource): boolean {
                                     /></template>
                                     Change Role
                                 </DropMenuItem>
-                                <Separator class="my-1" />
+                                <Separator
+                                    v-if="
+                                        member.can_change_role &&
+                                        member.can_remove
+                                    "
+                                    class="my-1"
+                                />
                                 <DropMenuItem
+                                    v-if="member.can_remove"
                                     danger
                                     @click="memberToRemove = member"
                                 >

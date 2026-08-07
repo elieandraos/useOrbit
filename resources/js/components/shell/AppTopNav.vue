@@ -9,6 +9,7 @@ import UserInfo from '@/components/shell/UserInfo.vue';
 import { Avatar } from '@/components/ui/avatar';
 import { DropMenu, DropMenuItem } from '@/components/ui/drop-menu';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/composables/useAuth';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { useNotifications } from '@/composables/useNotifications';
 import { dashboard, logout } from '@/routes';
@@ -22,6 +23,7 @@ const page = usePage();
 const user = computed(() => page.props.auth.user);
 
 const { isCurrentOrParentUrl } = useCurrentUrl();
+const { isPrivileged } = useAuth();
 
 const { items, unreadCount, fetchItems, loadMore, markAsRead } =
     useNotifications();
@@ -162,7 +164,9 @@ const mobileNavOpen = defineModel<boolean>('mobileNavOpen', {
                 </div>
                 <Separator class="my-1" />
                 <DropMenuItem :href="edit()">Settings</DropMenuItem>
-                <DropMenuItem :href="organizationMembersIndex()"
+                <DropMenuItem
+                    v-if="isPrivileged"
+                    :href="organizationMembersIndex()"
                     >Members</DropMenuItem
                 >
                 <Separator class="my-1" />

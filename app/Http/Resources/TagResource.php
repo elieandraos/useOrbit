@@ -17,6 +17,7 @@ final class TagResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'usage_count' => $this->whenCounted('documents'),
+            'can_update' => $request->user()?->can('update', $this->resource) ?? false,
             'can_delete' => $request->user()?->can('delete', $this->resource) ?? false,
         ];
     }

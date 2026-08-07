@@ -7,6 +7,9 @@ export interface OrganizationMemberResource {
     joined_at: string | null;
     last_login_at: string | null;
     is_you: boolean;
+    can_change_role: boolean;
+    can_remove: boolean;
+    can_revoke: boolean;
 }
 
 export interface InvitableRoleOption {

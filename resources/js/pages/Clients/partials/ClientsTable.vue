@@ -16,6 +16,7 @@ import Badge from '@/components/ui/badge/Badge.vue';
 import { DropMenu, DropMenuItem } from '@/components/ui/drop-menu';
 import { Pagination } from '@/components/ui/pagination';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/composables/useAuth';
 import {
     edit as clientsEdit,
     index as clientsIndex,
@@ -38,6 +39,8 @@ const props = defineProps<{
     sort: Sort;
     sortLabel: string;
 }>();
+
+const { isPrivileged } = useAuth();
 
 const clientToArchive = ref<ClientResource | null>(null);
 const clientToDelete = ref<ClientResource | null>(null);
@@ -263,11 +266,15 @@ function sortBy(column: string) {
                                             /></template>
                                             Edit
                                         </DropMenuItem>
-                                        <Separator class="my-1" />
+                                        <Separator
+                                            v-if="isPrivileged"
+                                            class="my-1"
+                                        />
                                         <template
                                             v-if="client.status === 'archived'"
                                         >
                                             <DropMenuItem
+                                                v-if="isPrivileged"
                                                 @click="unarchiveClient(client)"
                                             >
                                                 <template #leading
@@ -277,6 +284,7 @@ function sortBy(column: string) {
                                                 Unarchive
                                             </DropMenuItem>
                                             <DropMenuItem
+                                                v-if="isPrivileged"
                                                 danger
                                                 @click="clientToDelete = client"
                                             >
@@ -287,7 +295,7 @@ function sortBy(column: string) {
                                             </DropMenuItem>
                                         </template>
                                         <DropMenuItem
-                                            v-else
+                                            v-else-if="isPrivileged"
                                             danger
                                             @click="clientToArchive = client"
                                         >

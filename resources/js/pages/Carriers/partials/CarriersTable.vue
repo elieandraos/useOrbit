@@ -14,6 +14,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { DropMenu, DropMenuItem } from '@/components/ui/drop-menu';
 import { Pagination } from '@/components/ui/pagination';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/composables/useAuth';
 import {
     edit as carriersEdit,
     index as carriersIndex,
@@ -34,6 +35,8 @@ const props = defineProps<{
     carriers: Paginated<CarrierResource>;
     sort: Sort;
 }>();
+
+const { isPrivileged } = useAuth();
 
 const carrierToArchive = ref<CarrierResource | null>(null);
 
@@ -213,9 +216,15 @@ function sortBy(column: string) {
                                         /></template>
                                         Edit
                                     </DropMenuItem>
-                                    <Separator class="my-1" />
+                                    <Separator
+                                        v-if="isPrivileged"
+                                        class="my-1"
+                                    />
                                     <DropMenuItem
-                                        v-if="carrier.status === 'archived'"
+                                        v-if="
+                                            carrier.status === 'archived' &&
+                                            isPrivileged
+                                        "
                                         @click="unarchiveCarrier(carrier)"
                                     >
                                         <template #leading
@@ -224,7 +233,10 @@ function sortBy(column: string) {
                                         Unarchive
                                     </DropMenuItem>
                                     <DropMenuItem
-                                        v-else
+                                        v-else-if="
+                                            carrier.status !== 'archived' &&
+                                            isPrivileged
+                                        "
                                         danger
                                         @click="carrierToArchive = carrier"
                                     >

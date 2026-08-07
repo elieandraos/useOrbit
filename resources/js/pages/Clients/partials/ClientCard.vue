@@ -16,6 +16,7 @@ import { Avatar } from '@/components/ui/avatar';
 import Badge from '@/components/ui/badge/Badge.vue';
 import { DropMenu, DropMenuItem } from '@/components/ui/drop-menu';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/composables/useAuth';
 import { edit as clientsEdit, show as clientsShow } from '@/routes/clients';
 import type { ClientResource } from './client';
 
@@ -28,6 +29,8 @@ const emit = defineEmits<{
     unarchive: [client: ClientResource];
     delete: [client: ClientResource];
 }>();
+
+const { isPrivileged } = useAuth();
 
 function goToClient(client: ClientResource) {
     router.visit(clientsShow(client.slug).url);
@@ -72,15 +75,22 @@ function goToClient(client: ClientResource) {
                         <template #leading><Pencil class="size-4" /></template>
                         Edit
                     </DropMenuItem>
-                    <Separator class="my-1" />
+                    <Separator v-if="isPrivileged" class="my-1" />
                     <template v-if="client.status === 'archived'">
-                        <DropMenuItem @click="emit('unarchive', client)">
+                        <DropMenuItem
+                            v-if="isPrivileged"
+                            @click="emit('unarchive', client)"
+                        >
                             <template #leading
                                 ><ArchiveRestore class="size-4"
                             /></template>
                             Unarchive
                         </DropMenuItem>
-                        <DropMenuItem danger @click="emit('delete', client)">
+                        <DropMenuItem
+                            v-if="isPrivileged"
+                            danger
+                            @click="emit('delete', client)"
+                        >
                             <template #leading
                                 ><Trash2 class="size-4"
                             /></template>
@@ -88,7 +98,7 @@ function goToClient(client: ClientResource) {
                         </DropMenuItem>
                     </template>
                     <DropMenuItem
-                        v-else
+                        v-else-if="isPrivileged"
                         danger
                         @click="emit('archive', client)"
                     >
