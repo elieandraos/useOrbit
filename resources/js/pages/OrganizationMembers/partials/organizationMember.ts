@@ -7,3 +7,8 @@ export interface OrganizationMemberResource {
     joined_at: string | null;
     is_you: boolean;
 }
+
+export interface InvitableRoleOption {
+    label: string;
+    value: string;
+}

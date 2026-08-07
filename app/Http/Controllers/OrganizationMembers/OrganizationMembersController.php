@@ -6,6 +6,7 @@ namespace App\Http\Controllers\OrganizationMembers;
 
 use App\Actions\OrganizationMembers\InviteOrganizationMemberAction;
 use App\Actions\OrganizationMembers\RemoveOrganizationMemberAction;
+use App\Enums\OrganizationRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\OrganizationMembers\InviteOrganizationMemberRequest;
 use App\Http\Requests\OrganizationMembers\RemoveOrganizationMemberRequest;
@@ -33,6 +34,7 @@ final class OrganizationMembersController extends Controller
 
         return inertia('OrganizationMembers/Index', [
             'members' => OrganizationMemberResource::collection($members),
+            'roleOptions' => OrganizationRole::invitableOptions(),
         ]);
     }
 

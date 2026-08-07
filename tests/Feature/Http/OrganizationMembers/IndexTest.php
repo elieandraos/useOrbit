@@ -61,3 +61,14 @@ test('roster does not include members from another organization', function () {
         ->get(route('organization-members.index'))
         ->assertInertia(fn ($page) => $page->has('members', 1));
 });
+
+test('exposes the invitable role options for the invite member form', function () {
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+
+    $this->actingAs($owner)
+        ->get(route('organization-members.index'))
+        ->assertInertia(fn ($page) => $page
+            ->where('roleOptions', OrganizationRole::invitableOptions())
+        );
+});

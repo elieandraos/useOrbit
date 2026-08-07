@@ -21,6 +21,7 @@ const navItems = [
     { label: 'Label', href: '/design-foundation/label' },
     { label: 'Pagination', href: '/design-foundation/pagination' },
     { label: 'PhotoUpload', href: '/design-foundation/photo-upload' },
+    { label: 'RadioCard', href: '/design-foundation/radio-card' },
     { label: 'RadioChips', href: '/design-foundation/radio-chips' },
     { label: 'RadioPills', href: '/design-foundation/radio-pills' },
     { label: 'RangeSlider', href: '/design-foundation/range-slider' },
