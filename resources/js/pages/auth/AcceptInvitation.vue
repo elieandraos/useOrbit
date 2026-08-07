@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
+import { store } from '@/actions/App/Http/Controllers/OrganizationInvitations/AcceptOrganizationInvitationController';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
+import { Avatar } from '@/components/ui/avatar';
+import Badge from '@/components/ui/badge/Badge.vue';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
-import { store } from '@/actions/App/Http/Controllers/OrganizationInvitations/AcceptOrganizationInvitationController';
 
 defineProps<{
     token: string;
@@ -35,13 +38,37 @@ defineOptions({
         class="flex flex-col gap-6"
     >
         <div class="grid gap-6">
-            <div class="rounded-lg border border-border-subtle p-4 text-sm">
-                <p class="font-medium text-primary">{{ organization }}</p>
-                <p class="text-secondary">
-                    {{ name }} ({{ email }}) &middot; invited as {{ role }}
-                    <template v-if="invitedBy">by {{ invitedBy }}</template>
+            <div class="flex flex-col items-center gap-1 text-center">
+                <p class="text-sm text-secondary">
+                    You've been invited to join
+                </p>
+                <p class="text-2xl font-semibold tracking-tight text-primary">
+                    {{ organization }}
                 </p>
             </div>
+
+            <Separator />
+
+            <div class="flex flex-col items-center gap-2">
+                <div
+                    class="flex flex-wrap items-center justify-center gap-2 text-sm text-secondary"
+                >
+                    <template v-if="invitedBy">
+                        <Avatar :name="invitedBy" :size="26" />
+                        <span class="font-semibold text-primary">{{
+                            invitedBy
+                        }}</span>
+                        <span>invited you as</span>
+                    </template>
+                    <span v-else>You've been invited as</span>
+                    <Badge tone="neutral">{{ role }}</Badge>
+                </div>
+                <p class="text-xs text-tertiary">
+                    This invitation is for {{ name }} ({{ email }})
+                </p>
+            </div>
+
+            <Separator />
 
             <div class="grid gap-2">
                 <Label for="password">Password</Label>
@@ -82,5 +109,9 @@ defineOptions({
                 Join organization
             </Button>
         </div>
+
+        <p class="text-center text-xs text-tertiary">
+            By accepting, you agree to join this organization's workspace.
+        </p>
     </Form>
 </template>
