@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\OrganizationMemberStatus;
 use App\Enums\OrganizationRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -35,7 +38,7 @@ use Illuminate\Support\Carbon;
 final class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, Prunable;
 
     /**
      * Get the attributes that should be cast.
@@ -80,5 +83,15 @@ final class User extends Authenticatable
             ?->pivot;
 
         return $pivot?->role;
+    }
+
+    public function prunable(): Builder
+    {
+        return self::query()
+            ->whereNull('password')
+            ->whereHas('organizations', function (Builder $query): void {
+                $query->where('organization_user.status', OrganizationMemberStatus::Invited->value)
+                    ->where('organization_user.expires_at', '<', now());
+            });
     }
 }
