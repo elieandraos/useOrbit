@@ -12,16 +12,16 @@ use App\Http\Requests\OrganizationMembers\RemoveOrganizationMemberRequest;
 use App\Http\Resources\OrganizationMemberResource;
 use App\Models\OrganizationMember;
 use App\Models\User;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
 use Inertia\Inertia;
+use Inertia\Response;
 
 final class OrganizationMembersController extends Controller
 {
     #[Authorize('viewAny', OrganizationMember::class)]
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): Response
     {
         /** @var User $user */
         $user = $request->user();
@@ -31,8 +31,8 @@ final class OrganizationMembersController extends Controller
             ->orderBy('users.name')
             ->get();
 
-        return response()->json([
-            'data' => OrganizationMemberResource::collection($members)->resolve($request),
+        return inertia('OrganizationMembers/Index', [
+            'members' => OrganizationMemberResource::collection($members),
         ]);
     }
 
