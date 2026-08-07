@@ -27,6 +27,7 @@ use Illuminate\Support\Carbon;
  * @property string $password
  * @property Carbon|null $email_verified_at
  * @property int|null $current_organization_id
+ * @property Carbon|null $last_login_at
  * @property int|null $country_id
  * @property OrganizationMember $pivot
  * @property-read Country|null $country
@@ -49,6 +50,7 @@ final class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'last_login_at' => 'datetime',
             'password' => 'hashed',
         ];
     }

@@ -22,6 +22,7 @@ final class OrganizationMemberResource extends JsonResource
             'role' => $pivot->role,
             'status' => $pivot->status,
             'joined_at' => $pivot->joined_at?->format('Y-m-d'),
+            'last_login_at' => $this->last_login_at?->diffForHumans(),
             'is_you' => $this->id === $request->user()?->id,
         ];
     }

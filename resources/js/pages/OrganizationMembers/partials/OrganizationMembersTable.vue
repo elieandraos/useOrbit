@@ -92,7 +92,7 @@ function canManageMember(member: OrganizationMemberResource): boolean {
                             </div>
                         </div>
                     </div>
-                    <div class="mt-2.5 flex gap-1.5 pl-[46px]">
+                    <div class="mt-2.5 flex items-center gap-1.5 pl-[46px]">
                         <Badge tone="neutral" class="capitalize">{{
                             member.role
                         }}</Badge>
@@ -102,6 +102,9 @@ function canManageMember(member: OrganizationMemberResource): boolean {
                             class="capitalize"
                             >{{ member.status }}</Badge
                         >
+                        <span class="text-xs text-tertiary">
+                            {{ member.last_login_at ?? 'Never logged in' }}
+                        </span>
                     </div>
                 </div>
 
@@ -145,9 +148,10 @@ function canManageMember(member: OrganizationMemberResource): boolean {
         <!-- Desktop: table -->
         <table class="hidden w-full table-fixed border-collapse md:table">
             <colgroup>
-                <col style="width: 48%" />
-                <col style="width: 20%" />
-                <col style="width: 20%" />
+                <col style="width: 38%" />
+                <col style="width: 15%" />
+                <col style="width: 15%" />
+                <col style="width: 22%" />
                 <col class="w-[56px]" />
             </colgroup>
             <thead>
@@ -166,6 +170,11 @@ function canManageMember(member: OrganizationMemberResource): boolean {
                         class="px-4 py-2.5 text-left font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase"
                     >
                         Status
+                    </th>
+                    <th
+                        class="px-4 py-2.5 text-left font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase"
+                    >
+                        Last Login
                     </th>
                     <th class="rounded-tr-lg px-4 py-2.5"></th>
                 </tr>
@@ -235,6 +244,9 @@ function canManageMember(member: OrganizationMemberResource): boolean {
                             class="capitalize"
                             >{{ member.status }}</Badge
                         >
+                    </td>
+                    <td class="px-4 py-3 text-xs text-tertiary">
+                        {{ member.last_login_at ?? 'Never logged in' }}
                     </td>
                     <td class="px-4 py-3 text-right">
                         <DropMenu v-if="canManageMember(member)">

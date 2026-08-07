@@ -5,6 +5,7 @@ export interface OrganizationMemberResource {
     role: 'owner' | 'admin' | 'member';
     status: 'active' | 'invited' | 'suspended';
     joined_at: string | null;
+    last_login_at: string | null;
     is_you: boolean;
 }
 

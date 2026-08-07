@@ -13,7 +13,7 @@ test('guests are redirected to the login page', function () {
         ->assertRedirect(route('login'));
 });
 
-test('renders the roster for the current organization, exposing id, name, email, role, status, joined_at and is_you', function () {
+test('renders the roster for the current organization, exposing id, name, email, role, status, joined_at, last_login_at and is_you', function () {
     $organization = Organization::factory()->create();
     $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create(['name' => 'Amanda Owner']);
     $member = User::factory()->forOrganization($organization)->create(['name' => 'Zack Member']);
@@ -60,6 +60,17 @@ test('roster does not include members from another organization', function () {
     $this->actingAs($owner)
         ->get(route('organization-members.index'))
         ->assertInertia(fn ($page) => $page->has('members', 1));
+});
+
+test('exposes last_login_at as null for a member who has never logged in', function () {
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create(['last_login_at' => null]);
+
+    $this->actingAs($owner)
+        ->get(route('organization-members.index'))
+        ->assertInertia(fn ($page) => $page
+            ->where('members.0.last_login_at', null)
+        );
 });
 
 test('exposes the invitable role options for the invite member form', function () {
