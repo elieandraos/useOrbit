@@ -5,6 +5,7 @@ import { initializeTheme } from '@/composables/useAppearance';
 import AppLayout from '@/layouts/AppLayout.vue';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import { initializeFlashToast } from '@/lib/flashToast';
+import { initializeHttpExceptionToast } from '@/lib/httpExceptionToast';
 
 configureEcho({
     broadcaster: 'reverb',
@@ -44,6 +45,9 @@ initializeTheme();
 
 // This will listen for flash toast data from the server...
 initializeFlashToast();
+
+// This will show a toast for 403 responses instead of navigating to the error page...
+initializeHttpExceptionToast();
 
 // This will catch unhandled promise rejections that Vue's errorHandler won't see...
 if (typeof window !== 'undefined') {
