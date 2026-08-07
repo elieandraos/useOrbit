@@ -46,6 +46,7 @@ final class HandleInertiaRequests extends Middleware
                     'name' => $request->user()->name,
                     'email' => $request->user()->email,
                     'avatar' => $request->user()->avatar,
+                    'is_privileged' => $request->user()->organizationRole()?->isPrivileged() ?? false,
                 ] : null,
             ],
             'notifications' => [

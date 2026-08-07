@@ -5,11 +5,15 @@ declare(strict_types=1);
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\OrganizationMemberStatus;
 use App\Enums\OrganizationRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -23,16 +27,19 @@ use Illuminate\Support\Carbon;
  * @property string $password
  * @property Carbon|null $email_verified_at
  * @property int|null $current_organization_id
+ * @property Carbon|null $last_login_at
  * @property int|null $country_id
+ * @property OrganizationMember $pivot
  * @property-read Country|null $country
  * @property-read Organization|null $currentOrganization
+ * @property-read Collection<int, Organization> $organizations
  */
 #[Fillable(['name', 'email', 'password', 'current_organization_id', 'country_id', 'email_verified_at'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 final class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, Prunable;
 
     /**
      * Get the attributes that should be cast.
@@ -43,6 +50,7 @@ final class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'last_login_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
@@ -51,7 +59,7 @@ final class User extends Authenticatable
     {
         return $this->belongsToMany(Organization::class)
             ->using(OrganizationMember::class)
-            ->withPivot('role', 'status')
+            ->withPivot('role', 'status', 'invited_by', 'joined_at', 'token', 'expires_at')
             ->withTimestamps();
     }
 
@@ -77,5 +85,15 @@ final class User extends Authenticatable
             ?->pivot;
 
         return $pivot?->role;
+    }
+
+    public function prunable(): Builder
+    {
+        return self::query()
+            ->whereNull('password')
+            ->whereHas('organizations', function (Builder $query): void {
+                $query->where('organization_user.status', OrganizationMemberStatus::Invited->value)
+                    ->where('organization_user.expires_at', '<', now());
+            });
     }
 }

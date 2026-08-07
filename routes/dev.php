@@ -23,6 +23,7 @@ if (app()->environment('local')) {
     Route::get('/design-foundation/card', fn () => inertia('design-foundation/card/Index'))->name('design-foundation.card');
     Route::get('/design-foundation/form-field', fn () => inertia('design-foundation/form-field/Index'))->name('design-foundation.form-field');
     Route::get('/design-foundation/photo-upload', fn () => inertia('design-foundation/photo-upload/Index'))->name('design-foundation.photo-upload');
+    Route::get('/design-foundation/radio-card', fn () => inertia('design-foundation/radio-card/Index'))->name('design-foundation.radio-card');
     Route::get('/design-foundation/radio-chips', fn () => inertia('design-foundation/radio-chips/Index'))->name('design-foundation.radio-chips');
     Route::get('/design-foundation/radio-pills', fn () => inertia('design-foundation/radio-pills/Index'))->name('design-foundation.radio-pills');
     Route::get('/design-foundation/form-section', fn () => inertia('design-foundation/form-section/Index'))->name('design-foundation.form-section');

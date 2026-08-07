@@ -222,6 +222,7 @@ function deleteTag(tag: TagResource): void {
                             <Badge>{{ tag.usage_count ?? 0 }}</Badge>
                         </span>
                         <button
+                            v-if="tag.can_update"
                             type="button"
                             title="Rename"
                             class="cursor-pointer p-1 text-tertiary hover:text-primary"
@@ -230,6 +231,7 @@ function deleteTag(tag: TagResource): void {
                             <Pencil class="size-3.5" />
                         </button>
                         <button
+                            v-if="tag.can_delete"
                             type="button"
                             title="Delete"
                             class="cursor-pointer p-1 text-tertiary hover:text-danger"

@@ -13,6 +13,7 @@ import { Avatar } from '@/components/ui/avatar';
 import Badge from '@/components/ui/badge/Badge.vue';
 import { DropMenu, DropMenuItem } from '@/components/ui/drop-menu';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/composables/useAuth';
 import { edit as carriersEdit, show as carriersShow } from '@/routes/carriers';
 import type { CarrierResource } from './carrier';
 
@@ -24,6 +25,8 @@ const emit = defineEmits<{
     archive: [carrier: CarrierResource];
     unarchive: [carrier: CarrierResource];
 }>();
+
+const { isPrivileged } = useAuth();
 
 function goToCarrier(carrier: CarrierResource) {
     router.visit(carriersShow(carrier.slug).url);
@@ -75,9 +78,9 @@ const branchCities = computed(() =>
                         <template #leading><Pencil class="size-4" /></template>
                         Edit
                     </DropMenuItem>
-                    <Separator class="my-1" />
+                    <Separator v-if="isPrivileged" class="my-1" />
                     <DropMenuItem
-                        v-if="carrier.status === 'archived'"
+                        v-if="carrier.status === 'archived' && isPrivileged"
                         @click="emit('unarchive', carrier)"
                     >
                         <template #leading
@@ -86,7 +89,9 @@ const branchCities = computed(() =>
                         Unarchive
                     </DropMenuItem>
                     <DropMenuItem
-                        v-else
+                        v-else-if="
+                            carrier.status !== 'archived' && isPrivileged
+                        "
                         danger
                         @click="emit('archive', carrier)"
                     >
@@ -104,10 +109,7 @@ const branchCities = computed(() =>
                 <Badge tone="neutral">0 clients</Badge>
                 <Badge tone="accent">0 policies</Badge>
             </div>
-            <div
-                v-if="branchCities"
-                class="flex min-w-0 items-center gap-1.5"
-            >
+            <div v-if="branchCities" class="flex min-w-0 items-center gap-1.5">
                 <Building2 class="size-3.5 shrink-0 text-tertiary" />
                 <span class="truncate text-[12px] text-secondary">
                     {{ branchCities }}

@@ -21,6 +21,20 @@ test('owner can viewAny, view, create, update, delete, archive, and unarchive ca
         ->and($owner->can('unarchive', $carrier))->toBeTrue();
 });
 
+test('admin can viewAny, view, create, update, delete, archive, and unarchive carriers in their organization', function () {
+    $organization = Organization::factory()->create();
+    $admin = User::factory()->forOrganization($organization, OrganizationRole::Admin)->create();
+    $carrier = Carrier::factory()->forOrganization($admin)->create();
+
+    expect($admin->can('viewAny', Carrier::class))->toBeTrue()
+        ->and($admin->can('view', $carrier))->toBeTrue()
+        ->and($admin->can('create', Carrier::class))->toBeTrue()
+        ->and($admin->can('update', $carrier))->toBeTrue()
+        ->and($admin->can('delete', $carrier))->toBeTrue()
+        ->and($admin->can('archive', $carrier))->toBeTrue()
+        ->and($admin->can('unarchive', $carrier))->toBeTrue();
+});
+
 test('member can viewAny, view, create, and update carriers but cannot delete, archive, or unarchive', function () {
     $organization = Organization::factory()->create();
     $member = User::factory()->forOrganization($organization)->create();

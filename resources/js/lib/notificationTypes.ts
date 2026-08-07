@@ -1,6 +1,7 @@
-import { Upload } from '@lucide/vue';
+import { Upload, UserPlus } from '@lucide/vue';
 import type { Component } from 'vue';
 import { index as documentsIndex } from '@/routes/clients/documents';
+import { index as organizationMembersIndex } from '@/routes/organization-members';
 import type { DocumentsUploadBatchProcessedData } from '@/types/notification';
 
 export type NotificationTypeMeta = {
@@ -10,6 +11,7 @@ export type NotificationTypeMeta = {
 };
 
 export const DOCUMENTS_UPLOADED = 'documents.uploaded';
+export const MEMBER_JOINED = 'member.joined';
 
 /**
  * Keyed off `data.action`, the semantic key set server-side in each
@@ -25,5 +27,10 @@ export const notificationTypes: Record<string, NotificationTypeMeta> = {
                 client: (data as DocumentsUploadBatchProcessedData).subject
                     .slug,
             }).url,
+    },
+    [MEMBER_JOINED]: {
+        icon: UserPlus,
+        label: 'Member joined',
+        resolveUrl: () => organizationMembersIndex().url,
     },
 };

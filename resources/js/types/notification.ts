@@ -43,3 +43,14 @@ export type DocumentsUploadMeta = {
 
 export type DocumentsUploadBatchProcessedData =
     NotificationEnvelope<DocumentsUploadMeta>;
+
+export type MemberJoinedMeta = {
+    member: {
+        id: number;
+        name: string;
+        email: string;
+        role: string | null;
+    };
+};
+
+export type MemberJoinedData = NotificationEnvelope<MemberJoinedMeta>;

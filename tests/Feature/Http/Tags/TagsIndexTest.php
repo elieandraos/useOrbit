@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Enums\OrganizationRole;
 use App\Models\Client;
 use App\Models\Document;
+use App\Models\Organization;
 use App\Models\Tag;
 use App\Models\User;
 
@@ -52,6 +54,28 @@ test('an owner_id that does not belong to the current organization is rejected',
     $this->actingAs($user)
         ->get(route('tags.index', ['owner_type' => 'clients', 'owner_id' => $otherClient->id]))
         ->assertInvalid(['owner_id']);
+});
+
+test('exposes can_update and can_delete based on the viewer role', function () {
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+    $member = User::factory()->forOrganization($organization)->create();
+    $client = Client::factory()->forOrganization($owner)->create();
+    Tag::factory()->forOrganization($owner)->createdBy($owner)->create();
+
+    $ownerResponse = $this->actingAs($owner)
+        ->get(route('tags.index', ['owner_type' => 'clients', 'owner_id' => $client->id]))
+        ->assertOk();
+
+    expect($ownerResponse->json('0.can_update'))->toBeTrue()
+        ->and($ownerResponse->json('0.can_delete'))->toBeTrue();
+
+    $memberResponse = $this->actingAs($member)
+        ->get(route('tags.index', ['owner_type' => 'clients', 'owner_id' => $client->id]))
+        ->assertOk();
+
+    expect($memberResponse->json('0.can_update'))->toBeFalse()
+        ->and($memberResponse->json('0.can_delete'))->toBeFalse();
 });
 
 test('tags from another organization are excluded', function () {

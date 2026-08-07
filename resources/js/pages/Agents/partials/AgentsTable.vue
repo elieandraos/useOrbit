@@ -15,6 +15,7 @@ import Badge from '@/components/ui/badge/Badge.vue';
 import { DropMenu, DropMenuItem } from '@/components/ui/drop-menu';
 import { Pagination } from '@/components/ui/pagination';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/composables/useAuth';
 import {
     edit as agentsEdit,
     index as agentsIndex,
@@ -35,6 +36,8 @@ const props = defineProps<{
     agents: Paginated<AgentResource>;
     sort: Sort;
 }>();
+
+const { isPrivileged } = useAuth();
 
 const agentToArchive = ref<AgentResource | null>(null);
 
@@ -234,9 +237,15 @@ function sortBy(column: string) {
                                         /></template>
                                         Edit
                                     </DropMenuItem>
-                                    <Separator class="my-1" />
+                                    <Separator
+                                        v-if="isPrivileged"
+                                        class="my-1"
+                                    />
                                     <DropMenuItem
-                                        v-if="agent.status === 'archived'"
+                                        v-if="
+                                            agent.status === 'archived' &&
+                                            isPrivileged
+                                        "
                                         @click="unarchiveAgent(agent)"
                                     >
                                         <template #leading
@@ -245,7 +254,10 @@ function sortBy(column: string) {
                                         Unarchive
                                     </DropMenuItem>
                                     <DropMenuItem
-                                        v-else
+                                        v-else-if="
+                                            agent.status !== 'archived' &&
+                                            isPrivileged
+                                        "
                                         danger
                                         @click="agentToArchive = agent"
                                     >

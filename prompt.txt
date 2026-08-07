@@ -1,5 +1,6 @@
 artifact review prompt:
 -----------------
+nexy artifcat: multi-tenancy / Roles / nvitation flow .
 Review it as if I'm the lead engineer deciding whether this is documentation I'd want in my team's repository.
 Don't just look for correctness. look for clarity, omissions, repetition,
 and whether it showcases the engineering decisions that make the feature worth talking about
@@ -15,3 +16,6 @@ what falls in unit/feature tests ? define structure once for all.
 notification ui redesign like mymusic website
 deployment production/dev. s3 storage. nightwatch. server upgrade choice.
 mentions in notes => notification
+ui uplifts: phone number input with lebanon flag +961 6digits
+address and phone related to user country for now. (just logging for onboarding later)
+maybe put user country id in inertia request, because we only need it for frontend to select default country (to the user country id) if not set.

@@ -5,7 +5,6 @@ import { onMounted, ref } from 'vue';
 import RadioChips from '@/components/ui/radio-chips/RadioChips.vue';
 import DesignFoundationLayout from '@/layouts/DesignFoundationLayout.vue';
 import reactivityCode from './snippets/reactivity.md?raw';
-import roleSelectionCode from './snippets/role-selection.md?raw';
 import sizesCode from './snippets/sizes.md?raw';
 import verticalCode from './snippets/vertical.md?raw';
 
@@ -17,7 +16,6 @@ const sections = [
     { id: 'reactivity', label: 'Reactivity' },
     { id: 'sizes', label: 'Sizes' },
     { id: 'vertical', label: 'Vertical display' },
-    { id: 'role-selection', label: 'With description' },
 ];
 
 const views = ref<Record<string, ViewMode>>(
@@ -28,7 +26,6 @@ const codeSnippets: Record<string, string> = {
     reactivity: reactivityCode,
     sizes: sizesCode,
     vertical: verticalCode,
-    'role-selection': roleSelectionCode,
 };
 
 const highlighted = ref<Record<string, string>>({});
@@ -52,21 +49,8 @@ const reactivitySelected = ref('Female');
 const sizeSmSelected = ref('Female');
 const sizeMdSelected = ref('Female');
 const verticalSelected = ref('Female');
-const roleSelected = ref('member');
 
 const genderOptions = ['Female', 'Male', 'Non-binary', 'Prefer not to say'];
-const roleOptions = [
-    {
-        label: 'Owner',
-        value: 'owner',
-        desc: 'Full access including member management and billing',
-    },
-    {
-        label: 'Member',
-        value: 'member',
-        desc: 'Can view and manage clients but cannot delete or manage members',
-    },
-];
 </script>
 
 <template>
@@ -156,14 +140,6 @@ const roleOptions = [
                     <RadioChips
                         v-model="verticalSelected"
                         :options="genderOptions"
-                        direction="vertical"
-                    />
-                </div>
-
-                <div v-else-if="section.id === 'role-selection'">
-                    <RadioChips
-                        v-model="roleSelected"
-                        :options="roleOptions"
                         direction="vertical"
                     />
                 </div>
