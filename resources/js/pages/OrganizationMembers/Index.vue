@@ -39,7 +39,11 @@ const inviteModalOpen = ref(false);
             </template>
         </PageHeader>
 
-        <OrganizationMembersTable class="mt-5" :members="members" />
+        <OrganizationMembersTable
+            class="mt-5"
+            :members="members"
+            :role-options="roleOptions"
+        />
 
         <InviteMemberModal
             v-model:open="inviteModalOpen"

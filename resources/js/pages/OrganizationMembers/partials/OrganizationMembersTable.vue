@@ -1,11 +1,21 @@
 <script setup lang="ts">
-import { Mail } from '@lucide/vue';
+import { ArrowLeftRight, Ban, Mail, MoreHorizontal, Trash2 } from '@lucide/vue';
+import { ref } from 'vue';
 import { Avatar } from '@/components/ui/avatar';
 import Badge from '@/components/ui/badge/Badge.vue';
-import type { OrganizationMemberResource } from './organizationMember';
+import { DropMenu, DropMenuItem } from '@/components/ui/drop-menu';
+import { Separator } from '@/components/ui/separator';
+import ChangeRoleModal from './ChangeRoleModal.vue';
+import type {
+    InvitableRoleOption,
+    OrganizationMemberResource,
+} from './organizationMember';
+import RemoveMemberModal from './RemoveMemberModal.vue';
+import RevokeInvitationModal from './RevokeInvitationModal.vue';
 
 defineProps<{
     members: OrganizationMemberResource[];
+    roleOptions: InvitableRoleOption[];
 }>();
 
 const statusTone: Record<
@@ -16,6 +26,18 @@ const statusTone: Record<
     invited: 'warning',
     suspended: 'neutral',
 };
+
+const memberToChangeRole = ref<OrganizationMemberResource | null>(null);
+const memberToRemove = ref<OrganizationMemberResource | null>(null);
+const memberToRevoke = ref<OrganizationMemberResource | null>(null);
+
+function canManageMember(member: OrganizationMemberResource): boolean {
+    return (
+        !member.is_you &&
+        member.role !== 'owner' &&
+        member.status !== 'suspended'
+    );
+}
 </script>
 
 <template>
@@ -82,15 +104,51 @@ const statusTone: Record<
                         >
                     </div>
                 </div>
+
+                <DropMenu v-if="canManageMember(member)">
+                    <template #trigger>
+                        <button
+                            class="inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-secondary transition-colors hover:bg-sunken"
+                        >
+                            <MoreHorizontal class="size-4" />
+                        </button>
+                    </template>
+
+                    <DropMenuItem
+                        v-if="member.status === 'invited'"
+                        danger
+                        @click="memberToRevoke = member"
+                    >
+                        <template #leading><Ban class="size-4" /></template>
+                        Revoke Invitation
+                    </DropMenuItem>
+                    <template v-else>
+                        <DropMenuItem @click="memberToChangeRole = member">
+                            <template #leading
+                                ><ArrowLeftRight class="size-4"
+                            /></template>
+                            Change Role
+                        </DropMenuItem>
+                        <Separator class="my-1" />
+                        <DropMenuItem danger @click="memberToRemove = member">
+                            <template #leading
+                                ><Trash2 class="size-4"
+                            /></template>
+                            Remove Member
+                        </DropMenuItem>
+                    </template>
+                </DropMenu>
+                <span v-else class="size-7 shrink-0" />
             </div>
         </div>
 
         <!-- Desktop: table -->
         <table class="hidden w-full table-fixed border-collapse md:table">
             <colgroup>
-                <col style="width: 55%" />
-                <col style="width: 22%" />
-                <col style="width: 23%" />
+                <col style="width: 48%" />
+                <col style="width: 20%" />
+                <col style="width: 20%" />
+                <col class="w-[56px]" />
             </colgroup>
             <thead>
                 <tr class="border-b border-border bg-sunken">
@@ -105,10 +163,11 @@ const statusTone: Record<
                         Role
                     </th>
                     <th
-                        class="rounded-tr-lg px-4 py-2.5 text-left font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase"
+                        class="px-4 py-2.5 text-left font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase"
                     >
                         Status
                     </th>
+                    <th class="rounded-tr-lg px-4 py-2.5"></th>
                 </tr>
             </thead>
             <tbody>
@@ -177,8 +236,58 @@ const statusTone: Record<
                             >{{ member.status }}</Badge
                         >
                     </td>
+                    <td class="px-4 py-3 text-right">
+                        <DropMenu v-if="canManageMember(member)">
+                            <template #trigger>
+                                <button
+                                    class="inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-secondary transition-colors hover:bg-sunken"
+                                >
+                                    <MoreHorizontal class="size-4" />
+                                </button>
+                            </template>
+
+                            <DropMenuItem
+                                v-if="member.status === 'invited'"
+                                danger
+                                @click="memberToRevoke = member"
+                            >
+                                <template #leading
+                                    ><Ban class="size-4"
+                                /></template>
+                                Revoke Invitation
+                            </DropMenuItem>
+                            <template v-else>
+                                <DropMenuItem
+                                    @click="memberToChangeRole = member"
+                                >
+                                    <template #leading
+                                        ><ArrowLeftRight class="size-4"
+                                    /></template>
+                                    Change Role
+                                </DropMenuItem>
+                                <Separator class="my-1" />
+                                <DropMenuItem
+                                    danger
+                                    @click="memberToRemove = member"
+                                >
+                                    <template #leading
+                                        ><Trash2 class="size-4"
+                                    /></template>
+                                    Remove Member
+                                </DropMenuItem>
+                            </template>
+                        </DropMenu>
+                        <span v-else class="text-xs text-tertiary">—</span>
+                    </td>
                 </tr>
             </tbody>
         </table>
+
+        <ChangeRoleModal
+            v-model="memberToChangeRole"
+            :role-options="roleOptions"
+        />
+        <RemoveMemberModal v-model="memberToRemove" :members="members" />
+        <RevokeInvitationModal v-model="memberToRevoke" />
     </div>
 </template>

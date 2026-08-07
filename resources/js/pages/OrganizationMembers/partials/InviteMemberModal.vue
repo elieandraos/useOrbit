@@ -10,6 +10,7 @@ import Input from '@/components/ui/input/Input.vue';
 import { RadioCard } from '@/components/ui/radio-card';
 import { store as organizationMembersStore } from '@/routes/organization-members';
 import type { InvitableRoleOption } from './organizationMember';
+import { ROLE_DESCRIPTIONS } from './organizationMember';
 
 defineProps<{
     roleOptions: InvitableRoleOption[];
@@ -18,11 +19,6 @@ defineProps<{
 const open = defineModel<boolean>('open', { default: false });
 
 const inviteFormRef = useTemplateRef<FormComponentRef>('inviteFormRef');
-
-const roleDescriptions: Record<string, string> = {
-    admin: 'Full access including member management and billing',
-    member: "Can view and manage everything, but can't take destructive actions like archiving or deleting",
-};
 
 const name = ref('');
 const email = ref('');
@@ -110,7 +106,7 @@ function close() {
                         :options="
                             roleOptions.map((option) => ({
                                 ...option,
-                                desc: roleDescriptions[option.value],
+                                desc: ROLE_DESCRIPTIONS[option.value],
                             }))
                         "
                     />
