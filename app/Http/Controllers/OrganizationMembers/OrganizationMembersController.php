@@ -11,7 +11,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\OrganizationMembers\InviteOrganizationMemberRequest;
 use App\Http\Requests\OrganizationMembers\RemoveOrganizationMemberRequest;
 use App\Http\Resources\OrganizationMemberResource;
-use App\Models\OrganizationMember;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,13 +20,13 @@ use Inertia\Response;
 
 final class OrganizationMembersController extends Controller
 {
-    #[Authorize('viewAny', OrganizationMember::class)]
+    #[Authorize('viewAny', User::class)]
     public function index(Request $request): Response
     {
         /** @var User $user */
         $user = $request->user();
 
-        $members = $user->currentOrganization
+        $members = $user->organization
             ->users()
             ->orderBy('users.name')
             ->get();
@@ -41,7 +40,7 @@ final class OrganizationMembersController extends Controller
     /**
      * @throws \Throwable
      */
-    #[Authorize('invite', OrganizationMember::class)]
+    #[Authorize('invite', User::class)]
     public function store(InviteOrganizationMemberRequest $request, InviteOrganizationMemberAction $action): RedirectResponse
     {
         /** @var User $user */
@@ -56,7 +55,7 @@ final class OrganizationMembersController extends Controller
     /**
      * @throws \Throwable
      */
-    #[Authorize('remove', [OrganizationMember::class, 'member'])]
+    #[Authorize('remove', [User::class, 'member'])]
     public function destroy(RemoveOrganizationMemberRequest $request, User $member, RemoveOrganizationMemberAction $action): RedirectResponse
     {
         /** @var User $user */

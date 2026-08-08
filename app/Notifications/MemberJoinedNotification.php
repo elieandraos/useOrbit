@@ -37,7 +37,7 @@ final class MemberJoinedNotification extends EnvelopeNotification
         ];
     }
 
-    /** @return array{member: array{id: int, name: string, email: string, role: string|null}} */
+    /** @return array{member: array{id: int, name: string, email: string, role: string}} */
     protected function meta(): array
     {
         return [
@@ -45,7 +45,7 @@ final class MemberJoinedNotification extends EnvelopeNotification
                 'id' => $this->member->id,
                 'name' => $this->member->name,
                 'email' => $this->member->email,
-                'role' => $this->member->organizationRole()?->value,
+                'role' => $this->member->role->value,
             ],
         ];
     }

@@ -29,8 +29,8 @@ final class AcceptOrganizationInvitationController extends Controller
             'organization' => $invitation->organization->name,
             'invitedBy' => $invitation->inviter?->name,
             'role' => $invitation->role->label(),
-            'name' => $invitation->user->name,
-            'email' => $invitation->user->email,
+            'name' => $invitation->name,
+            'email' => $invitation->email,
             'passwordRules' => Password::defaults()->toPasswordRulesString(),
         ]);
     }
@@ -56,7 +56,7 @@ final class AcceptOrganizationInvitationController extends Controller
             return to_route('invitations.show', $token);
         }
 
-        Auth::login($accepted->user);
+        Auth::login($accepted);
         $request->session()->regenerate();
 
         return to_route('dashboard');

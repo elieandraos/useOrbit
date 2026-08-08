@@ -10,7 +10,6 @@ use App\Models\CarrierBranch;
 use App\Models\Client;
 use App\Models\Document;
 use App\Models\Note;
-use App\Models\OrganizationMember;
 use App\Models\Tag;
 use App\Models\User;
 use App\Policies\AgentPolicy;
@@ -62,7 +61,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Client::class, ClientPolicy::class);
         Gate::policy(Document::class, DocumentPolicy::class);
         Gate::policy(Note::class, NotePolicy::class);
-        Gate::policy(OrganizationMember::class, OrganizationMemberPolicy::class);
+        Gate::policy(User::class, OrganizationMemberPolicy::class);
         Gate::policy(Tag::class, TagPolicy::class);
     }
 
