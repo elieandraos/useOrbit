@@ -19,6 +19,6 @@ final class CurrentOrganizationScope implements Scope
             return;
         }
 
-        $builder->where($model->getTable().'.organization_id', $user->current_organization_id);
+        $builder->where($model->getTable().'.organization_id', $user->organization_id);
     }
 }
