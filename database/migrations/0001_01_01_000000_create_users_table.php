@@ -15,11 +15,17 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('organization_id')->constrained()->restrictOnDelete();
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password')->nullable();
-            $table->unsignedBigInteger('current_organization_id')->nullable();
+            $table->string('role', 20);
+            $table->string('status', 20);
+            $table->foreignId('invited_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamp('joined_at')->nullable();
+            $table->string('invitation_token')->nullable()->unique();
+            $table->timestamp('invitation_expires_at')->nullable();
             $table->timestamp('last_login_at')->nullable();
             $table->foreignId('country_id')->nullable()->constrained()->nullOnDelete();
             $table->rememberToken();
