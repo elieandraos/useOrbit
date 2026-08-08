@@ -21,6 +21,7 @@ use App\Policies\DocumentPolicy;
 use App\Policies\NotePolicy;
 use App\Policies\OrganizationMemberPolicy;
 use App\Policies\TagPolicy;
+use App\Support\Tenancy\OrganizationContext;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -39,7 +40,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->scoped(OrganizationContext::class);
     }
 
     /**
