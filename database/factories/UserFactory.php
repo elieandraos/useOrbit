@@ -35,7 +35,10 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
-            'current_organization_id' => null,
+            'organization_id' => Organization::factory(),
+            'role' => OrganizationRole::Owner,
+            'status' => OrganizationMemberStatus::Active,
+            'joined_at' => now(),
             'country_id' => null,
         ];
     }
@@ -45,14 +48,12 @@ class UserFactory extends Factory
      */
     public function withOrganization(): static
     {
-        return $this->afterCreating(function (User $user) {
-            $organization = Organization::factory()->create();
-            $user->organizations()->attach($organization, [
-                'role' => OrganizationRole::Member->value,
-                'status' => OrganizationMemberStatus::Active->value,
-            ]);
-            $user->update(['current_organization_id' => $organization->id]);
-        });
+        return $this->state(fn (): array => [
+            'organization_id' => Organization::factory(),
+            'role' => OrganizationRole::Member,
+            'status' => OrganizationMemberStatus::Active,
+            'joined_at' => now(),
+        ]);
     }
 
     /**
@@ -60,13 +61,12 @@ class UserFactory extends Factory
      */
     public function forOrganization(Organization $organization, OrganizationRole $role = OrganizationRole::Member): static
     {
-        return $this->afterCreating(function (User $user) use ($organization, $role) {
-            $user->organizations()->attach($organization, [
-                'role' => $role->value,
-                'status' => OrganizationMemberStatus::Active->value,
-            ]);
-            $user->update(['current_organization_id' => $organization->id]);
-        });
+        return $this->state(fn (): array => [
+            'organization_id' => $organization->id,
+            'role' => $role,
+            'status' => OrganizationMemberStatus::Active,
+            'joined_at' => now(),
+        ]);
     }
 
     /**
