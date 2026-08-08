@@ -64,7 +64,7 @@ test('excludes documents that are not pending', function () {
 test('excludes documents uploaded by another user', function () {
     Bus::fake();
     $user = User::factory()->withOrganization()->create();
-    $otherMember = User::factory()->create(['current_organization_id' => $user->current_organization_id]);
+    $otherMember = User::factory()->create(['organization_id' => $user->organization_id]);
     $othersDocument = Document::factory()->forOrganization($user)->uploadedBy($otherMember)->create(['status' => DocumentStatus::Pending]);
 
     /** @noinspection PhpUnhandledExceptionInspection */

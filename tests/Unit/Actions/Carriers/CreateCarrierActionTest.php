@@ -38,7 +38,7 @@ test('creates carrier scoped to the user current organization', function () use 
     /** @noinspection PhpUnhandledExceptionInspection */
     $carrier = app(CreateCarrierAction::class)->handle($user, $attributes);
 
-    expect($carrier->organization_id)->toBe($user->current_organization_id);
+    expect($carrier->organization_id)->toBe($user->organization_id);
 });
 
 test('sets created_by and updated_by to the user id', function () use ($attributes) {

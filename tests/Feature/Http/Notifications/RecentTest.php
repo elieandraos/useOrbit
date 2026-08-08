@@ -11,7 +11,7 @@ test('guests are redirected to the login page', function () {
 
 test('member sees only their own notifications', function () {
     $user = User::factory()->withOrganization()->create();
-    $otherUser = User::factory()->forOrganization($user->currentOrganization)->create();
+    $otherUser = User::factory()->forOrganization($user->organization)->create();
 
     $mine = createNotificationFor($user);
     createNotificationFor($otherUser);

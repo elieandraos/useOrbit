@@ -24,7 +24,7 @@ test('scopes the note to the user current organization', function () {
     /** @noinspection PhpUnhandledExceptionInspection */
     $note = app(CreateNoteAction::class)->handle($user, $client, ['body' => 'A note.']);
 
-    expect($note->organization_id)->toBe($user->current_organization_id);
+    expect($note->organization_id)->toBe($user->organization_id);
 });
 
 test('sets created_by to the user id', function () {

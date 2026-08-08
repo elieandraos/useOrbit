@@ -59,7 +59,7 @@ test('scopes the document to the user current organization', function () {
     /** @noinspection PhpUnhandledExceptionInspection */
     $document = app(UploadDocumentAction::class)->handle($user, $client, $file);
 
-    expect($document->organization_id)->toBe($user->current_organization_id);
+    expect($document->organization_id)->toBe($user->organization_id);
 });
 
 test('sets uploaded_by to the user id', function () {
@@ -115,8 +115,8 @@ test('computes a sha256 checksum of the uploaded file', function () {
 
 test('deletes the staged file when the document row fails to persist', function () {
     Storage::fake('local');
-    $user = User::factory()->create(['current_organization_id' => 999999]);
-    $client = Client::factory()->create();
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->make();
     $file = UploadedFile::fake()->create('report.pdf', 100, 'application/pdf');
 
     expect(fn () => app(UploadDocumentAction::class)->handle($user, $client, $file))

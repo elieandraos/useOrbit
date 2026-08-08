@@ -28,19 +28,18 @@ test('creates a pending user with no password', function () use ($attributes) {
         ->and($invitee->password)->toBeNull();
 });
 
-test('attaches an invited pivot scoped to the inviter organization', function () use ($attributes) {
+test('creates an invited member scoped to the inviter organization', function () use ($attributes) {
     $organization = Organization::factory()->create();
     $inviter = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
 
     /** @noinspection PhpUnhandledExceptionInspection */
     $invitee = app(InviteOrganizationMemberAction::class)->handle($inviter, [...$attributes, 'role' => 'admin']);
 
-    $pivot = $invitee->organizations()->wherePivot('organization_id', $organization->id)->first()?->pivot;
-
-    expect($pivot->role)->toBe(OrganizationRole::Admin)
-        ->and($pivot->status)->toBe(OrganizationMemberStatus::Invited)
-        ->and($pivot->invited_by)->toBe($inviter->id)
-        ->and($pivot->expires_at->isBetween(now()->addDays(7)->subMinute(), now()->addDays(7)->addMinute()))->toBeTrue();
+    expect($invitee->organization_id)->toBe($organization->id)
+        ->and($invitee->role)->toBe(OrganizationRole::Admin)
+        ->and($invitee->status)->toBe(OrganizationMemberStatus::Invited)
+        ->and($invitee->invited_by)->toBe($inviter->id)
+        ->and($invitee->invitation_expires_at->isBetween(now()->addDays(7)->subMinute(), now()->addDays(7)->addMinute()))->toBeTrue();
 });
 
 test('stores a hashed token that matches the plaintext token sent in the notification', function () use ($attributes) {
@@ -52,12 +51,10 @@ test('stores a hashed token that matches the plaintext token sent in the notific
     /** @noinspection PhpUnhandledExceptionInspection */
     $invitee = app(InviteOrganizationMemberAction::class)->handle($inviter, $attributes);
 
-    $pivot = $invitee->organizations()->wherePivot('organization_id', $organization->id)->first()?->pivot;
-
     Notification::assertSentTo(
         $invitee,
         OrganizationInvitationNotification::class,
-        fn (OrganizationInvitationNotification $notification): bool => hash('sha256', $notification->token) === $pivot->token,
+        fn (OrganizationInvitationNotification $notification): bool => hash('sha256', $notification->token) === $invitee->invitation_token,
     );
 });
 

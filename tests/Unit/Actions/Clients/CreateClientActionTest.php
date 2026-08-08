@@ -46,7 +46,7 @@ test('creates client scoped to the user current organization', function () use (
     /** @noinspection PhpUnhandledExceptionInspection */
     $client = app(CreateClientAction::class)->handle($user, $attributes);
 
-    expect($client->organization_id)->toBe($user->current_organization_id);
+    expect($client->organization_id)->toBe($user->organization_id);
 });
 
 test('sets created_by to the user id', function () use ($attributes) {

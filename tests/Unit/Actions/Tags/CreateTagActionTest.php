@@ -13,7 +13,7 @@ test('creates a new tag when no matching name exists', function () {
     $tag = app(CreateTagAction::class)->handle($user, 'Medicare');
 
     expect($tag->name)->toBe('Medicare')
-        ->and($tag->organization_id)->toBe($user->current_organization_id)
+        ->and($tag->organization_id)->toBe($user->organization_id)
         ->and($tag->created_by)->toBe($user->id)
         ->and(Tag::query()->count())->toBe(1);
 });
@@ -37,6 +37,6 @@ test('scopes the case-insensitive match to the user current organization', funct
     /** @noinspection PhpUnhandledExceptionInspection */
     $tag = app(CreateTagAction::class)->handle($user, 'Medicare');
 
-    expect($tag->organization_id)->toBe($user->current_organization_id)
+    expect($tag->organization_id)->toBe($user->organization_id)
         ->and(Tag::query()->count())->toBe(2);
 });

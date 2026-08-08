@@ -29,7 +29,7 @@ test('leaves an already-read notification as is', function () {
 
 test('throws when the notification belongs to another user', function () {
     $user = User::factory()->withOrganization()->create();
-    $otherUser = User::factory()->forOrganization($user->currentOrganization)->create();
+    $otherUser = User::factory()->forOrganization($user->organization)->create();
     $othersNotification = createNotificationFor($otherUser);
 
     /** @noinspection PhpUnhandledExceptionInspection */

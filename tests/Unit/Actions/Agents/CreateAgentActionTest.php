@@ -33,7 +33,7 @@ test('creates agent scoped to the user current organization', function () use ($
     /** @noinspection PhpUnhandledExceptionInspection */
     $agent = app(CreateAgentAction::class)->handle($user, $attributes);
 
-    expect($agent->organization_id)->toBe($user->current_organization_id);
+    expect($agent->organization_id)->toBe($user->organization_id);
 });
 
 test('sets created_by and updated_by to the user id', function () use ($attributes) {

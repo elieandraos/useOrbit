@@ -3,18 +3,16 @@
 declare(strict_types=1);
 
 use App\Enums\OrganizationMemberStatus;
-use App\Enums\OrganizationRole;
 use App\Models\Organization;
 use App\Models\User;
 
 test('deletes expired pending invited users', function () {
     $organization = Organization::factory()->create();
-    $invitee = User::factory()->create(['password' => null]);
-    $invitee->organizations()->attach($organization, [
-        'role' => OrganizationRole::Member->value,
-        'status' => OrganizationMemberStatus::Invited->value,
-        'token' => hash('sha256', 'some-token'),
-        'expires_at' => now()->subDay(),
+    $invitee = User::factory()->forOrganization($organization)->create([
+        'password' => null,
+        'status' => OrganizationMemberStatus::Invited,
+        'invitation_token' => hash('sha256', 'some-token'),
+        'invitation_expires_at' => now()->subDay(),
     ]);
 
     $this->artisan('model:prune', ['--model' => [User::class]])->assertSuccessful();
@@ -22,14 +20,13 @@ test('deletes expired pending invited users', function () {
     expect(User::query()->whereKey($invitee->id)->exists())->toBeFalse();
 });
 
-test('cascades the pivot deletion for a pruned invitee', function () {
+test('removes the pruned invitee from the organization roster', function () {
     $organization = Organization::factory()->create();
-    $invitee = User::factory()->create(['password' => null]);
-    $invitee->organizations()->attach($organization, [
-        'role' => OrganizationRole::Member->value,
-        'status' => OrganizationMemberStatus::Invited->value,
-        'token' => hash('sha256', 'some-token'),
-        'expires_at' => now()->subDay(),
+    User::factory()->forOrganization($organization)->create([
+        'password' => null,
+        'status' => OrganizationMemberStatus::Invited,
+        'invitation_token' => hash('sha256', 'some-token'),
+        'invitation_expires_at' => now()->subDay(),
     ]);
 
     $this->artisan('model:prune', ['--model' => [User::class]])->assertSuccessful();
@@ -39,12 +36,11 @@ test('cascades the pivot deletion for a pruned invitee', function () {
 
 test('leaves non-expired pending invited users untouched', function () {
     $organization = Organization::factory()->create();
-    $invitee = User::factory()->create(['password' => null]);
-    $invitee->organizations()->attach($organization, [
-        'role' => OrganizationRole::Member->value,
-        'status' => OrganizationMemberStatus::Invited->value,
-        'token' => hash('sha256', 'some-token'),
-        'expires_at' => now()->addDays(7),
+    $invitee = User::factory()->forOrganization($organization)->create([
+        'password' => null,
+        'status' => OrganizationMemberStatus::Invited,
+        'invitation_token' => hash('sha256', 'some-token'),
+        'invitation_expires_at' => now()->addDays(7),
     ]);
 
     $this->artisan('model:prune', ['--model' => [User::class]])->assertSuccessful();
@@ -52,11 +48,10 @@ test('leaves non-expired pending invited users untouched', function () {
     expect(User::query()->whereKey($invitee->id)->exists())->toBeTrue();
 });
 
-test('leaves active members untouched regardless of a past pivot expiry', function () {
+test('leaves active members untouched regardless of a past invitation expiry', function () {
     $organization = Organization::factory()->create();
-    $member = User::factory()->forOrganization($organization)->create();
-    $member->organizations()->updateExistingPivot($organization->id, [
-        'expires_at' => now()->subDay(),
+    $member = User::factory()->forOrganization($organization)->create([
+        'invitation_expires_at' => now()->subDay(),
     ]);
 
     $this->artisan('model:prune', ['--model' => [User::class]])->assertSuccessful();
@@ -66,12 +61,10 @@ test('leaves active members untouched regardless of a past pivot expiry', functi
 
 test('leaves users who accepted their invitation untouched', function () {
     $organization = Organization::factory()->create();
-    $invitee = User::factory()->create();
-    $invitee->organizations()->attach($organization, [
-        'role' => OrganizationRole::Member->value,
-        'status' => OrganizationMemberStatus::Invited->value,
-        'token' => hash('sha256', 'some-token'),
-        'expires_at' => now()->subDay(),
+    $invitee = User::factory()->forOrganization($organization)->create([
+        'status' => OrganizationMemberStatus::Invited,
+        'invitation_token' => hash('sha256', 'some-token'),
+        'invitation_expires_at' => now()->subDay(),
     ]);
 
     $this->artisan('model:prune', ['--model' => [User::class]])->assertSuccessful();

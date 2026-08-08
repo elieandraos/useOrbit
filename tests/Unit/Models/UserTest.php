@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\Country;
+use App\Models\Organization;
 use App\Models\User;
 
 test('country resolves the user\'s associated country', function () {
@@ -17,8 +18,28 @@ test('country resolves the user\'s associated country', function () {
         ->and($user->country->is($country))->toBeTrue();
 });
 
-test('organizationRole returns null when the user has no current organization', function () {
-    $user = User::factory()->create(['current_organization_id' => null]);
+test('organization resolves the user\'s organization', function () {
+    $organization = Organization::factory()->create();
+    $user = User::factory()->forOrganization($organization)->create();
 
-    expect($user->organizationRole())->toBeNull();
+    expect($user->organization)->toBeInstanceOf(Organization::class)
+        ->and($user->organization->is($organization))->toBeTrue();
+});
+
+test('inviter resolves the user who sent the invitation', function () {
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization)->create();
+    $invitee = User::factory()->forOrganization($organization)->create(['invited_by' => $owner->id]);
+
+    expect($invitee->inviter?->is($owner))->toBeTrue();
+});
+
+test('inviter is null once the inviting user has been deleted', function () {
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization)->create();
+    $invitee = User::factory()->forOrganization($organization)->create(['invited_by' => $owner->id]);
+
+    $owner->delete();
+
+    expect($invitee->fresh()->inviter)->toBeNull();
 });

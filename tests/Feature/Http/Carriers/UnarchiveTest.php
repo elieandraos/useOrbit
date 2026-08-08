@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use App\Enums\CarrierStatus;
-use App\Enums\OrganizationMemberStatus;
 use App\Enums\OrganizationRole;
 use App\Models\Carrier;
 use App\Models\Organization;
@@ -18,11 +17,7 @@ test('guests are redirected to the login page', function () {
 
 test('owner can unarchive a carrier from their organization', function () {
     $organization = Organization::factory()->create();
-    $owner = User::factory()->create(['current_organization_id' => $organization->id]);
-    $owner->organizations()->attach($organization, [
-        'role' => OrganizationRole::Owner->value,
-        'status' => OrganizationMemberStatus::Active->value,
-    ]);
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
     $carrier = Carrier::factory()->forOrganization($owner)->archived()->create();
 
     $this->actingAs($owner)

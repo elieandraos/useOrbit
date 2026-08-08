@@ -3,22 +3,15 @@
 declare(strict_types=1);
 
 use App\Enums\OrganizationMemberStatus;
+use App\Enums\OrganizationRole;
 use App\Models\Organization;
 use App\Models\User;
 
-test('authenticated user with no current_organization_id is redirected', function () {
-    $user = User::factory()->create(['current_organization_id' => null]);
-
-    $this->actingAs($user)
-        ->get(route('dashboard'))
-        ->assertRedirect(route('home'))
-        ->assertSessionHas('error', 'You are not associated with any organization.');
-});
-
 test('authenticated user with suspended membership is redirected', function () {
     $organization = Organization::factory()->create();
-    $user = User::factory()->create(['current_organization_id' => $organization->id]);
-    $user->organizations()->attach($organization, ['role' => 'member', 'status' => OrganizationMemberStatus::Suspended->value]);
+    $user = User::factory()->forOrganization($organization, OrganizationRole::Member)->create([
+        'status' => OrganizationMemberStatus::Suspended,
+    ]);
 
     $this->actingAs($user)
         ->get(route('dashboard'))
@@ -28,8 +21,9 @@ test('authenticated user with suspended membership is redirected', function () {
 
 test('authenticated user with invited membership is redirected', function () {
     $organization = Organization::factory()->create();
-    $user = User::factory()->create(['current_organization_id' => $organization->id]);
-    $user->organizations()->attach($organization, ['role' => 'member', 'status' => OrganizationMemberStatus::Invited->value]);
+    $user = User::factory()->forOrganization($organization, OrganizationRole::Member)->create([
+        'status' => OrganizationMemberStatus::Invited,
+    ]);
 
     $this->actingAs($user)
         ->get(route('dashboard'))
@@ -39,8 +33,7 @@ test('authenticated user with invited membership is redirected', function () {
 
 test('authenticated user with active membership passes through', function () {
     $organization = Organization::factory()->create();
-    $user = User::factory()->create(['current_organization_id' => $organization->id]);
-    $user->organizations()->attach($organization, ['role' => 'member', 'status' => OrganizationMemberStatus::Active->value]);
+    $user = User::factory()->forOrganization($organization)->create();
 
     $this->actingAs($user)
         ->get(route('dashboard'))

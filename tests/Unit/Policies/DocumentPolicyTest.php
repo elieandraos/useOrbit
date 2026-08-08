@@ -100,9 +100,3 @@ test('user with a current organization can finalize a document batch', function 
 
     expect($user->can('finalize', Document::class))->toBeTrue();
 });
-
-test('user without a current organization cannot finalize a document batch', function () {
-    $user = User::factory()->create(['current_organization_id' => null]);
-
-    expect($user->can('finalize', Document::class))->toBeFalse();
-});

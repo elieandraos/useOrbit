@@ -63,7 +63,7 @@ test('clients from another organization are not included', function () {
         ->assertHasPaginatedResource(
             'clients',
             ClientResource::collection(
-                Client::query()->where('organization_id', $user->current_organization_id)->latest('enrollment_date')->paginate(7)
+                Client::query()->where('organization_id', $user->organization_id)->latest('enrollment_date')->paginate(7)
             )
         );
 });

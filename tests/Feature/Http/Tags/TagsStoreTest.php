@@ -31,7 +31,7 @@ test('creates a tag scoped to the acting user\'s organization with created_by se
         ]);
 
     $this->assertDatabaseHas('tags', [
-        'organization_id' => $user->current_organization_id,
+        'organization_id' => $user->organization_id,
         'created_by' => $user->id,
         'name' => 'Medicare',
     ]);

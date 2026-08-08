@@ -11,9 +11,8 @@ use Illuminate\Support\Facades\Notification;
 
 test('hard-deletes the pending user row', function () {
     $organization = Organization::factory()->create();
-    $invitee = User::factory()->create(['password' => null]);
-    $invitee->organizations()->attach($organization, [
-        'role' => OrganizationRole::Member->value,
+    $invitee = User::factory()->forOrganization($organization)->create([
+        'password' => null,
         'status' => 'invited',
     ]);
 
@@ -23,11 +22,10 @@ test('hard-deletes the pending user row', function () {
     expect(User::query()->find($invitee->id))->toBeNull();
 });
 
-test('cascades the pivot deletion', function () {
+test('removes the member from the organization roster', function () {
     $organization = Organization::factory()->create();
-    $invitee = User::factory()->create(['password' => null]);
-    $invitee->organizations()->attach($organization, [
-        'role' => OrganizationRole::Member->value,
+    $invitee = User::factory()->forOrganization($organization)->create([
+        'password' => null,
         'status' => 'invited',
     ]);
 

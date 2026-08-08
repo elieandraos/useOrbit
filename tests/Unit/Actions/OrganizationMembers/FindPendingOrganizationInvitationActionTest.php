@@ -43,12 +43,12 @@ test('resolves the invitation for a valid, unexpired token', function () use ($i
 
     $found = app(FindPendingOrganizationInvitationAction::class)->handle($token);
 
-    expect($found?->user->is($invitee))->toBeTrue()
+    expect($found?->is($invitee))->toBeTrue()
         ->and($found?->organization->is($organization))->toBeTrue()
         ->and($found?->inviter->is($owner))->toBeTrue();
 });
 
-test('eager loads the user, organization, and inviter relations', function () use ($invite) {
+test('eager loads the organization and inviter relations', function () use ($invite) {
     $organization = Organization::factory()->create();
     $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
 
@@ -56,8 +56,7 @@ test('eager loads the user, organization, and inviter relations', function () us
 
     $found = app(FindPendingOrganizationInvitationAction::class)->handle($token);
 
-    expect($found?->relationLoaded('user'))->toBeTrue()
-        ->and($found?->relationLoaded('organization'))->toBeTrue()
+    expect($found?->relationLoaded('organization'))->toBeTrue()
         ->and($found?->relationLoaded('inviter'))->toBeTrue();
 });
 
@@ -73,9 +72,7 @@ test('returns null once the invitation has expired', function () use ($invite) {
 
     [$invitee, $token] = $invite($owner);
 
-    $invitee->organizations()->updateExistingPivot($organization->id, [
-        'expires_at' => now()->subDay(),
-    ]);
+    $invitee->update(['invitation_expires_at' => now()->subDay()]);
 
     $found = app(FindPendingOrganizationInvitationAction::class)->handle($token);
 
@@ -88,11 +85,11 @@ test('returns null once the invitation has already been accepted', function () u
 
     [$invitee, $token] = $invite($owner);
 
-    $invitee->organizations()->updateExistingPivot($organization->id, [
-        'status' => OrganizationMemberStatus::Active->value,
+    $invitee->update([
+        'status' => OrganizationMemberStatus::Active,
         'joined_at' => now(),
-        'token' => null,
-        'expires_at' => null,
+        'invitation_token' => null,
+        'invitation_expires_at' => null,
     ]);
 
     $found = app(FindPendingOrganizationInvitationAction::class)->handle($token);
@@ -109,5 +106,5 @@ test('does not match a token belonging to a different invitation', function () u
 
     $found = app(FindPendingOrganizationInvitationAction::class)->handle($tokenA);
 
-    expect($found?->user->is($inviteeB))->toBeFalse();
+    expect($found?->is($inviteeB))->toBeFalse();
 });
