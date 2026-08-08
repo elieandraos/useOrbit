@@ -22,7 +22,7 @@ final class RemoveOrganizationMemberAction
     public function handle(User $user, User $member, User $successor): void
     {
         DB::transaction(function () use ($user, $member, $successor): void {
-            $organizationId = $user->current_organization_id;
+            $organizationId = $user->organization_id;
 
             $this->reassign(Client::withTrashed(), $organizationId, $member, $successor, ['created_by', 'updated_by']);
             $this->reassign(Document::query(), $organizationId, $member, $successor, ['uploaded_by']);
@@ -31,7 +31,6 @@ final class RemoveOrganizationMemberAction
             $this->reassign(Carrier::withTrashed(), $organizationId, $member, $successor, ['created_by', 'updated_by']);
             $this->reassign(Agent::withTrashed(), $organizationId, $member, $successor, ['created_by', 'updated_by']);
 
-            // Hard-deletes the member; the organization_user pivot cascades on delete.
             $member->delete();
         });
     }

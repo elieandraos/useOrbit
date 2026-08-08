@@ -25,14 +25,14 @@ final class CreateAgentAction
             $slug = $this->generateUniqueSlug(
                 Agent::class,
                 "{$attributes['first_name']} {$attributes['last_name']}",
-                $user->current_organization_id,
+                $user->organization_id,
             );
 
             /** @var Agent $agent */
             $agent = Agent::query()->create([
                 ...$attributes,
                 'status' => AgentStatus::Active,
-                'organization_id' => $user->current_organization_id,
+                'organization_id' => $user->organization_id,
                 'slug' => $slug,
                 'created_by' => $user->id,
                 'updated_by' => $user->id,

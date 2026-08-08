@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace App\Actions\OrganizationMembers;
 
-use App\Models\OrganizationMember;
+use App\Models\User;
 
 final class FindPendingOrganizationInvitationAction
 {
-    public function handle(string $token): ?OrganizationMember
+    public function handle(string $token): ?User
     {
         /** @noinspection PhpUndefinedMethodInspection */
-        /** @var OrganizationMember|null $invitation */
-        $invitation = OrganizationMember::query()
+        /** @var User|null $invitation */
+        $invitation = User::query()
             ->pendingInvitation()
-            ->where('token', hash('sha256', $token))
-            ->with(['user', 'organization', 'inviter'])
+            ->where('invitation_token', hash('sha256', $token))
+            ->with(['organization', 'inviter'])
             ->first();
 
         return $invitation;

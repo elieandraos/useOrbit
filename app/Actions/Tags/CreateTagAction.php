@@ -15,7 +15,7 @@ final class CreateTagAction
         $name = trim($name);
 
         $tag = Tag::query()
-            ->where('organization_id', $user->current_organization_id)
+            ->where('organization_id', $user->organization_id)
             ->whereRaw('LOWER(name) = ?', [Str::lower($name)])
             ->first();
 
@@ -25,7 +25,7 @@ final class CreateTagAction
 
         /** @var Tag $tag */
         $tag = Tag::query()->create([
-            'organization_id' => $user->current_organization_id,
+            'organization_id' => $user->organization_id,
             'name' => $name,
             'created_by' => $user->id,
         ]);

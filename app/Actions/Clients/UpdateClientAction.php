@@ -38,7 +38,7 @@ final class UpdateClientAction
                 $attributes['slug'] = $this->generateUniqueSlug(
                     Client::class,
                     $newName,
-                    $user->current_organization_id,
+                    $user->organization_id,
                     $client->id,
                 );
             }

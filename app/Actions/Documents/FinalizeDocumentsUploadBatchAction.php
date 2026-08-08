@@ -25,7 +25,7 @@ final class FinalizeDocumentsUploadBatchAction
     {
         $documents = Document::query()
             ->whereKey($documentIds)
-            ->where('organization_id', $user->current_organization_id)
+            ->where('organization_id', $user->organization_id)
             ->where('uploaded_by', $user->id)
             ->where('status', DocumentStatus::Pending)
             ->with('documentable')

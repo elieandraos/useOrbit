@@ -27,21 +27,19 @@ final class InviteOrganizationMemberAction
                 'name' => $attributes['name'],
                 'email' => $attributes['email'],
                 'password' => null,
-            ]);
-
-            $invitee->organizations()->attach($invitedBy->current_organization_id, [
+                'organization_id' => $invitedBy->organization_id,
                 'role' => $attributes['role'],
-                'status' => OrganizationMemberStatus::Invited->value,
+                'status' => OrganizationMemberStatus::Invited,
                 'invited_by' => $invitedBy->id,
-                'token' => hash('sha256', $token),
-                'expires_at' => now()->addDays(7),
+                'invitation_token' => hash('sha256', $token),
+                'invitation_expires_at' => now()->addDays(7),
             ]);
 
             return $invitee;
         });
 
         $invitee->notify(
-            new OrganizationInvitationNotification($invitedBy->currentOrganization, $invitedBy, $token)->afterCommit(),
+            new OrganizationInvitationNotification($invitedBy->organization, $invitedBy, $token)->afterCommit(),
         );
 
         return $invitee;

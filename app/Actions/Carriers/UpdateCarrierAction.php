@@ -32,7 +32,7 @@ final class UpdateCarrierAction
                     'slug' => $this->generateUniqueSlug(
                         Carrier::class,
                         $attributes['name'],
-                        $user->current_organization_id,
+                        $user->organization_id,
                         $carrier->id,
                     ),
                 ] : [],

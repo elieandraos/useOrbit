@@ -24,7 +24,7 @@ final class CreateNewUser implements CreatesNewUsers
      *
      * @param  array{organization: string, name: string, email: string, password: string, password_confirmation: string}  $input
      *
-     * @throws ValidationException
+     * @throws ValidationException|\Throwable
      */
     public function create(array $input): User
     {
@@ -45,12 +45,9 @@ final class CreateNewUser implements CreatesNewUsers
                 'name' => $input['name'],
                 'email' => $input['email'],
                 'password' => $input['password'],
-                'current_organization_id' => $organization->id,
-            ]);
-
-            $user->organizations()->attach($organization->id, [
-                'role' => OrganizationRole::Owner->value,
-                'status' => OrganizationMemberStatus::Active->value,
+                'organization_id' => $organization->id,
+                'role' => OrganizationRole::Owner,
+                'status' => OrganizationMemberStatus::Active,
                 'joined_at' => now(),
             ]);
 

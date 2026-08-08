@@ -30,14 +30,14 @@ final class CreateClientAction
             $slug = $this->generateUniqueSlug(
                 Client::class,
                 $nameSource,
-                $user->current_organization_id,
+                $user->organization_id,
             );
 
             /** @var Client $client */
             $client = Client::query()->create([
                 ...$attributes,
                 'status' => ClientStatus::Active,
-                'organization_id' => $user->current_organization_id,
+                'organization_id' => $user->organization_id,
                 'slug' => $slug,
                 'created_by' => $user->id,
                 'updated_by' => $user->id,
