@@ -12,16 +12,16 @@ final class CarrierBranchPolicy
 {
     public function create(User $user, Carrier $carrier): bool
     {
-        return $carrier->organization_id === $user->current_organization_id;
+        return $carrier->organization_id === $user->organization_id;
     }
 
     public function update(User $user, CarrierBranch $branch): bool
     {
-        return $branch->carrier?->organization_id === $user->current_organization_id;
+        return $branch->carrier?->organization_id === $user->organization_id;
     }
 
     public function delete(User $user, CarrierBranch $branch): bool
     {
-        return $branch->carrier?->organization_id === $user->current_organization_id;
+        return $branch->carrier?->organization_id === $user->organization_id;
     }
 }
