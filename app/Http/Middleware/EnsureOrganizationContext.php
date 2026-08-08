@@ -6,6 +6,7 @@ namespace App\Http\Middleware;
 
 use App\Enums\OrganizationMemberStatus;
 use App\Models\User;
+use App\Support\Tenancy\OrganizationContext;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -26,6 +27,8 @@ final class EnsureOrganizationContext
             return redirect()->route('home')
                 ->with('error', 'Your membership in this organization is not active.');
         }
+
+        app(OrganizationContext::class)->set($user->organization_id);
 
         return $next($request);
     }

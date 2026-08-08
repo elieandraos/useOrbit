@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Enums\OrganizationMemberStatus;
 use App\Enums\OrganizationRole;
+use App\Models\Client;
 use App\Models\Organization;
 use App\Models\User;
 
@@ -38,4 +39,25 @@ test('authenticated user with active membership passes through', function () {
     $this->actingAs($user)
         ->get(route('dashboard'))
         ->assertOk();
+});
+
+test('an own-tenant implicit-bound route resolves correctly', function () {
+    $organization = Organization::factory()->create();
+    $user = User::factory()->forOrganization($organization)->create();
+    $client = Client::factory()->forOrganization($user)->create();
+
+    $this->actingAs($user)
+        ->get(route('clients.show', $client))
+        ->assertOk();
+});
+
+test('a foreign-tenant bound model still 404s once the middleware runs before binding', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $otherOrganization = Organization::factory()->create();
+    $client = Client::factory()->for($otherOrganization)->create();
+
+    $this->actingAs($user)
+        ->get(route('clients.show', $client))
+        ->assertNotFound();
 });
