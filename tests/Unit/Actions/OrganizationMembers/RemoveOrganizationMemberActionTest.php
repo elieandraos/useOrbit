@@ -12,12 +12,14 @@ use App\Models\Note;
 use App\Models\Organization;
 use App\Models\Tag;
 use App\Models\User;
+use App\Support\Tenancy\OrganizationContext;
 
 test('reassigns authored records to the successor scoped to the organization', function (string $modelClass, string $column) {
     $organization = Organization::factory()->create();
     $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
     $member = User::factory()->forOrganization($organization)->create();
     $successor = User::factory()->forOrganization($organization)->create();
+    app(OrganizationContext::class)->set($organization->id);
 
     $record = $modelClass::factory()->forOrganization($owner)->create([$column => $member->id]);
 
@@ -43,6 +45,7 @@ test('reassigns created_by on a soft-deleted record via withTrashed', function (
     $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
     $member = User::factory()->forOrganization($organization)->create();
     $successor = User::factory()->forOrganization($organization)->create();
+    app(OrganizationContext::class)->set($organization->id);
 
     $record = $modelClass::factory()->forOrganization($owner)->create(['created_by' => $member->id]);
     $record->delete();
@@ -65,6 +68,7 @@ test('hard-deletes the member row', function () {
     $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
     $member = User::factory()->forOrganization($organization)->create();
     $successor = User::factory()->forOrganization($organization)->create();
+    app(OrganizationContext::class)->set($organization->id);
 
     /** @noinspection PhpUnhandledExceptionInspection */
     app(RemoveOrganizationMemberAction::class)->handle($owner, $member, $successor);
@@ -77,6 +81,7 @@ test('cascades the pivot deletion', function () {
     $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
     $member = User::factory()->forOrganization($organization)->create();
     $successor = User::factory()->forOrganization($organization)->create();
+    app(OrganizationContext::class)->set($organization->id);
 
     /** @noinspection PhpUnhandledExceptionInspection */
     app(RemoveOrganizationMemberAction::class)->handle($owner, $member, $successor);

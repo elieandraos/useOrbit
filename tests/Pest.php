@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\User;
 use App\Notifications\DocumentsUploadBatchProcessed;
+use App\Support\Tenancy\OrganizationContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Str;
@@ -55,6 +56,11 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+function setOrganizationContext(User $user): void
+{
+    app(OrganizationContext::class)->set($user->organization_id);
 }
 
 function createNotificationFor(User $user, bool $read = false): DatabaseNotification

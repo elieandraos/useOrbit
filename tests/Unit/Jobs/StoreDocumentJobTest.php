@@ -179,6 +179,7 @@ test('is a no-op when the document is already being processed by another worker'
 
 test('claiming transitions the document to processing and blocks a second concurrent claim', function () {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create();
     $job = new StoreDocumentJob($document->id, $document->organization_id);
     $claim = fn (): ?Document => Closure::bind(fn (): ?Document => $this->claim(), $job, $job)();

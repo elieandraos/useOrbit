@@ -33,6 +33,7 @@ $companyAttributes = [
 
 test('sets status to active by default', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
 
     /** @noinspection PhpUnhandledExceptionInspection */
     $client = app(CreateClientAction::class)->handle($user, $attributes);
@@ -42,6 +43,7 @@ test('sets status to active by default', function () use ($attributes) {
 
 test('creates client scoped to the user current organization', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
 
     /** @noinspection PhpUnhandledExceptionInspection */
     $client = app(CreateClientAction::class)->handle($user, $attributes);
@@ -51,6 +53,7 @@ test('creates client scoped to the user current organization', function () use (
 
 test('sets created_by to the user id', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
 
     /** @noinspection PhpUnhandledExceptionInspection */
     $client = app(CreateClientAction::class)->handle($user, $attributes);
@@ -60,6 +63,7 @@ test('sets created_by to the user id', function () use ($attributes) {
 
 test('generates a non-empty slug', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
 
     /** @noinspection PhpUnhandledExceptionInspection */
     $client = app(CreateClientAction::class)->handle($user, $attributes);
@@ -71,8 +75,11 @@ test('two organizations can each have the same slug without collision', function
     $userA = User::factory()->withOrganization()->create();
     $userB = User::factory()->withOrganization()->create();
 
+    setOrganizationContext($userA);
     /** @noinspection PhpUnhandledExceptionInspection */
     $clientA = app(CreateClientAction::class)->handle($userA, $attributes);
+
+    setOrganizationContext($userB);
     /** @noinspection PhpUnhandledExceptionInspection */
     $clientB = app(CreateClientAction::class)->handle($userB, $attributes);
 
@@ -82,6 +89,7 @@ test('two organizations can each have the same slug without collision', function
 
 test('appends counter when slug already exists in the same organization', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
 
     /** @noinspection PhpUnhandledExceptionInspection */
     $first = app(CreateClientAction::class)->handle($user, $attributes);
@@ -94,6 +102,7 @@ test('appends counter when slug already exists in the same organization', functi
 
 test('generates slug from company_name for a company client', function () use ($companyAttributes) {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
 
     /** @noinspection PhpUnhandledExceptionInspection */
     $client = app(CreateClientAction::class)->handle($user, $companyAttributes);
@@ -105,8 +114,11 @@ test('two organizations can each have the same company slug without collision', 
     $userA = User::factory()->withOrganization()->create();
     $userB = User::factory()->withOrganization()->create();
 
+    setOrganizationContext($userA);
     /** @noinspection PhpUnhandledExceptionInspection */
     $clientA = app(CreateClientAction::class)->handle($userA, $companyAttributes);
+
+    setOrganizationContext($userB);
     /** @noinspection PhpUnhandledExceptionInspection */
     $clientB = app(CreateClientAction::class)->handle($userB, $companyAttributes);
 

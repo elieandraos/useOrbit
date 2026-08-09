@@ -33,6 +33,7 @@ $companyAttributes = [
 
 test('updates the client fields in the database', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     /** @var Client $client */
     $client = Client::factory()->forOrganization($user)->create();
 
@@ -48,6 +49,7 @@ test('updates the client fields in the database', function () use ($attributes) 
 
 test('sets updated_by to the user id', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     /** @var Client $client */
     $client = Client::factory()->forOrganization($user)->create();
 
@@ -61,6 +63,7 @@ test('sets updated_by to the user id', function () use ($attributes) {
 
 test('regenerates slug when name changes', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     /** @var Client $client */
     $client = Client::factory()->forOrganization($user)->create([
         'first_name' => 'John',
@@ -78,6 +81,7 @@ test('regenerates slug when name changes', function () use ($attributes) {
 
 test('keeps existing slug when name does not change', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     /** @var Client $client */
     $client = Client::factory()->forOrganization($user)->create([
         'first_name' => 'Jane',
@@ -95,6 +99,7 @@ test('keeps existing slug when name does not change', function () use ($attribut
 
 test('regenerates slug from company_name when it changes', function () use ($companyAttributes) {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     /** @var Client $client */
     $client = Client::factory()->forOrganization($user)->company()->create([
         'company_name' => 'Acme Logistics',
@@ -111,6 +116,7 @@ test('regenerates slug from company_name when it changes', function () use ($com
 
 test('keeps existing slug when company_name does not change', function () use ($companyAttributes) {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     /** @var Client $client */
     $client = Client::factory()->forOrganization($user)->company()->create([
         'company_name' => 'Beta Traders',

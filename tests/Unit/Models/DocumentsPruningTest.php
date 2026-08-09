@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 test('deletes stale pending documents and their staging files', function () {
     Storage::fake('local');
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create([
         'path' => 'documents-staging/'.Str::uuid(),
         'status' => DocumentStatus::Pending,
@@ -27,6 +28,7 @@ test('deletes stale pending documents and their staging files', function () {
 test('leaves recent pending documents untouched', function () {
     Storage::fake('local');
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create([
         'path' => 'documents-staging/'.Str::uuid(),
         'status' => DocumentStatus::Pending,
@@ -43,6 +45,7 @@ test('leaves recent pending documents untouched', function () {
 test('deletes stale processing documents and their staging files', function () {
     Storage::fake('local');
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     $document = Document::factory()->forOrganization($user)->uploadedBy($user)->processing()->create([
         'path' => 'documents-staging/'.Str::uuid(),
         'created_at' => now()->subHours(2),
@@ -57,6 +60,7 @@ test('deletes stale processing documents and their staging files', function () {
 
 test('leaves old completed documents untouched', function () {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     $document = Document::factory()->forOrganization($user)->uploadedBy($user)->completed()->create([
         'created_at' => now()->subHours(2),
     ]);
@@ -69,6 +73,7 @@ test('leaves old completed documents untouched', function () {
 test('deletes stale failed documents and their staging files', function () {
     Storage::fake('local');
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     $document = Document::factory()->forOrganization($user)->uploadedBy($user)->failed()->create([
         'path' => 'documents-staging/'.Str::uuid(),
         'created_at' => now()->subHours(2),
@@ -84,6 +89,7 @@ test('deletes stale failed documents and their staging files', function () {
 test('leaves recent failed documents untouched', function () {
     Storage::fake('local');
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     $document = Document::factory()->forOrganization($user)->uploadedBy($user)->failed()->create([
         'path' => 'documents-staging/'.Str::uuid(),
         'created_at' => now()->subMinutes(30),

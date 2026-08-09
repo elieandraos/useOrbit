@@ -14,6 +14,7 @@ $attributes = [
 
 test('updates the carrier fields in the database', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     /** @var Carrier $carrier */
     $carrier = Carrier::factory()->forOrganization($user)->create();
 
@@ -29,6 +30,7 @@ test('updates the carrier fields in the database', function () use ($attributes)
 
 test('sets updated_by to the user id', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     /** @var Carrier $carrier */
     $carrier = Carrier::factory()->forOrganization($user)->create();
 
@@ -42,6 +44,7 @@ test('sets updated_by to the user id', function () use ($attributes) {
 
 test('regenerates slug when name changes', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     /** @var Carrier $carrier */
     $carrier = Carrier::factory()->forOrganization($user)->create([
         'name' => 'Bankers Assurance',
@@ -58,6 +61,7 @@ test('regenerates slug when name changes', function () use ($attributes) {
 
 test('keeps existing slug when name does not change', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     /** @var Carrier $carrier */
     $carrier = Carrier::factory()->forOrganization($user)->create([
         'name' => 'Beta Traders',

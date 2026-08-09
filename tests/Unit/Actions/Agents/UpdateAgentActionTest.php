@@ -20,6 +20,7 @@ $attributes = [
 
 test('updates the agent fields in the database', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     /** @var Agent $agent */
     $agent = Agent::factory()->forOrganization($user)->create();
 
@@ -37,6 +38,7 @@ test('updates the agent fields in the database', function () use ($attributes) {
 
 test('sets updated_by to the user id', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     /** @var Agent $agent */
     $agent = Agent::factory()->forOrganization($user)->create();
 
@@ -50,6 +52,7 @@ test('sets updated_by to the user id', function () use ($attributes) {
 
 test('regenerates slug when the name changes', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     /** @var Agent $agent */
     $agent = Agent::factory()->forOrganization($user)->create([
         'first_name' => 'Mira',
@@ -67,6 +70,7 @@ test('regenerates slug when the name changes', function () use ($attributes) {
 
 test('keeps existing slug when the name does not change', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     /** @var Agent $agent */
     $agent = Agent::factory()->forOrganization($user)->create([
         'first_name' => 'Nadia',
