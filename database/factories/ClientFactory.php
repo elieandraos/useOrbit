@@ -33,7 +33,6 @@ class ClientFactory extends Factory
         $middleName = fake()->firstName(Gender::Male->value);
         $lastName = fake()->lastName();
         $mothersName = fake()->firstName(Gender::Female->value);
-        $emailDomain = fake()->randomElement(['gmail.com', 'outlook.com', 'yahoo.com', 'hotmail.com', 'icloud.com']);
 
         $country = Country::query()->firstOrCreate(
             ['iso2' => 'LB'],
@@ -45,7 +44,7 @@ class ClientFactory extends Factory
 
         return [
             'organization_id' => Organization::factory(),
-            'slug' => Str::slug($firstName.'-'.$lastName.'-'.fake()->unique()->numerify()),
+            'slug' => null,
             'client_type' => ClientType::Individual->value,
             'company_name' => null,
             'first_name' => $firstName,
@@ -55,7 +54,7 @@ class ClientFactory extends Factory
             'date_of_birth' => fake()->dateTimeBetween('-60 years', '-18 years')->format('Y-m-d'),
             'gender' => $gender->value,
             'phone' => fake()->phoneNumber(),
-            'email' => Str::slug($firstName, '_').'_'.Str::slug($lastName, '_').'@'.$emailDomain,
+            'email' => null,
             'street' => fake()->buildingNumber().' '.fake()->streetName(),
             'building_floor' => fake()->randomElement(['Ground Floor', '1st Floor', '2nd Floor', '3rd Floor', '4th Floor', '5th Floor']),
             'country_id' => $country->id,
@@ -66,6 +65,18 @@ class ClientFactory extends Factory
             'status' => ClientStatus::Active->value,
             'created_by' => User::factory(),
         ];
+    }
+
+    /**
+     * Derive slug/email from the final first_name/last_name (after any factory
+     * state or ->create([...]) override), not the random name computed in definition().
+     */
+    public function configure(): static
+    {
+        return $this->afterMaking(function (Client $client): void {
+            $client->slug ??= Str::slug($client->first_name.'-'.$client->last_name.'-'.fake()->unique()->numerify());
+            $client->email ??= Str::slug($client->first_name, '_').'_'.Str::slug($client->last_name, '_').'@'.fake()->randomElement(['gmail.com', 'outlook.com', 'yahoo.com', 'hotmail.com', 'icloud.com']);
+        });
     }
 
     public function archived(): static

@@ -23,17 +23,27 @@ class CarrierFactory extends Factory
      */
     public function definition(): array
     {
-        $name = fake()->company();
-
         return [
             'organization_id' => Organization::factory(),
-            'slug' => Str::slug($name.'-'.fake()->unique()->numerify()),
-            'name' => $name,
+            'slug' => null,
+            'name' => fake()->company(),
             'phone' => fake()->phoneNumber(),
-            'website' => Str::slug($name, '').'.com',
+            'website' => null,
             'status' => CarrierStatus::Active->value,
             'created_by' => User::factory(),
         ];
+    }
+
+    /**
+     * Derive slug/website from the final name (after any factory state or
+     * ->create([...]) override), not the random name computed in definition().
+     */
+    public function configure(): static
+    {
+        return $this->afterMaking(function (Carrier $carrier): void {
+            $carrier->slug ??= Str::slug($carrier->name.'-'.fake()->unique()->numerify());
+            $carrier->website ??= Str::slug($carrier->name, '').'.com';
+        });
     }
 
     public function archived(): static

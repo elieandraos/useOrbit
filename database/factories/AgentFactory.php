@@ -27,7 +27,6 @@ class AgentFactory extends Factory
     {
         $firstName = fake()->firstName();
         $lastName = fake()->lastName();
-        $emailDomain = fake()->randomElement(['gmail.com', 'outlook.com', 'yahoo.com', 'hotmail.com', 'icloud.com']);
         $dateOfBirth = fake()->dateTimeBetween('-60 years', '-21 years');
         $joinedAt = fake()->dateTimeBetween((clone $dateOfBirth)->modify('+21 years'), 'now');
 
@@ -41,13 +40,13 @@ class AgentFactory extends Factory
 
         return [
             'organization_id' => Organization::factory(),
-            'slug' => Str::slug($firstName.'-'.$lastName.'-'.fake()->unique()->numerify()),
+            'slug' => null,
             'first_name' => $firstName,
             'last_name' => $lastName,
             'date_of_birth' => $dateOfBirth->format('Y-m-d'),
             'joined_at' => $joinedAt->format('Y-m-d'),
             'phone' => fake()->phoneNumber(),
-            'email' => Str::slug($firstName, '_').'_'.Str::slug($lastName, '_').'@'.$emailDomain,
+            'email' => null,
             'street' => fake()->buildingNumber().' '.fake()->streetName(),
             'building_floor' => fake()->randomElement(['Ground Floor', '1st Floor', '2nd Floor', '3rd Floor', '4th Floor', '5th Floor']),
             'country_id' => $country->id,
@@ -56,6 +55,18 @@ class AgentFactory extends Factory
             'status' => AgentStatus::Active->value,
             'created_by' => User::factory(),
         ];
+    }
+
+    /**
+     * Derive slug/email from the final first_name/last_name (after any factory
+     * state or ->create([...]) override), not the random name computed in definition().
+     */
+    public function configure(): static
+    {
+        return $this->afterMaking(function (Agent $agent): void {
+            $agent->slug ??= Str::slug($agent->first_name.'-'.$agent->last_name.'-'.fake()->unique()->numerify());
+            $agent->email ??= Str::slug($agent->first_name, '_').'_'.Str::slug($agent->last_name, '_').'@'.fake()->randomElement(['gmail.com', 'outlook.com', 'yahoo.com', 'hotmail.com', 'icloud.com']);
+        });
     }
 
     public function archived(): static
