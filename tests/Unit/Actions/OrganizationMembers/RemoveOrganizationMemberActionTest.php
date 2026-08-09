@@ -24,7 +24,7 @@ test('reassigns authored records to the successor scoped to the organization', f
     $record = $modelClass::factory()->forOrganization($owner)->create([$column => $member->id]);
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    app(RemoveOrganizationMemberAction::class)->handle($owner, $member, $successor);
+    app(RemoveOrganizationMemberAction::class)->handle($member, $successor);
 
     expect($record->fresh()->{$column})->toBe($successor->id);
 })->with([
@@ -51,7 +51,7 @@ test('reassigns created_by on a soft-deleted record via withTrashed', function (
     $record->delete();
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    app(RemoveOrganizationMemberAction::class)->handle($owner, $member, $successor);
+    app(RemoveOrganizationMemberAction::class)->handle($member, $successor);
 
     $fresh = $record->fresh();
 
@@ -71,7 +71,7 @@ test('hard-deletes the member row', function () {
     app(OrganizationContext::class)->set($organization->id);
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    app(RemoveOrganizationMemberAction::class)->handle($owner, $member, $successor);
+    app(RemoveOrganizationMemberAction::class)->handle($member, $successor);
 
     expect(User::query()->find($member->id))->toBeNull();
 });
@@ -84,7 +84,7 @@ test('cascades the pivot deletion', function () {
     app(OrganizationContext::class)->set($organization->id);
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    app(RemoveOrganizationMemberAction::class)->handle($owner, $member, $successor);
+    app(RemoveOrganizationMemberAction::class)->handle($member, $successor);
 
     expect($organization->fresh()->users()->count())->toBe(2);
 });

@@ -8,12 +8,15 @@ use App\Enums\DocumentStatus;
 use App\Models\Contracts\Documentable;
 use App\Models\Document;
 use App\Models\User;
+use App\Support\Tenancy\OrganizationContext;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 final class UploadDocumentAction
 {
+    public function __construct(private readonly OrganizationContext $organizationContext) {}
+
     /**
      * @throws Throwable
      */
@@ -26,7 +29,7 @@ final class UploadDocumentAction
         try {
             /** @var Document $document */
             $document = $documentable->documents()->create([
-                'organization_id' => $user->organization_id,
+                'organization_id' => $this->organizationContext->id(),
                 'uploaded_by' => $user->id,
                 'original_filename' => $file->getClientOriginalName(),
                 'disk' => $disk,

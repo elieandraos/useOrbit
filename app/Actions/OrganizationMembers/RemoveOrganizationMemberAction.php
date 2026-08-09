@@ -11,18 +11,21 @@ use App\Models\Document;
 use App\Models\Note;
 use App\Models\Tag;
 use App\Models\User;
+use App\Support\Tenancy\OrganizationContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 final class RemoveOrganizationMemberAction
 {
+    public function __construct(private readonly OrganizationContext $organizationContext) {}
+
     /**
      * @throws \Throwable
      */
-    public function handle(User $user, User $member, User $successor): void
+    public function handle(User $member, User $successor): void
     {
-        DB::transaction(function () use ($user, $member, $successor): void {
-            $organizationId = $user->organization_id;
+        DB::transaction(function () use ($member, $successor): void {
+            $organizationId = $this->organizationContext->id();
 
             $this->reassign(Client::withTrashed(), $organizationId, $member, $successor, ['created_by', 'updated_by']);
             $this->reassign(Document::query(), $organizationId, $member, $successor, ['uploaded_by']);

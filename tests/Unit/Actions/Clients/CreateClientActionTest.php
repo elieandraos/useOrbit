@@ -7,7 +7,9 @@ use App\Enums\ClientStatus;
 use App\Enums\ClientType;
 use App\Enums\Gender;
 use App\Enums\LeadSource;
+use App\Models\Organization;
 use App\Models\User;
+use App\Support\Tenancy\OrganizationContext;
 
 $attributes = [
     'client_type' => ClientType::Individual->value,
@@ -49,6 +51,18 @@ test('creates client scoped to the user current organization', function () use (
     $client = app(CreateClientAction::class)->handle($user, $attributes);
 
     expect($client->organization_id)->toBe($user->organization_id);
+});
+
+test('creates client scoped to the organization context rather than the user organization', function () use ($attributes) {
+    $user = User::factory()->withOrganization()->create();
+    $otherOrganization = Organization::factory()->create();
+    app(OrganizationContext::class)->set($otherOrganization->id);
+
+    /** @noinspection PhpUnhandledExceptionInspection */
+    $client = app(CreateClientAction::class)->handle($user, $attributes);
+
+    expect($client->organization_id)->toBe($otherOrganization->id)
+        ->and($client->organization_id)->not->toBe($user->organization_id);
 });
 
 test('sets created_by to the user id', function () use ($attributes) {

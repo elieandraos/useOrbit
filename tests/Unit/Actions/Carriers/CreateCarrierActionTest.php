@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 use App\Actions\Carriers\CreateCarrierAction;
 use App\Enums\CarrierStatus;
+use App\Models\Organization;
 use App\Models\User;
+use App\Support\Tenancy\OrganizationContext;
 
 $attributes = [
     'name' => 'Bankers Assurance',
@@ -41,6 +43,18 @@ test('creates carrier scoped to the user current organization', function () use 
     $carrier = app(CreateCarrierAction::class)->handle($user, $attributes);
 
     expect($carrier->organization_id)->toBe($user->organization_id);
+});
+
+test('creates carrier scoped to the organization context rather than the user organization', function () use ($attributes) {
+    $user = User::factory()->withOrganization()->create();
+    $otherOrganization = Organization::factory()->create();
+    app(OrganizationContext::class)->set($otherOrganization->id);
+
+    /** @noinspection PhpUnhandledExceptionInspection */
+    $carrier = app(CreateCarrierAction::class)->handle($user, $attributes);
+
+    expect($carrier->organization_id)->toBe($otherOrganization->id)
+        ->and($carrier->organization_id)->not->toBe($user->organization_id);
 });
 
 test('sets created_by and updated_by to the user id', function () use ($attributes) {

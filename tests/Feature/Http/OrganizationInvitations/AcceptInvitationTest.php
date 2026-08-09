@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Notification;
 function inviteMemberAndCaptureToken(User $owner): array
 {
     Notification::fake();
+    setOrganizationContext($owner);
 
     /** @noinspection PhpUnhandledExceptionInspection */
     $invitee = app(InviteOrganizationMemberAction::class)->handle($owner, [

@@ -5,7 +5,9 @@ declare(strict_types=1);
 use App\Actions\Documents\UploadDocumentAction;
 use App\Enums\DocumentStatus;
 use App\Models\Client;
+use App\Models\Organization;
 use App\Models\User;
+use App\Support\Tenancy\OrganizationContext;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -13,6 +15,7 @@ use Illuminate\Support\Facades\Storage;
 test('stashes the file to the local staging disk', function () {
     Storage::fake('local');
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     $client = Client::factory()->forOrganization($user)->create();
     $file = UploadedFile::fake()->create('report.pdf', 100, 'application/pdf');
 
@@ -27,6 +30,7 @@ test('stages the file to the configured documents disk', function () {
     config(['documents.disk' => 's3']);
     Storage::fake('s3');
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     $client = Client::factory()->forOrganization($user)->create();
     $file = UploadedFile::fake()->create('report.pdf', 100, 'application/pdf');
 
@@ -40,6 +44,7 @@ test('stages the file to the configured documents disk', function () {
 test('creates a pending document row', function () {
     Storage::fake('local');
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     $client = Client::factory()->forOrganization($user)->create();
     $file = UploadedFile::fake()->create('report.pdf', 100, 'application/pdf');
 
@@ -50,9 +55,10 @@ test('creates a pending document row', function () {
         ->and($document->stored_at)->toBeNull();
 });
 
-test('scopes the document to the user current organization', function () {
+test('scopes the document to the current organization context', function () {
     Storage::fake('local');
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     $client = Client::factory()->forOrganization($user)->create();
     $file = UploadedFile::fake()->create('report.pdf', 100, 'application/pdf');
 
@@ -62,9 +68,25 @@ test('scopes the document to the user current organization', function () {
     expect($document->organization_id)->toBe($user->organization_id);
 });
 
+test('scopes the document to the organization context rather than the user organization', function () {
+    Storage::fake('local');
+    $user = User::factory()->withOrganization()->create();
+    $otherOrganization = Organization::factory()->create();
+    $client = Client::factory()->forOrganization($user)->create();
+    $file = UploadedFile::fake()->create('report.pdf', 100, 'application/pdf');
+    app(OrganizationContext::class)->set($otherOrganization->id);
+
+    /** @noinspection PhpUnhandledExceptionInspection */
+    $document = app(UploadDocumentAction::class)->handle($user, $client, $file);
+
+    expect($document->organization_id)->toBe($otherOrganization->id)
+        ->and($document->organization_id)->not->toBe($user->organization_id);
+});
+
 test('sets uploaded_by to the user id', function () {
     Storage::fake('local');
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     $client = Client::factory()->forOrganization($user)->create();
     $file = UploadedFile::fake()->create('report.pdf', 100, 'application/pdf');
 
@@ -77,6 +99,7 @@ test('sets uploaded_by to the user id', function () {
 test('associates the document with the given documentable', function () {
     Storage::fake('local');
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     $client = Client::factory()->forOrganization($user)->create();
     $file = UploadedFile::fake()->create('report.pdf', 100, 'application/pdf');
 
@@ -90,6 +113,7 @@ test('associates the document with the given documentable', function () {
 test('keeps the original filename separate from the staging path', function () {
     Storage::fake('local');
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     $client = Client::factory()->forOrganization($user)->create();
     $file = UploadedFile::fake()->create('report.pdf', 100, 'application/pdf');
 
@@ -103,6 +127,7 @@ test('keeps the original filename separate from the staging path', function () {
 test('computes a sha256 checksum of the uploaded file', function () {
     Storage::fake('local');
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     $client = Client::factory()->forOrganization($user)->create();
     $file = UploadedFile::fake()->create('report.pdf', 100, 'application/pdf');
     $expectedChecksum = hash_file('sha256', $file->getRealPath());
@@ -116,6 +141,7 @@ test('computes a sha256 checksum of the uploaded file', function () {
 test('deletes the staged file when the document row fails to persist', function () {
     Storage::fake('local');
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     $client = Client::factory()->make();
     $file = UploadedFile::fake()->create('report.pdf', 100, 'application/pdf');
 
@@ -128,6 +154,7 @@ test('deletes the staged file when the document row fails to persist', function 
 test('records the mime type and size', function () {
     Storage::fake('local');
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     $client = Client::factory()->forOrganization($user)->create();
     $file = UploadedFile::fake()->create('report.pdf', 100, 'application/pdf');
 

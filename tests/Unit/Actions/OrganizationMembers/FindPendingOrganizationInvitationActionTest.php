@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Notification;
 
 $invite = function (User $inviter, string $email = 'jane.doe@useorbit.com'): array {
     Notification::fake();
+    setOrganizationContext($inviter);
 
     /** @noinspection PhpUnhandledExceptionInspection */
     $invitee = app(InviteOrganizationMemberAction::class)->handle($inviter, [

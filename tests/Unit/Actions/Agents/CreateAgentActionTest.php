@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 use App\Actions\Agents\CreateAgentAction;
 use App\Enums\AgentStatus;
+use App\Models\Organization;
 use App\Models\User;
+use App\Support\Tenancy\OrganizationContext;
 
 $attributes = [
     'first_name' => 'Mira',
@@ -36,6 +38,18 @@ test('creates agent scoped to the user current organization', function () use ($
     $agent = app(CreateAgentAction::class)->handle($user, $attributes);
 
     expect($agent->organization_id)->toBe($user->organization_id);
+});
+
+test('creates agent scoped to the organization context rather than the user organization', function () use ($attributes) {
+    $user = User::factory()->withOrganization()->create();
+    $otherOrganization = Organization::factory()->create();
+    app(OrganizationContext::class)->set($otherOrganization->id);
+
+    /** @noinspection PhpUnhandledExceptionInspection */
+    $agent = app(CreateAgentAction::class)->handle($user, $attributes);
+
+    expect($agent->organization_id)->toBe($otherOrganization->id)
+        ->and($agent->organization_id)->not->toBe($user->organization_id);
 });
 
 test('sets created_by and updated_by to the user id', function () use ($attributes) {

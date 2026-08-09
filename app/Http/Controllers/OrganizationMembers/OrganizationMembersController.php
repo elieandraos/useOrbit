@@ -58,13 +58,10 @@ final class OrganizationMembersController extends Controller
     #[Authorize('remove', [User::class, 'member'])]
     public function destroy(RemoveOrganizationMemberRequest $request, User $member, RemoveOrganizationMemberAction $action): RedirectResponse
     {
-        /** @var User $user */
-        $user = $request->user();
-
         /** @var User $successor */
         $successor = User::query()->findOrFail($request->validated('reassign_to'));
 
-        $action->handle($user, $member, $successor);
+        $action->handle($member, $successor);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Member removed.')]);
 

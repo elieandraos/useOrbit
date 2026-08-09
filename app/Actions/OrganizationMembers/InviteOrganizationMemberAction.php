@@ -7,11 +7,14 @@ namespace App\Actions\OrganizationMembers;
 use App\Enums\OrganizationMemberStatus;
 use App\Models\User;
 use App\Notifications\OrganizationInvitationNotification;
+use App\Support\Tenancy\OrganizationContext;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 final class InviteOrganizationMemberAction
 {
+    public function __construct(private readonly OrganizationContext $organizationContext) {}
+
     /**
      * @param  array{name: string, email: string, role: string}  $attributes
      *
@@ -27,7 +30,7 @@ final class InviteOrganizationMemberAction
                 'name' => $attributes['name'],
                 'email' => $attributes['email'],
                 'password' => null,
-                'organization_id' => $invitedBy->organization_id,
+                'organization_id' => $this->organizationContext->id(),
                 'role' => $attributes['role'],
                 'status' => OrganizationMemberStatus::Invited,
                 'invited_by' => $invitedBy->id,

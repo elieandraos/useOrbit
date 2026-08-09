@@ -40,6 +40,7 @@ test('revoking an invitation frees the email for a new invite', function () {
 
     $organization = Organization::factory()->create();
     $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+    setOrganizationContext($owner);
 
     /** @noinspection PhpUnhandledExceptionInspection */
     $invitee = app(InviteOrganizationMemberAction::class)->handle($owner, [

@@ -10,11 +10,14 @@ use App\Models\Contracts\Documentable;
 use App\Models\Document;
 use App\Models\User;
 use App\Notifications\DocumentsUploadBatchProcessed;
+use App\Support\Tenancy\OrganizationContext;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Bus;
 
 final class FinalizeDocumentsUploadBatchAction
 {
+    public function __construct(private readonly OrganizationContext $organizationContext) {}
+
     /**
      * @param  array<int, int>  $documentIds
      * @return int the number of submitted IDs that were rejected (not owned by the user, wrong org, or no longer pending)
@@ -25,7 +28,7 @@ final class FinalizeDocumentsUploadBatchAction
     {
         $documents = Document::query()
             ->whereKey($documentIds)
-            ->where('organization_id', $user->organization_id)
+            ->where('organization_id', $this->organizationContext->id())
             ->where('uploaded_by', $user->id)
             ->where('status', DocumentStatus::Pending)
             ->with('documentable')

@@ -8,11 +8,14 @@ use App\Concerns\GeneratesUniqueSlug;
 use App\Enums\CarrierStatus;
 use App\Models\Carrier;
 use App\Models\User;
+use App\Support\Tenancy\OrganizationContext;
 use Illuminate\Support\Facades\DB;
 
 final class CreateCarrierAction
 {
     use GeneratesUniqueSlug;
+
+    public function __construct(private readonly OrganizationContext $organizationContext) {}
 
     /**
      * @param  array{name: string, phone?: string|null, website?: string|null, branch: array{street?: string|null, building_floor?: string|null, city: string, country_id?: int|null, state_id?: int|null}, contact: array{name: string, role?: string|null, email?: string|null, phone?: string|null}}  $attributes
@@ -22,10 +25,12 @@ final class CreateCarrierAction
     public function handle(User $user, array $attributes): Carrier
     {
         return DB::transaction(function () use ($user, $attributes): Carrier {
+            $organizationId = $this->organizationContext->id();
+
             $slug = $this->generateUniqueSlug(
                 Carrier::class,
                 $attributes['name'],
-                $user->organization_id,
+                $organizationId,
             );
 
             /** @var Carrier $carrier */
@@ -34,7 +39,7 @@ final class CreateCarrierAction
                 'phone' => $attributes['phone'] ?? null,
                 'website' => $attributes['website'] ?? null,
                 'status' => CarrierStatus::Active,
-                'organization_id' => $user->organization_id,
+                'organization_id' => $organizationId,
                 'slug' => $slug,
                 'created_by' => $user->id,
                 'updated_by' => $user->id,

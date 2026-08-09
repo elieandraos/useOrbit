@@ -7,11 +7,14 @@ namespace App\Actions\Carriers;
 use App\Concerns\GeneratesUniqueSlug;
 use App\Models\Carrier;
 use App\Models\User;
+use App\Support\Tenancy\OrganizationContext;
 use Illuminate\Support\Facades\DB;
 
 final class UpdateCarrierAction
 {
     use GeneratesUniqueSlug;
+
+    public function __construct(private readonly OrganizationContext $organizationContext) {}
 
     /**
      * @param  array{name: string, phone?: string|null, website?: string|null}  $attributes
@@ -32,7 +35,7 @@ final class UpdateCarrierAction
                     'slug' => $this->generateUniqueSlug(
                         Carrier::class,
                         $attributes['name'],
-                        $user->organization_id,
+                        $this->organizationContext->id(),
                         $carrier->id,
                     ),
                 ] : [],
