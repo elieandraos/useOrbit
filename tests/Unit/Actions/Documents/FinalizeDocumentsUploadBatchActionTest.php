@@ -43,8 +43,8 @@ test('dispatches a batch containing a job for each pending document owned by the
     /** @noinspection PhpParamsInspection */
     Bus::assertBatched(fn (PendingBatchFake $batch): bool => $batch->jobs->count() === 2
         && $batch->hasJobs([
-            fn (StoreDocumentJob $job): bool => $job->document->is($first),
-            fn (StoreDocumentJob $job): bool => $job->document->is($second),
+            fn (StoreDocumentJob $job): bool => $job->documentId === $first->id,
+            fn (StoreDocumentJob $job): bool => $job->documentId === $second->id,
         ]));
 });
 
@@ -111,7 +111,7 @@ test('returns a partial rejected count when some submitted ids match and others 
     expect($rejectedCount)->toBe(1);
     /** @noinspection PhpParamsInspection */
     Bus::assertBatched(fn (PendingBatchFake $batch): bool => $batch->jobs->count() === 1
-        && $batch->hasJobs([fn (StoreDocumentJob $job): bool => $job->document->is($pending)]));
+        && $batch->hasJobs([fn (StoreDocumentJob $job): bool => $job->documentId === $pending->id]));
 });
 
 test('does not count a duplicate submitted id as rejected', function () {

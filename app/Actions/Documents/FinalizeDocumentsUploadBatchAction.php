@@ -45,7 +45,7 @@ final class FinalizeDocumentsUploadBatchAction
         /** @var Model&Documentable $documentable */
         $documentable = $firstDocument->documentable;
 
-        Bus::batch($documents->map(fn (Document $document): StoreDocumentJob => new StoreDocumentJob($document))->all())
+        Bus::batch($documents->map(fn (Document $document): StoreDocumentJob => new StoreDocumentJob($document->id, $document->organization_id))->all())
             ->finally(function () use ($user, $ids, $documentable): void {
                 $outcome = app(CountDocumentsUploadBatchOutcomeAction::class)->handle($ids);
                 $processedDocuments = Document::query()->whereKey($ids)->get(['id', 'status']);
