@@ -7,6 +7,7 @@ namespace Database\Seeders;
 use App\Models\Client;
 use App\Models\Note;
 use App\Models\Organization;
+use App\Support\Tenancy\OrganizationContext;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -21,6 +22,8 @@ final class NotesSeeder extends Seeder
     {
         $organization = Organization::query()->firstOrFail();
         $user = $organization->owner();
+
+        app(OrganizationContext::class)->set($organization->id);
 
         Client::query()->each(function (Client $client) use ($user): void {
             $count = fake()->numberBetween(0, 3);
