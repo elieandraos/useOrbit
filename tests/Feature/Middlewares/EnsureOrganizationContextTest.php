@@ -3,14 +3,13 @@
 declare(strict_types=1);
 
 use App\Enums\OrganizationMemberStatus;
-use App\Enums\OrganizationRole;
 use App\Models\Client;
 use App\Models\Organization;
 use App\Models\User;
 
 test('authenticated user with suspended membership is redirected', function () {
     $organization = Organization::factory()->create();
-    $user = User::factory()->forOrganization($organization, OrganizationRole::Member)->create([
+    $user = User::factory()->forOrganization($organization)->create([
         'status' => OrganizationMemberStatus::Suspended,
     ]);
 
@@ -22,7 +21,7 @@ test('authenticated user with suspended membership is redirected', function () {
 
 test('authenticated user with invited membership is redirected', function () {
     $organization = Organization::factory()->create();
-    $user = User::factory()->forOrganization($organization, OrganizationRole::Member)->create([
+    $user = User::factory()->forOrganization($organization)->create([
         'status' => OrganizationMemberStatus::Invited,
     ]);
 
