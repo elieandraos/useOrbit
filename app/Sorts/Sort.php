@@ -17,6 +17,17 @@ abstract class Sort
     {
         $this->builder = $builder;
 
+        $sorted = $this->resolve();
+
+        // Ties on the primary sort column(s) are otherwise ordered however the
+        // database engine feels like on a given query plan, which is not
+        // guaranteed to stay consistent across executions. Break ties on the
+        // primary key so pagination and tests get a stable, repeatable order.
+        return $sorted->orderBy($sorted->getModel()->getKeyName());
+    }
+
+    private function resolve(): Builder
+    {
         if ($this->column === null) {
             return $this->default($this->builder);
         }

@@ -25,7 +25,7 @@ test('authenticated user can list their organization carriers', function () {
         ->assertOk()
         ->assertHasPaginatedResource(
             'carriers',
-            CarrierResource::collection(Carrier::query()->with('branches')->orderBy('name')->paginate(7))
+            CarrierResource::collection(Carrier::query()->with('branches')->orderBy('name')->orderBy('id')->paginate(7))
         );
 });
 
@@ -162,7 +162,7 @@ test('carriers from another organization are not included', function () {
         ->assertHasPaginatedResource(
             'carriers',
             CarrierResource::collection(
-                Carrier::query()->where('organization_id', $user->organization_id)->with('branches')->orderBy('name')->paginate(7)
+                Carrier::query()->where('organization_id', $user->organization_id)->with('branches')->orderBy('name')->orderBy('id')->paginate(7)
             )
         );
 });

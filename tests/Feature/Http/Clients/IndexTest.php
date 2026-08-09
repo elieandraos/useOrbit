@@ -23,7 +23,7 @@ test('authenticated user can list their organization clients', function () {
     $this->actingAs($user)
         ->get(route('clients.index'))
         ->assertOk()
-        ->assertHasPaginatedResource('clients', ClientResource::collection(Client::query()->latest('enrollment_date')->paginate(7)));
+        ->assertHasPaginatedResource('clients', ClientResource::collection(Client::query()->latest('enrollment_date')->orderBy('id')->paginate(7)));
 });
 
 test('clients are ordered by enrollment date, newest first', function () {
@@ -63,7 +63,7 @@ test('clients from another organization are not included', function () {
         ->assertHasPaginatedResource(
             'clients',
             ClientResource::collection(
-                Client::query()->where('organization_id', $user->organization_id)->latest('enrollment_date')->paginate(7)
+                Client::query()->where('organization_id', $user->organization_id)->latest('enrollment_date')->orderBy('id')->paginate(7)
             )
         );
 });

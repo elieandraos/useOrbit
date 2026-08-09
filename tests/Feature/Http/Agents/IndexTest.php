@@ -23,7 +23,7 @@ test('authenticated user can list their organization agents', function () {
         ->assertOk()
         ->assertHasPaginatedResource(
             'agents',
-            AgentResource::collection(Agent::query()->orderBy('last_name')->orderBy('first_name')->paginate(7))
+            AgentResource::collection(Agent::query()->orderBy('last_name')->orderBy('first_name')->orderBy('id')->paginate(7))
         );
 });
 
@@ -160,7 +160,7 @@ test('agents from another organization are not included', function () {
         ->assertHasPaginatedResource(
             'agents',
             AgentResource::collection(
-                Agent::query()->where('organization_id', $user->organization_id)->orderBy('last_name')->orderBy('first_name')->paginate(7)
+                Agent::query()->where('organization_id', $user->organization_id)->orderBy('last_name')->orderBy('first_name')->orderBy('id')->paginate(7)
             )
         );
 });
