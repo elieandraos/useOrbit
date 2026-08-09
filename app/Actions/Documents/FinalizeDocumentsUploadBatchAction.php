@@ -25,7 +25,7 @@ final class FinalizeDocumentsUploadBatchAction
     {
         $documents = Document::query()
             ->whereKey($documentIds)
-            ->where('organization_id', $user->current_organization_id)
+            ->where('organization_id', $user->organization_id)
             ->where('uploaded_by', $user->id)
             ->where('status', DocumentStatus::Pending)
             ->with('documentable')
@@ -45,7 +45,7 @@ final class FinalizeDocumentsUploadBatchAction
         /** @var Model&Documentable $documentable */
         $documentable = $firstDocument->documentable;
 
-        Bus::batch($documents->map(fn (Document $document): StoreDocumentJob => new StoreDocumentJob($document))->all())
+        Bus::batch($documents->map(fn (Document $document): StoreDocumentJob => new StoreDocumentJob($document->id, $document->organization_id))->all())
             ->finally(function () use ($user, $ids, $documentable): void {
                 $outcome = app(CountDocumentsUploadBatchOutcomeAction::class)->handle($ids);
                 $processedDocuments = Document::query()->whereKey($ids)->get(['id', 'status']);

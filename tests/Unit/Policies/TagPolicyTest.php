@@ -14,13 +14,6 @@ test('user with a current organization can viewAny and create tags', function ()
         ->and($user->can('create', Tag::class))->toBeTrue();
 });
 
-test('user without a current organization cannot viewAny or create tags', function () {
-    $user = User::factory()->create(['current_organization_id' => null]);
-
-    expect($user->can('viewAny', Tag::class))->toBeFalse()
-        ->and($user->can('create', Tag::class))->toBeFalse();
-});
-
 test('creator can delete their own tag', function () {
     $organization = Organization::factory()->create();
     $member = User::factory()->forOrganization($organization)->create();

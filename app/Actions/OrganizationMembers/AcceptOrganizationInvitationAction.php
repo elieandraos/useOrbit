@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\OrganizationMembers;
 
 use App\Enums\OrganizationMemberStatus;
-use App\Models\OrganizationMember;
+use App\Models\User;
 use App\Notifications\MemberJoinedNotification;
 use Illuminate\Support\Facades\DB;
 
@@ -16,41 +16,37 @@ final class AcceptOrganizationInvitationAction
      *
      * @throws \Throwable
      */
-    public function handle(OrganizationMember $invitation, array $attributes): ?OrganizationMember
+    public function handle(User $invitation, array $attributes): ?User
     {
-        $accepted = DB::transaction(function () use ($invitation, $attributes): ?OrganizationMember {
+        $accepted = DB::transaction(function () use ($invitation, $attributes): ?User {
             /** @noinspection PhpUndefinedMethodInspection */
-            /** @var OrganizationMember|null $current */
-            $current = OrganizationMember::query()
+            /** @var User|null $current */
+            $current = User::query()
                 ->whereKey($invitation->id)
                 ->pendingInvitation()
                 ->lockForUpdate()
                 ->first();
 
-            if (! $current instanceof OrganizationMember) {
+            if (! $current instanceof User) {
                 return null;
             }
 
             $current->update([
-                'status' => OrganizationMemberStatus::Active->value,
-                'joined_at' => now(),
-                'token' => null,
-                'expires_at' => null,
-            ]);
-
-            $current->user->update([
                 'password' => $attributes['password'],
-                'current_organization_id' => $current->organization_id,
+                'status' => OrganizationMemberStatus::Active,
+                'joined_at' => now(),
+                'invitation_token' => null,
+                'invitation_expires_at' => null,
             ]);
 
             return $current;
         });
 
-        if (! $accepted instanceof OrganizationMember) {
+        if (! $accepted instanceof User) {
             return null;
         }
 
-        $accepted->organization->owner()?->notify(new MemberJoinedNotification($accepted->organization, $accepted->user)->afterCommit());
+        $accepted->organization->owner()?->notify(new MemberJoinedNotification($accepted->organization, $accepted)->afterCommit());
 
         return $accepted;
     }

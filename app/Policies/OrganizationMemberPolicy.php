@@ -12,13 +12,13 @@ final class OrganizationMemberPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->current_organization_id !== null;
+        return $user->organization_id !== null;
     }
 
     public function invite(User $user): bool
     {
-        return $user->current_organization_id !== null
-            && ($user->organizationRole()?->isPrivileged() ?? false);
+        return $user->organization_id !== null
+            && $user->role->isPrivileged();
     }
 
     public function changeRole(User $user, User $member): bool
@@ -27,18 +27,13 @@ final class OrganizationMemberPolicy
             return false;
         }
 
-        if (! ($user->organizationRole()?->isPrivileged() ?? false)) {
+        if (! $user->role->isPrivileged()) {
             return false;
         }
 
-        $pivot = $member->organizations()
-            ->wherePivot('organization_id', $user->current_organization_id)
-            ->first()
-            ?->pivot;
-
-        return $pivot !== null
-            && $pivot->role !== OrganizationRole::Owner
-            && $pivot->status === OrganizationMemberStatus::Active;
+        return $member->organization_id === $user->organization_id
+            && $member->role !== OrganizationRole::Owner
+            && $member->status === OrganizationMemberStatus::Active;
     }
 
     public function remove(User $user, User $member): bool
@@ -47,31 +42,22 @@ final class OrganizationMemberPolicy
             return false;
         }
 
-        if (! ($user->organizationRole()?->isPrivileged() ?? false)) {
+        if (! $user->role->isPrivileged()) {
             return false;
         }
 
-        $pivot = $member->organizations()
-            ->wherePivot('organization_id', $user->current_organization_id)
-            ->first()
-            ?->pivot;
-
-        return $pivot !== null
-            && $pivot->role !== OrganizationRole::Owner
-            && $pivot->status === OrganizationMemberStatus::Active;
+        return $member->organization_id === $user->organization_id
+            && $member->role !== OrganizationRole::Owner
+            && $member->status === OrganizationMemberStatus::Active;
     }
 
     public function revoke(User $user, User $member): bool
     {
-        if (! ($user->organizationRole()?->isPrivileged() ?? false)) {
+        if (! $user->role->isPrivileged()) {
             return false;
         }
 
-        $pivot = $member->organizations()
-            ->wherePivot('organization_id', $user->current_organization_id)
-            ->first()
-            ?->pivot;
-
-        return $pivot !== null && $pivot->status === OrganizationMemberStatus::Invited;
+        return $member->organization_id === $user->organization_id
+            && $member->status === OrganizationMemberStatus::Invited;
     }
 }

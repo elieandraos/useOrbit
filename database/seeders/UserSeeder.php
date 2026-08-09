@@ -25,17 +25,14 @@ final class UserSeeder extends Seeder
             ['name' => 'Lebanon', 'iso3' => 'LBN', 'phone_code' => '961', 'region' => 'Asia', 'subregion' => 'Western Asia'],
         );
 
-        $user = User::factory()->create([
+        User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
-            'current_organization_id' => $organization->id,
-            'country_id' => $country->id,
-        ]);
-
-        $user->organizations()->attach($organization->id, [
-            'role' => OrganizationRole::Owner->value,
-            'status' => OrganizationMemberStatus::Active->value,
+            'organization_id' => $organization->id,
+            'role' => OrganizationRole::Owner,
+            'status' => OrganizationMemberStatus::Active,
             'joined_at' => now(),
+            'country_id' => $country->id,
         ]);
     }
 }

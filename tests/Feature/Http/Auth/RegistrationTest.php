@@ -33,10 +33,9 @@ test('new users can register', function () {
     /** @var User $user */
     $user = auth()->user();
     $organization = Organization::query()->where('name', 'Test Company')->first();
-    $pivot = $user->organizations()->first()->pivot;
 
     expect($organization)->not->toBeNull()
-        ->and($user->current_organization_id)->toBe($organization->id)
-        ->and($pivot->role)->toBe(OrganizationRole::Owner)
-        ->and($pivot->status)->toBe(OrganizationMemberStatus::Active);
+        ->and($user->organization_id)->toBe($organization->id)
+        ->and($user->role)->toBe(OrganizationRole::Owner)
+        ->and($user->status)->toBe(OrganizationMemberStatus::Active);
 });

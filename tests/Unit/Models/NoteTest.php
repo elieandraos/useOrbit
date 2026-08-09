@@ -8,6 +8,7 @@ use App\Models\User;
 
 test('note belongs to its notable and resolves the relation both directions', function () {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     $client = Client::factory()->forOrganization($user)->create();
     $note = Note::factory()->forOrganization($user)->createdBy($user)->create([
         'notable_type' => $client->getMorphClass(),
@@ -34,7 +35,7 @@ test('current organization scope only returns notes for the acting user\'s curre
     $ownNote = Note::factory()->forOrganization($user)->createdBy($user)->create();
     Note::factory()->forOrganization($otherUser)->createdBy($otherUser)->create();
 
-    $this->actingAs($user);
+    setOrganizationContext($user);
 
     expect(Note::query()->pluck('id'))->toEqual(collect([$ownNote->id]));
 });

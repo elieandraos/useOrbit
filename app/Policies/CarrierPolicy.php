@@ -11,39 +11,39 @@ final class CarrierPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->current_organization_id !== null;
+        return $user->organization_id !== null;
     }
 
     public function view(User $user, Carrier $carrier): bool
     {
-        return $carrier->organization_id === $user->current_organization_id;
+        return $carrier->organization_id === $user->organization_id;
     }
 
     public function create(User $user): bool
     {
-        return $user->current_organization_id !== null;
+        return $user->organization_id !== null;
     }
 
     public function update(User $user, Carrier $carrier): bool
     {
-        return $carrier->organization_id === $user->current_organization_id;
+        return $carrier->organization_id === $user->organization_id;
     }
 
     public function delete(User $user, Carrier $carrier): bool
     {
-        return $carrier->organization_id === $user->current_organization_id
-            && ($user->organizationRole()?->isPrivileged() ?? false);
+        return $carrier->organization_id === $user->organization_id
+            && $user->role->isPrivileged();
     }
 
     public function archive(User $user, Carrier $carrier): bool
     {
-        return $carrier->organization_id === $user->current_organization_id
-            && ($user->organizationRole()?->isPrivileged() ?? false);
+        return $carrier->organization_id === $user->organization_id
+            && $user->role->isPrivileged();
     }
 
     public function unarchive(User $user, Carrier $carrier): bool
     {
-        return $carrier->organization_id === $user->current_organization_id
-            && ($user->organizationRole()?->isPrivileged() ?? false);
+        return $carrier->organization_id === $user->organization_id
+            && $user->role->isPrivileged();
     }
 }

@@ -15,7 +15,6 @@ final class RevokeOrganizationInvitationAction
     public function handle(User $member): void
     {
         DB::transaction(function () use ($member): void {
-            // Hard-deletes the pending user; the organization_user pivot cascades on delete.
             $member->delete();
         });
     }

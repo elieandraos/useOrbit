@@ -57,10 +57,10 @@ test('store rejects an email already a member of this organization', function ()
 test('store rejects an email already invited to this organization', function () use ($validPayload) {
     $organization = Organization::factory()->create();
     $user = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
-    $pendingInvitee = User::factory()->create(['email' => $validPayload['email'], 'password' => null]);
-    $pendingInvitee->organizations()->attach($organization, [
-        'role' => OrganizationRole::Member->value,
-        'status' => OrganizationMemberStatus::Invited->value,
+    User::factory()->forOrganization($organization)->create([
+        'email' => $validPayload['email'],
+        'password' => null,
+        'status' => OrganizationMemberStatus::Invited,
     ]);
 
     $this->actingAs($user)

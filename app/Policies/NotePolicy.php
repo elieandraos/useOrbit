@@ -12,28 +12,28 @@ final class NotePolicy
 {
     public function viewAny(User $user, Notable $notable): bool
     {
-        return $notable->organization_id === $user->current_organization_id;
+        return $notable->organization_id === $user->organization_id;
     }
 
     public function create(User $user, Notable $notable): bool
     {
-        return $notable->organization_id === $user->current_organization_id;
+        return $notable->organization_id === $user->organization_id;
     }
 
     public function view(User $user, Note $note): bool
     {
-        return $note->organization_id === $user->current_organization_id;
+        return $note->organization_id === $user->organization_id;
     }
 
     public function update(User $user, Note $note): bool
     {
-        return $note->organization_id === $user->current_organization_id
-            && (($user->organizationRole()?->isPrivileged() ?? false) || $note->created_by === $user->id);
+        return $note->organization_id === $user->organization_id
+            && ($user->role->isPrivileged() || $note->created_by === $user->id);
     }
 
     public function delete(User $user, Note $note): bool
     {
-        return $note->organization_id === $user->current_organization_id
-            && (($user->organizationRole()?->isPrivileged() ?? false) || $note->created_by === $user->id);
+        return $note->organization_id === $user->organization_id
+            && ($user->role->isPrivileged() || $note->created_by === $user->id);
     }
 }

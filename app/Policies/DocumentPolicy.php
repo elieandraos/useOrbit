@@ -18,28 +18,28 @@ final class DocumentPolicy
 {
     public function viewAny(User $user, Documentable $documentable): bool
     {
-        return $documentable->organization_id === $user->current_organization_id;
+        return $documentable->organization_id === $user->organization_id;
     }
 
     public function create(User $user, Documentable $documentable): bool
     {
-        return $documentable->organization_id === $user->current_organization_id;
+        return $documentable->organization_id === $user->organization_id;
     }
 
     public function finalize(User $user): bool
     {
-        return $user->current_organization_id !== null;
+        return $user->organization_id !== null;
     }
 
     public function view(User $user, Document $document): bool
     {
-        return $document->organization_id === $user->current_organization_id;
+        return $document->organization_id === $user->organization_id;
     }
 
     public function delete(User $user, Document $document): bool
     {
-        return $document->organization_id === $user->current_organization_id
+        return $document->organization_id === $user->organization_id
             && $document->status->isSettled()
-            && (($user->organizationRole()?->isPrivileged() ?? false) || $document->uploaded_by === $user->id);
+            && ($user->role->isPrivileged() || $document->uploaded_by === $user->id);
     }
 }

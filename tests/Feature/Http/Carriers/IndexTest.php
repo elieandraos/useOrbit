@@ -162,7 +162,7 @@ test('carriers from another organization are not included', function () {
         ->assertHasPaginatedResource(
             'carriers',
             CarrierResource::collection(
-                Carrier::query()->where('organization_id', $user->current_organization_id)->with('branches')->orderBy('name')->paginate(7)
+                Carrier::query()->where('organization_id', $user->organization_id)->with('branches')->orderBy('name')->paginate(7)
             )
         );
 });

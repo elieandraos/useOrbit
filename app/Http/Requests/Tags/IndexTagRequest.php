@@ -33,7 +33,7 @@ final class IndexTagRequest extends FormRequest
                 'integer',
                 Rule::when(
                     $ownerTable !== null,
-                    [Rule::exists($ownerTable, 'id')->where('organization_id', $this->user()?->current_organization_id)],
+                    [Rule::exists($ownerTable, 'id')->where('organization_id', $this->user()?->organization_id)],
                 ),
             ],
         ];

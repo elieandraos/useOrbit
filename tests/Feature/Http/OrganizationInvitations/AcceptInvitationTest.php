@@ -63,7 +63,7 @@ test('renders the invalid page for an expired token', function () {
 
     [$invitee, $token] = inviteMemberAndCaptureToken($owner);
 
-    $invitee->organizations()->updateExistingPivot($organization->id, ['expires_at' => now()->subDay()]);
+    $invitee->update(['invitation_expires_at' => now()->subDay()]);
 
     $this->get(route('invitations.show', $token))
         ->assertOk()
@@ -76,11 +76,11 @@ test('renders the invalid page for an already-accepted token', function () {
 
     [$invitee, $token] = inviteMemberAndCaptureToken($owner);
 
-    $invitee->organizations()->updateExistingPivot($organization->id, [
-        'status' => OrganizationMemberStatus::Active->value,
+    $invitee->update([
+        'status' => OrganizationMemberStatus::Active,
         'joined_at' => now(),
-        'token' => null,
-        'expires_at' => null,
+        'invitation_token' => null,
+        'invitation_expires_at' => null,
     ]);
 
     $this->get(route('invitations.show', $token))

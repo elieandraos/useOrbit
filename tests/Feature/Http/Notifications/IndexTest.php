@@ -13,7 +13,7 @@ test('guests are redirected to the login page', function () {
 
 test('member sees only their own notifications, paginated most recent first', function () {
     $user = User::factory()->withOrganization()->create();
-    $otherUser = User::factory()->forOrganization($user->currentOrganization)->create();
+    $otherUser = User::factory()->forOrganization($user->organization)->create();
 
     $older = createNotificationFor($user);
     $older->forceFill(['created_at' => now()->subDay()])->save();

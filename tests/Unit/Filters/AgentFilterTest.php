@@ -5,12 +5,13 @@ declare(strict_types=1);
 use App\Enums\AgentStatus;
 use App\Filters\AgentFilter;
 use App\Models\Agent;
+use App\Models\Scopes\CurrentOrganizationScope;
 
 test('empty filters return the unfiltered builder', function () {
     Agent::factory(3)->create();
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $agents = Agent::query()->filter(new AgentFilter([]))->get();
+    $agents = Agent::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new AgentFilter([]))->get();
 
     expect($agents)->toHaveCount(3);
 });
@@ -19,7 +20,7 @@ test('a null or empty string value is skipped', function () {
     Agent::factory(3)->create();
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $agents = Agent::query()->filter(new AgentFilter(['search' => null]))->get();
+    $agents = Agent::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new AgentFilter(['search' => null]))->get();
 
     expect($agents)->toHaveCount(3);
 });
@@ -28,7 +29,7 @@ test('an unrecognized filter key is ignored', function () {
     Agent::factory(3)->create();
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $agents = Agent::query()->filter(new AgentFilter(['unknown' => 'value']))->get();
+    $agents = Agent::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new AgentFilter(['unknown' => 'value']))->get();
 
     expect($agents)->toHaveCount(3);
 });
@@ -39,7 +40,7 @@ test('search matches first name', function () {
     Agent::factory()->create(['first_name' => 'Nadia']);
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $agents = Agent::query()->filter(new AgentFilter(['search' => 'Mira']))->get();
+    $agents = Agent::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new AgentFilter(['search' => 'Mira']))->get();
 
     expect($agents->pluck('id')->all())->toBe([$match->id]);
 });
@@ -50,7 +51,7 @@ test('search matches last name', function () {
     Agent::factory()->create(['last_name' => 'Fares']);
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $agents = Agent::query()->filter(new AgentFilter(['search' => 'Olsen']))->get();
+    $agents = Agent::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new AgentFilter(['search' => 'Olsen']))->get();
 
     expect($agents->pluck('id')->all())->toBe([$match->id]);
 });
@@ -61,7 +62,7 @@ test('search matches phone', function () {
     Agent::factory()->create(['phone' => '+96170999999']);
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $agents = Agent::query()->filter(new AgentFilter(['search' => '70123456']))->get();
+    $agents = Agent::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new AgentFilter(['search' => '70123456']))->get();
 
     expect($agents->pluck('id')->all())->toBe([$match->id]);
 });
@@ -72,7 +73,7 @@ test('search matches email', function () {
     Agent::factory()->create(['email' => 'nadia.fares@useorbit.com']);
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $agents = Agent::query()->filter(new AgentFilter(['search' => 'mira.olsen']))->get();
+    $agents = Agent::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new AgentFilter(['search' => 'mira.olsen']))->get();
 
     expect($agents->pluck('id')->all())->toBe([$match->id]);
 });
@@ -81,7 +82,7 @@ test('search excludes non-matching agents', function () {
     Agent::factory()->create(['first_name' => 'Mira', 'last_name' => 'Olsen', 'phone' => '+96170123456', 'email' => 'mira@useorbit.com']);
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $agents = Agent::query()->filter(new AgentFilter(['search' => 'nonexistent']))->get();
+    $agents = Agent::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new AgentFilter(['search' => 'nonexistent']))->get();
 
     expect($agents)->toHaveCount(0);
 });
@@ -92,7 +93,7 @@ test('archived=false returns only active agents', function () {
     Agent::factory()->archived()->create();
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $agents = Agent::query()->filter(new AgentFilter(['archived' => false]))->get();
+    $agents = Agent::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new AgentFilter(['archived' => false]))->get();
 
     expect($agents->pluck('id')->all())->toBe([$active->id]);
 });
@@ -103,7 +104,7 @@ test('archived=true returns only archived agents', function () {
     $archived = Agent::factory()->archived()->create();
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $agents = Agent::query()->filter(new AgentFilter(['archived' => true]))->get();
+    $agents = Agent::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new AgentFilter(['archived' => true]))->get();
 
     expect($agents->pluck('id')->all())->toBe([$archived->id]);
 });

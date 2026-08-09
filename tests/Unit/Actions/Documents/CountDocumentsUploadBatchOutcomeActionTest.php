@@ -9,6 +9,7 @@ use Illuminate\Support\Collection;
 
 test('counts completed and failed documents among the given ids', function () {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     $completed = Document::factory(2)->forOrganization($user)->uploadedBy($user)->completed()->create();
     $failed = Document::factory()->forOrganization($user)->uploadedBy($user)->failed()->create();
 
@@ -23,6 +24,7 @@ test('counts completed and failed documents among the given ids', function () {
 
 test('ignores documents still pending', function () {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     $pending = Document::factory()->forOrganization($user)->uploadedBy($user)->create();
 
     /** @noinspection PhpUnhandledExceptionInspection */
@@ -33,6 +35,7 @@ test('ignores documents still pending', function () {
 
 test('ignores documents outside the given ids', function () {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     Document::factory()->forOrganization($user)->uploadedBy($user)->completed()->create();
     $failed = Document::factory()->forOrganization($user)->uploadedBy($user)->failed()->create();
 

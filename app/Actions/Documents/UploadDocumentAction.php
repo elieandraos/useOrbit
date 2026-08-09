@@ -26,7 +26,7 @@ final class UploadDocumentAction
         try {
             /** @var Document $document */
             $document = $documentable->documents()->create([
-                'organization_id' => $user->current_organization_id,
+                'organization_id' => $user->organization_id,
                 'uploaded_by' => $user->id,
                 'original_filename' => $file->getClientOriginalName(),
                 'disk' => $disk,

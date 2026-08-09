@@ -79,6 +79,7 @@ test('shares the organization tag catalog with usage counts', function () {
     ]);
     $document->tags()->attach($tag);
 
+    setOrganizationContext($user);
     /** @noinspection PhpUndefinedMethodInspection */
     $tags = Tag::query()
         ->withDocumentCount($client->getMorphClass(), $client->id)

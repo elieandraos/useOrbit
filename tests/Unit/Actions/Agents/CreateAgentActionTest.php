@@ -20,6 +20,7 @@ $attributes = [
 
 test('sets status to active by default', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
 
     /** @noinspection PhpUnhandledExceptionInspection */
     $agent = app(CreateAgentAction::class)->handle($user, $attributes);
@@ -29,15 +30,17 @@ test('sets status to active by default', function () use ($attributes) {
 
 test('creates agent scoped to the user current organization', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
 
     /** @noinspection PhpUnhandledExceptionInspection */
     $agent = app(CreateAgentAction::class)->handle($user, $attributes);
 
-    expect($agent->organization_id)->toBe($user->current_organization_id);
+    expect($agent->organization_id)->toBe($user->organization_id);
 });
 
 test('sets created_by and updated_by to the user id', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
 
     /** @noinspection PhpUnhandledExceptionInspection */
     $agent = app(CreateAgentAction::class)->handle($user, $attributes);
@@ -48,6 +51,7 @@ test('sets created_by and updated_by to the user id', function () use ($attribut
 
 test('stores the submitted attributes', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
 
     /** @noinspection PhpUnhandledExceptionInspection */
     $agent = app(CreateAgentAction::class)->handle($user, $attributes);
@@ -63,6 +67,7 @@ test('stores the submitted attributes', function () use ($attributes) {
 
 test('generates a non-empty slug', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
 
     /** @noinspection PhpUnhandledExceptionInspection */
     $agent = app(CreateAgentAction::class)->handle($user, $attributes);
@@ -74,8 +79,11 @@ test('two organizations can each have the same slug without collision', function
     $userA = User::factory()->withOrganization()->create();
     $userB = User::factory()->withOrganization()->create();
 
+    setOrganizationContext($userA);
     /** @noinspection PhpUnhandledExceptionInspection */
     $agentA = app(CreateAgentAction::class)->handle($userA, $attributes);
+
+    setOrganizationContext($userB);
     /** @noinspection PhpUnhandledExceptionInspection */
     $agentB = app(CreateAgentAction::class)->handle($userB, $attributes);
 
@@ -85,6 +93,7 @@ test('two organizations can each have the same slug without collision', function
 
 test('appends counter when slug already exists in the same organization', function () use ($attributes) {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
 
     /** @noinspection PhpUnhandledExceptionInspection */
     $first = app(CreateAgentAction::class)->handle($user, $attributes);

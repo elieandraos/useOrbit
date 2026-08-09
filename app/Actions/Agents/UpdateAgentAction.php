@@ -31,7 +31,7 @@ final class UpdateAgentAction
                     'slug' => $this->generateUniqueSlug(
                         Agent::class,
                         "{$attributes['first_name']} {$attributes['last_name']}",
-                        $user->current_organization_id,
+                        $user->organization_id,
                         $agent->id,
                     ),
                 ] : [],

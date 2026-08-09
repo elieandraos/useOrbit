@@ -71,7 +71,7 @@ class DocumentFactory extends Factory
     public function forOrganization(User $user): static
     {
         return $this->state(fn (array $attributes): array => [
-            'organization_id' => $user->current_organization_id,
+            'organization_id' => $user->organization_id,
         ]);
     }
 

@@ -24,8 +24,8 @@ final class RemoveOrganizationMemberRequest extends FormRequest
                 'required',
                 'integer',
                 Rule::notIn([$member->id]),
-                Rule::exists('organization_user', 'user_id')
-                    ->where('organization_id', $user->current_organization_id)
+                Rule::exists('users', 'id')
+                    ->where('organization_id', $user->organization_id)
                     ->where('status', OrganizationMemberStatus::Active->value),
             ],
         ];

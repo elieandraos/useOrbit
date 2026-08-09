@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Enums\OrganizationMemberStatus;
 use App\Models\Organization;
 use App\Models\User;
 
@@ -13,8 +12,7 @@ test('guests are redirected to the login page', function () {
 
 test('authenticated users can visit the dashboard', function () {
     $organization = Organization::factory()->create();
-    $user = User::factory()->create(['current_organization_id' => $organization->id]);
-    $user->organizations()->attach($organization, ['role' => 'member', 'status' => OrganizationMemberStatus::Active->value]);
+    $user = User::factory()->forOrganization($organization)->create();
 
     $this->actingAs($user)
         ->get(route('dashboard'))

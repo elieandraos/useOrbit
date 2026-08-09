@@ -38,9 +38,7 @@ final class InviteOrganizationMemberRequest extends FormRequest
                 /** @var User $user */
                 $user = $this->user();
 
-                $alreadyInOrganization = $invitee->organizations()
-                    ->wherePivot('organization_id', $user->current_organization_id)
-                    ->exists();
+                $alreadyInOrganization = $invitee->organization_id === $user->organization_id;
 
                 $validator->errors()->add('email', $alreadyInOrganization
                     ? __('This person is already a member of this organization.')

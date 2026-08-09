@@ -17,7 +17,7 @@ final class CreateNoteAction
     {
         /** @var Note $note */
         $note = $notable->notes()->create([
-            'organization_id' => $user->current_organization_id,
+            'organization_id' => $user->organization_id,
             'created_by' => $user->id,
             'body' => $attributes['body'],
             'pinned' => $attributes['pinned'] ?? false,

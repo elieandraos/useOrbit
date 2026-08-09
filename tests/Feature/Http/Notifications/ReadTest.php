@@ -23,7 +23,7 @@ test('member can mark their own notification as read', function () {
 
 test('member cannot mark another user\'s notification as read', function () {
     $user = User::factory()->withOrganization()->create();
-    $otherUser = User::factory()->forOrganization($user->currentOrganization)->create();
+    $otherUser = User::factory()->forOrganization($user->organization)->create();
     $othersNotification = createNotificationFor($otherUser);
 
     $this->actingAs($user)

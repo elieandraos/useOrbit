@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\Agent;
+use App\Models\Scopes\CurrentOrganizationScope;
 use App\Sorts\AgentSort;
 
 test('name sorts by last name then first name ascending', function () {
@@ -14,7 +15,7 @@ test('name sorts by last name then first name ascending', function () {
     $bravo = Agent::factory()->create(['first_name' => 'Mona', 'last_name' => 'Bravo']);
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $agents = Agent::query()->sort(new AgentSort('name', 'asc'))->get();
+    $agents = Agent::query()->withoutGlobalScope(CurrentOrganizationScope::class)->sort(new AgentSort('name', 'asc'))->get();
 
     expect($agents->pluck('id')->all())->toBe([$alpha->id, $bravo->id, $charlie->id]);
 });
@@ -26,7 +27,7 @@ test('name sort direction can be reversed', function () {
     $bravo = Agent::factory()->create(['last_name' => 'Bravo']);
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $agents = Agent::query()->sort(new AgentSort('name', 'desc'))->get();
+    $agents = Agent::query()->withoutGlobalScope(CurrentOrganizationScope::class)->sort(new AgentSort('name', 'desc'))->get();
 
     expect($agents->pluck('id')->all())->toBe([$bravo->id, $alpha->id]);
 });
@@ -38,7 +39,7 @@ test('default falls back to last name then first name ascending', function () {
     $bravo = Agent::factory()->create(['last_name' => 'Bravo']);
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $agents = Agent::query()->sort(new AgentSort(null, 'asc'))->get();
+    $agents = Agent::query()->withoutGlobalScope(CurrentOrganizationScope::class)->sort(new AgentSort(null, 'asc'))->get();
 
     expect($agents->pluck('id')->all())->toBe([$alpha->id, $bravo->id]);
 });
@@ -50,7 +51,7 @@ test('an unrecognized column falls back to the default', function () {
     $bravo = Agent::factory()->create(['last_name' => 'Bravo']);
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $agents = Agent::query()->sort(new AgentSort('unknown', 'asc'))->get();
+    $agents = Agent::query()->withoutGlobalScope(CurrentOrganizationScope::class)->sort(new AgentSort('unknown', 'asc'))->get();
 
     expect($agents->pluck('id')->all())->toBe([$alpha->id, $bravo->id]);
 });

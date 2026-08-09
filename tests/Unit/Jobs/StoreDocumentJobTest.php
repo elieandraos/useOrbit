@@ -23,7 +23,7 @@ test('moves the staged file to the final destination on success', function () {
     $destination = sprintf('organizations/%d/%s/%d/%d.pdf', $document->organization_id, $document->documentable_type, $document->documentable_id, $document->id);
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    new StoreDocumentJob($document)->handle();
+    new StoreDocumentJob($document->id, $document->organization_id)->handle();
 
     Storage::disk('local')->assertExists($destination);
     Storage::disk('local')->assertMissing($document->path);
@@ -40,7 +40,7 @@ test('sets status to completed, updates the path, and stamps stored_at on succes
     $destination = sprintf('organizations/%d/%s/%d/%d.pdf', $document->organization_id, $document->documentable_type, $document->documentable_id, $document->id);
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    new StoreDocumentJob($document)->handle();
+    new StoreDocumentJob($document->id, $document->organization_id)->handle();
 
     $fresh = $document->fresh();
     expect($fresh->status)->toBe(DocumentStatus::Completed)
@@ -61,7 +61,7 @@ test('moves the staged file and updates the disk column on the configured non-lo
     $destination = sprintf('organizations/%d/%s/%d/%d.pdf', $document->organization_id, $document->documentable_type, $document->documentable_id, $document->id);
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    new StoreDocumentJob($document)->handle();
+    new StoreDocumentJob($document->id, $document->organization_id)->handle();
 
     Storage::disk('s3')->assertExists($destination);
     $fresh = $document->fresh();
@@ -83,7 +83,7 @@ test('finalizes the row without moving when the destination already exists and p
     Storage::disk('local')->put($destination, $contents);
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    new StoreDocumentJob($document)->handle();
+    new StoreDocumentJob($document->id, $document->organization_id)->handle();
 
     $fresh = $document->fresh();
     expect($fresh->status)->toBe(DocumentStatus::Completed)
@@ -104,7 +104,7 @@ test('finalizes the row without moving when the destination already exists and t
     // No staged file at $document->path: if the job fell back to a checksum-driven copy this would throw.
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    new StoreDocumentJob($document)->handle();
+    new StoreDocumentJob($document->id, $document->organization_id)->handle();
 
     $fresh = $document->fresh();
     expect($fresh->status)->toBe(DocumentStatus::Completed)
@@ -126,7 +126,7 @@ test('re-copies the staged file when the destination copy fails its checksum', f
     Storage::disk('local')->put($destination, 'a partial write from a crashed attempt');
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    new StoreDocumentJob($document)->handle();
+    new StoreDocumentJob($document->id, $document->organization_id)->handle();
 
     $fresh = $document->fresh();
     expect($fresh->status)->toBe(DocumentStatus::Completed)
@@ -146,7 +146,7 @@ test('throws when the destination fails its checksum and the staged file is gone
     // No staged file at $document->path: nothing left to recover from.
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    new StoreDocumentJob($document)->handle();
+    new StoreDocumentJob($document->id, $document->organization_id)->handle();
 })->throws(RuntimeException::class, 'staged file is missing and the destination copy failed its integrity check.');
 
 test('is a no-op when the document is no longer pending', function () {
@@ -156,7 +156,7 @@ test('is a no-op when the document is no longer pending', function () {
     $originalPath = $document->path;
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    new StoreDocumentJob($document)->handle();
+    new StoreDocumentJob($document->id, $document->organization_id)->handle();
 
     $fresh = $document->fresh();
     expect($fresh->status)->toBe(DocumentStatus::Completed)
@@ -170,7 +170,7 @@ test('is a no-op when the document is already being processed by another worker'
     $originalPath = $document->path;
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    new StoreDocumentJob($document)->handle();
+    new StoreDocumentJob($document->id, $document->organization_id)->handle();
 
     $fresh = $document->fresh();
     expect($fresh->status)->toBe(DocumentStatus::Processing)
@@ -179,8 +179,9 @@ test('is a no-op when the document is already being processed by another worker'
 
 test('claiming transitions the document to processing and blocks a second concurrent claim', function () {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create();
-    $job = new StoreDocumentJob($document);
+    $job = new StoreDocumentJob($document->id, $document->organization_id);
     $claim = fn (): ?Document => Closure::bind(fn (): ?Document => $this->claim(), $job, $job)();
 
     $claimed = $claim();
@@ -192,8 +193,7 @@ test('claiming transitions the document to processing and blocks a second concur
 });
 
 test('checksum returns null when the disk cannot open a read stream', function () {
-    $document = Document::factory()->make();
-    $job = new StoreDocumentJob($document);
+    $job = new StoreDocumentJob(1, 1);
     $disk = Mockery::mock(Filesystem::class);
     $disk->shouldReceive('readStream')->once()->with('some/path')->andReturn(false);
     Storage::shouldReceive('disk')->with('local')->andReturn($disk);
@@ -212,16 +212,16 @@ test('reverts the document to pending when the attempt throws, so it can be retr
     Storage::disk('local')->put($document->path, 'staged contents');
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    expect(fn () => new StoreDocumentJob($document)->handle())->toThrow(RuntimeException::class);
+    expect(fn () => new StoreDocumentJob($document->id, $document->organization_id)->handle())->toThrow(RuntimeException::class)
+        ->and($document->fresh()->status)->toBe(DocumentStatus::Pending);
 
-    expect($document->fresh()->status)->toBe(DocumentStatus::Pending);
 });
 
 test('failed hook marks the document as failed with a safe, generic message', function () {
     $user = User::factory()->withOrganization()->create();
     $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create();
 
-    new StoreDocumentJob($document)->failed(new RuntimeException('Disk write failed.'));
+    new StoreDocumentJob($document->id, $document->organization_id)->failed(new RuntimeException('Disk write failed.'));
 
     $fresh = $document->fresh();
     expect($fresh->status)->toBe(DocumentStatus::Failed)
@@ -233,7 +233,7 @@ test('failed hook logs the real exception message for debugging', function () {
     $user = User::factory()->withOrganization()->create();
     $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create();
 
-    new StoreDocumentJob($document)->failed(new RuntimeException('Disk write failed.'));
+    new StoreDocumentJob($document->id, $document->organization_id)->failed(new RuntimeException('Disk write failed.'));
 
     Log::shouldHaveReceived('error')->once()->withArgs(
         fn (string $message, array $context): bool => $context['document_id'] === $document->id
@@ -250,7 +250,7 @@ test('is a no-op when the batch has been cancelled', function () {
     ]);
     Storage::disk('local')->put($document->path, 'staged contents');
 
-    $job = new StoreDocumentJob($document);
+    $job = new StoreDocumentJob($document->id, $document->organization_id);
     /** @var StoreDocumentJob $job */
     [$job] = $job->withFakeBatch(cancelledAt: CarbonImmutable::now());
 
@@ -273,12 +273,22 @@ test('throws when the mime type has no allowed extension', function () {
     Storage::disk('local')->put($document->path, 'staged contents');
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    new StoreDocumentJob($document)->handle();
+    new StoreDocumentJob($document->id, $document->organization_id)->handle();
 })->throws(RuntimeException::class, 'has no validated extension for mime type [application/zip].');
 
 test('retries up to three times with an exponential backoff schedule', function () {
-    $job = new StoreDocumentJob(Document::factory()->make());
+    $job = new StoreDocumentJob(1, 1);
 
     expect($job->tries)->toBe(3)
         ->and($job->backoff())->toBe([10, 30, 60]);
+});
+
+test('serialization round-trip preserves plain document and organization ids, never rehydrating a model', function () {
+    $job = new StoreDocumentJob(42, 7);
+
+    /** @var StoreDocumentJob $unserialized */
+    $unserialized = unserialize(serialize($job));
+
+    expect($unserialized->documentId)->toBe(42)
+        ->and($unserialized->organizationId)->toBe(7);
 });

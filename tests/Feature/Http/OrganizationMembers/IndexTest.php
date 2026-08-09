@@ -38,10 +38,10 @@ test('renders the roster for the current organization, exposing id, name, email,
 test('roster includes invited members alongside active members', function () {
     $organization = Organization::factory()->create();
     $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
-    $invitee = User::factory()->create(['password' => null, 'name' => 'Zzz Invitee']);
-    $invitee->organizations()->attach($organization, [
-        'role' => OrganizationRole::Member->value,
-        'status' => OrganizationMemberStatus::Invited->value,
+    $invitee = User::factory()->forOrganization($organization)->create([
+        'password' => null,
+        'name' => 'Zzz Invitee',
+        'status' => OrganizationMemberStatus::Invited,
     ]);
 
     $this->actingAs($owner)
@@ -97,10 +97,10 @@ test('exposes can_revoke true for a privileged viewer and false for a member', f
     $organization = Organization::factory()->create();
     $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create(['name' => 'Amanda Owner']);
     $member = User::factory()->forOrganization($organization)->create(['name' => 'Bob Member']);
-    $invitee = User::factory()->create(['password' => null, 'name' => 'Zzz Invitee']);
-    $invitee->organizations()->attach($organization, [
-        'role' => OrganizationRole::Member->value,
-        'status' => OrganizationMemberStatus::Invited->value,
+    $invitee = User::factory()->forOrganization($organization)->create([
+        'password' => null,
+        'name' => 'Zzz Invitee',
+        'status' => OrganizationMemberStatus::Invited,
     ]);
 
     $this->actingAs($owner)

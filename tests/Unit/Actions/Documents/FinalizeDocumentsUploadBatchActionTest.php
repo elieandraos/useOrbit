@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Actions\Documents\FinalizeDocumentsUploadBatchAction;
 use App\Enums\DocumentStatus;
 use App\Jobs\StoreDocumentJob;
+use App\Models\Client;
 use App\Models\Document;
 use App\Models\User;
 use App\Notifications\DocumentsUploadBatchProcessed;
@@ -33,6 +34,7 @@ function runFinallyCallbacks(PendingBatchFake $batch): void
 test('dispatches a batch containing a job for each pending document owned by the user', function () {
     Bus::fake();
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     $first = Document::factory()->forOrganization($user)->uploadedBy($user)->create(['status' => DocumentStatus::Pending]);
     $second = Document::factory()->forOrganization($user)->uploadedBy($user)->create(['status' => DocumentStatus::Pending]);
 
@@ -43,14 +45,15 @@ test('dispatches a batch containing a job for each pending document owned by the
     /** @noinspection PhpParamsInspection */
     Bus::assertBatched(fn (PendingBatchFake $batch): bool => $batch->jobs->count() === 2
         && $batch->hasJobs([
-            fn (StoreDocumentJob $job): bool => $job->document->is($first),
-            fn (StoreDocumentJob $job): bool => $job->document->is($second),
+            fn (StoreDocumentJob $job): bool => $job->documentId === $first->id,
+            fn (StoreDocumentJob $job): bool => $job->documentId === $second->id,
         ]));
 });
 
 test('excludes documents that are not pending', function () {
     Bus::fake();
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     Document::factory()->forOrganization($user)->uploadedBy($user)->create(['status' => DocumentStatus::Pending]);
     $completed = Document::factory()->forOrganization($user)->uploadedBy($user)->completed()->create();
 
@@ -64,7 +67,8 @@ test('excludes documents that are not pending', function () {
 test('excludes documents uploaded by another user', function () {
     Bus::fake();
     $user = User::factory()->withOrganization()->create();
-    $otherMember = User::factory()->create(['current_organization_id' => $user->current_organization_id]);
+    setOrganizationContext($user);
+    $otherMember = User::factory()->create(['organization_id' => $user->organization_id]);
     $othersDocument = Document::factory()->forOrganization($user)->uploadedBy($otherMember)->create(['status' => DocumentStatus::Pending]);
 
     /** @noinspection PhpUnhandledExceptionInspection */
@@ -77,6 +81,7 @@ test('excludes documents uploaded by another user', function () {
 test('excludes documents from another organization', function () {
     Bus::fake();
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     $otherUser = User::factory()->withOrganization()->create();
     $othersDocument = Document::factory()->forOrganization($otherUser)->uploadedBy($otherUser)->create(['status' => DocumentStatus::Pending]);
 
@@ -90,6 +95,7 @@ test('excludes documents from another organization', function () {
 test('dispatches nothing when no submitted document matches the filters', function () {
     Bus::fake();
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     $completed = Document::factory()->forOrganization($user)->uploadedBy($user)->completed()->create();
 
     /** @noinspection PhpUnhandledExceptionInspection */
@@ -102,6 +108,7 @@ test('dispatches nothing when no submitted document matches the filters', functi
 test('returns a partial rejected count when some submitted ids match and others do not', function () {
     Bus::fake();
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     $pending = Document::factory()->forOrganization($user)->uploadedBy($user)->create(['status' => DocumentStatus::Pending]);
     $completed = Document::factory()->forOrganization($user)->uploadedBy($user)->completed()->create();
 
@@ -111,12 +118,13 @@ test('returns a partial rejected count when some submitted ids match and others 
     expect($rejectedCount)->toBe(1);
     /** @noinspection PhpParamsInspection */
     Bus::assertBatched(fn (PendingBatchFake $batch): bool => $batch->jobs->count() === 1
-        && $batch->hasJobs([fn (StoreDocumentJob $job): bool => $job->document->is($pending)]));
+        && $batch->hasJobs([fn (StoreDocumentJob $job): bool => $job->documentId === $pending->id]));
 });
 
 test('does not count a duplicate submitted id as rejected', function () {
     Bus::fake();
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create(['status' => DocumentStatus::Pending]);
 
     /** @noinspection PhpUnhandledExceptionInspection */
@@ -128,7 +136,13 @@ test('does not count a duplicate submitted id as rejected', function () {
 test('notifies the uploader with the batch outcome once every job completes', function () {
     Bus::fake();
     $user = User::factory()->withOrganization()->create();
-    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create(['status' => DocumentStatus::Pending]);
+    setOrganizationContext($user);
+    $client = Client::factory()->forOrganization($user)->create();
+    $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create([
+        'status' => DocumentStatus::Pending,
+        'documentable_type' => $client->getMorphClass(),
+        'documentable_id' => $client->id,
+    ]);
 
     /** @noinspection PhpUnhandledExceptionInspection */
     app(FinalizeDocumentsUploadBatchAction::class)->handle($user, [$document->id]);
@@ -154,8 +168,18 @@ test('notifies the uploader with the batch outcome once every job completes', fu
 test('notifies the uploader with a failed count when a file in the batch fails to store', function () {
     Bus::fake();
     $user = User::factory()->withOrganization()->create();
-    $succeeded = Document::factory()->forOrganization($user)->uploadedBy($user)->create(['status' => DocumentStatus::Pending]);
-    $failed = Document::factory()->forOrganization($user)->uploadedBy($user)->create(['status' => DocumentStatus::Pending]);
+    setOrganizationContext($user);
+    $client = Client::factory()->forOrganization($user)->create();
+    $succeeded = Document::factory()->forOrganization($user)->uploadedBy($user)->create([
+        'status' => DocumentStatus::Pending,
+        'documentable_type' => $client->getMorphClass(),
+        'documentable_id' => $client->id,
+    ]);
+    $failed = Document::factory()->forOrganization($user)->uploadedBy($user)->create([
+        'status' => DocumentStatus::Pending,
+        'documentable_type' => $client->getMorphClass(),
+        'documentable_id' => $client->id,
+    ]);
 
     /** @noinspection PhpUnhandledExceptionInspection */
     app(FinalizeDocumentsUploadBatchAction::class)->handle($user, [$succeeded->id, $failed->id]);

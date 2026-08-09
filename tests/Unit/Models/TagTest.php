@@ -10,6 +10,7 @@ use Illuminate\Database\QueryException;
 
 test('document tags resolve and round-trip through the document_tag pivot', function () {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     $document = Document::factory()->forOrganization($user)->uploadedBy($user)->create();
     $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
 
@@ -25,6 +26,7 @@ test('document tags resolve and round-trip through the document_tag pivot', func
 
 test('withDocumentCount only counts documents belonging to the given owner', function () {
     $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
     $client = Client::factory()->forOrganization($user)->create();
     $otherClient = Client::factory()->forOrganization($user)->create();
     $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
@@ -54,7 +56,7 @@ test('current organization scope only returns tags for the acting user\'s curren
     $ownTag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
     Tag::factory()->forOrganization($otherUser)->createdBy($otherUser)->create();
 
-    $this->actingAs($user);
+    setOrganizationContext($user);
 
     expect(Tag::query()->pluck('id'))->toEqual(collect([$ownTag->id]));
 });

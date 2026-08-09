@@ -7,12 +7,13 @@ use App\Enums\ClientType;
 use App\Enums\Gender;
 use App\Filters\ClientFilter;
 use App\Models\Client;
+use App\Models\Scopes\CurrentOrganizationScope;
 
 test('empty filters return the unfiltered builder', function () {
     Client::factory(3)->create();
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $clients = Client::query()->filter(new ClientFilter([]))->get();
+    $clients = Client::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new ClientFilter([]))->get();
 
     expect($clients)->toHaveCount(3);
 });
@@ -21,7 +22,7 @@ test('a null or empty string value is skipped', function () {
     Client::factory(3)->create();
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $clients = Client::query()->filter(new ClientFilter(['search' => null, 'gender' => '']))->get();
+    $clients = Client::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new ClientFilter(['search' => null, 'gender' => '']))->get();
 
     expect($clients)->toHaveCount(3);
 });
@@ -30,7 +31,7 @@ test('an unrecognized filter key is ignored', function () {
     Client::factory(3)->create();
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $clients = Client::query()->filter(new ClientFilter(['unknown' => 'value']))->get();
+    $clients = Client::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new ClientFilter(['unknown' => 'value']))->get();
 
     expect($clients)->toHaveCount(3);
 });
@@ -47,7 +48,7 @@ test('search matches first name', function () {
     ]);
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $clients = Client::query()->filter(new ClientFilter(['search' => 'Ali']))->get();
+    $clients = Client::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new ClientFilter(['search' => 'Ali']))->get();
 
     expect($clients->pluck('id')->all())->toBe([$match->id]);
 });
@@ -64,7 +65,7 @@ test('search matches middle name', function () {
     ]);
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $clients = Client::query()->filter(new ClientFilter(['search' => 'Yusuf']))->get();
+    $clients = Client::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new ClientFilter(['search' => 'Yusuf']))->get();
 
     expect($clients->pluck('id')->all())->toBe([$match->id]);
 });
@@ -81,7 +82,7 @@ test('search matches last name', function () {
     ]);
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $clients = Client::query()->filter(new ClientFilter(['search' => 'Haddad']))->get();
+    $clients = Client::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new ClientFilter(['search' => 'Haddad']))->get();
 
     expect($clients->pluck('id')->all())->toBe([$match->id]);
 });
@@ -98,7 +99,7 @@ test('search matches company name', function () {
     ]);
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $clients = Client::query()->filter(new ClientFilter(['search' => 'Acme']))->get();
+    $clients = Client::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new ClientFilter(['search' => 'Acme']))->get();
 
     expect($clients->pluck('id')->all())->toBe([$match->id]);
 });
@@ -115,7 +116,7 @@ test('search matches phone', function () {
     ]);
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $clients = Client::query()->filter(new ClientFilter(['search' => '70123456']))->get();
+    $clients = Client::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new ClientFilter(['search' => '70123456']))->get();
 
     expect($clients->pluck('id')->all())->toBe([$match->id]);
 });
@@ -132,7 +133,7 @@ test('search matches email', function () {
     ]);
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $clients = Client::query()->filter(new ClientFilter(['search' => 'jane@']))->get();
+    $clients = Client::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new ClientFilter(['search' => 'jane@']))->get();
 
     expect($clients->pluck('id')->all())->toBe([$match->id]);
 });
@@ -141,7 +142,7 @@ test('search excludes non-matching clients', function () {
     Client::factory()->create(['first_name' => 'Aline', 'middle_name' => null, 'last_name' => 'Haddad', 'phone' => '+96170123456', 'email' => 'jane@example.com']);
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $clients = Client::query()->filter(new ClientFilter(['search' => 'nonexistent']))->get();
+    $clients = Client::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new ClientFilter(['search' => 'nonexistent']))->get();
 
     expect($clients)->toHaveCount(0);
 });
@@ -152,7 +153,7 @@ test('clientType narrows to the exact matching type only', function () {
     Client::factory()->create(['client_type' => ClientType::Individual->value]);
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $clients = Client::query()->filter(new ClientFilter(['client_type' => ClientType::Company->value]))->get();
+    $clients = Client::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new ClientFilter(['client_type' => ClientType::Company->value]))->get();
 
     expect($clients->pluck('id')->all())->toBe([$match->id]);
 });
@@ -163,7 +164,7 @@ test('gender narrows to the exact matching value only', function () {
     Client::factory()->create(['gender' => Gender::Male->value]);
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $clients = Client::query()->filter(new ClientFilter(['gender' => Gender::Female->value]))->get();
+    $clients = Client::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new ClientFilter(['gender' => Gender::Female->value]))->get();
 
     expect($clients->pluck('id')->all())->toBe([$match->id]);
 });
@@ -176,7 +177,7 @@ test('enrolledFrom is an inclusive lower bound', function () {
     Client::factory()->create(['enrollment_date' => '2024-01-05']);
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $clients = Client::query()->filter(new ClientFilter(['enrolled_from' => '2024-01-10']))->get();
+    $clients = Client::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new ClientFilter(['enrolled_from' => '2024-01-10']))->get();
 
     expect($clients->pluck('id')->sort()->values()->all())->toBe(collect([$onBoundary->id, $after->id])->sort()->values()->all());
 });
@@ -189,7 +190,7 @@ test('enrolledTo is an inclusive upper bound', function () {
     Client::factory()->create(['enrollment_date' => '2024-01-15']);
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $clients = Client::query()->filter(new ClientFilter(['enrolled_to' => '2024-01-10']))->get();
+    $clients = Client::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new ClientFilter(['enrolled_to' => '2024-01-10']))->get();
 
     expect($clients->pluck('id')->sort()->values()->all())->toBe(collect([$onBoundary->id, $before->id])->sort()->values()->all());
 });
@@ -201,7 +202,7 @@ test('enrolledFrom and enrolledTo combined narrow to the inclusive range', funct
     Client::factory()->create(['enrollment_date' => '2024-02-01']);
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $clients = Client::query()->filter(new ClientFilter([
+    $clients = Client::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new ClientFilter([
         'enrolled_from' => '2024-01-05',
         'enrolled_to' => '2024-01-20',
     ]))->get();
@@ -216,7 +217,7 @@ test('ageMin includes a client turning exactly the minimum age today', function 
     $youngerByOneDay = Client::factory()->create(['date_of_birth' => now()->subYears(30)->addDay()->toDateString()]);
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $clients = Client::query()->filter(new ClientFilter(['age_min' => 30]))->get();
+    $clients = Client::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new ClientFilter(['age_min' => 30]))->get();
 
     expect($clients->pluck('id')->all())->toBe([$turnsMinToday->id])
         ->and($clients->pluck('id'))->not->toContain($youngerByOneDay->id);
@@ -229,7 +230,7 @@ test('ageMax includes a client who has not yet turned max + 1 today', function (
     $turnsMaxPlusOneToday = Client::factory()->create(['date_of_birth' => now()->subYears(41)->toDateString()]);
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $clients = Client::query()->filter(new ClientFilter(['age_max' => 40]))->get();
+    $clients = Client::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new ClientFilter(['age_max' => 40]))->get();
 
     expect($clients->pluck('id')->all())->toBe([$turnsMaxToday->id])
         ->and($clients->pluck('id'))->not->toContain($turnsMaxPlusOneToday->id);
@@ -242,7 +243,7 @@ test('ageMin and ageMax combined narrow to the inclusive age range', function ()
     Client::factory()->create(['date_of_birth' => now()->subYears(50)->toDateString()]);
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $clients = Client::query()->filter(new ClientFilter([
+    $clients = Client::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new ClientFilter([
         'age_min' => 30,
         'age_max' => 40,
     ]))->get();
@@ -267,7 +268,7 @@ test('all filters combined narrow to a single matching client', function () {
     ]);
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $clients = Client::query()->filter(new ClientFilter([
+    $clients = Client::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new ClientFilter([
         'search' => 'Aline',
         'gender' => Gender::Female->value,
         'enrolled_from' => '2024-01-01',
@@ -285,7 +286,7 @@ test('archived=false returns only active clients', function () {
     Client::factory()->archived()->create();
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $clients = Client::query()->filter(new ClientFilter(['archived' => false]))->get();
+    $clients = Client::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new ClientFilter(['archived' => false]))->get();
 
     expect($clients->pluck('id')->all())->toBe([$active->id]);
 });
@@ -296,7 +297,7 @@ test('archived=true returns only archived clients', function () {
     $archived = Client::factory()->archived()->create();
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $clients = Client::query()->filter(new ClientFilter(['archived' => true]))->get();
+    $clients = Client::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new ClientFilter(['archived' => true]))->get();
 
     expect($clients->pluck('id')->all())->toBe([$archived->id]);
 });

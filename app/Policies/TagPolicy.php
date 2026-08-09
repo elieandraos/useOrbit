@@ -11,23 +11,23 @@ final class TagPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->current_organization_id !== null;
+        return $user->organization_id !== null;
     }
 
     public function create(User $user): bool
     {
-        return $user->current_organization_id !== null;
+        return $user->organization_id !== null;
     }
 
     public function update(User $user, Tag $tag): bool
     {
-        return $tag->organization_id === $user->current_organization_id
-            && (($user->organizationRole()?->isPrivileged() ?? false) || $tag->created_by === $user->id);
+        return $tag->organization_id === $user->organization_id
+            && ($user->role->isPrivileged() || $tag->created_by === $user->id);
     }
 
     public function delete(User $user, Tag $tag): bool
     {
-        return $tag->organization_id === $user->current_organization_id
-            && (($user->organizationRole()?->isPrivileged() ?? false) || $tag->created_by === $user->id);
+        return $tag->organization_id === $user->organization_id
+            && ($user->role->isPrivileged() || $tag->created_by === $user->id);
     }
 }

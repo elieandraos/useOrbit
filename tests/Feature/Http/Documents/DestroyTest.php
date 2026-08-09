@@ -24,7 +24,7 @@ test('member can delete their own completed document', function () {
 
 test('member who did not upload the document is forbidden from deleting it', function () {
     $user = User::factory()->withOrganization()->create();
-    $otherMember = User::factory()->create(['current_organization_id' => $user->current_organization_id]);
+    $otherMember = User::factory()->create(['organization_id' => $user->organization_id]);
     $document = Document::factory()->forOrganization($user)->uploadedBy($otherMember)->completed()->create();
 
     $this->actingAs($user)

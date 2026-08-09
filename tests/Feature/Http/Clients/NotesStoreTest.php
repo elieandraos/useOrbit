@@ -73,7 +73,7 @@ test('creates a note with created_by set to the acting user', function () {
     $this->assertDatabaseHas('notes', [
         'notable_type' => $client->getMorphClass(),
         'notable_id' => $client->id,
-        'organization_id' => $user->current_organization_id,
+        'organization_id' => $user->organization_id,
         'created_by' => $user->id,
         'body' => 'Called the client about renewal.',
     ]);

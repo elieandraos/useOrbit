@@ -30,7 +30,7 @@ test('leaves already-read notifications untouched', function () {
 
 test('does not mark another user\'s unread notifications as read', function () {
     $user = User::factory()->withOrganization()->create();
-    $otherUser = User::factory()->forOrganization($user->currentOrganization)->create();
+    $otherUser = User::factory()->forOrganization($user->organization)->create();
     $othersNotification = createNotificationFor($otherUser);
 
     /** @noinspection PhpUnhandledExceptionInspection */

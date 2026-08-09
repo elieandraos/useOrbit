@@ -12,6 +12,7 @@ test('member can create, update, and delete a branch belonging to their organiza
     $member = User::factory()->forOrganization($organization)->create();
     $carrier = Carrier::factory()->forOrganization($member)->create();
     $branch = CarrierBranch::factory()->forCarrier($carrier)->create();
+    setOrganizationContext($member);
 
     expect($member->can('create', [CarrierBranch::class, $carrier]))->toBeTrue()
         ->and($member->can('update', $branch))->toBeTrue()
@@ -24,6 +25,7 @@ test('user cannot create, update, or delete a branch belonging to a different or
     $user = User::factory()->forOrganization($organization)->create();
     $carrier = Carrier::factory()->for($otherOrganization)->create();
     $branch = CarrierBranch::factory()->forCarrier($carrier)->create();
+    setOrganizationContext($user);
 
     expect($user->can('create', [CarrierBranch::class, $carrier]))->toBeFalse()
         ->and($user->can('update', $branch))->toBeFalse()

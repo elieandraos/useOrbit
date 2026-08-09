@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\DocumentStatus;
 use App\Models\Concerns\BelongsToCurrentOrganization;
 use App\Models\Contracts\Documentable;
+use App\Models\Scopes\CurrentOrganizationScope;
 use Carbon\CarbonImmutable;
 use Database\Factories\DocumentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -86,6 +87,7 @@ final class Document extends Model
     public function prunable(): Builder
     {
         return self::query()
+            ->withoutGlobalScope(CurrentOrganizationScope::class)
             ->whereIn('status', [DocumentStatus::Pending, DocumentStatus::Processing, DocumentStatus::Failed])
             ->where('created_at', '<', now()->subHours(config('documents.prune_after_hours')));
     }

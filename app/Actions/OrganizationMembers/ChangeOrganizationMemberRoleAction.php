@@ -14,10 +14,10 @@ final class ChangeOrganizationMemberRoleAction
      *
      * @throws \Throwable
      */
-    public function handle(User $user, User $member, array $attributes): User
+    public function handle(User $member, array $attributes): User
     {
-        return DB::transaction(function () use ($user, $member, $attributes): User {
-            $member->organizations()->updateExistingPivot($user->current_organization_id, [
+        return DB::transaction(function () use ($member, $attributes): User {
+            $member->update([
                 'role' => $attributes['role'],
             ]);
 

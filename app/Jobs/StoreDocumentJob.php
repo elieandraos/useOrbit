@@ -6,6 +6,7 @@ namespace App\Jobs;
 
 use App\Enums\DocumentStatus;
 use App\Models\Document;
+use App\Support\Tenancy\OrganizationContext;
 use Illuminate\Bus\Batchable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -22,7 +23,10 @@ final class StoreDocumentJob implements ShouldQueue
 
     public int $tries = 3;
 
-    public function __construct(public readonly Document $document) {}
+    public function __construct(
+        public readonly int $documentId,
+        public readonly int $organizationId,
+    ) {}
 
     /**
      * @return array<int, int>
@@ -37,6 +41,8 @@ final class StoreDocumentJob implements ShouldQueue
      */
     public function handle(): void
     {
+        app(OrganizationContext::class)->set($this->organizationId);
+
         if ($this->batch()?->cancelled()) {
             return;
         }
@@ -74,12 +80,14 @@ final class StoreDocumentJob implements ShouldQueue
 
     public function failed(?Throwable $exception): void
     {
+        app(OrganizationContext::class)->set($this->organizationId);
+
         Log::error('Failed to store an uploaded document.', [
-            'document_id' => $this->document->id,
+            'document_id' => $this->documentId,
             'exception' => $exception?->getMessage(),
         ]);
 
-        $this->document->update([
+        Document::query()->whereKey($this->documentId)->update([
             'status' => DocumentStatus::Failed,
             'error_message' => 'We were unable to store this file. Please try uploading it again.',
         ]);
@@ -89,7 +97,7 @@ final class StoreDocumentJob implements ShouldQueue
     {
         return DB::transaction(function (): ?Document {
             /** @var Document|null $document */
-            $document = Document::query()->whereKey($this->document->id)->lockForUpdate()->first();
+            $document = Document::query()->whereKey($this->documentId)->lockForUpdate()->first();
 
             if (! $document instanceof Document || $document->status !== DocumentStatus::Pending) {
                 return null;

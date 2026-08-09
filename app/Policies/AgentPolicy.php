@@ -11,39 +11,39 @@ final class AgentPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->current_organization_id !== null;
+        return $user->organization_id !== null;
     }
 
     public function view(User $user, Agent $agent): bool
     {
-        return $agent->organization_id === $user->current_organization_id;
+        return $agent->organization_id === $user->organization_id;
     }
 
     public function create(User $user): bool
     {
-        return $user->current_organization_id !== null;
+        return $user->organization_id !== null;
     }
 
     public function update(User $user, Agent $agent): bool
     {
-        return $agent->organization_id === $user->current_organization_id;
+        return $agent->organization_id === $user->organization_id;
     }
 
     public function archive(User $user, Agent $agent): bool
     {
-        return $agent->organization_id === $user->current_organization_id
-            && ($user->organizationRole()?->isPrivileged() ?? false);
+        return $agent->organization_id === $user->organization_id
+            && $user->role->isPrivileged();
     }
 
     public function unarchive(User $user, Agent $agent): bool
     {
-        return $agent->organization_id === $user->current_organization_id
-            && ($user->organizationRole()?->isPrivileged() ?? false);
+        return $agent->organization_id === $user->organization_id
+            && $user->role->isPrivileged();
     }
 
     public function delete(User $user, Agent $agent): bool
     {
-        return $agent->organization_id === $user->current_organization_id
-            && ($user->organizationRole()?->isPrivileged() ?? false);
+        return $agent->organization_id === $user->organization_id
+            && $user->role->isPrivileged();
     }
 }

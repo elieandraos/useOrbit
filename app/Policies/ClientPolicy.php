@@ -11,39 +11,39 @@ final class ClientPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->current_organization_id !== null;
+        return $user->organization_id !== null;
     }
 
     public function view(User $user, Client $client): bool
     {
-        return $client->organization_id === $user->current_organization_id;
+        return $client->organization_id === $user->organization_id;
     }
 
     public function create(User $user): bool
     {
-        return $user->current_organization_id !== null;
+        return $user->organization_id !== null;
     }
 
     public function update(User $user, Client $client): bool
     {
-        return $client->organization_id === $user->current_organization_id;
+        return $client->organization_id === $user->organization_id;
     }
 
     public function delete(User $user, Client $client): bool
     {
-        return $client->organization_id === $user->current_organization_id
-            && ($user->organizationRole()?->isPrivileged() ?? false);
+        return $client->organization_id === $user->organization_id
+            && $user->role->isPrivileged();
     }
 
     public function archive(User $user, Client $client): bool
     {
-        return $client->organization_id === $user->current_organization_id
-            && ($user->organizationRole()?->isPrivileged() ?? false);
+        return $client->organization_id === $user->organization_id
+            && $user->role->isPrivileged();
     }
 
     public function unarchive(User $user, Client $client): bool
     {
-        return $client->organization_id === $user->current_organization_id
-            && ($user->organizationRole()?->isPrivileged() ?? false);
+        return $client->organization_id === $user->organization_id
+            && $user->role->isPrivileged();
     }
 }

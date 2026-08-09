@@ -16,7 +16,7 @@ test('deletes the branch from the database', function () {
 
 test('does not affect other branches on the same carrier', function () {
     $branch = CarrierBranch::factory()->create();
-    $otherBranch = CarrierBranch::factory()->forCarrier($branch->carrier)->create();
+    $otherBranch = CarrierBranch::factory()->create(['carrier_id' => $branch->carrier_id]);
 
     /** @noinspection PhpUnhandledExceptionInspection */
     app(DeleteCarrierBranchAction::class)->handle($branch);
