@@ -71,3 +71,26 @@ test('leaves users who accepted their invitation untouched', function () {
 
     expect(User::query()->whereKey($invitee->id)->exists())->toBeTrue();
 });
+
+test('prunable results span organizations, unaffected by the acting user\'s tenant scope', function () {
+    $orgA = Organization::factory()->create();
+    $orgB = Organization::factory()->create();
+    $acting = User::factory()->forOrganization($orgA)->create();
+    $expiredInOrgA = User::factory()->forOrganization($orgA)->create([
+        'password' => null,
+        'status' => OrganizationMemberStatus::Invited,
+        'invitation_token' => hash('sha256', 'org-a-token'),
+        'invitation_expires_at' => now()->subDay(),
+    ]);
+    $expiredInOrgB = User::factory()->forOrganization($orgB)->create([
+        'password' => null,
+        'status' => OrganizationMemberStatus::Invited,
+        'invitation_token' => hash('sha256', 'org-b-token'),
+        'invitation_expires_at' => now()->subDay(),
+    ]);
+    $this->actingAs($acting);
+
+    $prunableIds = (new User)->prunable()->pluck('id');
+
+    expect($prunableIds)->toContain($expiredInOrgA->id, $expiredInOrgB->id);
+});

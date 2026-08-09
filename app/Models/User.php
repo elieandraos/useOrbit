@@ -7,6 +7,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\OrganizationMemberStatus;
 use App\Enums\OrganizationRole;
+use App\Models\Scopes\CurrentOrganizationScope;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -89,6 +90,7 @@ final class User extends Authenticatable
     public function prunable(): Builder
     {
         return self::query()
+            ->withoutGlobalScope(CurrentOrganizationScope::class)
             ->whereNull('password')
             ->where('status', OrganizationMemberStatus::Invited->value)
             ->where('invitation_expires_at', '<', now());

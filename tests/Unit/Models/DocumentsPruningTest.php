@@ -95,3 +95,19 @@ test('leaves recent failed documents untouched', function () {
     expect(Document::query()->whereKey($document->id)->exists())->toBeTrue();
     Storage::disk('local')->assertExists($document->path);
 });
+
+test('prunable results span organizations, unaffected by the acting user\'s tenant scope', function () {
+    $orgAUser = User::factory()->withOrganization()->create();
+    $orgBUser = User::factory()->withOrganization()->create();
+    $staleInOrgA = Document::factory()->forOrganization($orgAUser)->uploadedBy($orgAUser)->create([
+        'created_at' => now()->subHours(2),
+    ]);
+    $staleInOrgB = Document::factory()->forOrganization($orgBUser)->uploadedBy($orgBUser)->create([
+        'created_at' => now()->subHours(2),
+    ]);
+    $this->actingAs($orgAUser);
+
+    $prunableIds = (new Document)->prunable()->pluck('id');
+
+    expect($prunableIds)->toContain($staleInOrgA->id, $staleInOrgB->id);
+});
