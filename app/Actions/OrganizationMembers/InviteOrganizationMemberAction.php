@@ -11,9 +11,9 @@ use App\Support\Tenancy\OrganizationContext;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-final class InviteOrganizationMemberAction
+final readonly class InviteOrganizationMemberAction
 {
-    public function __construct(private readonly OrganizationContext $organizationContext) {}
+    public function __construct(private OrganizationContext $organizationContext) {}
 
     /**
      * @param  array{name: string, email: string, role: string}  $attributes
