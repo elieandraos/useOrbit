@@ -6,11 +6,18 @@ namespace App\Actions\Carriers;
 
 use App\Exports\CarriersExport;
 use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\Exception;
+use PhpOffice\PhpSpreadsheet\Writer\Exception as WriterException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 final class ExportCarriersToExcelAction
 {
-    /** @param  array{search?: string|null, archived?: bool|string|null}  $filters */
+    /**
+     * @param  array{search?: string|null, archived?: bool|string|null}  $filters
+     *
+     * @throws Exception
+     * @throws WriterException
+     */
     public function handle(array $filters, ?string $sortColumn, string $sortDirection): BinaryFileResponse
     {
         return Excel::download(
