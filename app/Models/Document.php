@@ -53,6 +53,10 @@ final class Document extends Model implements NotificationSubject
     /** @use HasFactory<DocumentFactory> */
     use BelongsToCurrentOrganization, HasFactory, Prunable;
 
+    protected $fillable = [
+        'error_message',
+    ];
+
     protected function casts(): array
     {
         return [
