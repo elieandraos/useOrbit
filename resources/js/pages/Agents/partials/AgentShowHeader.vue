@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { Calendar, Download, Mail, Pencil, Phone } from '@lucide/vue';
-import { computed } from 'vue';
+import { Bell, Calendar, Download, Mail, Pencil, Phone } from '@lucide/vue';
+import { computed, ref } from 'vue';
+import NotifyModal from '@/components/notifications/NotifyModal.vue';
 import { Avatar } from '@/components/ui/avatar';
 import Badge from '@/components/ui/badge/Badge.vue';
 import Button from '@/components/ui/button/Button.vue';
@@ -10,6 +11,7 @@ import { useFileExport } from '@/composables/useFileExport';
 import {
     edit as agentsEdit,
     exportPdf as agentsExportPdf,
+    notify as agentsNotify,
 } from '@/routes/agents';
 import type { AgentResource } from './agent';
 
@@ -22,6 +24,7 @@ const props = defineProps<{
 const { isExporting, exportFile } = useFileExport();
 
 const exportUrl = computed(() => agentsExportPdf(props.agent.slug).url);
+const notifyOpen = ref(false);
 
 function exportAgent(): Promise<void> {
     return exportFile(exportUrl.value, `${props.agent.slug}.pdf`, {
@@ -66,6 +69,14 @@ function exportAgent(): Promise<void> {
                         <Download v-else />
                     </template>
                     Export
+                </Button>
+                <Button
+                    variant="secondary"
+                    size="sm"
+                    @click="notifyOpen = true"
+                >
+                    <template #leading><Bell /></template>
+                    Notify
                 </Button>
                 <Link :href="agentsEdit(agent.slug).url">
                     <Button variant="secondary" size="sm">
@@ -130,6 +141,14 @@ function exportAgent(): Promise<void> {
                     </template>
                     Export
                 </Button>
+                <Button
+                    variant="secondary"
+                    size="md"
+                    @click="notifyOpen = true"
+                >
+                    <template #leading><Bell /></template>
+                    Notify
+                </Button>
                 <Link :href="agentsEdit(agent.slug).url">
                     <Button variant="secondary" size="md">
                         <template #leading><Pencil /></template>
@@ -138,5 +157,11 @@ function exportAgent(): Promise<void> {
                 </Link>
             </div>
         </div>
+
+        <NotifyModal
+            v-model:open="notifyOpen"
+            :subject-label="agent.full_name"
+            :form="agentsNotify.form(agent.slug)"
+        />
     </div>
 </template>

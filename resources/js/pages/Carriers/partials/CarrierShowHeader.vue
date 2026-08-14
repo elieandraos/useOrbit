@@ -1,13 +1,18 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { Download, Globe, Pencil, Phone } from '@lucide/vue';
-import { computed } from 'vue';
+import { Bell, Download, Globe, Pencil, Phone } from '@lucide/vue';
+import { computed, ref } from 'vue';
+import NotifyModal from '@/components/notifications/NotifyModal.vue';
 import { Avatar } from '@/components/ui/avatar';
 import Badge from '@/components/ui/badge/Badge.vue';
 import Button from '@/components/ui/button/Button.vue';
 import { Spinner } from '@/components/ui/spinner';
 import { useFileExport } from '@/composables/useFileExport';
-import { edit as carriersEdit, exportPdf as carriersExportPdf } from '@/routes/carriers';
+import {
+    edit as carriersEdit,
+    exportPdf as carriersExportPdf,
+    notify as carriersNotify,
+} from '@/routes/carriers';
 import type { CarrierResource } from './carrier';
 
 const props = defineProps<{
@@ -18,6 +23,7 @@ const props = defineProps<{
 const { isExporting, exportFile } = useFileExport();
 
 const exportUrl = computed(() => carriersExportPdf(props.carrier.slug).url);
+const notifyOpen = ref(false);
 
 function exportCarrier(): Promise<void> {
     return exportFile(exportUrl.value, `${props.carrier.slug}.pdf`, {
@@ -63,6 +69,14 @@ function exportCarrier(): Promise<void> {
                         <Download v-else />
                     </template>
                     Export
+                </Button>
+                <Button
+                    variant="secondary"
+                    size="sm"
+                    @click="notifyOpen = true"
+                >
+                    <template #leading><Bell /></template>
+                    Notify
                 </Button>
                 <Link :href="carriersEdit(carrier.slug).url">
                     <Button variant="secondary" size="sm">
@@ -134,6 +148,14 @@ function exportCarrier(): Promise<void> {
                     </template>
                     Export
                 </Button>
+                <Button
+                    variant="secondary"
+                    size="md"
+                    @click="notifyOpen = true"
+                >
+                    <template #leading><Bell /></template>
+                    Notify
+                </Button>
                 <Link :href="carriersEdit(carrier.slug).url">
                     <Button variant="secondary" size="md">
                         <template #leading><Pencil /></template>
@@ -142,5 +164,11 @@ function exportCarrier(): Promise<void> {
                 </Link>
             </div>
         </div>
+
+        <NotifyModal
+            v-model:open="notifyOpen"
+            :subject-label="carrier.name"
+            :form="carriersNotify.form(carrier.slug)"
+        />
     </div>
 </template>
