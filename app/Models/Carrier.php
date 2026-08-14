@@ -9,6 +9,7 @@ use App\Models\Concerns\BelongsToCurrentOrganization;
 use App\Models\Concerns\Filterable;
 use App\Models\Concerns\HasSlug;
 use App\Models\Concerns\Sortable;
+use App\Models\Contracts\NotificationSubject;
 use Carbon\CarbonImmutable;
 use Database\Factories\CarrierFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -39,7 +40,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Fillable([
     'organization_id', 'slug', 'name', 'phone', 'website', 'status', 'created_by', 'updated_by',
 ])]
-final class Carrier extends Model
+final class Carrier extends Model implements NotificationSubject
 {
     /** @use HasFactory<CarrierFactory> */
     use BelongsToCurrentOrganization, Filterable, HasFactory, HasSlug, SoftDeletes, Sortable;
@@ -64,5 +65,15 @@ final class Carrier extends Model
     public function updatedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function notificationSubjectKind(): string
+    {
+        return 'carrier';
+    }
+
+    public function notificationSubjectName(): string
+    {
+        return $this->name;
     }
 }

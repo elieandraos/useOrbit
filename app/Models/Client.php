@@ -17,6 +17,7 @@ use App\Models\Concerns\HasSlug;
 use App\Models\Concerns\Sortable;
 use App\Models\Contracts\Documentable;
 use App\Models\Contracts\Notable;
+use App\Models\Contracts\NotificationSubject;
 use Carbon\CarbonImmutable;
 use Database\Factories\ClientFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -71,7 +72,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'country_id', 'state_id', 'city', 'emergency_contact_name', 'emergency_contact_relationship',
     'emergency_contact_phone', 'enrollment_date', 'lead_source', 'status', 'created_by', 'updated_by',
 ])]
-final class Client extends Model implements Documentable, Notable
+final class Client extends Model implements Documentable, Notable, NotificationSubject
 {
     /** @use HasFactory<ClientFactory> */
     use BelongsToCurrentOrganization, Filterable, HasDocuments, HasFactory, HasNotes, HasSlug, SoftDeletes, Sortable;
@@ -115,6 +116,18 @@ final class Client extends Model implements Documentable, Notable
     }
 
     public function documentableName(): string
+    {
+        return $this->client_type === ClientType::Company
+            ? (string) $this->company_name
+            : "$this->first_name $this->last_name";
+    }
+
+    public function notificationSubjectKind(): string
+    {
+        return 'client';
+    }
+
+    public function notificationSubjectName(): string
     {
         return $this->client_type === ClientType::Company
             ? (string) $this->company_name

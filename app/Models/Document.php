@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\DocumentStatus;
 use App\Models\Concerns\BelongsToCurrentOrganization;
 use App\Models\Contracts\Documentable;
+use App\Models\Contracts\NotificationSubject;
 use App\Models\Scopes\CurrentOrganizationScope;
 use Carbon\CarbonImmutable;
 use Database\Factories\DocumentFactory;
@@ -47,7 +48,7 @@ use Illuminate\Support\Facades\Storage;
     'original_filename', 'disk', 'path', 'mime_type', 'size_in_bytes', 'checksum',
     'status', 'stored_at', 'error_message',
 ])]
-final class Document extends Model
+final class Document extends Model implements NotificationSubject
 {
     /** @use HasFactory<DocumentFactory> */
     use BelongsToCurrentOrganization, HasFactory, Prunable;
@@ -95,5 +96,15 @@ final class Document extends Model
     protected function pruning(): void
     {
         Storage::disk($this->disk)->delete($this->path);
+    }
+
+    public function notificationSubjectKind(): string
+    {
+        return 'document';
+    }
+
+    public function notificationSubjectName(): string
+    {
+        return $this->original_filename;
     }
 }

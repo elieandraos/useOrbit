@@ -6,6 +6,7 @@ namespace App\Http\Requests\OrganizationMembers;
 
 use App\Enums\OrganizationMemberStatus;
 use App\Models\User;
+use App\Support\Tenancy\OrganizationContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -16,16 +17,13 @@ final class RemoveOrganizationMemberRequest extends FormRequest
         /** @var User $member */
         $member = $this->route('member');
 
-        /** @var User $user */
-        $user = $this->user();
-
         return [
             'reassign_to' => [
                 'required',
                 'integer',
                 Rule::notIn([$member->id]),
                 Rule::exists('users', 'id')
-                    ->where('organization_id', $user->organization_id)
+                    ->where('organization_id', app(OrganizationContext::class)->id())
                     ->where('status', OrganizationMemberStatus::Active->value),
             ],
         ];

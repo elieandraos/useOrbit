@@ -9,6 +9,7 @@ use App\Models\Concerns\BelongsToCurrentOrganization;
 use App\Models\Concerns\Filterable;
 use App\Models\Concerns\HasSlug;
 use App\Models\Concerns\Sortable;
+use App\Models\Contracts\NotificationSubject;
 use Carbon\CarbonImmutable;
 use Database\Factories\AgentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -47,7 +48,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'organization_id', 'slug', 'first_name', 'last_name', 'date_of_birth', 'joined_at', 'phone', 'email',
     'street', 'building_floor', 'city', 'state_id', 'country_id', 'status', 'created_by', 'updated_by',
 ])]
-final class Agent extends Model
+final class Agent extends Model implements NotificationSubject
 {
     /** @use HasFactory<AgentFactory> */
     use BelongsToCurrentOrganization, Filterable, HasFactory, HasSlug, SoftDeletes, Sortable;
@@ -79,5 +80,15 @@ final class Agent extends Model
     public function updatedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function notificationSubjectKind(): string
+    {
+        return 'agent';
+    }
+
+    public function notificationSubjectName(): string
+    {
+        return "$this->first_name $this->last_name";
     }
 }
