@@ -16,6 +16,7 @@ const emit = defineEmits<{
     cancel: [id: string];
     dismiss: [id: string];
     delete: [document: DocumentRowItem];
+    notify: [document: DocumentRowItem];
     toggleTag: [documentId: number, tagId: number];
     createTag: [documentId: number, name: string];
 }>();
@@ -35,6 +36,7 @@ const emit = defineEmits<{
             @cancel="emit('cancel', $event)"
             @dismiss="emit('dismiss', $event)"
             @delete="emit('delete', $event)"
+            @notify="emit('notify', $event)"
             @toggle-tag="
                 (documentId, tagId) => emit('toggleTag', documentId, tagId)
             "

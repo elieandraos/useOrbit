@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import { SearchIcon } from '@lucide/vue';
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 import DeleteDocumentModal from '@/components/documents/DeleteDocumentModal.vue';
 import DocumentList from '@/components/documents/DocumentList.vue';
 import DocumentUploadDropzone from '@/components/documents/DocumentUploadDropzone.vue';
 import ManageTagsModal from '@/components/documents/ManageTagsModal.vue';
+import NotifyModal from '@/components/notifications/NotifyModal.vue';
 import TagFilterChips from '@/components/tags/TagFilterChips.vue';
 import Badge from '@/components/ui/badge/Badge.vue';
 import {
@@ -23,6 +24,7 @@ import { useNotifications } from '@/composables/useNotifications';
 import { useTagCatalog } from '@/composables/useTagCatalog';
 import { DOCUMENTS_UPLOADED } from '@/lib/notificationTypes';
 import { store as storeDocument } from '@/routes/clients/documents';
+import { notify as documentsNotify } from '@/routes/documents';
 import type {
     DocumentResource,
     DocumentRowItem,
@@ -148,6 +150,15 @@ watch(
 );
 
 const documentToDelete = ref<DocumentRowItem | null>(null);
+const documentToNotifyAbout = ref<DocumentRowItem | null>(null);
+const notifyModalOpen = computed({
+    get: () => documentToNotifyAbout.value !== null,
+    set: (value) => {
+        if (!value) {
+            documentToNotifyAbout.value = null;
+        }
+    },
+});
 const manageTagsOpen = ref(false);
 </script>
 
@@ -209,6 +220,7 @@ const manageTagsOpen = ref(false);
                     @toggle-tag="handleToggleTag"
                     @create-tag="handleCreateTag"
                     @delete="documentToDelete = $event"
+                    @notify="documentToNotifyAbout = $event"
                 />
             </CardContent>
         </Card>
@@ -223,6 +235,13 @@ const manageTagsOpen = ref(false);
             owner-type="clients"
             :owner-id="client.id"
             :reload-only="['documents']"
+        />
+
+        <NotifyModal
+            v-if="documentToNotifyAbout"
+            v-model:open="notifyModalOpen"
+            :subject-label="documentToNotifyAbout.original_filename"
+            :form="documentsNotify.form(documentToNotifyAbout.id)"
         />
     </ClientDetailShell>
 </template>
