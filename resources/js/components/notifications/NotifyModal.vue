@@ -62,14 +62,18 @@ function loadRecipients(): void {
     });
 }
 
-watch(open, (isOpen) => {
-    if (isOpen) {
-        loadRecipients();
-    } else {
-        notifyFormRef.value?.clearErrors();
-        resetFields();
-    }
-});
+watch(
+    open,
+    (isOpen) => {
+        if (isOpen) {
+            loadRecipients();
+        } else {
+            notifyFormRef.value?.clearErrors();
+            resetFields();
+        }
+    },
+    { immediate: true },
+);
 
 function close(): void {
     open.value = false;
