@@ -6,6 +6,7 @@ use App\Http\Controllers\Clients\ClientDocumentsController;
 use App\Http\Controllers\Documents\DocumentsDestroyController;
 use App\Http\Controllers\Documents\DocumentsDownloadController;
 use App\Http\Controllers\Documents\DocumentsUploadBatchController;
+use App\Http\Controllers\Notifications\NotifyDocumentController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified', 'organization'])->group(function () {
@@ -16,5 +17,6 @@ Route::middleware(['auth', 'verified', 'organization'])->group(function () {
 Route::middleware(['auth', 'verified', 'organization'])->prefix('documents')->name('documents.')->group(function () {
     Route::post('batch', DocumentsUploadBatchController::class)->name('batch');
     Route::get('{document}/download', DocumentsDownloadController::class)->name('download');
+    Route::post('{document}/notify', NotifyDocumentController::class)->name('notify');
     Route::delete('{document}', DocumentsDestroyController::class)->name('destroy');
 });

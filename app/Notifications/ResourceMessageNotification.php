@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Notifications;
 
 use App\Enums\NotificationReason;
+use App\Models\Contracts\HasNotificationParent;
 use App\Models\Contracts\NotificationSubject;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -29,23 +30,32 @@ final class ResourceMessageNotification extends EnvelopeNotification
     /** @return array{kind: string, slug: string, name: string} */
     protected function subject(): array
     {
-        return [
-            'kind' => $this->resource->notificationSubjectKind(),
-            'slug' => (string) $this->resource->getRouteKey(),
-            'name' => $this->resource->notificationSubjectName(),
-        ];
+        return $this->describe($this->resource);
     }
 
-    /** @return array{reason: string} */
+    /** @return array{reason: string, parent: array{kind: string, slug: string, name: string}|null} */
     protected function meta(): array
     {
         return [
             'reason' => $this->reason->value,
+            'parent' => $this->resource instanceof HasNotificationParent
+                ? $this->describe($this->resource->notificationParent())
+                : null,
         ];
     }
 
     protected function summary(): string
     {
         return $this->reason->summary();
+    }
+
+    /** @return array{kind: string, slug: string, name: string} */
+    private function describe(Model&NotificationSubject $subject): array
+    {
+        return [
+            'kind' => $subject->notificationSubjectKind(),
+            'slug' => (string) $subject->getRouteKey(),
+            'name' => $subject->notificationSubjectName(),
+        ];
     }
 }
