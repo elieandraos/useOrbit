@@ -9,6 +9,7 @@ interface Props {
     disabled?: boolean
     id?: string
     name?: string
+    value?: string | number
     tabindex?: number
     class?: HTMLAttributes['class']
 }
@@ -43,6 +44,7 @@ function toggle() {
             type="checkbox"
             :id="id"
             :name="name"
+            :value="value"
             :checked="isChecked"
             :disabled="disabled"
             :tabindex="tabindex"
