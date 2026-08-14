@@ -8,7 +8,7 @@ use App\Jobs\StoreDocumentJob;
 use App\Models\Client;
 use App\Models\Document;
 use App\Models\User;
-use App\Notifications\DocumentsUploadBatchProcessed;
+use App\Notifications\DocumentsUploadBatchProcessedNotification;
 use Illuminate\Bus\Batch;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Notification;
@@ -42,7 +42,6 @@ test('dispatches a batch containing a job for each pending document owned by the
     $rejectedCount = app(FinalizeDocumentsUploadBatchAction::class)->handle($user, [$first->id, $second->id]);
 
     expect($rejectedCount)->toBe(0);
-    /** @noinspection PhpParamsInspection */
     Bus::assertBatched(fn (PendingBatchFake $batch): bool => $batch->jobs->count() === 2
         && $batch->hasJobs([
             fn (StoreDocumentJob $job): bool => $job->documentId === $first->id,
@@ -116,7 +115,6 @@ test('returns a partial rejected count when some submitted ids match and others 
     $rejectedCount = app(FinalizeDocumentsUploadBatchAction::class)->handle($user, [$pending->id, $completed->id]);
 
     expect($rejectedCount)->toBe(1);
-    /** @noinspection PhpParamsInspection */
     Bus::assertBatched(fn (PendingBatchFake $batch): bool => $batch->jobs->count() === 1
         && $batch->hasJobs([fn (StoreDocumentJob $job): bool => $job->documentId === $pending->id]));
 });
@@ -133,7 +131,10 @@ test('does not count a duplicate submitted id as rejected', function () {
     expect($rejectedCount)->toBe(0);
 });
 
-test('notifies the uploader with the batch outcome once every job completes', function () {
+test(/**
+ * @throws ReflectionException
+ * @throws Throwable
+ */ 'notifies the uploader with the batch outcome once every job completes', function () {
     Bus::fake();
     $user = User::factory()->withOrganization()->create();
     setOrganizationContext($user);
@@ -156,11 +157,10 @@ test('notifies the uploader with the batch outcome once every job completes', fu
     /** @noinspection PhpUnhandledExceptionInspection */
     runFinallyCallbacks($batch);
 
-    /** @noinspection PhpParamsInspection */
     Notification::assertSentTo(
         $user,
-        DocumentsUploadBatchProcessed::class,
-        fn (DocumentsUploadBatchProcessed $notification): bool => $notification->outcome === ['completed' => 1, 'failed' => 0]
+        DocumentsUploadBatchProcessedNotification::class,
+        fn (DocumentsUploadBatchProcessedNotification $notification): bool => $notification->outcome === ['completed' => 1, 'failed' => 0]
             && $notification->documents->pluck('id')->all() === [$document->id],
     );
 });
@@ -194,10 +194,9 @@ test('notifies the uploader with a failed count when a file in the batch fails t
     /** @noinspection PhpUnhandledExceptionInspection */
     runFinallyCallbacks($batch);
 
-    /** @noinspection PhpParamsInspection */
     Notification::assertSentTo(
         $user,
-        DocumentsUploadBatchProcessed::class,
-        fn (DocumentsUploadBatchProcessed $notification): bool => $notification->outcome === ['completed' => 1, 'failed' => 1],
+        DocumentsUploadBatchProcessedNotification::class,
+        fn (DocumentsUploadBatchProcessedNotification $notification): bool => $notification->outcome === ['completed' => 1, 'failed' => 1],
     );
 });

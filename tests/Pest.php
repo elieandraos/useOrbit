@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\User;
-use App\Notifications\DocumentsUploadBatchProcessed;
+use App\Notifications\DocumentsUploadBatchProcessedNotification;
 use App\Support\Tenancy\OrganizationContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\DatabaseNotification;
@@ -67,7 +67,7 @@ function createNotificationFor(User $user, bool $read = false): DatabaseNotifica
 {
     return DatabaseNotification::query()->create([
         'id' => Str::uuid()->toString(),
-        'type' => DocumentsUploadBatchProcessed::class,
+        'type' => DocumentsUploadBatchProcessedNotification::class,
         'notifiable_type' => $user->getMorphClass(),
         'notifiable_id' => $user->id,
         'data' => ['summary' => 'Test notification.'],
