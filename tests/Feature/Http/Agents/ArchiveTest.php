@@ -7,6 +7,8 @@ use App\Enums\OrganizationRole;
 use App\Models\Agent;
 use App\Models\Organization;
 use App\Models\User;
+use App\Notifications\ResourceArchivedNotification;
+use Illuminate\Support\Facades\Notification;
 
 test('guests are redirected to the login page', function () {
     $agent = Agent::factory()->create();
@@ -39,4 +41,24 @@ test('non-owner member is forbidden from archiving an agent', function () {
     $this->actingAs($user)
         ->patch(route('agents.archive', $agent))
         ->assertForbidden();
+});
+
+test('notifies leadership that the agent was archived, excluding the actor and plain members', function () {
+    Notification::fake();
+
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+    $admin = User::factory()->forOrganization($organization, OrganizationRole::Admin)->create();
+    $member = User::factory()->forOrganization($organization, OrganizationRole::Member)->create();
+    $agent = Agent::factory()->forOrganization($owner)->create();
+
+    $this->actingAs($owner)->patch(route('agents.archive', $agent));
+
+    Notification::assertSentTo(
+        $admin,
+        ResourceArchivedNotification::class,
+        fn (ResourceArchivedNotification $notification): bool => $notification->toArray($admin)['subject']['kind'] === 'agent',
+    );
+    Notification::assertNotSentTo($owner, ResourceArchivedNotification::class);
+    Notification::assertNotSentTo($member, ResourceArchivedNotification::class);
 });
