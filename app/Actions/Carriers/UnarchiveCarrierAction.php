@@ -8,14 +8,11 @@ use App\Enums\CarrierStatus;
 use App\Models\Carrier;
 use App\Models\User;
 use App\Notifications\ResourceUnarchivedNotification;
-use App\Support\Notifications\LeadershipRecipients;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 
-final readonly class UnarchiveCarrierAction
+final class UnarchiveCarrierAction
 {
-    public function __construct(private LeadershipRecipients $recipients) {}
-
     /**
      * @throws \Throwable
      */
@@ -30,10 +27,13 @@ final readonly class UnarchiveCarrierAction
             return $carrier->fresh();
         });
 
-        Notification::send(
-            $this->recipients->resolve($user),
-            new ResourceUnarchivedNotification($user, $unarchived)->afterCommit(),
-        );
+        $recipients = User::query()
+            ->activeInCurrentOrganization()
+            ->privileged()
+            ->whereKeyNot($user->id)
+            ->get();
+
+        Notification::send($recipients, new ResourceUnarchivedNotification($user, $unarchived)->afterCommit());
 
         return $unarchived;
     }

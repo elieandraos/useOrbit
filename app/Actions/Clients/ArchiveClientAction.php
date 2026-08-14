@@ -8,14 +8,11 @@ use App\Enums\ClientStatus;
 use App\Models\Client;
 use App\Models\User;
 use App\Notifications\ResourceArchivedNotification;
-use App\Support\Notifications\LeadershipRecipients;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 
-final readonly class ArchiveClientAction
+final class ArchiveClientAction
 {
-    public function __construct(private LeadershipRecipients $recipients) {}
-
     public function handle(User $user, Client $client): Client
     {
         $archived = DB::transaction(function () use ($user, $client): Client {
@@ -27,10 +24,13 @@ final readonly class ArchiveClientAction
             return $client->fresh();
         });
 
-        Notification::send(
-            $this->recipients->resolve($user),
-            new ResourceArchivedNotification($user, $archived)->afterCommit(),
-        );
+        $recipients = User::query()
+            ->activeInCurrentOrganization()
+            ->privileged()
+            ->whereKeyNot($user->id)
+            ->get();
+
+        Notification::send($recipients, new ResourceArchivedNotification($user, $archived)->afterCommit());
 
         return $archived;
     }

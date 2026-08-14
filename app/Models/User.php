@@ -96,6 +96,17 @@ final class User extends Authenticatable
             ->where('status', OrganizationMemberStatus::Active->value);
     }
 
+    #[Scope]
+    protected function privileged(Builder $query): Builder
+    {
+        $privilegedRoles = array_map(
+            fn (OrganizationRole $role): string => $role->value,
+            array_filter(OrganizationRole::cases(), fn (OrganizationRole $role): bool => $role->isPrivileged()),
+        );
+
+        return $query->whereIn('role', $privilegedRoles);
+    }
+
     public function prunable(): Builder
     {
         return self::query()

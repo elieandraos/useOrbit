@@ -8,14 +8,11 @@ use App\Enums\ClientStatus;
 use App\Models\Client;
 use App\Models\User;
 use App\Notifications\ResourceUnarchivedNotification;
-use App\Support\Notifications\LeadershipRecipients;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 
-final readonly class UnarchiveClientAction
+final class UnarchiveClientAction
 {
-    public function __construct(private LeadershipRecipients $recipients) {}
-
     /**
      * @throws \Throwable
      */
@@ -30,10 +27,13 @@ final readonly class UnarchiveClientAction
             return $client->fresh();
         });
 
-        Notification::send(
-            $this->recipients->resolve($user),
-            new ResourceUnarchivedNotification($user, $unarchived)->afterCommit(),
-        );
+        $recipients = User::query()
+            ->activeInCurrentOrganization()
+            ->privileged()
+            ->whereKeyNot($user->id)
+            ->get();
+
+        Notification::send($recipients, new ResourceUnarchivedNotification($user, $unarchived)->afterCommit());
 
         return $unarchived;
     }
