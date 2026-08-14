@@ -12,9 +12,13 @@ use App\Models\Note;
 use App\Models\Organization;
 use App\Models\Tag;
 use App\Models\User;
+use App\Notifications\MemberRemovedNotification;
 use App\Support\Tenancy\OrganizationContext;
+use Illuminate\Support\Facades\Notification;
 
 test('reassigns authored records to the successor scoped to the organization', function (string $modelClass, string $column) {
+    Notification::fake();
+
     $organization = Organization::factory()->create();
     $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
     $member = User::factory()->forOrganization($organization)->create();
@@ -24,7 +28,7 @@ test('reassigns authored records to the successor scoped to the organization', f
     $record = $modelClass::factory()->forOrganization($owner)->create([$column => $member->id]);
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    app(RemoveOrganizationMemberAction::class)->handle($member, $successor);
+    app(RemoveOrganizationMemberAction::class)->handle($owner, $member, $successor);
 
     expect($record->fresh()->{$column})->toBe($successor->id);
 })->with([
@@ -41,6 +45,8 @@ test('reassigns authored records to the successor scoped to the organization', f
 ]);
 
 test('reassigns created_by on a soft-deleted record via withTrashed', function (string $modelClass) {
+    Notification::fake();
+
     $organization = Organization::factory()->create();
     $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
     $member = User::factory()->forOrganization($organization)->create();
@@ -51,7 +57,7 @@ test('reassigns created_by on a soft-deleted record via withTrashed', function (
     $record->delete();
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    app(RemoveOrganizationMemberAction::class)->handle($member, $successor);
+    app(RemoveOrganizationMemberAction::class)->handle($owner, $member, $successor);
 
     $fresh = $record->fresh();
 
@@ -64,6 +70,8 @@ test('reassigns created_by on a soft-deleted record via withTrashed', function (
 ]);
 
 test('hard-deletes the member row', function () {
+    Notification::fake();
+
     $organization = Organization::factory()->create();
     $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
     $member = User::factory()->forOrganization($organization)->create();
@@ -71,12 +79,14 @@ test('hard-deletes the member row', function () {
     app(OrganizationContext::class)->set($organization->id);
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    app(RemoveOrganizationMemberAction::class)->handle($member, $successor);
+    app(RemoveOrganizationMemberAction::class)->handle($owner, $member, $successor);
 
     expect(User::query()->find($member->id))->toBeNull();
 });
 
 test('cascades the pivot deletion', function () {
+    Notification::fake();
+
     $organization = Organization::factory()->create();
     $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
     $member = User::factory()->forOrganization($organization)->create();
@@ -84,7 +94,36 @@ test('cascades the pivot deletion', function () {
     app(OrganizationContext::class)->set($organization->id);
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    app(RemoveOrganizationMemberAction::class)->handle($member, $successor);
+    app(RemoveOrganizationMemberAction::class)->handle($owner, $member, $successor);
 
     expect($organization->fresh()->users()->count())->toBe(2);
+});
+
+test('notifies leadership that the member was removed, excluding the actor, the removed member, and plain members', function () {
+    Notification::fake();
+
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+    $otherAdmin = User::factory()->forOrganization($organization, OrganizationRole::Admin)->create();
+    $plainMember = User::factory()->forOrganization($organization, OrganizationRole::Member)->create();
+    $member = User::factory()->forOrganization($organization)->create(['name' => 'Jane Doe', 'email' => 'jane.doe@useorbit.com']);
+    $successor = User::factory()->forOrganization($organization)->create(['name' => 'Sam Reyes']);
+    app(OrganizationContext::class)->set($organization->id);
+
+    /** @noinspection PhpUnhandledExceptionInspection */
+    app(RemoveOrganizationMemberAction::class)->handle($owner, $member, $successor);
+
+    Notification::assertSentTo(
+        $otherAdmin,
+        MemberRemovedNotification::class,
+        fn (MemberRemovedNotification $notification): bool => $notification->toArray($otherAdmin)['meta']['member'] === [
+            'id' => $member->id,
+            'name' => 'Jane Doe',
+            'email' => 'jane.doe@useorbit.com',
+            'role' => 'member',
+        ]
+            && $notification->toArray($otherAdmin)['meta']['successor'] === ['id' => $successor->id, 'name' => 'Sam Reyes'],
+    );
+    Notification::assertNotSentTo($owner, MemberRemovedNotification::class);
+    Notification::assertNotSentTo($plainMember, MemberRemovedNotification::class);
 });

@@ -11,9 +11,11 @@ use App\Models\Document;
 use App\Models\Note;
 use App\Models\Tag;
 use App\Models\User;
+use App\Notifications\MemberRemovedNotification;
 use App\Support\Tenancy\OrganizationContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 final class RemoveOrganizationMemberAction
 {
@@ -22,8 +24,20 @@ final class RemoveOrganizationMemberAction
     /**
      * @throws \Throwable
      */
-    public function handle(User $member, User $successor): void
+    public function handle(User $actor, User $member, User $successor): void
     {
+        $organization = $member->organization;
+        $memberSnapshot = [
+            'id' => $member->id,
+            'name' => $member->name,
+            'email' => $member->email,
+            'role' => $member->role->value,
+        ];
+        $successorSnapshot = [
+            'id' => $successor->id,
+            'name' => $successor->name,
+        ];
+
         DB::transaction(function () use ($member, $successor): void {
             $organizationId = $this->organizationContext->id();
 
@@ -36,6 +50,17 @@ final class RemoveOrganizationMemberAction
 
             $member->delete();
         });
+
+        $recipients = User::query()
+            ->activeInCurrentOrganization()
+            ->privileged()
+            ->whereNotIn('id', [$actor->id, $member->id])
+            ->get();
+
+        Notification::send(
+            $recipients,
+            new MemberRemovedNotification($actor, $organization, $memberSnapshot, $successorSnapshot)->afterCommit(),
+        );
     }
 
     /**
