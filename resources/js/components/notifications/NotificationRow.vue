@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import { computed, inject } from 'vue';
-import { notificationTypes } from '@/lib/notificationTypes';
+import {
+    notificationTypes,
+    RESOURCE_ARCHIVED,
+    RESOURCE_MESSAGE,
+    RESOURCE_UNARCHIVED,
+} from '@/lib/notificationTypes';
 import type {
     NotificationEnvelope,
     NotificationItem,
@@ -26,6 +31,17 @@ const href = computed(
     () => meta.value?.resolveUrl(props.notification.data) ?? '#',
 );
 const isUnread = computed(() => props.notification.read_at === null);
+const isResourceMessage = computed(
+    () => data.value.action === RESOURCE_MESSAGE,
+);
+const isResourceEvent = computed(
+    () =>
+        data.value.action === RESOURCE_ARCHIVED ||
+        data.value.action === RESOURCE_UNARCHIVED,
+);
+const resourceEventVerb = computed(() =>
+    data.value.action === RESOURCE_ARCHIVED ? 'archived' : 'unarchived',
+);
 
 function handleClick(): void {
     if (isUnread.value) {
@@ -53,12 +69,47 @@ function handleClick(): void {
         </span>
         <span class="min-w-0 flex-1">
             <span
+                v-if="isResourceMessage"
+                class="block text-sm leading-snug"
+                :class="isUnread ? 'text-primary' : 'text-secondary'"
+            >
+                <span class="font-semibold text-primary">{{
+                    data.actor?.name ?? 'Someone'
+                }}</span>
+                notified you about
+                <span class="font-semibold text-primary">{{
+                    data.subject.name
+                }}</span
+                >.
+            </span>
+            <span
+                v-else-if="isResourceEvent"
+                class="block text-sm leading-snug"
+                :class="isUnread ? 'text-primary' : 'text-secondary'"
+            >
+                <span class="font-semibold text-primary">{{
+                    data.actor?.name ?? 'Someone'
+                }}</span>
+                {{ resourceEventVerb }} {{ data.subject.kind }}
+                <span class="font-semibold text-primary">{{
+                    data.subject.name
+                }}</span
+                >.
+            </span>
+            <span
+                v-else
                 class="block text-sm leading-snug"
                 :class="
                     isUnread
                         ? 'font-semibold text-primary'
                         : 'font-medium text-secondary'
                 "
+            >
+                {{ data.summary }}
+            </span>
+            <span
+                v-if="isResourceMessage"
+                class="block text-sm leading-snug text-secondary"
             >
                 {{ data.summary }}
             </span>

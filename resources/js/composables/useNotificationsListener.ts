@@ -2,7 +2,7 @@ import { usePage } from '@inertiajs/vue3';
 import { useEchoNotification } from '@laravel/echo-vue';
 import { toast } from 'vue-sonner';
 import { useNotifications } from '@/composables/useNotifications';
-import { DOCUMENTS_UPLOADED, RESOURCE_MESSAGE } from '@/lib/notificationTypes';
+import { DOCUMENTS_UPLOADED } from '@/lib/notificationTypes';
 import type {
     DocumentsUploadMeta,
     NotificationEnvelope,
@@ -24,29 +24,19 @@ export function useNotificationsListener(): void {
 
             receiveNotification({ id, type, data });
 
-            if (data.action === DOCUMENTS_UPLOADED) {
-                const { failed, completed } = data.meta as DocumentsUploadMeta;
-
-                if (failed > 0 && completed === 0) {
-                    toast.error(data.summary);
-                } else if (failed > 0) {
-                    toast.warning(data.summary);
-                } else {
-                    toast.success(data.summary);
-                }
-
+            if (data.action !== DOCUMENTS_UPLOADED) {
                 return;
             }
 
-            if (data.action === RESOURCE_MESSAGE) {
-                toast.info(
-                    `${data.actor?.name ?? 'Someone'} notified you about ${data.subject.name}`,
-                );
+            const { failed, completed } = data.meta as DocumentsUploadMeta;
 
-                return;
+            if (failed > 0 && completed === 0) {
+                toast.error(data.summary);
+            } else if (failed > 0) {
+                toast.warning(data.summary);
+            } else {
+                toast.success(data.summary);
             }
-
-            toast.info(data.summary);
         },
     );
 }
