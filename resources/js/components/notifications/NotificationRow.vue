@@ -2,6 +2,7 @@
 import { Link } from '@inertiajs/vue3';
 import { computed, inject } from 'vue';
 import {
+    DOCUMENTS_UPLOADED,
     MEMBER_JOINED,
     MEMBER_REMOVED,
     MEMBER_ROLE_CHANGED,
@@ -9,12 +10,15 @@ import {
     RESOURCE_ARCHIVED,
     RESOURCE_MESSAGE,
     RESOURCE_UNARCHIVED,
+    YOUR_ROLE_CHANGED,
 } from '@/lib/notificationTypes';
 import type {
+    DocumentsUploadMeta,
     MemberRemovedMeta,
     MemberRoleChangedMeta,
     NotificationEnvelope,
     NotificationItem,
+    YourRoleChangedMeta,
 } from '@/types/notification';
 
 const props = defineProps<{
@@ -56,6 +60,29 @@ const roleChangedMeta = computed(
     () => data.value.meta as MemberRoleChangedMeta,
 );
 const removedMeta = computed(() => data.value.meta as MemberRemovedMeta);
+const isDocumentsUploaded = computed(
+    () => data.value.action === DOCUMENTS_UPLOADED,
+);
+const uploadMeta = computed(() => data.value.meta as DocumentsUploadMeta);
+const uploadHeadline = computed(() => {
+    const { completed, failed } = uploadMeta.value;
+
+    if (failed === 0) {
+        return 'Your document upload is complete.';
+    }
+
+    if (completed === 0) {
+        return 'Your document upload failed.';
+    }
+
+    return 'Your document upload finished with some failures.';
+});
+const isYourRoleChanged = computed(
+    () => data.value.action === YOUR_ROLE_CHANGED,
+);
+const yourRoleChangedMeta = computed(
+    () => data.value.meta as YourRoleChangedMeta,
+);
 
 function handleClick(): void {
     if (isUnread.value) {
@@ -156,14 +183,50 @@ function handleClick(): void {
                 }}</span>
                 from {{ data.subject.name }}.
             </span>
+            <span
+                v-else-if="isDocumentsUploaded"
+                class="block text-sm leading-snug"
+                :class="
+                    isUnread
+                        ? 'font-semibold text-primary'
+                        : 'font-medium text-secondary'
+                "
+            >
+                {{ uploadHeadline }}
+            </span>
+            <span
+                v-else-if="isYourRoleChanged"
+                class="block text-sm leading-snug"
+                :class="
+                    isUnread
+                        ? 'font-semibold text-primary'
+                        : 'font-medium text-secondary'
+                "
+            >
+                Your role was changed to
+                <span class="capitalize">{{ yourRoleChangedMeta.to_role }}</span
+                >.
+            </span>
             <span v-else class="block text-xs leading-snug text-tertiary">
                 {{ data.summary }}
             </span>
             <span
-                v-if="isResourceMessage"
+                v-if="isResourceMessage || isDocumentsUploaded"
                 class="block text-xs leading-snug text-tertiary"
             >
                 {{ data.summary }}
+            </span>
+            <span
+                v-if="isYourRoleChanged"
+                class="block text-xs leading-snug text-tertiary"
+            >
+                Changed from
+                <span class="capitalize">{{
+                    yourRoleChangedMeta.from_role
+                }}</span>
+                to
+                <span class="capitalize">{{ yourRoleChangedMeta.to_role }}</span
+                >.
             </span>
             <span
                 class="mt-0.5 block text-right font-mono text-xs text-tertiary"
