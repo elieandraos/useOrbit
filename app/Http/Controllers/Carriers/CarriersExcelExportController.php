@@ -9,10 +9,15 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Carriers\IndexCarrierRequest;
 use App\Models\Carrier;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
+use PhpOffice\PhpSpreadsheet\Exception;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 final class CarriersExcelExportController extends Controller
 {
+    /**
+     * @throws Exception
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     */
     #[Authorize('viewAny', Carrier::class)]
     public function __invoke(IndexCarrierRequest $request, ExportCarriersToExcelAction $action): BinaryFileResponse
     {
