@@ -116,7 +116,9 @@ final class Document extends Model implements HasNotificationParent, Notificatio
     public function notificationParent(): Model&NotificationSubject
     {
         /** @var Model&NotificationSubject $documentable */
-        $documentable = $this->documentable;
+        $documentable = $this->documentable()
+            ->withoutGlobalScope(CurrentOrganizationScope::class)
+            ->firstOrFail();
 
         return $documentable;
     }

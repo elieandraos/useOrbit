@@ -72,3 +72,20 @@ test('meta.parent carries the owning client for a document', function () {
         'name' => 'Jane Doe',
     ]);
 });
+
+test('meta.parent resolves for a document without an established organization context, matching queue worker delivery', function () {
+    $actor = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($actor)->create(['first_name' => 'Jane', 'last_name' => 'Doe']);
+    $document = Document::factory()->forOrganization($actor)->create([
+        'documentable_type' => $client->getMorphClass(),
+        'documentable_id' => $client->id,
+    ]);
+
+    $notification = new ResourceMessageNotification($actor, $document, NotificationReason::NeedsReview);
+
+    expect($notification->toArray($actor)['meta']['parent'])->toBe([
+        'kind' => 'client',
+        'slug' => $client->slug,
+        'name' => 'Jane Doe',
+    ]);
+});
