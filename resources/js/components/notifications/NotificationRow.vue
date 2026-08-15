@@ -2,12 +2,17 @@
 import { Link } from '@inertiajs/vue3';
 import { computed, inject } from 'vue';
 import {
+    MEMBER_JOINED,
+    MEMBER_REMOVED,
+    MEMBER_ROLE_CHANGED,
     notificationTypes,
     RESOURCE_ARCHIVED,
     RESOURCE_MESSAGE,
     RESOURCE_UNARCHIVED,
 } from '@/lib/notificationTypes';
 import type {
+    MemberRemovedMeta,
+    MemberRoleChangedMeta,
     NotificationEnvelope,
     NotificationItem,
 } from '@/types/notification';
@@ -42,6 +47,15 @@ const isResourceEvent = computed(
 const resourceEventVerb = computed(() =>
     data.value.action === RESOURCE_ARCHIVED ? 'archived' : 'unarchived',
 );
+const isMemberJoined = computed(() => data.value.action === MEMBER_JOINED);
+const isMemberRoleChanged = computed(
+    () => data.value.action === MEMBER_ROLE_CHANGED,
+);
+const isMemberRemoved = computed(() => data.value.action === MEMBER_REMOVED);
+const roleChangedMeta = computed(
+    () => data.value.meta as MemberRoleChangedMeta,
+);
+const removedMeta = computed(() => data.value.meta as MemberRemovedMeta);
 
 function handleClick(): void {
     if (isUnread.value) {
@@ -96,12 +110,58 @@ function handleClick(): void {
                 }}</span
                 >.
             </span>
-            <span v-else class="block text-sm leading-snug text-tertiary">
+            <span
+                v-else-if="isMemberJoined"
+                class="block text-sm leading-snug"
+                :class="isUnread ? 'text-primary' : 'text-secondary'"
+            >
+                <span class="font-semibold text-primary">{{
+                    data.actor?.name ?? 'Someone'
+                }}</span>
+                joined
+                <span class="font-semibold text-primary">{{
+                    data.subject.name
+                }}</span
+                >.
+            </span>
+            <span
+                v-else-if="isMemberRoleChanged"
+                class="block text-sm leading-snug"
+                :class="isUnread ? 'text-primary' : 'text-secondary'"
+            >
+                <span class="font-semibold text-primary">{{
+                    data.actor?.name ?? 'Someone'
+                }}</span>
+                changed
+                <span class="font-semibold text-primary">{{
+                    roleChangedMeta.member.name
+                }}</span
+                >'s role from
+                <span class="capitalize">{{ roleChangedMeta.from_role }}</span>
+                to
+                <span class="capitalize">{{ roleChangedMeta.to_role }}</span
+                >.
+            </span>
+            <span
+                v-else-if="isMemberRemoved"
+                class="block text-sm leading-snug"
+                :class="isUnread ? 'text-primary' : 'text-secondary'"
+            >
+                <span class="font-semibold text-primary">{{
+                    data.actor?.name ?? 'Someone'
+                }}</span>
+                removed
+                <span class="font-semibold text-primary">{{
+                    removedMeta.member.name
+                }}</span>
+                from {{ data.subject.name }}.
+            </span>
+            <span v-else class="block text-xs leading-snug text-tertiary">
                 {{ data.summary }}
             </span>
             <span
                 v-if="isResourceMessage"
-                class="block text-sm leading-snug text-tertiary"
+                class="block text-xs leading-snug text-tertiary"
             >
                 {{ data.summary }}
             </span>
