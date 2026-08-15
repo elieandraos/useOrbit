@@ -13,6 +13,27 @@ test('user with a current organization can viewAny members', function () {
     expect($user->can('viewAny', User::class))->toBeTrue();
 });
 
+test('owner can manage organization members', function () {
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+
+    expect($owner->can('manage', User::class))->toBeTrue();
+});
+
+test('admin can manage organization members', function () {
+    $organization = Organization::factory()->create();
+    $admin = User::factory()->forOrganization($organization, OrganizationRole::Admin)->create();
+
+    expect($admin->can('manage', User::class))->toBeTrue();
+});
+
+test('member cannot manage organization members', function () {
+    $organization = Organization::factory()->create();
+    $member = User::factory()->forOrganization($organization)->create();
+
+    expect($member->can('manage', User::class))->toBeFalse();
+});
+
 test('owner can invite members', function () {
     $organization = Organization::factory()->create();
     $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();

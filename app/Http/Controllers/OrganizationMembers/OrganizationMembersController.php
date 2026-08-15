@@ -20,7 +20,7 @@ use Inertia\Response;
 
 final class OrganizationMembersController extends Controller
 {
-    #[Authorize('viewAny', User::class)]
+    #[Authorize('manage', User::class)]
     public function index(Request $request): Response
     {
         /** @var User $user */
