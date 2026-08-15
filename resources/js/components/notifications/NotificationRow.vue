@@ -96,24 +96,18 @@ function handleClick(): void {
                 }}</span
                 >.
             </span>
-            <span
-                v-else
-                class="block text-sm leading-snug"
-                :class="
-                    isUnread
-                        ? 'font-semibold text-primary'
-                        : 'font-medium text-secondary'
-                "
-            >
+            <span v-else class="block text-sm leading-snug text-tertiary">
                 {{ data.summary }}
             </span>
             <span
                 v-if="isResourceMessage"
-                class="block text-sm leading-snug text-secondary"
+                class="block text-sm leading-snug text-tertiary"
             >
                 {{ data.summary }}
             </span>
-            <span class="mt-0.5 block font-mono text-xs text-tertiary">
+            <span
+                class="mt-0.5 block text-right font-mono text-xs text-tertiary"
+            >
                 {{ notification.created_at }}
             </span>
         </span>
