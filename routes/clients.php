@@ -7,6 +7,7 @@ use App\Http\Controllers\Clients\ClientsController;
 use App\Http\Controllers\Clients\ClientsExcelExportController;
 use App\Http\Controllers\Clients\ClientsPdfExportController;
 use App\Http\Controllers\Clients\ClientsUnarchiveController;
+use App\Http\Controllers\Notifications\NotifyClientController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified', 'organization'])->group(function () {
@@ -19,6 +20,7 @@ Route::middleware(['auth', 'verified', 'organization'])->group(function () {
     Route::patch('clients/{client:slug}', [ClientsController::class, 'update'])->name('clients.update');
     Route::patch('clients/{client:slug}/archive', ClientsArchiveController::class)->name('clients.archive');
     Route::patch('clients/{client:slug}/unarchive', ClientsUnarchiveController::class)->name('clients.unarchive');
+    Route::post('clients/{client:slug}/notify', NotifyClientController::class)->name('clients.notify');
     Route::delete('clients/{client:slug}', [ClientsController::class, 'destroy'])->name('clients.destroy');
     Route::get('clients/{client:slug}/export', ClientsPdfExportController::class)->name('clients.export-pdf');
 });

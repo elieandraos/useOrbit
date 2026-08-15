@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { Calendar, Download, Mail, Pencil, Phone } from '@lucide/vue';
-import { computed } from 'vue';
+import { Bell, Calendar, Download, Mail, Pencil, Phone } from '@lucide/vue';
+import { computed, ref } from 'vue';
+import NotifyModal from '@/components/notifications/NotifyModal.vue';
 import Avatar from '@/components/ui/avatar/Avatar.vue';
 import Badge from '@/components/ui/badge/Badge.vue';
 import Button from '@/components/ui/button/Button.vue';
@@ -10,6 +11,7 @@ import { useFileExport } from '@/composables/useFileExport';
 import {
     edit as clientsEdit,
     exportPdf as clientsExportPdf,
+    notify as clientsNotify,
 } from '@/routes/clients';
 import type { ClientResource } from './client';
 
@@ -21,6 +23,7 @@ const props = defineProps<{
 const { isExporting, exportFile } = useFileExport();
 
 const exportUrl = computed(() => clientsExportPdf(props.client.slug).url);
+const notifyOpen = ref(false);
 
 function exportClient(): Promise<void> {
     return exportFile(exportUrl.value, `${props.client.slug}.pdf`, {
@@ -72,6 +75,14 @@ function exportClient(): Promise<void> {
                         <Download v-else />
                     </template>
                     Export
+                </Button>
+                <Button
+                    variant="secondary"
+                    size="sm"
+                    @click="notifyOpen = true"
+                >
+                    <template #leading><Bell /></template>
+                    Notify
                 </Button>
                 <Link :href="clientsEdit(client.slug).url">
                     <Button variant="secondary" size="sm">
@@ -150,6 +161,14 @@ function exportClient(): Promise<void> {
                     </template>
                     Export
                 </Button>
+                <Button
+                    variant="secondary"
+                    size="md"
+                    @click="notifyOpen = true"
+                >
+                    <template #leading><Bell /></template>
+                    Notify
+                </Button>
                 <Link :href="clientsEdit(client.slug).url">
                     <Button variant="secondary" size="md">
                         <template #leading><Pencil /></template>
@@ -158,5 +177,11 @@ function exportClient(): Promise<void> {
                 </Link>
             </div>
         </div>
+
+        <NotifyModal
+            v-model:open="notifyOpen"
+            :subject-label="client.full_name"
+            :form="clientsNotify.form(client.slug)"
+        />
     </div>
 </template>

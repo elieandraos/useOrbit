@@ -20,7 +20,7 @@ use Inertia\Response;
 
 final class OrganizationMembersController extends Controller
 {
-    #[Authorize('viewAny', User::class)]
+    #[Authorize('manage', User::class)]
     public function index(Request $request): Response
     {
         /** @var User $user */
@@ -58,10 +58,12 @@ final class OrganizationMembersController extends Controller
     #[Authorize('remove', [User::class, 'member'])]
     public function destroy(RemoveOrganizationMemberRequest $request, User $member, RemoveOrganizationMemberAction $action): RedirectResponse
     {
+        /** @var User $actor */
+        $actor = $request->user();
         /** @var User $successor */
         $successor = User::query()->findOrFail($request->validated('reassign_to'));
 
-        $action->handle($member, $successor);
+        $action->handle($actor, $member, $successor);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Member removed.')]);
 

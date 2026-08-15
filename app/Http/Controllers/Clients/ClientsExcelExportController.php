@@ -9,10 +9,15 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Clients\IndexClientRequest;
 use App\Models\Client;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
+use PhpOffice\PhpSpreadsheet\Exception;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 final class ClientsExcelExportController extends Controller
 {
+    /**
+     * @throws Exception
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     */
     #[Authorize('viewAny', Client::class)]
     public function __invoke(IndexClientRequest $request, ExportClientsToExcelAction $action): BinaryFileResponse
     {

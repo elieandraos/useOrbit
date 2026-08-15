@@ -15,6 +15,9 @@ use Inertia\Inertia;
 
 final class ClientsUnarchiveController extends Controller
 {
+    /**
+     * @throws \Throwable
+     */
     #[Authorize('unarchive', 'client')]
     public function __invoke(Request $request, Client $client, UnarchiveClientAction $action): RedirectResponse
     {

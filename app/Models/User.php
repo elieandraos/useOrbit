@@ -8,6 +8,7 @@ namespace App\Models;
 use App\Enums\OrganizationMemberStatus;
 use App\Enums\OrganizationRole;
 use App\Models\Scopes\CurrentOrganizationScope;
+use App\Support\Tenancy\OrganizationContext;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -85,6 +86,25 @@ final class User extends Authenticatable
         return $query->where('status', OrganizationMemberStatus::Invited->value)
             ->whereNotNull('invitation_token')
             ->where('invitation_expires_at', '>', now());
+    }
+
+    #[Scope]
+    protected function activeInCurrentOrganization(Builder $query): Builder
+    {
+        return $query
+            ->where('organization_id', app(OrganizationContext::class)->id())
+            ->where('status', OrganizationMemberStatus::Active->value);
+    }
+
+    #[Scope]
+    protected function privileged(Builder $query): Builder
+    {
+        $privilegedRoles = array_map(
+            fn (OrganizationRole $role): string => $role->value,
+            array_filter(OrganizationRole::cases(), fn (OrganizationRole $role): bool => $role->isPrivileged()),
+        );
+
+        return $query->whereIn('role', $privilegedRoles);
     }
 
     public function prunable(): Builder

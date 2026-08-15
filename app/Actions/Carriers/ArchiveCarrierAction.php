@@ -7,7 +7,9 @@ namespace App\Actions\Carriers;
 use App\Enums\CarrierStatus;
 use App\Models\Carrier;
 use App\Models\User;
+use App\Notifications\ResourceArchivedNotification;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 final class ArchiveCarrierAction
 {
@@ -16,7 +18,7 @@ final class ArchiveCarrierAction
      */
     public function handle(User $user, Carrier $carrier): Carrier
     {
-        return DB::transaction(function () use ($user, $carrier): Carrier {
+        $archived = DB::transaction(function () use ($user, $carrier): Carrier {
             $carrier->update([
                 'status' => CarrierStatus::Archived,
                 'updated_by' => $user->id,
@@ -24,5 +26,15 @@ final class ArchiveCarrierAction
 
             return $carrier->fresh();
         });
+
+        $recipients = User::query()
+            ->activeInCurrentOrganization()
+            ->privileged()
+            ->whereKeyNot($user->id)
+            ->get();
+
+        Notification::send($recipients, new ResourceArchivedNotification($user, $archived)->afterCommit());
+
+        return $archived;
     }
 }

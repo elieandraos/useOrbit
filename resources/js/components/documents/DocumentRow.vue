@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Clock, Download, Plus, Trash2, X } from '@lucide/vue';
+import { Bell, Clock, Download, Plus, Trash2, X } from '@lucide/vue';
 import { computed } from 'vue';
 import TagPickerMenu from '@/components/tags/TagPickerMenu.vue';
 import TagPill from '@/components/tags/TagPill.vue';
@@ -21,6 +21,7 @@ const emit = defineEmits<{
     cancel: [id: string];
     dismiss: [id: string];
     delete: [document: DocumentRowItem];
+    notify: [document: DocumentRowItem];
     toggleTag: [documentId: number, tagId: number];
     createTag: [documentId: number, name: string];
 }>();
@@ -293,6 +294,14 @@ const kind = computed(() => fileKind(filename.value));
                 />
             </DropMenu>
         </div>
+        <button
+            type="button"
+            title="Notify"
+            class="shrink-0 cursor-pointer p-1 text-tertiary hover:text-primary"
+            @click="emit('notify', item as DocumentRowItem)"
+        >
+            <Bell class="size-3.5" />
+        </button>
         <a
             v-if="item.download_url"
             :href="item.download_url"

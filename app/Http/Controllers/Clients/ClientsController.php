@@ -78,6 +78,9 @@ final class ClientsController extends Controller
         ]);
     }
 
+    /**
+     * @throws \Throwable
+     */
     #[Authorize('create', Client::class)]
     public function store(StoreClientRequest $request, CreateClientAction $action): RedirectResponse
     {
@@ -114,6 +117,9 @@ final class ClientsController extends Controller
         ]);
     }
 
+    /**
+     * @throws \Throwable
+     */
     #[Authorize('update', 'client')]
     public function update(UpdateClientRequest $request, Client $client, UpdateClientAction $action): RedirectResponse
     {

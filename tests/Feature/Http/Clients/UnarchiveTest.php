@@ -7,6 +7,8 @@ use App\Enums\OrganizationRole;
 use App\Models\Client;
 use App\Models\Organization;
 use App\Models\User;
+use App\Notifications\ResourceUnarchivedNotification;
+use Illuminate\Support\Facades\Notification;
 
 test('guests are redirected to the login page', function () {
     $client = Client::factory()->archived()->create();
@@ -37,4 +39,24 @@ test('non-owner member is forbidden from unarchiving a client', function () {
     $this->actingAs($user)
         ->patch(route('clients.unarchive', $client))
         ->assertForbidden();
+});
+
+test('notifies leadership that the client was unarchived, excluding the actor and plain members', function () {
+    Notification::fake();
+
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+    $admin = User::factory()->forOrganization($organization, OrganizationRole::Admin)->create();
+    $member = User::factory()->forOrganization($organization, OrganizationRole::Member)->create();
+    $client = Client::factory()->forOrganization($owner)->archived()->create();
+
+    $this->actingAs($owner)->patch(route('clients.unarchive', $client));
+
+    Notification::assertSentTo(
+        $admin,
+        ResourceUnarchivedNotification::class,
+        fn (ResourceUnarchivedNotification $notification): bool => $notification->toArray($admin)['subject']['kind'] === 'client',
+    );
+    Notification::assertNotSentTo($owner, ResourceUnarchivedNotification::class);
+    Notification::assertNotSentTo($member, ResourceUnarchivedNotification::class);
 });

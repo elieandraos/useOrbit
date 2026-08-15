@@ -7,7 +7,9 @@ namespace App\Actions\Agents;
 use App\Enums\AgentStatus;
 use App\Models\Agent;
 use App\Models\User;
+use App\Notifications\ResourceUnarchivedNotification;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 final class UnarchiveAgentAction
 {
@@ -16,7 +18,7 @@ final class UnarchiveAgentAction
      */
     public function handle(User $user, Agent $agent): Agent
     {
-        return DB::transaction(function () use ($user, $agent): Agent {
+        $unarchived = DB::transaction(function () use ($user, $agent): Agent {
             $agent->update([
                 'status' => AgentStatus::Active,
                 'updated_by' => $user->id,
@@ -24,5 +26,15 @@ final class UnarchiveAgentAction
 
             return $agent->fresh();
         });
+
+        $recipients = User::query()
+            ->activeInCurrentOrganization()
+            ->privileged()
+            ->whereKeyNot($user->id)
+            ->get();
+
+        Notification::send($recipients, new ResourceUnarchivedNotification($user, $unarchived)->afterCommit());
+
+        return $unarchived;
     }
 }

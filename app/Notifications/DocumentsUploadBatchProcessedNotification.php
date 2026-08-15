@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
-final class DocumentsUploadBatchProcessed extends EnvelopeNotification
+final class DocumentsUploadBatchProcessedNotification extends EnvelopeNotification
 {
     public const string ACTION = 'documents.uploaded';
 

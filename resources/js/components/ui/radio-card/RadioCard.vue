@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import type { HTMLAttributes } from 'vue'
 import { cn } from '@/lib/utils'
+import Badge from '@/components/ui/badge/Badge.vue'
 
 interface Option {
     label: string
     value: string
     desc?: string
+    badge?: string
 }
 
 interface Props {
@@ -55,7 +57,7 @@ function select(value: string) {
                     class="size-1.5 rounded-full bg-white"
                 />
             </span>
-            <span class="min-w-0">
+            <span class="min-w-0 flex-1">
                 <span class="block text-[13.5px] font-semibold text-primary">{{
                     option.label
                 }}</span>
@@ -65,6 +67,9 @@ function select(value: string) {
                     >{{ option.desc }}</span
                 >
             </span>
+            <Badge v-if="option.badge" tone="neutral" class="mt-0.5 shrink-0">{{
+                option.badge
+            }}</Badge>
         </button>
         <input v-if="name" type="hidden" :name="name" :value="modelValue" />
     </div>

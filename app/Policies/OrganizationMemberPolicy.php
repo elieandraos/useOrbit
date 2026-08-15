@@ -15,6 +15,12 @@ final class OrganizationMemberPolicy
         return $user->organization_id !== null;
     }
 
+    public function manage(User $user): bool
+    {
+        return $user->organization_id !== null
+            && $user->role->isPrivileged();
+    }
+
     public function invite(User $user): bool
     {
         return $user->organization_id !== null

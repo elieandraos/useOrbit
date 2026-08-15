@@ -9,10 +9,15 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Agents\IndexAgentRequest;
 use App\Models\Agent;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
+use PhpOffice\PhpSpreadsheet\Exception;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 final class AgentsExcelExportController extends Controller
 {
+    /**
+     * @throws Exception
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     */
     #[Authorize('viewAny', Agent::class)]
     public function __invoke(IndexAgentRequest $request, ExportAgentsToExcelAction $action): BinaryFileResponse
     {

@@ -13,6 +13,33 @@ test('guests are redirected to the login page', function () {
         ->assertRedirect(route('login'));
 });
 
+test('owner can access the organization members index', function () {
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+
+    $this->actingAs($owner)
+        ->get(route('organization-members.index'))
+        ->assertOk();
+});
+
+test('admin can access the organization members index', function () {
+    $organization = Organization::factory()->create();
+    $admin = User::factory()->forOrganization($organization, OrganizationRole::Admin)->create();
+
+    $this->actingAs($admin)
+        ->get(route('organization-members.index'))
+        ->assertOk();
+});
+
+test('member cannot access the organization members index', function () {
+    $organization = Organization::factory()->create();
+    $member = User::factory()->forOrganization($organization)->create();
+
+    $this->actingAs($member)
+        ->get(route('organization-members.index'))
+        ->assertForbidden();
+});
+
 test('renders the roster for the current organization, exposing id, name, email, role, status, joined_at, last_login_at and is_you', function () {
     $organization = Organization::factory()->create();
     $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create(['name' => 'Amanda Owner']);
@@ -73,7 +100,7 @@ test('exposes last_login_at as null for a member who has never logged in', funct
         );
 });
 
-test('exposes can_change_role, can_remove and can_revoke based on the viewer role', function () {
+test('exposes can_change_role and can_remove true for a privileged viewer', function () {
     $organization = Organization::factory()->create();
     $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create(['name' => 'Amanda Owner']);
     $member = User::factory()->forOrganization($organization)->create(['name' => 'Zack Member']);
@@ -84,19 +111,11 @@ test('exposes can_change_role, can_remove and can_revoke based on the viewer rol
             ->where('members.1.can_change_role', true)
             ->where('members.1.can_remove', true)
         );
-
-    $this->actingAs($member)
-        ->get(route('organization-members.index'))
-        ->assertInertia(fn ($page) => $page
-            ->where('members.0.can_change_role', false)
-            ->where('members.0.can_remove', false)
-        );
 });
 
-test('exposes can_revoke true for a privileged viewer and false for a member', function () {
+test('exposes can_revoke true for a privileged viewer', function () {
     $organization = Organization::factory()->create();
     $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create(['name' => 'Amanda Owner']);
-    $member = User::factory()->forOrganization($organization)->create(['name' => 'Bob Member']);
     $invitee = User::factory()->forOrganization($organization)->create([
         'password' => null,
         'name' => 'Zzz Invitee',
@@ -106,13 +125,7 @@ test('exposes can_revoke true for a privileged viewer and false for a member', f
     $this->actingAs($owner)
         ->get(route('organization-members.index'))
         ->assertInertia(fn ($page) => $page
-            ->where('members.2.can_revoke', true)
-        );
-
-    $this->actingAs($member)
-        ->get(route('organization-members.index'))
-        ->assertInertia(fn ($page) => $page
-            ->where('members.2.can_revoke', false)
+            ->where('members.1.can_revoke', true)
         );
 });
 

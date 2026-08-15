@@ -5,14 +5,14 @@ declare(strict_types=1);
 use App\Models\Client;
 use App\Models\Document;
 use App\Models\User;
-use App\Notifications\DocumentsUploadBatchProcessed;
+use App\Notifications\DocumentsUploadBatchProcessedNotification;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 
 test('is delivered via the database and broadcast channels', function () {
     $user = User::factory()->withOrganization()->create();
     $client = Client::factory()->forOrganization($user)->create();
 
-    $notification = new DocumentsUploadBatchProcessed(['completed' => 1, 'failed' => 0], collect(), $client);
+    $notification = new DocumentsUploadBatchProcessedNotification(['completed' => 1, 'failed' => 0], collect(), $client);
 
     expect($notification->via($user))->toBe(['database', 'broadcast']);
 });
@@ -29,7 +29,7 @@ test('array and broadcast payloads carry the action, actor, subject, meta, and a
         'documentable_id' => $client->id,
     ]);
 
-    $notification = new DocumentsUploadBatchProcessed(
+    $notification = new DocumentsUploadBatchProcessedNotification(
         ['completed' => 1, 'failed' => 1],
         collect([$completed, $failed]),
         $client,
@@ -52,7 +52,7 @@ test('array and broadcast payloads carry the action, actor, subject, meta, and a
     ];
 
     expect($notification->toArray($user))->toBe($expected)
-        ->and(DocumentsUploadBatchProcessed::ACTION)->toBe('documents.uploaded');
+        ->and(DocumentsUploadBatchProcessedNotification::ACTION)->toBe('documents.uploaded');
 
     $broadcast = $notification->toBroadcast($user);
     expect($broadcast)->toBeInstanceOf(BroadcastMessage::class)
@@ -67,7 +67,7 @@ test('summarizes an all-success batch without mentioning failures', function () 
         'documentable_id' => $client->id,
     ]);
 
-    $notification = new DocumentsUploadBatchProcessed(['completed' => 2, 'failed' => 0], $documents, $client);
+    $notification = new DocumentsUploadBatchProcessedNotification(['completed' => 2, 'failed' => 0], $documents, $client);
 
     expect($notification->toArray($user)['summary'])->toBe('2 documents uploaded to client Jane Doe.');
 });
@@ -80,7 +80,7 @@ test('summarizes a single-document upload using the singular form', function () 
         'documentable_id' => $client->id,
     ]);
 
-    $notification = new DocumentsUploadBatchProcessed(['completed' => 1, 'failed' => 0], $documents, $client);
+    $notification = new DocumentsUploadBatchProcessedNotification(['completed' => 1, 'failed' => 0], $documents, $client);
 
     expect($notification->toArray($user)['summary'])->toBe('1 document uploaded to client Jane Doe.');
 });
@@ -93,7 +93,7 @@ test('summarizes an all-failed batch without mentioning successes', function () 
         'documentable_id' => $client->id,
     ]);
 
-    $notification = new DocumentsUploadBatchProcessed(['completed' => 0, 'failed' => 2], $documents, $client);
+    $notification = new DocumentsUploadBatchProcessedNotification(['completed' => 0, 'failed' => 2], $documents, $client);
 
     expect($notification->toArray($user)['summary'])->toBe('2 documents failed to upload to client Jane Doe.');
 });
@@ -107,7 +107,7 @@ test('attributes an all-success summary to the actor when a member acts on behal
         'documentable_id' => $client->id,
     ]);
 
-    $notification = new DocumentsUploadBatchProcessed(['completed' => 2, 'failed' => 0], $documents, $client, $actor);
+    $notification = new DocumentsUploadBatchProcessedNotification(['completed' => 2, 'failed' => 0], $documents, $client, $actor);
 
     $data = $notification->toArray($user);
 
@@ -124,7 +124,7 @@ test('attributes an all-failed summary to the actor without mentioning successes
         'documentable_id' => $client->id,
     ]);
 
-    $notification = new DocumentsUploadBatchProcessed(['completed' => 0, 'failed' => 2], $documents, $client, $actor);
+    $notification = new DocumentsUploadBatchProcessedNotification(['completed' => 0, 'failed' => 2], $documents, $client, $actor);
 
     expect($notification->toArray($user)['summary'])
         ->toBe('Sarah Cohen failed to upload 2 documents to client Jane Doe.');
@@ -143,7 +143,7 @@ test('attributes a mixed summary to the actor with the failure count', function 
         'documentable_id' => $client->id,
     ]);
 
-    $notification = new DocumentsUploadBatchProcessed(
+    $notification = new DocumentsUploadBatchProcessedNotification(
         ['completed' => 1, 'failed' => 1],
         collect([$completed, $failed]),
         $client,

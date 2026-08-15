@@ -20,7 +20,9 @@ final class OrganizationMembersChangeRoleController extends Controller
     #[Authorize('changeRole', [User::class, 'member'])]
     public function __invoke(ChangeOrganizationMemberRoleRequest $request, User $member, ChangeOrganizationMemberRoleAction $action): RedirectResponse
     {
-        $action->handle($member, $request->validated());
+        /** @var User $actor */
+        $actor = $request->user();
+        $action->handle($actor, $member, $request->validated());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Member role updated.')]);
 

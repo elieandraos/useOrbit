@@ -54,3 +54,50 @@ export type MemberJoinedMeta = {
 };
 
 export type MemberJoinedData = NotificationEnvelope<MemberJoinedMeta>;
+
+export type ResourceEventMeta = Record<string, never>;
+
+export type ResourceArchivedData = NotificationEnvelope<ResourceEventMeta>;
+
+export type ResourceUnarchivedData = NotificationEnvelope<ResourceEventMeta>;
+
+export type MemberRoleChangedMeta = {
+    member: {
+        id: number;
+        name: string;
+        email: string;
+    };
+    from_role: string;
+    to_role: string;
+};
+
+export type MemberRoleChangedData = NotificationEnvelope<MemberRoleChangedMeta>;
+
+export type YourRoleChangedMeta = {
+    from_role: string;
+    to_role: string;
+};
+
+export type YourRoleChangedData = NotificationEnvelope<YourRoleChangedMeta>;
+
+export type MemberRemovedMeta = {
+    member: {
+        id: number;
+        name: string;
+        email: string;
+        role: string;
+    };
+    successor: {
+        id: number;
+        name: string;
+    };
+};
+
+export type MemberRemovedData = NotificationEnvelope<MemberRemovedMeta>;
+
+export type ResourceMessageMeta = {
+    reason: 'needs_review' | 'for_attention' | 'wants_input';
+    parent: NotificationSubject | null;
+};
+
+export type ResourceMessageData = NotificationEnvelope<ResourceMessageMeta>;

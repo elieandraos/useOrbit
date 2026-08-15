@@ -122,7 +122,7 @@ const mobileNavOpen = defineModel<boolean>('mobileNavOpen', {
                 </div>
                 <div
                     v-else
-                    class="flex flex-col overflow-y-auto p-1"
+                    class="flex flex-col divide-y divide-border-subtle overflow-y-auto p-1"
                     @scroll="handleScroll"
                 >
                     <NotificationRow

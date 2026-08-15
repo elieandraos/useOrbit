@@ -9,7 +9,7 @@ use App\Jobs\StoreDocumentJob;
 use App\Models\Contracts\Documentable;
 use App\Models\Document;
 use App\Models\User;
-use App\Notifications\DocumentsUploadBatchProcessed;
+use App\Notifications\DocumentsUploadBatchProcessedNotification;
 use App\Support\Tenancy\OrganizationContext;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Bus;
@@ -53,7 +53,7 @@ final class FinalizeDocumentsUploadBatchAction
                 $outcome = app(CountDocumentsUploadBatchOutcomeAction::class)->handle($ids);
                 $processedDocuments = Document::query()->whereKey($ids)->get(['id', 'status']);
 
-                $user->notify(new DocumentsUploadBatchProcessed($outcome, $processedDocuments, $documentable));
+                $user->notify(new DocumentsUploadBatchProcessedNotification($outcome, $processedDocuments, $documentable));
             })
             ->dispatch();
 
