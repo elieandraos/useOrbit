@@ -10,7 +10,7 @@ use App\Models\User;
 
 final class YourRoleChangedNotification extends EnvelopeNotification
 {
-    public const string ACTION = 'member.role_changed';
+    public const string ACTION = 'member.your_role_changed';
 
     public function __construct(
         User $actor,

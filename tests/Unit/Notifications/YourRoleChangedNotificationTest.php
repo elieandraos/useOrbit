@@ -26,7 +26,7 @@ test('array and broadcast payloads carry the action, actor, subject, meta, and a
     $notification = new YourRoleChangedNotification($actor, $organization, OrganizationRole::Member, OrganizationRole::Admin);
 
     $expected = [
-        'action' => 'member.role_changed',
+        'action' => 'member.your_role_changed',
         'actor' => ['id' => $actor->id, 'name' => 'John Doe'],
         'subject' => ['kind' => 'organization', 'slug' => (string) $organization->id, 'name' => 'Acme Insurance'],
         'meta' => [
@@ -37,7 +37,7 @@ test('array and broadcast payloads carry the action, actor, subject, meta, and a
     ];
 
     expect($notification->toArray($member))->toBe($expected)
-        ->and(YourRoleChangedNotification::ACTION)->toBe('member.role_changed');
+        ->and(YourRoleChangedNotification::ACTION)->toBe('member.your_role_changed');
 
     $broadcast = $notification->toBroadcast($member);
     expect($broadcast)->toBeInstanceOf(BroadcastMessage::class)

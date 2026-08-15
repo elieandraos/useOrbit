@@ -30,6 +30,7 @@ export const MEMBER_JOINED = 'member.joined';
 export const RESOURCE_ARCHIVED = 'resource.archived';
 export const RESOURCE_UNARCHIVED = 'resource.unarchived';
 export const MEMBER_ROLE_CHANGED = 'member.role_changed';
+export const YOUR_ROLE_CHANGED = 'member.your_role_changed';
 export const MEMBER_REMOVED = 'member.removed';
 export const RESOURCE_MESSAGE = 'resource.message';
 
@@ -108,6 +109,11 @@ export const notificationTypes: Record<string, NotificationTypeMeta> = {
                 data.subject as NotificationSubject,
                 data.meta as Record<string, unknown>,
             ),
+    },
+    [YOUR_ROLE_CHANGED]: {
+        icon: UserCog,
+        label: 'Your role changed',
+        resolveUrl: () => '#',
     },
     [MEMBER_REMOVED]: {
         icon: UserMinus,
