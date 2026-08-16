@@ -155,6 +155,26 @@ test('an invalid token redirects back to the show page on submit', function () {
     ])->assertRedirect(route('invitations.show', 'not-a-real-token'));
 });
 
+test('returns to the show page when the invitation is revoked between the lookup and the accept', function () {
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+
+    [$invitee, $token] = inviteMemberAndCaptureToken($owner);
+
+    User::retrieved(function (User $model) use ($invitee): void {
+        if ($model->is($invitee)) {
+            User::query()->whereKey($invitee->id)->delete();
+        }
+    });
+
+    $this->post(route('invitations.store', $token), [
+        'password' => 'a-strong-password',
+        'password_confirmation' => 'a-strong-password',
+    ])->assertRedirect(route('invitations.show', $token));
+
+    $this->assertGuest();
+});
+
 test('accepting an invitation logs the invitee in and redirects to the dashboard', function () {
     $organization = Organization::factory()->create();
     $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
