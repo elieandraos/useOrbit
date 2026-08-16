@@ -21,3 +21,10 @@ test('documentableName returns the company name for a company client', function 
 
     expect($client->documentableName())->toBe($client->company_name);
 });
+
+test('notificationSubjectName returns the company name for a company client', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->company()->create(['created_by' => $user->id]);
+
+    expect($client->notificationSubjectName())->toBe($client->company_name);
+});
