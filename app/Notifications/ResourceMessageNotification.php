@@ -36,11 +36,13 @@ final class ResourceMessageNotification extends EnvelopeNotification
     /** @return array{reason: string, parent: array{kind: string, slug: string, name: string}|null} */
     protected function meta(): array
     {
+        $parent = $this->resource instanceof HasNotificationParent
+            ? $this->describe($this->resource->notificationParent())
+            : null;
+
         return [
             'reason' => $this->reason->value,
-            'parent' => $this->resource instanceof HasNotificationParent
-                ? $this->describe($this->resource->notificationParent())
-                : null,
+            'parent' => $parent,
         ];
     }
 
