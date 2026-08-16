@@ -37,3 +37,10 @@ test('auth.user.is_privileged is false for a member', function () {
             ->where('auth.user.is_privileged', false)
         );
 });
+
+test('auth.user is null for a guest', function () {
+    $this->get(route('login'))
+        ->assertInertia(fn ($page) => $page
+            ->where('auth.user', null)
+        );
+});
