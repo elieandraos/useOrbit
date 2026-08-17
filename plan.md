@@ -81,15 +81,15 @@ The following product decisions are **LOCKED** and must be treated as fixed cons
 4. Preserve the current identity model: one User belongs to one Organization; membership remains directly on `User`; email remains globally unique.
 5. Separate email verification is not part of the target lifecycle. Remove the currently decorative/no-op `verified` route middleware/scaffolding where appropriate. Invitation acceptance is the controlled email-ownership/account-setup path.
 6. Add Fortify-native 2FA.
-7. 2FA is recommended by default but an Organization can require it.
-8. The organization-wide 2FA requirement can be enabled/disabled by the Owner only (not Admin).
+7. 2FA is recommended by default but an Organization can require it. The recommended-but-not-required treatment is passive copy on the Security settings page only — no dismissible banner, no notification-center entry.
+8. The organization-wide 2FA requirement can be enabled/disabled by the Owner only (not Admin), via a dedicated `settings/organization` settings surface — not the Organization Members page.
 9. When an Organization requires 2FA, enforcement is immediate per request: an Active authenticated user who has not enrolled is redirected to 2FA enrollment; no grace-period state; no forced logout required; normal application access resumes immediately after enrollment.
 10. Keep these concepts independent — do NOT introduce a new `OrganizationMemberStatus` for 2FA:
     - membership state → `User.status`
     - authentication/session state → Laravel auth/session
     - 2FA enrollment state → Fortify/User credential state
     - 2FA requirement → Organization-level policy
-11. 2FA reset/recovery: an Admin may never reset an Owner's 2FA; an Owner's 2FA may only be reset by another Owner; privileged management may reset eligible non-Owner users, subject to the existing role/authorization conventions (mirrors `changeRole`/`remove` in `OrganizationMemberPolicy`); Fortify recovery codes remain the normal self-service recovery path.
+11. 2FA reset/recovery: an Admin may never reset an Owner's 2FA; an Owner's 2FA may only be reset by another Owner through the in-app member-management path; privileged management may reset eligible non-Owner users, subject to the existing role/authorization conventions (mirrors `changeRole`/`remove` in `OrganizationMemberPolicy`); Fortify recovery codes remain the normal self-service recovery path. **Amended during feature-planning:** the domain permits only one Owner per organization (no application code path creates a second — see §2.5 "Sole-Owner recovery gap" below), so the in-app Owner-resets-Owner path is unreachable in the normal case. For that catastrophic sole-Owner lockout, an operator-mediated fallback (analogous to the provisioning command in §2.2, outside the web authorization/session boundary) provides recovery without weakening the in-app rule above.
 12. Keep the existing invitation acceptance flow shared between provisioned first Owners and ordinary invited members — no special first-Owner authentication/onboarding path.
 
 #### 2.1 Target account lifecycle
@@ -131,6 +131,7 @@ ProvisionOrganizationAction                InviteOrganizationMemberAction
 - `AcceptOrganizationInvitationController` already null-safely handles a missing inviter (`$invitation->inviter?->name`, line 30, exercised by the existing test "renders the accept-invitation page with no inviter once the inviter has been deleted") — direct evidence the domain already tolerates an invitation with no traceable human inviter, which is exactly the first-Owner case (`invited_by=null`).
 - **OPEN (not locked):** the exact reuse boundary for creating/sending the first-Owner invitation — i.e. whether `ProvisionOrganizationAction` calls a small extracted/shared piece of `InviteOrganizationMemberAction`'s row-creation logic, or duplicates the handful of lines outright, and whether `OrganizationInvitationNotification` is widened to accept a nullable `$invitedBy` or a distinct notification is introduced. Left for the feature-planning/implementation pass to resolve against actual code shape at build time.
 - **OPEN (not locked):** exact Artisan command argument/prompt UX (required flags vs. interactive prompts; whether it also prints the raw invitation URL as a delivery fallback).
+- See §2.5 "Sole-Owner recovery gap and operator-mediated fallback" for an analogous operator-run command introduced later in the target architecture, for the sole-Owner 2FA-lockout case.
 
 #### 2.3 What disappears with public registration
 
@@ -165,16 +166,22 @@ ProvisionOrganizationAction                InviteOrganizationMemberAction
 **Enforcement (organization policy — LOCKED decision #9, immediate per-request, no grace period).** Genuinely new — Fortify has no concept of "an org requires this." New middleware shaped identically to `EnsureOrganizationContext`: checks a condition on `$request->user()`, redirects (with flash message) to the enrollment page if unmet, otherwise passes through. Runs *after* the `organization` middleware in the pipeline, so a Suspended/Invited user is already redirected away before this gate is ever reached — no double-handling required. Redirect target needs a small explicit allowlist (enrollment routes themselves, `password.confirm`, `logout`) so an unenrolled user isn't stuck in a loop.
 
 **Recommended vs. required (LOCKED decision #7).** Two independent signals:
-- *Recommended* — a UX nudge with no gating, applies to every org by default. **OPEN (not locked):** exact UX treatment (passive settings-page copy vs. dismissible banner vs. active notification via the existing `NotifyAction` pipeline, `app/Actions/Notifications/NotifyAction.php`).
-- *Required* — the org-level policy below, enforced by the new middleware, toggled by the Owner only (LOCKED decision #8).
+- *Recommended* — a UX nudge with no gating, applies to every org by default. **RESOLVED (LOCKED) during feature-planning:** passive copy on the Security settings page only — no dismissible banner, no notification-center entry. The existing `NotifyAction` pipeline (`app/Actions/Notifications/NotifyAction.php`) is explicitly not used for this initiative's recommended-2FA nudge.
+- *Required* — the org-level policy below, enforced by the new middleware, toggled by the Owner only (LOCKED decision #8), via the dedicated `settings/organization` settings surface (see below).
 
 **Where the requirement is stored.** Organization-level, not User-level — `Organization` is already the tenant-policy root (`OrganizationContext`, `CurrentOrganizationScope`, `EnsureOrganizationContext` all exist because tenant-wide state belongs there), and it's currently minimal (`name` + two relations) specifically because nothing tenant-wide has needed a home yet. **OPEN (not locked):** exact DB representation — boolean `two_factor_required` vs. nullable `two_factor_required_at` timestamp (the latter would mirror the existing `_at` state-transition-timestamp convention used throughout `users`, e.g. `email_verified_at`, `joined_at`) vs. another codebase-consistent representation. Left for the feature-planning/implementation pass.
 
+**Where the toggle UI lives (LOCKED decision #8, resolved during feature-planning).** A new, dedicated Owner-only settings surface (`settings/organization`), alongside the existing Profile/Security/Appearance settings tabs — not the Organization Members page. This is the first organization-wide, non-member-specific policy setting the app will have; placing it on the Members page would blend org-wide security policy into a page framed around individual member management, cutting against the deliberate separation of membership state and 2FA-requirement policy already established by LOCKED decision #10.
+
 **Recovery (LOCKED decision #11).** Fortify's `/two-factor-challenge` already accepts a recovery code as an alternative to a TOTP code — no new code for that path. For lost-device-and-lost-recovery-codes, no self-service path exists (by design, matching Fortify's own model) — admin-mediated reset only:
 - New `resetTwoFactor` policy method on `OrganizationMemberPolicy`, mirroring the existing `changeRole`/`remove` guard shape (`role->isPrivileged()`, target not `Owner`).
-- Additional LOCKED constraint layered on top of that existing pattern: an Owner's 2FA may **only** be reset by another Owner (Admin is excluded even though Admin is otherwise "privileged" for member management) — this is stricter than `changeRole`/`remove`, which merely exclude the Owner as a *target*; here the *actor* must also be an Owner when the *target* is an Owner.
+- Additional LOCKED constraint layered on top of that existing pattern: an Owner's 2FA may **only** be reset by another Owner (Admin is excluded even though Admin is otherwise "privileged" for member management) — this is stricter than `changeRole`/`remove`, which merely exclude the Owner as a *target*; here the *actor* must also be an Owner when the *target* is an Owner. This in-app rule is unchanged and remains LOCKED.
 - New `ResetTwoFactorAuthenticationAction` clearing the three Fortify 2FA columns.
 - Should sit behind `RequirePassword` (already available) given its sensitivity, and should notify the affected member via the existing notification pipeline (mirrors `MemberJoinedNotification`'s existing pattern of notifying on membership events).
+
+**Sole-Owner recovery gap and operator-mediated fallback (LOCKED, added during feature-planning — amends decision #11).** Feature planning traced every code path that can produce or change a `role`: `OrganizationRole::invitableOptions()` excludes `Owner` from both the invite allow-list and the role-change allow-list, and both registration (pre-removal) and `ProvisionOrganizationAction` create exactly one Owner per organization, at org-creation time only. No application code path can create a second Owner in an existing organization. This means the current and target domain both permit **exactly one Owner per organization**, so the in-app "another Owner resets an Owner" branch immediately above is unreachable for the normal case — every organization that can exist today is a sole-Owner organization, and a sole Owner who loses both their authenticator device and their recovery codes has no recovery path through `OrganizationMemberPolicy::resetTwoFactor()`.
+
+This is addressed by a new **operator-mediated fallback**: an operator-run Artisan command, analogous in shape to the provisioning command (§2.2), that can reset a locked-out sole Owner's 2FA. It sits entirely outside the normal web authorization/session boundary — the same trust level as the provisioning command, not an in-app actor — and must not weaken `OrganizationMemberPolicy::resetTwoFactor()` itself: the in-app rule (Admin never resets an Owner; only another Owner resets an Owner) stays exactly as locked above, with no new web-facing path around it. This fallback exists specifically for the catastrophic case the in-app rule cannot reach.
 
 #### 2.6 Membership / authentication / 2FA state boundaries (LOCKED decision #10)
 
@@ -228,9 +235,10 @@ route handler
 - Fortify's 2FA migration + `TwoFactorAuthenticatable` trait + config flag
 - `EnsureTwoFactorRequirementIsMet`-style middleware + alias, shaped like `EnsureOrganizationContext`
 - `Fortify::twoFactorChallengeView()` registration
-- 2FA enrollment UI on `settings/Security.vue` (extends existing page, doesn't replace)
+- 2FA enrollment UI on `settings/Security.vue` (extends existing page, doesn't replace), plus passive "2FA recommended" copy on the same page (LOCKED decision #7)
 - `OrganizationMemberPolicy::resetTwoFactor()` + `ResetTwoFactorAuthenticationAction`
-- Owner-only control to toggle the org 2FA requirement (LOCKED decision #8)
+- New dedicated `settings/organization` settings page — Owner-only control to toggle the org 2FA requirement (LOCKED decision #8, resolved location during feature-planning)
+- Operator-mediated 2FA-reset fallback command (outside the web authorization/session boundary) for the sole-Owner lost-device-and-lost-recovery-codes case (LOCKED decision #11 amendment, §2.5 Recovery)
 
 #### 2.11 Tests/behavior affected
 
@@ -238,15 +246,16 @@ route handler
 - **Activates as-is, no rewrite:** the skipped 2FA block in `AuthenticationTest.php:28-46`.
 - **Unaffected:** `AcceptInvitationTest.php`, `EnsureOrganizationContextTest.php`, all `Unit/Actions/OrganizationMembers/*` tests.
 - **Reused as existing coverage evidence:** `AcceptInvitationTest.php`'s "renders the accept-invitation page with no inviter once the inviter has been deleted" case already exercises the null-inviter rendering the first-Owner path depends on.
-- **New tests needed:** `ProvisionOrganizationAction` unit test; the Artisan command's feature test; `EnsureTwoFactorRequirementIsMet`-style middleware test (sibling to `EnsureOrganizationContextTest.php`); 2FA enrollment/challenge feature tests; `resetTwoFactor` policy test (extends `OrganizationMemberPolicyTest.php`), including the Owner-can-only-be-reset-by-Owner case.
+- **New tests needed:** `ProvisionOrganizationAction` unit test; the Artisan command's feature test; `EnsureTwoFactorRequirementIsMet`-style middleware test (sibling to `EnsureOrganizationContextTest.php`); 2FA enrollment/challenge feature tests; `resetTwoFactor` policy test (extends `OrganizationMemberPolicyTest.php`), including the Owner-can-only-be-reset-by-Owner case (necessarily exercised against a manufactured two-Owner state, since no application code path produces one — see §2.5 "Sole-Owner recovery gap"); the operator-mediated 2FA-reset fallback command's feature test.
 
 #### 2.12 Security/failure/recovery cases
 
 - **Double-run of the provisioning command / duplicate email** — must wrap in the same transactional pattern used everywhere else; a failed `User` insert must roll back the `Organization` insert, not leave an orphaned tenant.
 - **Bootstrap invitation email never arrives** — a newly provisioned Organization needs a viable recovery/fallback path if the first Owner's invitation email is not delivered, because there is no existing active member who can resend it through the application (unlike peer-invites). The exact fallback/command UX remains open — see §2.2.
 - **Org flips the 2FA requirement mid-session** — enforcement is per-request via middleware (LOCKED decision #9), so the next request from an unenrolled user is redirected; no forced logout.
-- **Recovery-code exhaustion + lost device** — no self-service path exists by design; admin-reset action is itself sensitive and should sit behind `RequirePassword` and notify the affected member.
+- **Recovery-code exhaustion + lost device** — no self-service path exists by design; admin-reset action is itself sensitive and should sit behind `RequirePassword` and notify the affected member. For a sole-Owner organization (the normal case, see below), this in-app path is unreachable, and recovery instead goes through the operator-mediated fallback.
 - **Admin resetting the Owner's 2FA** — explicitly forbidden (LOCKED decision #11); `resetTwoFactor` policy must enforce actor-is-Owner-when-target-is-Owner, stricter than the existing `changeRole`/`remove` pattern.
+- **Sole-Owner lost-device-and-lost-recovery-codes (catastrophic case, discovered during feature-planning)** — the in-app admin-mediated path above is unreachable because the domain permits only one Owner per organization; recovered only via the operator-mediated fallback (LOCKED decision #11 amendment, §2.5), which sits outside the web authorization boundary and does not weaken `OrganizationMemberPolicy::resetTwoFactor()`.
 - **Suspended-user 2FA state** — irrelevant, falls out for free from middleware ordering (§2.8).
 
 #### 2.13 Before → after lifecycle comparison
@@ -257,7 +266,7 @@ route handler
 | New org creation | Implicit side-effect of any public registration | Explicit, operator-run Artisan command only |
 | First Owner onboarding | Registers directly with a password, instantly Active | Enters as an `Invited` row like any member, sets password via the invitation link |
 | Email verification | `verified` middleware present but a no-op | Middleware removed; invitation-link click is the ownership proof |
-| 2FA | Absent entirely — no columns, no Fortify feature, one dead-end request-class stub | Fortify-native enrollment + challenge; org-level requirement policy; per-user enrollment state; admin-mediated recovery with Owner-only Owner-reset |
+| 2FA | Absent entirely — no columns, no Fortify feature, one dead-end request-class stub | Fortify-native enrollment + challenge; org-level requirement policy toggled via a dedicated `settings/organization` page; passive recommended-2FA copy; per-user enrollment state; admin-mediated recovery with Owner-only Owner-reset, plus an operator-mediated fallback for the sole-Owner lockout case |
 | Membership/auth/2FA state | Only membership state formally exists | Four distinct, independently-stored axes (§2.6) |
 | Peer-invite flow | Fully built, working | Unchanged |
 
@@ -268,7 +277,7 @@ route handler
 - Exact DB representation of the organization 2FA requirement (`two_factor_required` boolean vs. `two_factor_required_at` nullable timestamp vs. another codebase-consistent representation) — §2.5.
 - Exact internal reuse boundary for creating/sending the first-Owner invitation (shared extraction from `InviteOrganizationMemberAction` vs. duplicated logic in `ProvisionOrganizationAction`; nullable-`$invitedBy` widening of `OrganizationInvitationNotification` vs. a distinct notification class) — §2.2.
 - Exact Artisan command argument/prompt UX — §2.2.
-- Exact UX treatment for "2FA recommended" when not mandatory (passive copy vs. banner vs. notification) — §2.5.
+- Exact operator-mediated 2FA-reset fallback command UX (identification input, confirmation mechanism) — mirrors the provisioning-command UX item above; see §2.5 "Sole-Owner recovery gap and operator-mediated fallback".
 - Whether the unused `email_verified_at` column is retained or removed in a later cleanup — §2.7.
 
 ---
