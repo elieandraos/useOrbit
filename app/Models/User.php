@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Laravel\Fortify\TwoFactorAuthenticatable;
 
 /**
  * @property int $id
@@ -26,6 +27,9 @@ use Illuminate\Support\Carbon;
  * @property string $name
  * @property string $email
  * @property string $password
+ * @property string|null $two_factor_secret
+ * @property string|null $two_factor_recovery_codes
+ * @property Carbon|null $two_factor_confirmed_at
  * @property OrganizationRole $role
  * @property OrganizationMemberStatus $status
  * @property int|null $invited_by
@@ -43,7 +47,7 @@ use Illuminate\Support\Carbon;
 final class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, Prunable;
+    use HasFactory, Notifiable, Prunable, TwoFactorAuthenticatable;
 
     /**
      * Get the attributes that should be cast.
@@ -59,6 +63,7 @@ final class User extends Authenticatable
             'status' => OrganizationMemberStatus::class,
             'joined_at' => 'datetime',
             'invitation_expires_at' => 'datetime',
+            'two_factor_confirmed_at' => 'datetime',
         ];
     }
 

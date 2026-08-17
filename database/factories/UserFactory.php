@@ -9,8 +9,12 @@ use App\Enums\OrganizationRole;
 use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Laravel\Fortify\RecoveryCode;
+use PragmaRX\Google2FA\Google2FA;
 
 /**
  * @extends Factory<User>
@@ -73,6 +77,16 @@ class UserFactory extends Factory
      */
     public function withTwoFactor(): static
     {
-        return $this->state([]);
+        return $this->state(function (): array {
+            $secret = app(Google2FA::class)->generateSecretKey();
+
+            return [
+                'two_factor_secret' => Crypt::encrypt($secret),
+                'two_factor_recovery_codes' => Crypt::encrypt(json_encode(
+                    Collection::times(8, fn (): string => RecoveryCode::generate())->all(),
+                )),
+                'two_factor_confirmed_at' => now(),
+            ];
+        });
     }
 }
