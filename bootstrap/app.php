@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Middleware\EnsureOrganizationContext;
+use App\Http\Middleware\EnsureTwoFactorRequirementIsMet;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
@@ -29,7 +30,12 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->alias([
-            'organization' => EnsureOrganizationContext::class,
+            'two-factor-required' => EnsureTwoFactorRequirementIsMet::class,
+        ]);
+
+        $middleware->group('organization', [
+            EnsureOrganizationContext::class,
+            EnsureTwoFactorRequirementIsMet::class,
         ]);
 
         $middleware->prependToPriorityList(
