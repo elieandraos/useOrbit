@@ -19,9 +19,83 @@ ui uplifts: phone number input with lebanon flag +961 6digits
 address and phone related to user country for now. (just logging for onboarding later)
 maybe put user country id in inertia request, because we only need it for frontend to select default country (to the user country id) if not set.
 
+Linkedin POST about my agentic-ecosystem:
+-----------------------------------------
+I accidentally built an agentic development ecosystem around Claude Skills.
+
+Today it looks roughly like:
+
+Claude Code → does the work in the repository
+architecture-laboratory → reconstructs an existing architecture or reasons through a new one, then turns the result into a canonical plan
+my-feature-planning → takes that plan and turns it into validated GitHub work
+content-backlog → remembers the engineering lessons worth keeping
+
+But it started much simpler.
+
+I had two LLMs.
+
+Claude Code did the work.
+
+OpenAI was where I reviewed it, challenged architecture, thought through trade-offs, and figured out what Claude should do next.
+
+Then I copied that reasoning back into Claude as a prompt.
+
+It worked.
+
+Until some prompts were approaching 100 lines.
+
+That was the smell.
+
+I realized I wasn't really writing prompts anymore.
+
+I was rewriting my engineering process in English every time I started a task.
+
+So I started turning that process into skills.
+
+And that's where the interesting part began.
+
+The skills weren't finished when they were written.
+
+A smoke test exposed a planning flaw → the skill changed.
+
+Real feature planning exposed a security rule that depended on an impossible state → we changed the architecture, then replanned.
+
+Generated GitHub issues exposed a validation blind spot → we added another validation layer.
+
+A rule was too broad → we narrowed it.
+
+A workflow repeated a mistake → we fixed the trigger, not just the instruction.
+
+Real work → failure → reasoning → better rule → better next run.
+
+That's the part I find most interesting about agentic development.
+
+The models aren't secretly retraining themselves.
+
+I'm turning the lessons from each session into durable workflow memory.
+
+And the weirdest metric of all?
+
+My prompts are getting shorter because the skills are getting smarter.
+
+The simplicity is the result, not the starting point.
+
+Making the workflow simple is brutally hard.
+
+But once the complexity is encoded into the system, the developer experience gets simpler.
+
+Less explaining.
+
+Less repeating.
+
+More deciding.
+
+Boring prompts. Thoughtful systems.
+
+
 
 ARCHITECTURE-LABORATORY / FEATURE-PLANNING v3 PLAN
-
+--------------------------------------------------
 Goal:
 
 Turn the current internal architecture + planning workflow into a genuinely reusable public skill pair for skills.sh.
