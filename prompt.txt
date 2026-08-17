@@ -19,6 +19,32 @@ ui uplifts: phone number input with lebanon flag +961 6digits
 address and phone related to user country for now. (just logging for onboarding later)
 maybe put user country id in inertia request, because we only need it for frontend to select default country (to the user country id) if not set.
 
+SELF-ASSESSMENT/CALIBRATION laboratory to add/elaborate-on:
+------------------------------------------------------------
+Based on this codebase and its git history, give me an evidence-based assessment of me as a software engineer.
+
+Look at the code I write and keep, architectural decisions, refactors, testing philosophy, security and tenancy thinking, database choices, Laravel/frontend patterns, and how I review or correct agent-generated work.
+
+Assess my apparent engineering seniority from the evidence. Don’t anchor on a level beforehand.
+
+I want to understand:
+
+what I’m particularly strong at;
+recurring weaknesses or blind spots;
+where I tend to over-engineer or overthink;
+where I under-engineer;
+what distinguishes my approach from less experienced engineers;
+what currently prevents me from operating at the next level;
+what kind of engineering role or environment my style seems best suited for.
+
+Use concrete examples from the repository and git history for your conclusions. Distinguish things you can actually infer from the evidence from things you can’t know.
+
+Be critical rather than flattering. I’m looking for calibration, not encouragement.
+
+Don’t modify anything.
+
+
+
 Linkedin POST about my agentic-ecosystem:
 -----------------------------------------
 I accidentally built an agentic development ecosystem around Claude Skills.
