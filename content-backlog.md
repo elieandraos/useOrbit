@@ -25,11 +25,14 @@ its stable `#`), then the story fields.
 | 4 | I gave my agents contracts with each other | Agentic workflow evolution | idea | Longer thread | — |
 | 5 | The tests were green. I still changed the feature | Engineering judgment | idea | Thread | — |
 | 6 | I tried to make three controllers into one. The codebase said no | Engineering judgment | idea | Short thread | — |
-| 7 | A tenant-scoped query worked in the browser and would have blown up in the queue | Engineering judgment | idea | Short thread | — |
+| 7 | Centralizing tenant context didn't remove the dependency — it made it explicit | Engineering judgment | idea | Short thread | — |
 | 8 | The org roster leaked more than it should have to regular members | Engineering judgment | idea | Single post | — |
 | 9 | I wrote the plan to make my own skills public — and the first decision was "not yet" | Agentic workflow evolution | idea | Short thread | — |
 | 10 | The same agent skipped the same rule twice — because the trigger was wrong, not the rule | Agent failures | idea | Thread | — |
 | 11 | I gave my content skill a rule against over-engineering — then revised it in the same session, on purpose | Agentic workflow evolution | idea | Short thread | — |
+| 12 | A locked security rule that could never actually fire | Engineering judgment | idea | Short thread | — |
+| 13 | Three ways my own planning skill could lie to me — found on issues it had already created | Agent failures | idea | Longer thread | — |
+| 14 | Twice accused of the same bug, twice couldn't find it in my own output | Agent conversations worth sharing | idea | Thread | — |
 
 ---
 
@@ -411,7 +414,7 @@ things before adopting it: does it fight the framework's own conventions, and do
 break the pattern the rest of the codebase already uses for this exact shape of problem. Losing
 either check is a real cost, not a style preference.
 
-## A tenant-scoped query worked in the browser and would have blown up in the queue
+## Centralizing tenant context didn't remove the dependency — it made it explicit
 
 - #: 7
 - Status: idea
@@ -419,60 +422,63 @@ either check is a real cost, not a style preference.
 - Potential format: Short thread
 - Added: 2026-08-17
 
-**What happened:** `Document::notificationParent()` resolved a document's parent (Client, Carrier,
-or Agent) through the normal `documentable` relation, which carries the app's global
-`CurrentOrganizationScope` — a query constraint that reads the current tenant from an
-`OrganizationContext` service. That service throws a `LogicException` if nothing has set the
-organization ID yet, rather than silently returning null. Document notifications get dispatched
-through a queued job, which runs with no HTTP request and therefore no established
-`OrganizationContext`. The fix bypasses the tenant scope explicitly for this one lookup —
-`$this->documentable()->withoutGlobalScope(CurrentOrganizationScope::class)->firstOrFail()` —
-since the document already pins its parent by a concrete foreign key; the scope wasn't adding
-safety there, just breaking under a worker. A regression test was added, explicitly named for the
-runtime it protects: "meta.parent resolves for a document without an established organization
-context, matching queue worker delivery."
+**What happened:** The application originally had tenant-awareness scattered through Actions and
+other layers, each one explicitly constraining queries with `where organization_id = ...`.
+`OrganizationContext` was introduced as the canonical place to answer "what organization is
+currently active," and `CurrentOrganizationScope` — a global Eloquent scope — was built on top of
+it to automatically constrain normal tenant-aware queries. The goal was to stop making every
+Action manually remember and apply tenant identity: instead of repeated query logic, tenant
+identity became application context, and Actions were free to focus on their actual business
+rules.
 
-**Why it's interesting:** This is the classic multi-tenancy trap — a global scope that quietly
-assumes "there's always a request in flight" — caught by reasoning about *where* the code
-actually executes (HTTP request vs. queue worker), not by a test that happened to fail in CI. The
-test name shows the reasoning was explicit and deliberate, not an accident that got patched after
-the fact.
+**Why it's interesting:** Centralizing tenant context looks, on the surface, like it removes a
+dependency — no more `organization_id` checks sprinkled through every Action. It doesn't remove
+the dependency, it relocates it. `CurrentOrganizationScope` isn't HTTP-specific; it depends on
+`OrganizationContext`, and HTTP is just one runtime that happens to establish that context
+automatically on every request. Any other runtime executing the same tenant-aware code — queue
+workers, Artisan commands, scheduled jobs, tests, future background processes — inherits the same
+question the HTTP request used to answer for free: who establishes `OrganizationContext` here?
 
-**Core insight:** A query that only works because there's a request currently running means half
-your queue jobs are one dispatch away from a crash.
+**Core insight:** If every Action has to remember which organization it's in, you don't really
+have tenant context — you have tenant homework. Centralizing it cleans up the application, but it
+doesn't make the dependency disappear; it just moves the question from every Action to every
+runtime.
 
-**Engineering lesson:** Global scopes bound to request-derived context (session, current-tenant
-services, auth()->user()) are a runtime assumption, not a universal guarantee. Any code path that
-can execute outside a request — queued jobs, scheduled commands, console commands — has to be
-checked against what actually establishes that context there, not just against how it behaves
-when clicked through in the browser. When a scope isn't providing safety for a specific,
-already-identified lookup (this one was pinned by a concrete foreign key), bypassing it explicitly
-is the correct fix, not a workaround.
+**Engineering lesson:** Pulling a cross-cutting concern like tenant identity out of business logic
+and into a shared service/global scope is good architecture — it stops every caller from having to
+reconstruct the same fact. But a global scope built on centralized, service-resolved context is
+only as safe as the guarantee that something establishes that context before the scope runs. The
+payoff (Actions that stop repeating tenant logic) and the obligation (every runtime has to
+deliberately establish `OrganizationContext`) are two halves of the same architectural decision,
+not a free win followed by a surprise bill.
 
-**Human decision / agent responsibility boundary:** The bug surfaced during hands-on work on the
-Notifications feature's document flow. Recognizing that the failure mode was specifically about
-*runtime context* — request vs. queue worker — and that the tenant scope was redundant (not
-protective) for this particular lookup, was the human judgment call; the fix itself (bypassing the
-scope, adding the targeted test) followed directly from that diagnosis.
+**Human decision / agent responsibility boundary:** Introducing `OrganizationContext` and
+`CurrentOrganizationScope` was a deliberate architectural decision to relocate tenant-awareness
+out of Actions and into application context. That decision carries its own follow-on
+responsibility: for every runtime capable of executing tenant-aware code, someone has to decide —
+explicitly — how `OrganizationContext` gets established there. The web request lifecycle answers
+that question automatically; every other runtime has to answer it on purpose.
 
-**Technical/architectural context:** `App\Models\Scopes\CurrentOrganizationScope` applies a
-`where organization_id = app(OrganizationContext::class)->id()` constraint globally.
-`OrganizationContext::id()` throws `LogicException` if the organization ID was never set — there's
-no silent null fallback. Document notifications are dispatched via a queued job, which has no
-request lifecycle to populate that context. Fix lives in `app/Models/Document.php::notificationParent()`.
+**Technical/architectural context:** `OrganizationContext` holds the current organization's
+identity as application state, independent of any particular runtime. `CurrentOrganizationScope`
+is a global Eloquent scope that reads from `OrganizationContext` to constrain normal tenant-aware
+queries automatically. Neither class is HTTP-only — the scope depends on the context service, not
+on the request lifecycle; HTTP middleware is simply the runtime that happens to populate
+`OrganizationContext` for web requests.
 
-**Before → After:** Before — `notificationParent()` resolved through the normally-scoped
-`documentable` relation, which depends on `OrganizationContext` being set. After — the lookup
-explicitly opts out of `CurrentOrganizationScope` for this one relation, since the document's
-foreign key already identifies the correct parent regardless of tenant context.
+**Before → After:** Before — Actions and other layers repeatedly carried tenant-awareness
+themselves through explicit `organization_id` constraints. After — the runtime establishes
+`OrganizationContext`, normal tenant-aware Eloquent queries inherit `CurrentOrganizationScope`,
+and Actions can focus on business logic instead of repeatedly reconstructing tenant identity.
 
-**Hook:** "A query that only works because there's a request currently running means half your
-queue jobs are one dispatch away from a crash."
+**Hook:** "Centralizing tenant context didn't make the dependency go away. It just moved the
+question from every Action to every runtime."
 
-**Audience takeaway:** Any Laravel engineer relying on global scopes for multi-tenancy should ask,
-for every code path that can run outside a request (queue workers, scheduled jobs, console
-commands), what actually establishes tenant context there — and whether the scope is still adding
-safety or just adding a failure mode.
+**Audience takeaway:** Centralizing a cross-cutting concern like tenant identity is a real
+architectural win — but it converts a repeated implementation detail into a single, load-bearing
+dependency. For every runtime that can execute that code (web, queue, console, scheduler, tests),
+ask what actually establishes that context there — don't assume the answer that works for HTTP
+requests generalizes for free.
 
 ## The org roster leaked more than it should have to regular members
 
@@ -731,3 +737,197 @@ feature anyway."
 improvement, that's the moment to check whether the rule actually defined what counts as
 "engineering" it was trying to prevent — not to treat the cheap win as an exception, but to fix
 the rule so it draws the right line going forward.
+
+## A locked security rule that could never actually fire
+
+- #: 12
+- Status: idea
+- Category: Engineering judgment
+- Potential format: Short thread
+- Added: 2026-08-17
+
+**What happened:** A LOCKED architecture decision for the Authentication/Invitation/2FA
+initiative stated: an Admin may never reset an Owner's 2FA; an Owner's 2FA may only be reset by
+another Owner. While planning the issues that would implement it, tracing the actual domain model
+— `OrganizationRole::invitableOptions()` (excludes `Owner` from the invite allow-list),
+`ChangeOrganizationMemberRoleRequest`'s role allow-list (also excludes `Owner`), and both
+registration and the new provisioning Action (each create exactly one Owner per organization, only
+at org-creation time) — showed that no application code path can ever create a second Owner for an
+organization. The rule's "another Owner resets an Owner" branch was therefore unreachable for
+every organization that exists or ever will exist under this architecture: a sole Owner who loses
+both their authenticator device and recovery codes had zero recovery path. Rather than loosen the
+original rule, the plan was amended to add a separate operator-mediated fallback — an Artisan
+command, run outside the web application entirely, that reuses the same reset Action directly and
+explicitly does not weaken the original policy.
+
+**Why it's interesting:** This wasn't a bug in the rule's logic — the rule was a defensible
+security decision on its own terms. The problem was one level up: the rule's "safe" branch
+depended on a system state (two Owners) that the rest of the application had already made
+impossible. Nobody wrote the invite-allow-list exclusion and the 2FA-reset rule at the same time,
+or with each other in mind — the conflict only showed up when both paths were traced together.
+
+**Core insight:** A correct authorization rule is only as good as whether the state it depends on
+can actually exist.
+
+**Engineering lesson:** When reviewing an authorization rule that branches on "another privileged
+actor," check whether the domain model can actually produce that actor — not just whether the
+branch reads correctly in isolation. A security rule and the data model it assumes can drift apart
+silently, especially across features that were built separately.
+
+**Human decision / agent responsibility boundary:** The agent traced the code paths and surfaced
+the practical gap rather than silently drafting an acceptance criterion that would have been
+untestable in practice. The human made the actual product call on how to close the gap —
+explicitly presented with options (accept the limitation, add an operator fallback, or amend the
+rule itself) — and chose the operator-mediated fallback, which the agent then wrote into an
+amendment to the LOCKED decision, preserving the original rule's text exactly rather than silently
+softening it.
+
+**Technical/architectural context:** `OrganizationRole::invitableOptions()` excludes `Owner`;
+`ChangeOrganizationMemberRoleRequest` restricts the assignable `role` to the same allow-list;
+registration (removed in this initiative) and the new `ProvisionOrganizationAction` each create
+exactly one Owner per organization, only at org-creation time. `OrganizationMemberPolicy::
+resetTwoFactor()` keeps the original rule unchanged; a new Artisan command reuses
+`ResetTwoFactorAuthenticationAction` directly, outside any web route or session.
+
+**Before → After:** Before — a single LOCKED rule with a reset path that could never fire for a
+sole-Owner org, and no fallback. After — the same rule, unchanged and still enforced in-app, plus
+a separate operator-level command that exists specifically for the case the rule can't reach,
+without creating a new way around the rule itself.
+
+**Hook:** "The rule said only another Owner can reset an Owner's 2FA. I checked — this app can
+never have a second Owner."
+
+**Audience takeaway:** When reviewing a security/authorization rule, trace whether the state it
+depends on ("another admin," "a second owner," "a backup approver") is actually reachable in the
+current data model — a rule that's logically airtight can still leave a real lockout if its
+assumed actor can never exist.
+
+## Three ways my own planning skill could lie to me — found on issues it had already created
+
+- #: 13
+- Status: idea
+- Category: Agent failures
+- Potential format: Longer thread
+- Added: 2026-08-17
+
+**What happened:** An audit of already-created GitHub issues (Phase 22, Authentication/
+Invitation/2FA) found real, live bugs — not hypothetical ones. Plan-decision numbers had been
+written into issue bodies as bare `#1`, `#5`, `#7–#10`, `#8`, `#9`, `#11`, `#12` — GitHub silently
+linkified every one of them into unrelated historical issues/PRs in the repo, since `#N` is
+GitHub's own issue/PR reference syntax and the planning skill had used the same syntax for a
+completely different numbering scheme (the plan document's decision numbers). Several issue
+Context sections also just cited a decision ("Implements LOCKED decision #11") without ever
+explaining what the decision actually said, meaning the issue depended on a reader having the
+planning document open to make sense of it. Mechanically grepping the raw GitHub Markdown also
+disproved one adjacent claim: the Tasks checklists were intact as real `- [ ] ` checkboxes the
+whole time — what looked like a rendering bug wasn't one.
+
+**Why it's interesting:** This connects to an earlier entry — a flaw found via a disposable, fake
+feature used purely as a smoke test — but here the same underlying discipline (mining a real
+workflow for a systemic bug) was triggered by a live problem on issues that already existed and
+were already visible to anyone looking at the repo. The fix wasn't a wording patch on nine issue
+bodies; it was recognizing that "the manifest lists the right issues" and "the content inside each
+issue is actually correct and self-contained" are two different guarantees, and that the skill had
+a check for the first and nothing for the second.
+
+**Core insight:** My checklist confirmed the manifest was right. It never once looked inside the
+issues the manifest was pointing at.
+
+**Engineering lesson:** A multi-layer generation pipeline (canonical definitions → rendered
+summary → individual artifacts) needs a distinct validation layer per layer — validating that the
+top-level list is correct says nothing about whether the content underneath each list item is
+correct. Reference-syntax collisions (using `#N` for two different numbering schemes in the same
+ecosystem) are a specific, mechanically-checkable class of bug, not a proofreading concern.
+
+**Human decision / agent responsibility boundary:** The user requested the audit and defined its
+scope (false references, context quality, checklist format, acceptance-criteria quality,
+dependency correctness) rather than the agent self-initiating it. The agent performed the
+mechanical verification — regex-extracting every `#N` and section-reference token from the live
+GitHub bodies and classifying each against the real issue set, rather than eyeballing rendered
+text — and proposed the fix; the user then asked for the fix to be generalized into the skill
+itself, not just applied once to the nine issues.
+
+**Technical/architectural context:** The planning skill (`my-feature-planning`) gained a third,
+explicit review category — "issue-body content integrity" — alongside two categories added
+earlier for the same skill's manifest ("canonical structural integrity," "rendered manifest
+integrity"). It runs on the literal rendered GitHub Markdown, twice: once when bodies are first
+drafted for review, and again immediately before any issue-create/issue-edit call.
+
+**Before → After:** Before — the skill validated that its summary table matched its own internal
+issue list, and nothing validated the text inside each issue body. After — every issue body is
+checked for false GitHub-reference syntax, load-bearing citations to a file that isn't durable,
+and Context sections that cite a decision instead of explaining it, before anything is created or
+updated on GitHub.
+
+**Hook:** "My planning agent's issues passed every check I had — and three of them still had
+broken links to random old GitHub issues."
+
+**Audience takeaway:** When an agent generates a multi-layer artifact (a plan, a summary, and
+individual outputs derived from it), each layer needs its own validation — a correct top-level
+summary is not evidence the content underneath it is correct, and reference-syntax collisions
+across two numbering systems are a real, recurring bug class worth checking for mechanically.
+
+**Supporting material:** The actual false references found — `#1`, `#5`, `#7–#10`, `#8`, `#9`,
+`#11`, `#12` — each linkifying to an unrelated real GitHub issue/PR in the repo purely because the
+plan's decision numbers happened to collide with GitHub's own reference syntax.
+
+## Twice accused of the same bug, twice couldn't find it in my own output
+
+- #: 14
+- Status: idea
+- Category: Agent conversations worth sharing
+- Potential format: Thread
+- Added: 2026-08-17
+
+**What happened:** Twice in the same session, the agent was told that a specific row had silently
+vanished from a rendered GitHub-issue summary table — one named issue the first time, a different
+named issue the second. Both were specific, plausible, well-described failure reports: "the
+structural-integrity review correctly reports N issues... the final compact manifest renders only
+N-1 rows and silently drops issue X." Both times, instead of accepting the premise and
+constructing a plausible root-cause story to match it, the actual text sent earlier in the
+conversation was re-read line by line — and the named row was present both times, with the correct
+title, labels, and dependencies. That was stated plainly rather than silently patched over or
+argued around. The requested defensive fix (a mechanical check that diffs the rendered table
+against the underlying data before it's ever shown) was still built in full, both times, since
+it's sound engineering regardless of whether that specific report reproduced.
+
+**Why it's interesting:** Most "agent found a bug" content is the agent catching its own mistake.
+This is closer to the opposite shape — being told, twice, by the person paying for the work, that
+a specific failure happened, and responding by checking rather than agreeing. Agreeing would have
+been the easier, more pleasant answer both times. It also wasn't stubbornness — the requested fix
+got built anyway, in full, because good defensive engineering doesn't require the triggering bug
+report to be true.
+
+**Core insight:** The user telling me I have a bug and me finding one in my own output are two
+different events. My job is to check, not to agree.
+
+**Engineering lesson:** Verification has to survive social pressure to agree, especially when the
+counterparty is right about almost everything else in the same conversation — as was the case
+here, where every other finding in the same audit was real. Being correct most of the time doesn't
+mean the next claim should get rubber-stamped; each specific claim still gets checked against the
+actual evidence.
+
+**Human decision / agent responsibility boundary:** The user's role was raising the concern and
+defining the required fix's shape in detail (a generic, mechanical, count/order/title diff, not
+hard-coded to the specific case). The agent's role was checking the specific claim against the
+actual transcript before accepting it, reporting the result honestly either way, and then building
+the requested check regardless of whether the check's own justifying incident had actually
+occurred.
+
+**Technical/architectural context:** Both incidents concerned `my-feature-planning`'s rendered
+"compact manifest" — the summary table shown for final approval before any GitHub issue gets
+created. The resulting fix ("rendered manifest integrity") mechanically diffs every rendered row
+against the canonical issue list — same count, same titles, same order, nothing added or dropped
+— every time the manifest is shown, not just once.
+
+**Before → After:** Before — the rendered manifest's correctness rested on having "just written it
+right," with no independent check. After — every manifest render is diffed against the canonical
+list before being shown, regardless of whether any specific past instance was ever proven to have
+failed.
+
+**Hook:** "You told me the same bug happened twice. I checked my own transcript both times. It
+hadn't."
+
+**Audience takeaway:** When someone reports a bug in your agent's output, checking the actual
+evidence before agreeing (or disagreeing) is a distinct skill from being generally trustworthy —
+and it's worth doing even when you'll build the requested fix either way.
