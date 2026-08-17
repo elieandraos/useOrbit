@@ -15,13 +15,26 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * @property int $id
  * @property string $name
+ * @property bool $two_factor_required
  * @property-read Collection<int, User> $users
  */
-#[Fillable(['name'])]
+#[Fillable(['name', 'two_factor_required'])]
 final class Organization extends Model
 {
     /** @use HasFactory<OrganizationFactory> */
     use HasFactory;
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'two_factor_required' => 'boolean',
+        ];
+    }
 
     public function users(): HasMany
     {
