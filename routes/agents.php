@@ -10,7 +10,7 @@ use App\Http\Controllers\Agents\AgentsUnarchiveController;
 use App\Http\Controllers\Notifications\NotifyAgentController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'verified', 'organization'])->group(function () {
+Route::middleware(['auth', 'organization'])->group(function () {
     Route::get('agents', [AgentsController::class, 'index'])->name('agents.index');
     Route::get('agents/create', [AgentsController::class, 'create'])->name('agents.create');
     Route::post('agents', [AgentsController::class, 'store'])->name('agents.store');

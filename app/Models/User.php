@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\OrganizationMemberStatus;
 use App\Enums\OrganizationRole;
 use App\Models\Scopes\CurrentOrganizationScope;
@@ -27,7 +26,6 @@ use Illuminate\Support\Carbon;
  * @property string $name
  * @property string $email
  * @property string $password
- * @property Carbon|null $email_verified_at
  * @property OrganizationRole $role
  * @property OrganizationMemberStatus $status
  * @property int|null $invited_by
@@ -40,7 +38,7 @@ use Illuminate\Support\Carbon;
  * @property-read Country|null $country
  * @property-read User|null $inviter
  */
-#[Fillable(['name', 'email', 'password', 'organization_id', 'role', 'status', 'invited_by', 'joined_at', 'invitation_token', 'invitation_expires_at', 'country_id', 'email_verified_at'])]
+#[Fillable(['name', 'email', 'password', 'organization_id', 'role', 'status', 'invited_by', 'joined_at', 'invitation_token', 'invitation_expires_at', 'country_id'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 final class User extends Authenticatable
 {
@@ -55,7 +53,6 @@ final class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
             'password' => 'hashed',
             'role' => OrganizationRole::class,

@@ -7,7 +7,7 @@ use App\Http\Controllers\OrganizationMembers\OrganizationMembersController;
 use App\Http\Controllers\OrganizationMembers\OrganizationMembersRevokeInvitationController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'verified', 'organization'])->group(function () {
+Route::middleware(['auth', 'organization'])->group(function () {
     Route::get('organization-members', [OrganizationMembersController::class, 'index'])->name('organization-members.index');
     Route::post('organization-members', [OrganizationMembersController::class, 'store'])->name('organization-members.store');
     Route::patch('organization-members/{member}/change-role', OrganizationMembersChangeRoleController::class)->name('organization-members.change-role');
