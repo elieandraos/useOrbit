@@ -66,4 +66,26 @@ final class OrganizationMemberPolicy
         return $member->organization_id === $user->organization_id
             && $member->status === OrganizationMemberStatus::Invited;
     }
+
+    public function resetTwoFactor(User $user, User $member): bool
+    {
+        if ($member->is($user)) {
+            return false;
+        }
+
+        if (! $user->role->isPrivileged()) {
+            return false;
+        }
+
+        if ($member->organization_id !== $user->organization_id
+            || $member->status !== OrganizationMemberStatus::Active) {
+            return false;
+        }
+
+        if ($member->role === OrganizationRole::Owner) {
+            return $user->role === OrganizationRole::Owner;
+        }
+
+        return true;
+    }
 }

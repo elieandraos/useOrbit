@@ -223,3 +223,71 @@ test('owner cannot revoke an invitation in another organization', function () {
 
     expect($owner->can('revoke', [User::class, $invitee]))->toBeFalse();
 });
+
+test('admin cannot reset an owner two-factor authentication', function () {
+    $organization = Organization::factory()->create();
+    $admin = User::factory()->forOrganization($organization, OrganizationRole::Admin)->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+
+    expect($admin->can('resetTwoFactor', [User::class, $owner]))->toBeFalse();
+});
+
+test('owner can reset another owner two-factor authentication', function () {
+    // No app path creates a second Owner today; this manufactured pair proves the policy's
+    // Owner-vs-Owner branch is correct in case that constraint ever changes.
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+    $otherOwner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+
+    expect($owner->can('resetTwoFactor', [User::class, $otherOwner]))->toBeTrue();
+});
+
+test('owner can reset an active member two-factor authentication', function () {
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+    $member = User::factory()->forOrganization($organization)->create();
+
+    expect($owner->can('resetTwoFactor', [User::class, $member]))->toBeTrue();
+});
+
+test('admin can reset an active member two-factor authentication', function () {
+    $organization = Organization::factory()->create();
+    $admin = User::factory()->forOrganization($organization, OrganizationRole::Admin)->create();
+    $member = User::factory()->forOrganization($organization)->create();
+
+    expect($admin->can('resetTwoFactor', [User::class, $member]))->toBeTrue();
+});
+
+test('member cannot reset another member two-factor authentication', function () {
+    $organization = Organization::factory()->create();
+    $member = User::factory()->forOrganization($organization)->create();
+    $otherMember = User::factory()->forOrganization($organization)->create();
+
+    expect($member->can('resetTwoFactor', [User::class, $otherMember]))->toBeFalse();
+});
+
+test('owner cannot reset their own two-factor authentication', function () {
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+
+    expect($owner->can('resetTwoFactor', [User::class, $owner]))->toBeFalse();
+});
+
+test('owner cannot reset the two-factor authentication of an invited member', function () {
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+    $invitee = User::factory()->forOrganization($organization)->create([
+        'password' => null,
+        'status' => OrganizationMemberStatus::Invited,
+    ]);
+
+    expect($owner->can('resetTwoFactor', [User::class, $invitee]))->toBeFalse();
+});
+
+test('owner cannot reset the two-factor authentication of a member in another organization', function () {
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+    $memberElsewhere = User::factory()->withOrganization()->create();
+
+    expect($owner->can('resetTwoFactor', [User::class, $memberElsewhere]))->toBeFalse();
+});
