@@ -36,6 +36,9 @@ its stable `#`), then the story fields.
 | 15 | The IDE warning that took four tries to actually suppress | Agent failures | idea | Short thread | — |
 | 16 | A feature flag almost broke a commit that hadn't been written yet | Engineering judgment | idea | Short thread | — |
 | 17 | I built a skill by refusing to invent the one thing I didn't have evidence for | Agentic workflow evolution | idea | Longer thread | — |
+| 18 | The test was red — and the code was right | Engineering judgment | idea | Short thread | — |
+| 19 | I traced a bug into compiled node_modules JS to prove a contract before shipping it | Engineering judgment | idea | Thread | — |
+| 20 | The commits I was asked to inspect were already pushed | Engineering judgment | idea | Short thread | — |
 
 ---
 
@@ -1121,3 +1124,185 @@ each rule, and an explicit list of what's still undesigned.
 evidence bar for "this is a rule" should be higher than "this happened once" — and a good
 extraction says so out loud when it hits that limit, instead of quietly padding the gap with
 something that sounds like a convention.
+
+## The test was red — and the code was right
+
+- #: 18
+- Status: idea
+- Category: Engineering judgment
+- Potential format: Short thread
+- Added: 2026-08-18
+
+**What happened:** While fixing a `Switch` component's form-serialization bug, added a new backend
+test posting the string `'1'` then `'0'` to toggle an organization's 2FA requirement on and back
+off in one test, as the same Owner. The second assertion failed — the flag was still `true` after
+posting `'0'`. Rather than assume the just-written fix was broken, added a temporary file-based
+debug log inside the controller and reran the test: only one of the two HTTP requests ever reached
+the controller body at all. Traced the second one to `EnsureTwoFactorRequirementIsMet` — a
+pre-existing middleware from an earlier issue, sitting in the same route-middleware group — which
+had redirected the Owner to the security settings page on their own very next request, because the
+first request had just turned the org-wide 2FA requirement on and this particular Owner hadn't
+enrolled their own 2FA yet. The fix was to rewrite the test into two independent, single-transition
+cases instead of a two-step toggle, with the "turn it off" case starting from an Owner who already
+has 2FA enabled.
+
+**Why it's interesting:** The instinct when a brand-new test fails right after touching code is to
+assume the new code is wrong. Here the code was correct and the test's own scenario was
+unrealistic — a real Owner in production, in that exact situation, would hit the same redirect.
+This is the mirror image of a more common failure mode (green tests hiding a real problem): a red
+test that was actually surfacing correct, intentional enforcement working exactly as designed.
+
+**Core insight:** A failing test isn't always pointing at a bug. Sometimes it's pointing at a
+scenario that couldn't actually happen.
+
+**Engineering lesson:** When a new test fails immediately after a change, trace before rewriting —
+a temporary debug log at the actual boundary (here, the first line of a controller method) settles
+in seconds whether the code or the test's premise is wrong, instead of guessing from the failure
+message alone.
+
+**Human decision / agent responsibility boundary:** The user had approved a specific correction
+(move a component's serialization fix into the shared component itself) and asked for the relevant
+tests to be added or updated as appropriate. Writing the new test, hitting the unexpected failure,
+diagnosing it via debug logging, and deciding to rewrite the test rather than second-guess the
+approved fix were all agent judgment calls, reported transparently as part of the verification
+summary rather than glossed over.
+
+**Technical/architectural context:** Laravel's `EnsureTwoFactorRequirementIsMet` middleware
+(introduced in an earlier issue in the same project) sits in the same `organization`
+middleware group as the settings-update route it was tested against — meaning any request from an
+unenrolled user, including the very Owner who just changed the setting, is subject to it
+immediately, with no grace period.
+
+**Before → After:** Before — one test chained two sequential requests as the same Owner, toggling
+the flag on then off. After — two independent tests, each proving one transition, with the
+"turn off" case using an Owner who already has 2FA enabled so the middleware doesn't intercept the
+request the test is trying to make.
+
+**Hook:** "My test failed. The bug was in the test's assumptions, not the code."
+
+**Audience takeaway:** A red test right after a change doesn't automatically mean the change broke
+something — trace it to the actual point of failure before assuming the fix is wrong and rewriting
+code to match a test that was never realistic to begin with.
+
+## I traced a bug into compiled node_modules JS to prove a contract before shipping it
+
+- #: 19
+- Status: idea
+- Category: Engineering judgment
+- Potential format: Thread
+- Added: 2026-08-18
+
+**What happened:** Asked to review a two-factor-authentication confirmation form against the
+actual framework source before sign-off. Reading Laravel Fortify's `ConfirmTwoFactorAuthentication`
+action directly showed it throws its validation failure into a *named* error bag
+(`confirmTwoFactorAuthentication`), not the default one — confirmed independently against an
+already-passing backend test that explicitly asserted that exact named bag. That raised a real
+question: would the Vue form's plain `errors.code` binding actually see that error at all? Traced
+Inertia's Laravel adapter source to see how it resolves session validation errors into the shared
+`errors` prop — confirmed that without a `'default'` bag present, named-bag errors return nested
+under their bag name, not flattened. Then went into the *compiled* `@inertiajs/vue3`/`@inertiajs/core`
+JavaScript bundles in `node_modules` to confirm the client-side `<Form>` component only unwraps a
+named bag into its flat `errors` slot when told which bag to read. The form in question wasn't
+telling it. `errors.code` would have been `undefined` on every genuine wrong-code submission —
+the input would have silently rejected the user's code with zero visible feedback.
+
+**Why it's interesting:** This defect was invisible to every automated check the project actually
+runs — formatter, backend test suite, linter, TypeScript checker — because the stack has no
+frontend component or browser test layer. The backend test proved the *session* carried the
+bagged error; nothing proved what the frontend actually did with it. The only way to catch it was
+reading the real contract at every layer it crossed: PHP action, PHP framework adapter, and
+finally the actual shipped JavaScript the browser runs.
+
+**Core insight:** When there's no test that would catch it, reading the actual source three layers
+down is the test.
+
+**Engineering lesson:** A named error bag is a real contract between backend and frontend, and
+it's opt-in on both ends — using one server-side buys nothing on the client unless the client
+explicitly asks for that same bag by name. Nothing fails loudly when this is missed; the error
+message just never appears.
+
+**Human decision / agent responsibility boundary:** The user's review request explicitly asked to
+verify the flow against Fortify's actual response contracts, not just against documentation or
+assumption. The agent's job was to actually go read the three source layers rather than trust that
+a standard-looking `<Form v-slot="{ errors }">` binding would just work — found and reported the
+defect with exact file/line citations; the user approved the fix directly from that evidence.
+
+**Technical/architectural context:** `Laravel\Fortify\Actions\ConfirmTwoFactorAuthentication`'s
+`->errorBag('confirmTwoFactorAuthentication')` call; `inertiajs/inertia-laravel`'s
+`resolveValidationErrors()` bag-resolution logic; the Inertia Vue3 `<Form>` component's
+`errorBag`/`error-bag` prop, verified directly in the compiled `dist/index.js` of both
+`@inertiajs/core` and `@inertiajs/vue3`.
+
+**Before → After:** Before — the confirm form silently discarded validation errors on a wrong
+code, with no visible feedback to the user. After — `error-bag="confirmTwoFactorAuthentication"`
+on the form makes the same errors appear correctly.
+
+**Hook:** "The bug had no test that could catch it — so I went and read the framework's compiled
+JavaScript instead."
+
+**Audience takeaway:** When a stack has a genuine test-coverage gap — no component tests, no
+browser tests — don't let that gap become invisible risk on anything that crosses it. Go verify
+the actual contract in source instead of trusting docs, convention, or "it looks like every other
+form."
+
+## The commits I was asked to inspect were already pushed
+
+- #: 20
+- Status: idea
+- Category: Engineering judgment
+- Potential format: Short thread
+- Added: 2026-08-18
+
+**What happened:** Asked to inspect a set of "unpushed" commits for a missing convention and
+report how to safely amend them, without making any changes yet. Ran `git fetch` before trusting
+that framing, rather than assuming the local branch state matched the premise — and found the
+branch was already fully in sync with `origin`. Every one of the commits in question was already
+public. That single fact changed what the eventual operation actually was: not a quiet local
+`git commit --amend`-style fixup, but a full history rewrite of already-shared commits requiring a
+force-push, explicit verification that nothing else depended on that history, and a considered,
+authorized destructive-git-operation decision — not something to walk into on the strength of a
+one-word assumption in the request. Reported the discrepancy plainly before proposing anything.
+When later authorized to proceed, executed the rewrite by replaying each commit through
+`git commit-tree` (preserving trees and author/committer metadata exactly, changing only the
+messages), validated it with a tree-hash identity check and a full `git range-diff` before
+touching the remote, confirmed no open PR or other branch depended on the old history, and pushed
+with `--force-with-lease` rather than a bare force push.
+
+**Why it's interesting:** The word "unpushed" in the request was doing a lot of unexamined work —
+it implicitly set the whole risk profile for what came next. Taking five seconds to fetch and
+check, before reasoning about how careful the rest of the operation needed to be, turned out to
+matter more than any of the individual safety mechanics used afterward.
+
+**Core insight:** Before you decide how careful to be, check whether the thing you're about to
+touch is actually as private as you think it is.
+
+**Engineering lesson:** "Unpushed" and "pushed" aren't just a descriptive label on a request —
+they determine whether an operation is a safe, purely local rewrite or a shared-history rewrite
+that needs explicit authorization, a dependency check, and a force-push. Re-verify
+state-dependent assumptions before calibrating risk around them, even when the assumption comes
+from the user's own phrasing of the task.
+
+**Human decision / agent responsibility boundary:** The user asked for inspection and a report
+first, explicitly deferring the actual rewrite decision. The agent's job was to investigate
+accurately, including the state of the branch itself, not only the specific thing asked about (the
+missing trailers) — surfaced the pushed/unpushed discrepancy unprompted, proposed a safe rewrite
+procedure, and only executed it after an explicit follow-up approval that added its own further
+safety constraints (verify no dependents, preserve content exactly, validate with a diff before
+pushing).
+
+**Technical/architectural context:** `git commit-tree` used to replay a linear commit history with
+new messages while keeping every tree hash and every author/committer identity and timestamp
+byte-identical; `git range-diff` as the mechanical, human-checkable proof that nothing but the
+messages changed; `--force-with-lease` as the push mechanism that refuses if the remote moved
+unexpectedly since the last fetch.
+
+**Before → After:** Before — the task was framed as amending some unpushed commits. After — a
+verified, safe rewrite and force-push of eleven already-public commits, proven safe via tree-hash
+identity and a full range-diff before anything touched the remote.
+
+**Hook:** "I was asked to fix some unpushed commits. They weren't unpushed."
+
+**Audience takeaway:** When a request assumes a particular state — "this is local," "this hasn't
+shipped," "nobody's seen this yet" — verify that assumption before calibrating how carefully to
+proceed. The assumption itself is often what determines whether the rest of the plan is actually
+safe.
