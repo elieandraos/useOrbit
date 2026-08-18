@@ -34,10 +34,32 @@ test('notifies the affected member that their two-factor authentication was rese
     /** @noinspection PhpUnhandledExceptionInspection */
     app(ResetTwoFactorAuthenticationAction::class)->handle($owner, $member);
 
+    /** @noinspection PhpUnhandledExceptionInspection */
     Notification::assertSentTo(
         $member,
         YourTwoFactorAuthenticationWasResetNotification::class,
         fn (YourTwoFactorAuthenticationWasResetNotification $notification): bool => $notification->toArray($member)['subject']['name'] === $organization->name
             && $notification->toArray($member)['actor']['id'] === $owner->id,
+    );
+});
+
+test('clears the member two-factor authentication columns with no actor, for operator-mediated resets', function () {
+    Notification::fake();
+
+    $organization = Organization::factory()->create();
+    $member = User::factory()->forOrganization($organization, OrganizationRole::Owner)->withTwoFactor()->create();
+
+    /** @noinspection PhpUnhandledExceptionInspection */
+    app(ResetTwoFactorAuthenticationAction::class)->handle(null, $member);
+
+    expect($member->fresh()->two_factor_secret)->toBeNull()
+        ->and($member->fresh()->two_factor_recovery_codes)->toBeNull()
+        ->and($member->fresh()->two_factor_confirmed_at)->toBeNull();
+
+    /** @noinspection PhpUnhandledExceptionInspection */
+    Notification::assertSentTo(
+        $member,
+        YourTwoFactorAuthenticationWasResetNotification::class,
+        fn (YourTwoFactorAuthenticationWasResetNotification $notification): bool => $notification->toArray($member)['actor'] === null,
     );
 });

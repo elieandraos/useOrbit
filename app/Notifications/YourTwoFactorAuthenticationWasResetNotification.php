@@ -12,7 +12,7 @@ final class YourTwoFactorAuthenticationWasResetNotification extends EnvelopeNoti
     public const string ACTION = 'member.your_two_factor_reset';
 
     public function __construct(
-        User $actor,
+        ?User $actor,
         private readonly Organization $organization,
     ) {
         parent::__construct($actor);
@@ -41,8 +41,8 @@ final class YourTwoFactorAuthenticationWasResetNotification extends EnvelopeNoti
 
     protected function summary(): string
     {
-        return __(':actor reset your two-factor authentication.', [
-            'actor' => $this->actor?->name,
-        ]);
+        return $this->actor === null
+            ? __('Your two-factor authentication was reset.')
+            : __(':actor reset your two-factor authentication.', ['actor' => $this->actor->name]);
     }
 }

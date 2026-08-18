@@ -16,7 +16,7 @@ final readonly class ResetTwoFactorAuthenticationAction
     /**
      * @throws \Throwable
      */
-    public function handle(User $actor, User $member): void
+    public function handle(?User $actor, User $member): void
     {
         DB::transaction(function () use ($member): void {
             ($this->disableTwoFactorAuthentication)($member);
