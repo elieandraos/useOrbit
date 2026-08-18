@@ -47,7 +47,6 @@ function toggle() {
         <input
             type="checkbox"
             :id="id"
-            :name="name"
             :checked="isChecked"
             :disabled="disabled"
             :tabindex="tabindex"
@@ -75,5 +74,6 @@ function toggle() {
                 "
             />
         </span>
+        <input v-if="name" type="hidden" :name="name" :value="isChecked ? '1' : '0'" />
     </span>
 </template>

@@ -7,7 +7,9 @@ import PasswordInput from '@/components/PasswordInput.vue';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Tab, Tabs } from '@/components/ui/tabs';
+import { useAuth } from '@/composables/useAuth';
 import { edit as editAppearance } from '@/routes/appearance';
+import { edit as editOrganization } from '@/routes/organization';
 import { edit as editProfile } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
 
@@ -16,6 +18,7 @@ type Props = {
 };
 
 const props = defineProps<Props>();
+const { isOwner } = useAuth();
 
 defineOptions({
     layout: {
@@ -42,6 +45,7 @@ defineOptions({
             <Tab :href="editProfile()">Profile</Tab>
             <Tab :href="editSecurity()">Security</Tab>
             <Tab :href="editAppearance()">Appearance</Tab>
+            <Tab v-if="isOwner" :href="editOrganization()">Organization</Tab>
         </Tabs>
 
         <section class="max-w-xl space-y-12 py-8">
@@ -94,7 +98,9 @@ defineOptions({
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="password_confirmation">Confirm password</Label>
+                        <Label for="password_confirmation"
+                            >Confirm password</Label
+                        >
                         <PasswordInput
                             id="password_confirmation"
                             name="password_confirmation"

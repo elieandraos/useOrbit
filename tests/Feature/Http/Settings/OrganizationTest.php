@@ -46,6 +46,30 @@ test('owner can enable the organization two factor requirement', function () {
     expect($organization->fresh()->two_factor_required)->toBeTrue();
 });
 
+test('accepts the string "1" a browser form submission sends for the checked state', function () {
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+
+    /** @noinspection PhpUnhandledExceptionInspection */
+    $this->actingAs($owner)
+        ->patch(route('organization.update'), ['two_factor_required' => '1'])
+        ->assertSessionHasNoErrors();
+
+    expect($organization->fresh()->two_factor_required)->toBeTrue();
+});
+
+test('accepts the string "0" a browser form submission sends for the unchecked state', function () {
+    $organization = Organization::factory()->create(['two_factor_required' => true]);
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->withTwoFactor()->create();
+
+    /** @noinspection PhpUnhandledExceptionInspection */
+    $this->actingAs($owner)
+        ->patch(route('organization.update'), ['two_factor_required' => '0'])
+        ->assertSessionHasNoErrors();
+
+    expect($organization->fresh()->two_factor_required)->toBeFalse();
+});
+
 test('admin cannot update the organization two factor requirement', function () {
     $organization = Organization::factory()->create();
     $admin = User::factory()->forOrganization($organization, OrganizationRole::Admin)->create();

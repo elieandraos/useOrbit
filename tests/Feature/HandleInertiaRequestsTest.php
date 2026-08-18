@@ -38,6 +38,38 @@ test('auth.user.is_privileged is false for a member', function () {
         );
 });
 
+test('auth.user.is_owner is true for an owner', function () {
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+
+    $this->actingAs($owner)
+        ->get(route('dashboard'))
+        ->assertInertia(fn ($page) => $page
+            ->where('auth.user.is_owner', true)
+        );
+});
+
+test('auth.user.is_owner is false for an admin', function () {
+    $organization = Organization::factory()->create();
+    $admin = User::factory()->forOrganization($organization, OrganizationRole::Admin)->create();
+
+    $this->actingAs($admin)
+        ->get(route('dashboard'))
+        ->assertInertia(fn ($page) => $page
+            ->where('auth.user.is_owner', false)
+        );
+});
+
+test('auth.user.is_owner is false for a member', function () {
+    $member = User::factory()->withOrganization()->create();
+
+    $this->actingAs($member)
+        ->get(route('dashboard'))
+        ->assertInertia(fn ($page) => $page
+            ->where('auth.user.is_owner', false)
+        );
+});
+
 test('auth.user is null for a guest', function () {
     $this->get(route('login'))
         ->assertInertia(fn ($page) => $page
