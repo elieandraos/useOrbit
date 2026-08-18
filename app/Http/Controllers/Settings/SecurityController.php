@@ -23,6 +23,7 @@ final class SecurityController extends Controller
         $props = [
             'passwordRules' => Password::defaults()->toPasswordRulesString(),
             'canManageTwoFactor' => Features::canManageTwoFactorAuthentication(),
+            'organizationRequiresTwoFactor' => $request->user()->organization->two_factor_required,
         ];
 
         if (Features::canManageTwoFactorAuthentication()) {

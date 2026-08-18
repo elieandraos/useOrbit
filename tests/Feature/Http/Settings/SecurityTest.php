@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -24,6 +25,29 @@ test('security page is displayed', function () {
             ->component('settings/Security')
             ->where('canManageTwoFactor', true)
             ->where('twoFactorEnabled', false),
+        );
+});
+
+test('security page exposes whether the organization requires two factor authentication', function () {
+    $organization = Organization::factory()->create(['two_factor_required' => true]);
+    $user = User::factory()->forOrganization($organization)->create();
+
+    $this->actingAs($user)
+        ->withSession(['auth.password_confirmed_at' => time()])
+        ->get(route('security.edit'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('organizationRequiresTwoFactor', true),
+        );
+});
+
+test('security page exposes false when the organization does not require two factor authentication', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->withSession(['auth.password_confirmed_at' => time()])
+        ->get(route('security.edit'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('organizationRequiresTwoFactor', false),
         );
 });
 

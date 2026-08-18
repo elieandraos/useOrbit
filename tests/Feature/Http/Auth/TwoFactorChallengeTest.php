@@ -4,7 +4,21 @@ declare(strict_types=1);
 
 use App\Models\User;
 use Illuminate\Support\Facades\Crypt;
+use Inertia\Testing\AssertableInertia as Assert;
 use PragmaRX\Google2FA\Google2FA;
+
+test('renders the challenge page for a partially authenticated user', function () {
+    $user = User::factory()->withOrganization()->withTwoFactor()->create();
+
+    $this->post(route('login.store'), [
+        'email' => $user->email,
+        'password' => 'password',
+    ])->assertRedirect(route('two-factor.login'));
+
+    $this->get(route('two-factor.login'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('auth/TwoFactorChallenge'));
+});
 
 test('authenticates with a valid two factor code', function () {
     $user = User::factory()->withOrganization()->withTwoFactor()->create();
