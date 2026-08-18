@@ -25,6 +25,7 @@ final class OrganizationMemberResource extends JsonResource
             'can_change_role' => $request->user()?->can('changeRole', [User::class, $this->resource]) ?? false,
             'can_remove' => $request->user()?->can('remove', [User::class, $this->resource]) ?? false,
             'can_revoke' => $request->user()?->can('revoke', [User::class, $this->resource]) ?? false,
+            'can_reset_two_factor' => $request->user()?->can('resetTwoFactor', [User::class, $this->resource]) ?? false,
         ];
     }
 }

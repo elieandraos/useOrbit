@@ -10,6 +10,7 @@ export interface OrganizationMemberResource {
     can_change_role: boolean;
     can_remove: boolean;
     can_revoke: boolean;
+    can_reset_two_factor: boolean;
 }
 
 export interface InvitableRoleOption {

@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { ArrowLeftRight, Ban, Mail, MoreHorizontal, Trash2 } from '@lucide/vue';
+import {
+    ArrowLeftRight,
+    Ban,
+    Mail,
+    MoreHorizontal,
+    ShieldOff,
+    Trash2,
+} from '@lucide/vue';
 import { ref } from 'vue';
 import { Avatar } from '@/components/ui/avatar';
 import Badge from '@/components/ui/badge/Badge.vue';
@@ -11,6 +18,7 @@ import type {
     OrganizationMemberResource,
 } from './organizationMember';
 import RemoveMemberModal from './RemoveMemberModal.vue';
+import ResetTwoFactorModal from './ResetTwoFactorModal.vue';
 import RevokeInvitationModal from './RevokeInvitationModal.vue';
 
 defineProps<{
@@ -30,11 +38,14 @@ const statusTone: Record<
 const memberToChangeRole = ref<OrganizationMemberResource | null>(null);
 const memberToRemove = ref<OrganizationMemberResource | null>(null);
 const memberToRevoke = ref<OrganizationMemberResource | null>(null);
+const memberToResetTwoFactor = ref<OrganizationMemberResource | null>(null);
 
 function canManageMember(member: OrganizationMemberResource): boolean {
     return member.status === 'invited'
         ? member.can_revoke
-        : member.can_change_role || member.can_remove;
+        : member.can_change_role ||
+              member.can_remove ||
+              member.can_reset_two_factor;
 }
 </script>
 
@@ -134,7 +145,27 @@ function canManageMember(member: OrganizationMemberResource): boolean {
                             Change Role
                         </DropMenuItem>
                         <Separator
-                            v-if="member.can_change_role && member.can_remove"
+                            v-if="
+                                member.can_change_role &&
+                                (member.can_reset_two_factor ||
+                                    member.can_remove)
+                            "
+                            class="my-1"
+                        />
+                        <DropMenuItem
+                            v-if="member.can_reset_two_factor"
+                            danger
+                            @click="memberToResetTwoFactor = member"
+                        >
+                            <template #leading
+                                ><ShieldOff class="size-4"
+                            /></template>
+                            Reset 2FA
+                        </DropMenuItem>
+                        <Separator
+                            v-if="
+                                member.can_reset_two_factor && member.can_remove
+                            "
                             class="my-1"
                         />
                         <DropMenuItem
@@ -289,6 +320,24 @@ function canManageMember(member: OrganizationMemberResource): boolean {
                                 <Separator
                                     v-if="
                                         member.can_change_role &&
+                                        (member.can_reset_two_factor ||
+                                            member.can_remove)
+                                    "
+                                    class="my-1"
+                                />
+                                <DropMenuItem
+                                    v-if="member.can_reset_two_factor"
+                                    danger
+                                    @click="memberToResetTwoFactor = member"
+                                >
+                                    <template #leading
+                                        ><ShieldOff class="size-4"
+                                    /></template>
+                                    Reset 2FA
+                                </DropMenuItem>
+                                <Separator
+                                    v-if="
+                                        member.can_reset_two_factor &&
                                         member.can_remove
                                     "
                                     class="my-1"
@@ -317,5 +366,6 @@ function canManageMember(member: OrganizationMemberResource): boolean {
         />
         <RemoveMemberModal v-model="memberToRemove" :members="members" />
         <RevokeInvitationModal v-model="memberToRevoke" />
+        <ResetTwoFactorModal v-model="memberToResetTwoFactor" />
     </div>
 </template>
