@@ -33,6 +33,9 @@ its stable `#`), then the story fields.
 | 12 | A locked security rule that could never actually fire | Engineering judgment | idea | Short thread | — |
 | 13 | Three ways my own planning skill could lie to me — found on issues it had already created | Agent failures | idea | Longer thread | — |
 | 14 | Twice accused of the same bug, twice couldn't find it in my own output | Agent conversations worth sharing | idea | Thread | — |
+| 15 | The IDE warning that took four tries to actually suppress | Agent failures | idea | Short thread | — |
+| 16 | A feature flag almost broke a commit that hadn't been written yet | Engineering judgment | idea | Short thread | — |
+| 17 | I built a skill by refusing to invent the one thing I didn't have evidence for | Agentic workflow evolution | idea | Longer thread | — |
 
 ---
 
@@ -931,3 +934,190 @@ hadn't."
 **Audience takeaway:** When someone reports a bug in your agent's output, checking the actual
 evidence before agreeing (or disagreeing) is a distinct skill from being generally trustworthy —
 and it's worth doing even when you'll build the requested fix either way.
+
+## The IDE warning that took four tries to actually suppress
+
+- #: 15
+- Status: idea
+- Category: Agent failures
+- Potential format: Short thread
+- Added: 2026-08-18
+
+**What happened:** A routine PhpStorm "Unhandled Exception" false-positive kept showing up on
+`Notification::assertSentTo()`, `Crypt::decrypt()`/`encrypt()`, and `Google2FA` calls inside Pest
+test closures — a known class of warning the project's own PhpStorm-conventions skill already
+documented a fix for: place `@noinspection PhpUnhandledExceptionInspection` on the line directly
+above the offending statement. That fix worked, repeatedly, across many call sites in the same
+session. Then, in a test asserting that a failed insert rolls back a transaction, the same
+annotation — placed directly above `expect(fn () => app(...)->handle($attributes))->toThrow(...)`
+— did not suppress the warning; PhpStorm kept flagging the `->handle()` call *inside* the arrow
+function. Moving the comment inline, immediately before the `fn` keyword itself, didn't fix it
+either — same warning, now pointing at the same inner call from a different column. Only when the
+throwing call was pulled out of the arrow function entirely, into a real `function () use (...) {
+... }` closure body with the suppression comment as its first line, did the warning actually
+disappear. That specific case — a documented top-level placement not reaching inside a nested
+arrow-function scope — was then written back into the project's `my-phpstorm-conventions` skill as
+its own documented pattern, with working and non-working code shown side by side, distinct from
+the general rule it extends.
+
+**Why it's interesting:** A fix that had already worked reliably, many times, in the same session,
+on the same class of warning, suddenly stopped working — not because the rule was wrong, but
+because the code's shape had quietly changed (the throwing call now lived inside a nested function
+scope instead of directly in the test body). Two more attempts at placing the same annotation, in
+increasingly specific spots, both failed the same way before the actual fix turned out to be
+structural rather positional.
+
+**Core insight:** "Works elsewhere in this file" isn't proof it'll work here — when a fix depends
+on *where* you put it, the code's shape matters as much as the fix itself.
+
+**Engineering lesson:** A suppression comment is scoped to whatever unit of code it sits inside.
+Moving the throwing call into a *new* scope — here, an arrow function passed as an argument — moves
+it out of reach of a comment placed in the outer scope, even immediately adjacent to it. When a
+documented fix stops working, check whether the code's structure changed before assuming the fix
+itself needs to change.
+
+**Human decision / agent responsibility boundary:** The user pointed at each specific IDE warning
+by file and line as it appeared, flagging symptoms in real time without diagnosing the cause. The
+agent tried the documented fix, then two escalating variations, checked each one against the
+actual IDE diagnostic feedback rather than assuming success, and once the real fix was found,
+proposed writing it back into the project's own skill; the user asked for exactly that.
+
+**Technical/architectural context:** Pest tests in a Laravel/Fortify app; PhpStorm's "Unhandled
+Exception" inspection fires on any call to a method that declares `@throws` in its own docblock
+when made inside a Pest closure, which has no real caller to propagate a `@throws` to — the
+project's documented workaround is `@noinspection`, not restructuring the call.
+
+**Before → After:** Before — the project's skill documented one fix for this whole class of
+warning: `@noinspection` on the line above the statement. After — the skill also documents the
+arrow-function edge case explicitly: when the throwing call lives inside `expect(fn () => ...)`,
+extract it into a named closure with the suppression comment inside its body, because the
+top-level placement structurally can't reach inside a nested function scope.
+
+**Hook:** "I fixed the same IDE warning four times before I understood why the first three
+attempts didn't count."
+
+**Audience takeaway:** When a "known fix" for a linter/IDE suppression stops working, don't assume
+the annotation itself is broken — check whether the code around it changed shape (a new closure, a
+new scope) before trying more variations of the same placement.
+
+## A feature flag almost broke a commit that hadn't been written yet
+
+- #: 16
+- Status: idea
+- Category: Engineering judgment
+- Potential format: Short thread
+- Added: 2026-08-18
+
+**What happened:** While splitting an already-implemented 2FA backend issue into semantic commits
+— persistence layer, then Security-settings-page controller wiring, then enabling Fortify's
+`twoFactorAuthentication` feature flag — the natural order, matching the issue's own task list,
+was data layer → controller → flag. Before building the commits, checking what enabling the flag
+would actually touch app-wide (not just the new code) surfaced that three pre-existing tests in
+`SecurityTest.php` — a file this issue never edited — were gated behind
+`skipUnlessFortifyHas(Features::twoFactorAuthentication())`, silently skipped for as long as the
+feature had been off, and set to start running the instant the flag flipped on. Those tests
+asserted exact Inertia props (`canManageTwoFactor`, `twoFactorEnabled`, `requiresConfirmation`)
+that only the not-yet-committed controller change would actually return. Landing "enable the flag"
+as the third commit, in reading order, would have made that commit red on arrival — not because of
+anything wrong in the commit itself, but because it activated three tests whose dependency hadn't
+landed yet. The commits were reordered instead: controller wiring landed second (inert while the
+flag is off — every `Features::` check reads `false`), and enabling the flag moved to third,
+activating everything at once, including retroactively proving the first two commits correct.
+
+**Why it's interesting:** Nothing about the new code being committed was wrong. The risk was
+entirely in *old*, already-skipped tests, in a file nobody was touching, one config change away
+from waking up and failing against code that hadn't shipped yet. That's invisible if you only look
+at the diff of the commit you're about to write — it only shows up by asking what state change
+(not just what code change) that commit causes across the whole app.
+
+**Core insight:** A feature flag doesn't just turn your new code on — it turns on every test
+that's been quietly waiting for it, whether you touched that file this week or not.
+
+**Engineering lesson:** Before committing a step that flips a config/feature flag, check which
+currently-skipped tests are gated on that exact flag and confirm their dependencies are already
+committed — not just the tests the current issue added. A `skipUnlessFortifyHas()`-style runtime
+gate is invisible in a normal test run right up until the moment its condition changes.
+
+**Human decision / agent responsibility boundary:** The reordering itself was a technical judgment
+call the agent made and explained; the user's role was setting the standard being protected — keep
+every commit coherent and passing — and approving the specific reordered plan, and the isolation
+technique used to prove each commit really did stand alone, before any commit was written.
+
+**Technical/architectural context:** Laravel Fortify feature flags (`config('fortify.features')`),
+a project `skipUnlessFortifyHas()` test helper wrapping Pest's `markTestSkipped()`, and a
+`git stash`-based per-commit isolation-verification technique — commit, stash everything else, run
+the full suite against just what's landed, pop, repeat — used to prove the reordered split was
+actually safe rather than just plausible.
+
+**Before → After:** Before — commits were about to follow the issue's own task-list order (data →
+controller → flag). After — commit order follows activation-dependency order instead, with the
+flag-flipping commit deliberately landing last specifically because it's the one that changes what
+other tests do.
+
+**Hook:** "The bug wasn't in the commit I was about to write — it was in three tests I hadn't
+touched."
+
+**Audience takeaway:** Before flipping a feature flag or config switch in its own commit, check
+what that flag *un-gates* elsewhere in the suite before deciding where that commit belongs in the
+sequence.
+
+## I built a skill by refusing to invent the one thing I didn't have evidence for
+
+- #: 17
+- Status: idea
+- Category: Agentic workflow evolution
+- Potential format: Longer thread
+- Added: 2026-08-18
+
+**What happened:** After four issues shipped with a real, repeated implementation pattern —
+approve an issue, implement only its scope, stop for review, inspect the finished diff, propose
+semantic commit boundaries, get that plan approved separately, build the commits, verify, ask
+before closing the issue, recalculate what's unblocked next — that pattern was extracted into a
+new skill, `my-git-workflow`. The framing was explicit: this is an extraction exercise, not a
+greenfield design, and the instruction named the actual evidence to extract from — two issues that
+shipped as one clean commit each, two that split into several dependency-ordered commits, all from
+the same four-issue implementation history. While building it, one gap in the evidence stood out:
+every commit across all four issues happened on a single branch,
+`feature/organization-owner-provisioning`, that ended up carrying all four issues' worth of work
+rather than one branch per issue. That's one data point about how this particular milestone
+happened to be worked, not a repeated pattern — so the skill says exactly that, and explicitly
+leaves branch-naming, PR conventions, merge strategy, and release process undesigned rather than
+filling them in with plausible-sounding defaults.
+
+**Why it's interesting:** The easy failure mode when building a workflow skill from a handful of
+examples is generalizing past what was actually seen — turning "this is what happened once" into
+"this is the rule now." The commit-splitting pattern had four real data points behind it and was
+safe to codify as a rule. The branching pattern had exactly one, and codifying it anyway would have
+produced a skill that sounded authoritative about something it had no basis for.
+
+**Core insight:** A skill built from one example isn't a workflow yet — it's a guess wearing a
+workflow's clothes.
+
+**Engineering lesson:** When extracting a reusable process from real history, the evidence bar
+isn't "did this happen" — it's "did this happen more than once, in more than one shape, for a
+reason that generalizes." A single occurrence is a fact about that one instance, not yet a rule.
+
+**Human decision / agent responsibility boundary:** The user set the extraction constraint up
+front — build v0.1 from the actual implementation history, not from imagining a good workflow, and
+explicitly do not invent branch conventions beyond the evidence available. The agent's job was
+applying that discipline consistently while drafting the skill, including noticing and calling out
+the branch-naming gap rather than quietly smoothing it over to make the skill feel more complete.
+
+**Technical/architectural context:** The extracted skill sits between an existing planning skill
+(`my-feature-planning`, which decides what work should exist and owns issue creation) and the
+project's implementation skills (which own the actual code) — `my-git-workflow` owns everything in
+between: implementation review, commit-boundary proposals, verification scope, issue closure, and
+recalculating a milestone's dependency-ready set afterward.
+
+**Before → After:** Before — the implement → review → commit-split → verify → close → recalculate
+loop existed only as something the agent and user had converged on conversationally, issue by
+issue, re-explained each time. After — it's a standing skill invokable with a short prompt
+("implement #290, same workflow"), with its own rule files grounded in the four issues that proved
+each rule, and an explicit list of what's still undesigned.
+
+**Hook:** "The most important line in my new skill is the one that says 'we don't know this yet.'"
+
+**Audience takeaway:** When you ask an agent to turn a real workflow into a reusable skill, the
+evidence bar for "this is a rule" should be higher than "this happened once" — and a good
+extraction says so out loud when it hits that limit, instead of quietly padding the gap with
+something that sounds like a convention.
