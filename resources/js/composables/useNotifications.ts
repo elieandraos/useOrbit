@@ -79,17 +79,34 @@ export function useNotifications(): UseNotificationsReturn {
 
         itemsRequested = true;
 
-        useHttp({}).get(recent().url, {
-            onSuccess: (response) => {
-                applyPage(response as RecentNotificationsResponse, {
-                    append: false,
-                });
-            },
-            onError: () => {
-                itemsRequested = false;
-                toast.error("Couldn't load notifications.");
-            },
-        });
+        useHttp({})
+            .get(recent().url, {
+                onSuccess: (response) => {
+                    applyPage(response as RecentNotificationsResponse, {
+                        append: false,
+                    });
+                },
+                onError: () => {
+                    itemsRequested = false;
+                    toast.error("Couldn't load notifications.");
+                },
+                onHttpException: (response) => {
+                    itemsRequested = false;
+
+                    if (response.status !== 423) {
+                        toast.error("Couldn't load notifications.");
+                    }
+                },
+            })
+            .catch(() => {
+                // onHttpException above already handled the response (silently
+                // for the expected mandatory-2FA 423, with a toast otherwise).
+                // useHttp still rejects its returned promise after invoking
+                // that callback — this exists only to keep that rejection from
+                // reaching the browser as an unhandled promise rejection, which
+                // is what was triggering the generic "Something went wrong"
+                // toast on top of the specific one.
+            });
     }
 
     function loadMore(): void {
