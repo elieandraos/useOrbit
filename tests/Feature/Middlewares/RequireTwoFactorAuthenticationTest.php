@@ -39,7 +39,17 @@ test('org requires two factor and user is not enrolled: redirected to enrollment
     $this->actingAs($user)
         ->get(route('dashboard'))
         ->assertRedirect(route('security.edit'))
-        ->assertSessionHas('error');
+        ->assertHasInertiaFlash('error', 'Your organization requires two-factor authentication. Please finish setting it up to continue.');
+});
+
+test('org requires two factor and user is not enrolled: a background JSON request gets a 423 instead of being redirected', function () {
+    $organization = Organization::factory()->create(['two_factor_required' => true]);
+    $user = User::factory()->forOrganization($organization)->create();
+
+    $this->actingAs($user)
+        ->getJson(route('notifications.recent'))
+        ->assertStatus(423)
+        ->assertJson(['message' => 'Your organization requires two-factor authentication. Please finish setting it up to continue.']);
 });
 
 test('an unenrolled user in a requiring org may still reach the enrollment page itself', function () {

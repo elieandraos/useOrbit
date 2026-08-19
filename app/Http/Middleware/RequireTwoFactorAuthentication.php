@@ -7,9 +7,10 @@ namespace App\Http\Middleware;
 use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
 
-final class EnsureTwoFactorRequirementIsMet
+final class RequireTwoFactorAuthentication
 {
     /**
      * The enrollment route itself must stay reachable, or an unenrolled user
@@ -19,6 +20,8 @@ final class EnsureTwoFactorRequirementIsMet
      * here — this middleware structurally never runs on them.
      */
     private const string ENROLLMENT_ROUTE = 'security.edit';
+
+    private const string REQUIREMENT_MESSAGE = 'Your organization requires two-factor authentication. Please finish setting it up to continue.';
 
     /**
      * Handle an incoming request.
@@ -42,7 +45,12 @@ final class EnsureTwoFactorRequirementIsMet
             return $next($request);
         }
 
-        return redirect()->route(self::ENROLLMENT_ROUTE)
-            ->with('error', 'Your organization requires two-factor authentication. Please finish setting it up to continue.');
+        if ($request->expectsJson()) {
+            return response()->json(['message' => self::REQUIREMENT_MESSAGE], 423);
+        }
+
+        Inertia::flash('toast', ['type' => 'error', 'message' => self::REQUIREMENT_MESSAGE]);
+
+        return redirect()->route(self::ENROLLMENT_ROUTE);
     }
 }
