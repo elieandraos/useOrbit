@@ -86,6 +86,35 @@ test('security page renders without two factor when feature is disabled', functi
         );
 });
 
+test('revisiting the security page does not disable an unconfirmed two factor secret', function () {
+    $this->skipUnlessFortifyHas(Features::twoFactorAuthentication());
+
+    Features::twoFactorAuthentication([
+        'confirm' => true,
+        'confirmPassword' => true,
+    ]);
+
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->withSession(['auth.password_confirmed_at' => time()])
+        ->post(route('two-factor.enable'));
+
+    expect($user->fresh()->two_factor_secret)->not->toBeNull();
+
+    $this->actingAs($user)
+        ->withSession(['auth.password_confirmed_at' => time()])
+        ->get(route('security.edit'));
+
+    sleep(1);
+
+    $this->actingAs($user)
+        ->withSession(['auth.password_confirmed_at' => time()])
+        ->get(route('security.edit'));
+
+    expect($user->fresh()->two_factor_secret)->not->toBeNull();
+});
+
 test('password can be updated', function () {
     $user = User::factory()->withOrganization()->create();
 
