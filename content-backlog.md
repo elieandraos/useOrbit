@@ -39,6 +39,8 @@ its stable `#`), then the story fields.
 | 18 | The test was red — and the code was right | Engineering judgment | idea | Short thread | — |
 | 19 | I traced a bug into compiled node_modules JS to prove a contract before shipping it | Engineering judgment | idea | Thread | — |
 | 20 | The commits I was asked to inspect were already pushed | Engineering judgment | idea | Short thread | — |
+| 21 | Fixing the bug unmasked the next bug underneath it | Engineering judgment | idea | Longer thread | — |
+| 22 | The bug report that turned out to be a hard refresh | Agentic workflow evolution | idea | Single post | — |
 
 ---
 
@@ -1306,3 +1308,125 @@ identity and a full range-diff before anything touched the remote.
 shipped," "nobody's seen this yet" — verify that assumption before calibrating how carefully to
 proceed. The assumption itself is often what determines whether the rest of the plan is actually
 safe.
+
+## Fixing the bug unmasked the next bug underneath it
+
+- #: 21
+- Status: idea
+- Category: Engineering judgment
+- Potential format: Longer thread
+- Added: 2026-08-19
+
+**What happened:** A discovered-work issue (#296) was drafted with a plausible theory: "Inertia's
+own client automatically re-fetches the current page's URL." Manual smoke testing after the prior
+fix (#295) had shown a generic "Something went wrong" toast on Settings → Security for any account
+still completing mandatory 2FA, and that theory was the best explanation available at the time —
+honestly flagged in the issue itself as unconfirmed, with header capture named as a remaining task.
+Picking that issue back up, the real mechanism turned out to be different and sharper: a shared
+`organization` middleware group — not anything Security-specific — was silently redirecting *every*
+request from an unenrolled account, including background XHR calls the app already made on every
+authenticated page (the notification-bell poll). That redirect landed on the Security page with the
+caller's `Accept: application/json` header intact but no `X-Inertia` header, so the server returned
+a full HTML page instead of JSON, and the caller's `JSON.parse` crashed. Confirmed by reproducing
+live, matching a captured browser stack trace to an exact line in the shipped `@inertiajs/vue3`
+bundle, and temporarily instrumenting the middleware itself to log real request headers before
+reverting the instrumentation. The fix (a `423` for JSON-expecting requests, mirroring how
+Laravel's own `RequirePassword` middleware already handles the identical situation one layer over)
+finally let the *correct*, specific toast reach the user — which is exactly what exposed that a
+second, unrelated bug had been quietly firing underneath the whole time: the notification poll's
+own error handler had no `onHttpException`, so its `423` became an unhandled promise rejection,
+tripping the same generic toast from a completely different cause. Fixing #296 is what made #297
+visible; before that fix, the two failures were indistinguishable from a single symptom.
+
+**Why it's interesting:** A three-issue chain (#295 → #296 → #297) in one continuous session where
+each fix peels back the next layer, and the original bug report's own working theory — reasonable,
+honestly caveated, but wrong — only got corrected once the investigation went all the way to a real
+captured request instead of stopping at a plausible-sounding mechanism.
+
+**Core insight:** "The toast I finally fixed is what proved there was a second bug I hadn't fixed
+yet."
+
+**Engineering lesson:** A middleware written for "protect this one page" can end up guarding every
+request an app makes once it's grouped onto a shared middleware stack — the blast radius of a
+security gate is a property of where it's registered, not just what it was written to do. And two
+independent bugs stacked on the same symptom can look like one bug until the first one is actually
+fixed.
+
+**Human decision / agent responsibility boundary:** The user drove every checkpoint explicitly —
+approved moving from investigation to a concrete fix-direction question (exempt background JSON
+calls entirely, or return a clean `423`), chose the stricter option after the trade-off was named,
+approved the rename of the middleware to a name that actually describes what it does, and directed
+the follow-up investigation into #297 rather than the agent self-initiating it from a stray
+observation. The agent's job was tracing the actual mechanism with real evidence at each step —
+live reproduction, exact bundle line-matching, temporary and fully-reverted server instrumentation —
+and reporting findings and trade-offs rather than guessing.
+
+**Technical/architectural context:** `RequireTwoFactorAuthentication` (renamed from
+`EnsureTwoFactorRequirementIsMet`) on the `organization` middleware group; Laravel's
+`Illuminate\Auth\Middleware\RequirePassword` as the precedent for the `expectsJson()` branch;
+Inertia's `useHttp` composable, whose `submit()` only invokes `onError` for a `422` and
+`onHttpException` for anything else; `Inertia::flash('toast', ...)` replacing a plain Laravel
+session flash key the frontend's toast system never read.
+
+**Before → After:** Before — one visible symptom (a generic toast, sometimes with in-app navigation
+looking broken) with a plausible but unconfirmed cause. After — two distinct, understood, separately
+fixed defects: a middleware redirecting background JSON calls it was never meant to touch, and a
+frontend composable that didn't handle the one HTTP status the fixed middleware now correctly
+returns.
+
+**Hook:** "Fixing the bug made a different bug visible for the first time."
+
+**Audience takeaway:** When a fix changes what a user actually sees, don't assume a now-different
+symptom means the fix was wrong — it can mean the fix was right, and something else was hiding
+behind it the whole time.
+
+## The bug report that turned out to be a hard refresh
+
+- #: 22
+- Status: idea
+- Category: Agentic workflow evolution
+- Potential format: Single post
+- Added: 2026-08-19
+
+**What happened:** A manual report came in: after an Owner confirms "Reset 2FA" for a member, the
+action succeeds but no success toast appears once the modal closes. Investigated from source
+instead of assumed — the controller correctly flashes the toast and is backend-tested for exactly
+that; the frontend modal is structurally identical to a sibling modal (remove member) using the
+same pattern; the toast-delivery mechanism itself is registered globally at app boot and lives in
+the persistent layout, architecturally independent of any one modal's mount/unmount lifecycle.
+Reported honestly that static analysis found no code-level defect, rather than filing a
+discovered-work issue for a cause that hadn't actually been located — filing one would have been
+exactly what that workflow's own intake checklist warns against. It turned out to be a hard-refresh
+artifact on the user's end; nothing in the code needed to change.
+
+**Why it's interesting:** The discovered-work intake's job isn't to find a bug every time it runs —
+it's to refuse to manufacture one when the evidence doesn't support it. This is what that discipline
+looks like when it works exactly as designed and correctly produces no issue at all, in the same
+session that had just produced three real ones from a similarly-triggered investigation.
+
+**Core insight:** "The workflow's job isn't to find a bug every time — it's to not manufacture one
+when there isn't one."
+
+**Engineering lesson:** A structurally sound, backend-tested feedback mechanism with no evident
+frontend defect is legitimate evidence of "probably not a code bug" — reporting that conclusion
+plainly is more useful than either fabricating a plausible-sounding cause or silently dropping the
+investigation.
+
+**Human decision / agent responsibility boundary:** The user reported the symptom and explicitly
+scoped the investigation (code only, no browser reproduction this pass) and the workflow to use if
+it turned out to be real. The agent's job was to trace the actual code paths involved and report
+honestly that no defect was found, rather than either inventing one to look thorough or silently
+declaring it fine without evidence. The user then supplied the missing piece — confirming it was a
+hard refresh — closing the loop the agent couldn't close alone.
+
+**Technical/architectural context:** `OrganizationMembersResetTwoFactorController`'s
+`Inertia::flash('toast', ...)` + `return back()`, tested by
+`tests/Feature/Http/OrganizationMembers/ResetTwoFactorTest.php`; the same `v-if`-gated `<Form
+@success="member = null">` pattern shared with `RemoveMemberModal.vue`; the global `router.on('flash', ...)`
+listener registered once in `app.ts`, decoupled from any specific page component's lifecycle.
+
+**Hook:** "I investigated a bug report all the way down to 'there's no bug.'"
+
+**Audience takeaway:** A validated "I can't find a defect" is a legitimate, useful outcome of an
+investigation — not a failure to find something, and not grounds to file an issue anyway just
+because a report came in.
