@@ -16,6 +16,7 @@ return new class extends Migration
         Schema::create('organizations', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->boolean('two_factor_required')->default(false);
             $table->timestamps();
         });
     }

@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => inertia('Welcome'))->name('home');
 
-Route::middleware(['auth', 'verified', 'organization'])->group(function () {
+Route::middleware(['auth', 'organization'])->group(function () {
     Route::get('dashboard', fn () => inertia('Dashboard'))->name('dashboard');
 });
 

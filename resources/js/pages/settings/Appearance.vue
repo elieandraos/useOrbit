@@ -3,9 +3,13 @@ import { Head } from '@inertiajs/vue3';
 import AppearanceTabs from '@/components/AppearanceTabs.vue';
 import Heading from '@/components/Heading.vue';
 import { Tab, Tabs } from '@/components/ui/tabs';
+import { useAuth } from '@/composables/useAuth';
 import { edit as editAppearance } from '@/routes/appearance';
+import { edit as editOrganization } from '@/routes/organization';
 import { edit as editProfile } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
+
+const { isOwner } = useAuth();
 
 defineOptions({
     layout: {
@@ -32,6 +36,7 @@ defineOptions({
             <Tab :href="editProfile()">Profile</Tab>
             <Tab :href="editSecurity()">Security</Tab>
             <Tab :href="editAppearance()">Appearance</Tab>
+            <Tab v-if="isOwner" :href="editOrganization()">Organization</Tab>
         </Tabs>
 
         <section class="max-w-xl space-y-12 py-8">

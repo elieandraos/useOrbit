@@ -4,6 +4,7 @@ export type User = {
     email: string;
     avatar?: string;
     is_privileged: boolean;
+    is_owner: boolean;
 };
 
 export type Auth = {

@@ -10,7 +10,7 @@ use App\Http\Controllers\Clients\ClientsUnarchiveController;
 use App\Http\Controllers\Notifications\NotifyClientController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'verified', 'organization'])->group(function () {
+Route::middleware(['auth', 'organization'])->group(function () {
     Route::get('clients', [ClientsController::class, 'index'])->name('clients.index');
     Route::get('clients/create', [ClientsController::class, 'create'])->name('clients.create');
     Route::post('clients', [ClientsController::class, 'store'])->name('clients.store');

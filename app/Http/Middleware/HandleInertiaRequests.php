@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Enums\OrganizationRole;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -47,6 +48,7 @@ final class HandleInertiaRequests extends Middleware
                     'email' => $request->user()->email,
                     'avatar' => $request->user()->avatar,
                     'is_privileged' => $request->user()->role->isPrivileged(),
+                    'is_owner' => $request->user()->role === OrganizationRole::Owner,
                 ] : null,
             ],
             'notifications' => [

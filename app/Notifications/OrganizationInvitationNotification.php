@@ -17,7 +17,7 @@ final class OrganizationInvitationNotification extends Notification implements S
 
     public function __construct(
         public readonly Organization $organization,
-        public readonly User $invitedBy,
+        public readonly ?User $invitedBy,
         public readonly string $token,
     ) {}
 
@@ -34,13 +34,20 @@ final class OrganizationInvitationNotification extends Notification implements S
     /** @noinspection PhpUnusedParameterInspection */
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
-            ->subject(__('You\'ve been invited to join :organization', ['organization' => $this->organization->name]))
-            ->line(__(':name has invited you to join :organization on :app.', [
+        $line = $this->invitedBy === null
+            ? __('An account has been created for you on :organization on :app.', [
+                'organization' => $this->organization->name,
+                'app' => config('app.name'),
+            ])
+            : __(':name has invited you to join :organization on :app.', [
                 'name' => $this->invitedBy->name,
                 'organization' => $this->organization->name,
                 'app' => config('app.name'),
-            ]))
+            ]);
+
+        return (new MailMessage)
+            ->subject(__('You\'ve been invited to join :organization', ['organization' => $this->organization->name]))
+            ->line($line)
             ->action(__('Accept Invitation'), route('invitations.show', $this->token))
             ->line(__('This invitation will expire in 7 days.'));
     }

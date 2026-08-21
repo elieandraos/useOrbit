@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\OrganizationMemberStatus;
 use App\Enums\OrganizationRole;
 use App\Models\Scopes\CurrentOrganizationScope;
@@ -20,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Laravel\Fortify\TwoFactorAuthenticatable;
 
 /**
  * @property int $id
@@ -27,7 +27,9 @@ use Illuminate\Support\Carbon;
  * @property string $name
  * @property string $email
  * @property string $password
- * @property Carbon|null $email_verified_at
+ * @property string|null $two_factor_secret
+ * @property string|null $two_factor_recovery_codes
+ * @property Carbon|null $two_factor_confirmed_at
  * @property OrganizationRole $role
  * @property OrganizationMemberStatus $status
  * @property int|null $invited_by
@@ -40,12 +42,12 @@ use Illuminate\Support\Carbon;
  * @property-read Country|null $country
  * @property-read User|null $inviter
  */
-#[Fillable(['name', 'email', 'password', 'organization_id', 'role', 'status', 'invited_by', 'joined_at', 'invitation_token', 'invitation_expires_at', 'country_id', 'email_verified_at'])]
+#[Fillable(['name', 'email', 'password', 'organization_id', 'role', 'status', 'invited_by', 'joined_at', 'invitation_token', 'invitation_expires_at', 'country_id'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 final class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, Prunable;
+    use HasFactory, Notifiable, Prunable, TwoFactorAuthenticatable;
 
     /**
      * Get the attributes that should be cast.
@@ -55,13 +57,13 @@ final class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
             'password' => 'hashed',
             'role' => OrganizationRole::class,
             'status' => OrganizationMemberStatus::class,
             'joined_at' => 'datetime',
             'invitation_expires_at' => 'datetime',
+            'two_factor_confirmed_at' => 'datetime',
         ];
     }
 

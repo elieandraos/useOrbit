@@ -129,6 +129,30 @@ test('exposes can_revoke true for a privileged viewer', function () {
         );
 });
 
+test('exposes can_reset_two_factor true for a privileged viewer', function () {
+    $organization = Organization::factory()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create(['name' => 'Amanda Owner']);
+    $member = User::factory()->forOrganization($organization)->create(['name' => 'Zack Member']);
+
+    $this->actingAs($owner)
+        ->get(route('organization-members.index'))
+        ->assertInertia(fn ($page) => $page
+            ->where('members.1.can_reset_two_factor', true)
+        );
+});
+
+test('exposes can_reset_two_factor false when an admin views an owner', function () {
+    $organization = Organization::factory()->create();
+    $admin = User::factory()->forOrganization($organization, OrganizationRole::Admin)->create(['name' => 'Amanda Admin']);
+    User::factory()->forOrganization($organization, OrganizationRole::Owner)->create(['name' => 'Zack Owner']);
+
+    $this->actingAs($admin)
+        ->get(route('organization-members.index'))
+        ->assertInertia(fn ($page) => $page
+            ->where('members.1.can_reset_two_factor', false)
+        );
+});
+
 test('exposes the invitable role options for the invite member form', function () {
     $organization = Organization::factory()->create();
     $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();

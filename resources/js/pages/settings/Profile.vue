@@ -9,7 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tab, Tabs } from '@/components/ui/tabs';
+import { useAuth } from '@/composables/useAuth';
 import { edit as editAppearance } from '@/routes/appearance';
+import { edit as editOrganization } from '@/routes/organization';
 import { edit as editProfile } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
 
@@ -26,6 +28,7 @@ defineOptions({
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
+const { isOwner } = useAuth();
 </script>
 
 <template>
@@ -41,6 +44,7 @@ const user = computed(() => page.props.auth.user);
             <Tab :href="editProfile()">Profile</Tab>
             <Tab :href="editSecurity()">Security</Tab>
             <Tab :href="editAppearance()">Appearance</Tab>
+            <Tab v-if="isOwner" :href="editOrganization()">Organization</Tab>
         </Tabs>
 
         <section class="max-w-xl space-y-12 py-8">

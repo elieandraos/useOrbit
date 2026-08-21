@@ -33,6 +33,14 @@ its stable `#`), then the story fields.
 | 12 | A locked security rule that could never actually fire | Engineering judgment | idea | Short thread | — |
 | 13 | Three ways my own planning skill could lie to me — found on issues it had already created | Agent failures | idea | Longer thread | — |
 | 14 | Twice accused of the same bug, twice couldn't find it in my own output | Agent conversations worth sharing | idea | Thread | — |
+| 15 | The IDE warning that took four tries to actually suppress | Agent failures | idea | Short thread | — |
+| 16 | A feature flag almost broke a commit that hadn't been written yet | Engineering judgment | idea | Short thread | — |
+| 17 | I built a skill by refusing to invent the one thing I didn't have evidence for | Agentic workflow evolution | idea | Longer thread | — |
+| 18 | The test was red — and the code was right | Engineering judgment | idea | Short thread | — |
+| 19 | I traced a bug into compiled node_modules JS to prove a contract before shipping it | Engineering judgment | idea | Thread | — |
+| 20 | The commits I was asked to inspect were already pushed | Engineering judgment | idea | Short thread | — |
+| 21 | Fixing the bug unmasked the next bug underneath it | Engineering judgment | idea | Longer thread | — |
+| 22 | The bug report that turned out to be a hard refresh | Agentic workflow evolution | idea | Single post | — |
 
 ---
 
@@ -931,3 +939,494 @@ hadn't."
 **Audience takeaway:** When someone reports a bug in your agent's output, checking the actual
 evidence before agreeing (or disagreeing) is a distinct skill from being generally trustworthy —
 and it's worth doing even when you'll build the requested fix either way.
+
+## The IDE warning that took four tries to actually suppress
+
+- #: 15
+- Status: idea
+- Category: Agent failures
+- Potential format: Short thread
+- Added: 2026-08-18
+
+**What happened:** A routine PhpStorm "Unhandled Exception" false-positive kept showing up on
+`Notification::assertSentTo()`, `Crypt::decrypt()`/`encrypt()`, and `Google2FA` calls inside Pest
+test closures — a known class of warning the project's own PhpStorm-conventions skill already
+documented a fix for: place `@noinspection PhpUnhandledExceptionInspection` on the line directly
+above the offending statement. That fix worked, repeatedly, across many call sites in the same
+session. Then, in a test asserting that a failed insert rolls back a transaction, the same
+annotation — placed directly above `expect(fn () => app(...)->handle($attributes))->toThrow(...)`
+— did not suppress the warning; PhpStorm kept flagging the `->handle()` call *inside* the arrow
+function. Moving the comment inline, immediately before the `fn` keyword itself, didn't fix it
+either — same warning, now pointing at the same inner call from a different column. Only when the
+throwing call was pulled out of the arrow function entirely, into a real `function () use (...) {
+... }` closure body with the suppression comment as its first line, did the warning actually
+disappear. That specific case — a documented top-level placement not reaching inside a nested
+arrow-function scope — was then written back into the project's `my-phpstorm-conventions` skill as
+its own documented pattern, with working and non-working code shown side by side, distinct from
+the general rule it extends.
+
+**Why it's interesting:** A fix that had already worked reliably, many times, in the same session,
+on the same class of warning, suddenly stopped working — not because the rule was wrong, but
+because the code's shape had quietly changed (the throwing call now lived inside a nested function
+scope instead of directly in the test body). Two more attempts at placing the same annotation, in
+increasingly specific spots, both failed the same way before the actual fix turned out to be
+structural rather positional.
+
+**Core insight:** "Works elsewhere in this file" isn't proof it'll work here — when a fix depends
+on *where* you put it, the code's shape matters as much as the fix itself.
+
+**Engineering lesson:** A suppression comment is scoped to whatever unit of code it sits inside.
+Moving the throwing call into a *new* scope — here, an arrow function passed as an argument — moves
+it out of reach of a comment placed in the outer scope, even immediately adjacent to it. When a
+documented fix stops working, check whether the code's structure changed before assuming the fix
+itself needs to change.
+
+**Human decision / agent responsibility boundary:** The user pointed at each specific IDE warning
+by file and line as it appeared, flagging symptoms in real time without diagnosing the cause. The
+agent tried the documented fix, then two escalating variations, checked each one against the
+actual IDE diagnostic feedback rather than assuming success, and once the real fix was found,
+proposed writing it back into the project's own skill; the user asked for exactly that.
+
+**Technical/architectural context:** Pest tests in a Laravel/Fortify app; PhpStorm's "Unhandled
+Exception" inspection fires on any call to a method that declares `@throws` in its own docblock
+when made inside a Pest closure, which has no real caller to propagate a `@throws` to — the
+project's documented workaround is `@noinspection`, not restructuring the call.
+
+**Before → After:** Before — the project's skill documented one fix for this whole class of
+warning: `@noinspection` on the line above the statement. After — the skill also documents the
+arrow-function edge case explicitly: when the throwing call lives inside `expect(fn () => ...)`,
+extract it into a named closure with the suppression comment inside its body, because the
+top-level placement structurally can't reach inside a nested function scope.
+
+**Hook:** "I fixed the same IDE warning four times before I understood why the first three
+attempts didn't count."
+
+**Audience takeaway:** When a "known fix" for a linter/IDE suppression stops working, don't assume
+the annotation itself is broken — check whether the code around it changed shape (a new closure, a
+new scope) before trying more variations of the same placement.
+
+## A feature flag almost broke a commit that hadn't been written yet
+
+- #: 16
+- Status: idea
+- Category: Engineering judgment
+- Potential format: Short thread
+- Added: 2026-08-18
+
+**What happened:** While splitting an already-implemented 2FA backend issue into semantic commits
+— persistence layer, then Security-settings-page controller wiring, then enabling Fortify's
+`twoFactorAuthentication` feature flag — the natural order, matching the issue's own task list,
+was data layer → controller → flag. Before building the commits, checking what enabling the flag
+would actually touch app-wide (not just the new code) surfaced that three pre-existing tests in
+`SecurityTest.php` — a file this issue never edited — were gated behind
+`skipUnlessFortifyHas(Features::twoFactorAuthentication())`, silently skipped for as long as the
+feature had been off, and set to start running the instant the flag flipped on. Those tests
+asserted exact Inertia props (`canManageTwoFactor`, `twoFactorEnabled`, `requiresConfirmation`)
+that only the not-yet-committed controller change would actually return. Landing "enable the flag"
+as the third commit, in reading order, would have made that commit red on arrival — not because of
+anything wrong in the commit itself, but because it activated three tests whose dependency hadn't
+landed yet. The commits were reordered instead: controller wiring landed second (inert while the
+flag is off — every `Features::` check reads `false`), and enabling the flag moved to third,
+activating everything at once, including retroactively proving the first two commits correct.
+
+**Why it's interesting:** Nothing about the new code being committed was wrong. The risk was
+entirely in *old*, already-skipped tests, in a file nobody was touching, one config change away
+from waking up and failing against code that hadn't shipped yet. That's invisible if you only look
+at the diff of the commit you're about to write — it only shows up by asking what state change
+(not just what code change) that commit causes across the whole app.
+
+**Core insight:** A feature flag doesn't just turn your new code on — it turns on every test
+that's been quietly waiting for it, whether you touched that file this week or not.
+
+**Engineering lesson:** Before committing a step that flips a config/feature flag, check which
+currently-skipped tests are gated on that exact flag and confirm their dependencies are already
+committed — not just the tests the current issue added. A `skipUnlessFortifyHas()`-style runtime
+gate is invisible in a normal test run right up until the moment its condition changes.
+
+**Human decision / agent responsibility boundary:** The reordering itself was a technical judgment
+call the agent made and explained; the user's role was setting the standard being protected — keep
+every commit coherent and passing — and approving the specific reordered plan, and the isolation
+technique used to prove each commit really did stand alone, before any commit was written.
+
+**Technical/architectural context:** Laravel Fortify feature flags (`config('fortify.features')`),
+a project `skipUnlessFortifyHas()` test helper wrapping Pest's `markTestSkipped()`, and a
+`git stash`-based per-commit isolation-verification technique — commit, stash everything else, run
+the full suite against just what's landed, pop, repeat — used to prove the reordered split was
+actually safe rather than just plausible.
+
+**Before → After:** Before — commits were about to follow the issue's own task-list order (data →
+controller → flag). After — commit order follows activation-dependency order instead, with the
+flag-flipping commit deliberately landing last specifically because it's the one that changes what
+other tests do.
+
+**Hook:** "The bug wasn't in the commit I was about to write — it was in three tests I hadn't
+touched."
+
+**Audience takeaway:** Before flipping a feature flag or config switch in its own commit, check
+what that flag *un-gates* elsewhere in the suite before deciding where that commit belongs in the
+sequence.
+
+## I built a skill by refusing to invent the one thing I didn't have evidence for
+
+- #: 17
+- Status: idea
+- Category: Agentic workflow evolution
+- Potential format: Longer thread
+- Added: 2026-08-18
+
+**What happened:** After four issues shipped with a real, repeated implementation pattern —
+approve an issue, implement only its scope, stop for review, inspect the finished diff, propose
+semantic commit boundaries, get that plan approved separately, build the commits, verify, ask
+before closing the issue, recalculate what's unblocked next — that pattern was extracted into a
+new skill, `my-git-workflow`. The framing was explicit: this is an extraction exercise, not a
+greenfield design, and the instruction named the actual evidence to extract from — two issues that
+shipped as one clean commit each, two that split into several dependency-ordered commits, all from
+the same four-issue implementation history. While building it, one gap in the evidence stood out:
+every commit across all four issues happened on a single branch,
+`feature/organization-owner-provisioning`, that ended up carrying all four issues' worth of work
+rather than one branch per issue. That's one data point about how this particular milestone
+happened to be worked, not a repeated pattern — so the skill says exactly that, and explicitly
+leaves branch-naming, PR conventions, merge strategy, and release process undesigned rather than
+filling them in with plausible-sounding defaults.
+
+**Why it's interesting:** The easy failure mode when building a workflow skill from a handful of
+examples is generalizing past what was actually seen — turning "this is what happened once" into
+"this is the rule now." The commit-splitting pattern had four real data points behind it and was
+safe to codify as a rule. The branching pattern had exactly one, and codifying it anyway would have
+produced a skill that sounded authoritative about something it had no basis for.
+
+**Core insight:** A skill built from one example isn't a workflow yet — it's a guess wearing a
+workflow's clothes.
+
+**Engineering lesson:** When extracting a reusable process from real history, the evidence bar
+isn't "did this happen" — it's "did this happen more than once, in more than one shape, for a
+reason that generalizes." A single occurrence is a fact about that one instance, not yet a rule.
+
+**Human decision / agent responsibility boundary:** The user set the extraction constraint up
+front — build v0.1 from the actual implementation history, not from imagining a good workflow, and
+explicitly do not invent branch conventions beyond the evidence available. The agent's job was
+applying that discipline consistently while drafting the skill, including noticing and calling out
+the branch-naming gap rather than quietly smoothing it over to make the skill feel more complete.
+
+**Technical/architectural context:** The extracted skill sits between an existing planning skill
+(`my-feature-planning`, which decides what work should exist and owns issue creation) and the
+project's implementation skills (which own the actual code) — `my-git-workflow` owns everything in
+between: implementation review, commit-boundary proposals, verification scope, issue closure, and
+recalculating a milestone's dependency-ready set afterward.
+
+**Before → After:** Before — the implement → review → commit-split → verify → close → recalculate
+loop existed only as something the agent and user had converged on conversationally, issue by
+issue, re-explained each time. After — it's a standing skill invokable with a short prompt
+("implement #290, same workflow"), with its own rule files grounded in the four issues that proved
+each rule, and an explicit list of what's still undesigned.
+
+**Hook:** "The most important line in my new skill is the one that says 'we don't know this yet.'"
+
+**Audience takeaway:** When you ask an agent to turn a real workflow into a reusable skill, the
+evidence bar for "this is a rule" should be higher than "this happened once" — and a good
+extraction says so out loud when it hits that limit, instead of quietly padding the gap with
+something that sounds like a convention.
+
+## The test was red — and the code was right
+
+- #: 18
+- Status: idea
+- Category: Engineering judgment
+- Potential format: Short thread
+- Added: 2026-08-18
+
+**What happened:** While fixing a `Switch` component's form-serialization bug, added a new backend
+test posting the string `'1'` then `'0'` to toggle an organization's 2FA requirement on and back
+off in one test, as the same Owner. The second assertion failed — the flag was still `true` after
+posting `'0'`. Rather than assume the just-written fix was broken, added a temporary file-based
+debug log inside the controller and reran the test: only one of the two HTTP requests ever reached
+the controller body at all. Traced the second one to `EnsureTwoFactorRequirementIsMet` — a
+pre-existing middleware from an earlier issue, sitting in the same route-middleware group — which
+had redirected the Owner to the security settings page on their own very next request, because the
+first request had just turned the org-wide 2FA requirement on and this particular Owner hadn't
+enrolled their own 2FA yet. The fix was to rewrite the test into two independent, single-transition
+cases instead of a two-step toggle, with the "turn it off" case starting from an Owner who already
+has 2FA enabled.
+
+**Why it's interesting:** The instinct when a brand-new test fails right after touching code is to
+assume the new code is wrong. Here the code was correct and the test's own scenario was
+unrealistic — a real Owner in production, in that exact situation, would hit the same redirect.
+This is the mirror image of a more common failure mode (green tests hiding a real problem): a red
+test that was actually surfacing correct, intentional enforcement working exactly as designed.
+
+**Core insight:** A failing test isn't always pointing at a bug. Sometimes it's pointing at a
+scenario that couldn't actually happen.
+
+**Engineering lesson:** When a new test fails immediately after a change, trace before rewriting —
+a temporary debug log at the actual boundary (here, the first line of a controller method) settles
+in seconds whether the code or the test's premise is wrong, instead of guessing from the failure
+message alone.
+
+**Human decision / agent responsibility boundary:** The user had approved a specific correction
+(move a component's serialization fix into the shared component itself) and asked for the relevant
+tests to be added or updated as appropriate. Writing the new test, hitting the unexpected failure,
+diagnosing it via debug logging, and deciding to rewrite the test rather than second-guess the
+approved fix were all agent judgment calls, reported transparently as part of the verification
+summary rather than glossed over.
+
+**Technical/architectural context:** Laravel's `EnsureTwoFactorRequirementIsMet` middleware
+(introduced in an earlier issue in the same project) sits in the same `organization`
+middleware group as the settings-update route it was tested against — meaning any request from an
+unenrolled user, including the very Owner who just changed the setting, is subject to it
+immediately, with no grace period.
+
+**Before → After:** Before — one test chained two sequential requests as the same Owner, toggling
+the flag on then off. After — two independent tests, each proving one transition, with the
+"turn off" case using an Owner who already has 2FA enabled so the middleware doesn't intercept the
+request the test is trying to make.
+
+**Hook:** "My test failed. The bug was in the test's assumptions, not the code."
+
+**Audience takeaway:** A red test right after a change doesn't automatically mean the change broke
+something — trace it to the actual point of failure before assuming the fix is wrong and rewriting
+code to match a test that was never realistic to begin with.
+
+## I traced a bug into compiled node_modules JS to prove a contract before shipping it
+
+- #: 19
+- Status: idea
+- Category: Engineering judgment
+- Potential format: Thread
+- Added: 2026-08-18
+
+**What happened:** Asked to review a two-factor-authentication confirmation form against the
+actual framework source before sign-off. Reading Laravel Fortify's `ConfirmTwoFactorAuthentication`
+action directly showed it throws its validation failure into a *named* error bag
+(`confirmTwoFactorAuthentication`), not the default one — confirmed independently against an
+already-passing backend test that explicitly asserted that exact named bag. That raised a real
+question: would the Vue form's plain `errors.code` binding actually see that error at all? Traced
+Inertia's Laravel adapter source to see how it resolves session validation errors into the shared
+`errors` prop — confirmed that without a `'default'` bag present, named-bag errors return nested
+under their bag name, not flattened. Then went into the *compiled* `@inertiajs/vue3`/`@inertiajs/core`
+JavaScript bundles in `node_modules` to confirm the client-side `<Form>` component only unwraps a
+named bag into its flat `errors` slot when told which bag to read. The form in question wasn't
+telling it. `errors.code` would have been `undefined` on every genuine wrong-code submission —
+the input would have silently rejected the user's code with zero visible feedback.
+
+**Why it's interesting:** This defect was invisible to every automated check the project actually
+runs — formatter, backend test suite, linter, TypeScript checker — because the stack has no
+frontend component or browser test layer. The backend test proved the *session* carried the
+bagged error; nothing proved what the frontend actually did with it. The only way to catch it was
+reading the real contract at every layer it crossed: PHP action, PHP framework adapter, and
+finally the actual shipped JavaScript the browser runs.
+
+**Core insight:** When there's no test that would catch it, reading the actual source three layers
+down is the test.
+
+**Engineering lesson:** A named error bag is a real contract between backend and frontend, and
+it's opt-in on both ends — using one server-side buys nothing on the client unless the client
+explicitly asks for that same bag by name. Nothing fails loudly when this is missed; the error
+message just never appears.
+
+**Human decision / agent responsibility boundary:** The user's review request explicitly asked to
+verify the flow against Fortify's actual response contracts, not just against documentation or
+assumption. The agent's job was to actually go read the three source layers rather than trust that
+a standard-looking `<Form v-slot="{ errors }">` binding would just work — found and reported the
+defect with exact file/line citations; the user approved the fix directly from that evidence.
+
+**Technical/architectural context:** `Laravel\Fortify\Actions\ConfirmTwoFactorAuthentication`'s
+`->errorBag('confirmTwoFactorAuthentication')` call; `inertiajs/inertia-laravel`'s
+`resolveValidationErrors()` bag-resolution logic; the Inertia Vue3 `<Form>` component's
+`errorBag`/`error-bag` prop, verified directly in the compiled `dist/index.js` of both
+`@inertiajs/core` and `@inertiajs/vue3`.
+
+**Before → After:** Before — the confirm form silently discarded validation errors on a wrong
+code, with no visible feedback to the user. After — `error-bag="confirmTwoFactorAuthentication"`
+on the form makes the same errors appear correctly.
+
+**Hook:** "The bug had no test that could catch it — so I went and read the framework's compiled
+JavaScript instead."
+
+**Audience takeaway:** When a stack has a genuine test-coverage gap — no component tests, no
+browser tests — don't let that gap become invisible risk on anything that crosses it. Go verify
+the actual contract in source instead of trusting docs, convention, or "it looks like every other
+form."
+
+## The commits I was asked to inspect were already pushed
+
+- #: 20
+- Status: idea
+- Category: Engineering judgment
+- Potential format: Short thread
+- Added: 2026-08-18
+
+**What happened:** Asked to inspect a set of "unpushed" commits for a missing convention and
+report how to safely amend them, without making any changes yet. Ran `git fetch` before trusting
+that framing, rather than assuming the local branch state matched the premise — and found the
+branch was already fully in sync with `origin`. Every one of the commits in question was already
+public. That single fact changed what the eventual operation actually was: not a quiet local
+`git commit --amend`-style fixup, but a full history rewrite of already-shared commits requiring a
+force-push, explicit verification that nothing else depended on that history, and a considered,
+authorized destructive-git-operation decision — not something to walk into on the strength of a
+one-word assumption in the request. Reported the discrepancy plainly before proposing anything.
+When later authorized to proceed, executed the rewrite by replaying each commit through
+`git commit-tree` (preserving trees and author/committer metadata exactly, changing only the
+messages), validated it with a tree-hash identity check and a full `git range-diff` before
+touching the remote, confirmed no open PR or other branch depended on the old history, and pushed
+with `--force-with-lease` rather than a bare force push.
+
+**Why it's interesting:** The word "unpushed" in the request was doing a lot of unexamined work —
+it implicitly set the whole risk profile for what came next. Taking five seconds to fetch and
+check, before reasoning about how careful the rest of the operation needed to be, turned out to
+matter more than any of the individual safety mechanics used afterward.
+
+**Core insight:** Before you decide how careful to be, check whether the thing you're about to
+touch is actually as private as you think it is.
+
+**Engineering lesson:** "Unpushed" and "pushed" aren't just a descriptive label on a request —
+they determine whether an operation is a safe, purely local rewrite or a shared-history rewrite
+that needs explicit authorization, a dependency check, and a force-push. Re-verify
+state-dependent assumptions before calibrating risk around them, even when the assumption comes
+from the user's own phrasing of the task.
+
+**Human decision / agent responsibility boundary:** The user asked for inspection and a report
+first, explicitly deferring the actual rewrite decision. The agent's job was to investigate
+accurately, including the state of the branch itself, not only the specific thing asked about (the
+missing trailers) — surfaced the pushed/unpushed discrepancy unprompted, proposed a safe rewrite
+procedure, and only executed it after an explicit follow-up approval that added its own further
+safety constraints (verify no dependents, preserve content exactly, validate with a diff before
+pushing).
+
+**Technical/architectural context:** `git commit-tree` used to replay a linear commit history with
+new messages while keeping every tree hash and every author/committer identity and timestamp
+byte-identical; `git range-diff` as the mechanical, human-checkable proof that nothing but the
+messages changed; `--force-with-lease` as the push mechanism that refuses if the remote moved
+unexpectedly since the last fetch.
+
+**Before → After:** Before — the task was framed as amending some unpushed commits. After — a
+verified, safe rewrite and force-push of eleven already-public commits, proven safe via tree-hash
+identity and a full range-diff before anything touched the remote.
+
+**Hook:** "I was asked to fix some unpushed commits. They weren't unpushed."
+
+**Audience takeaway:** When a request assumes a particular state — "this is local," "this hasn't
+shipped," "nobody's seen this yet" — verify that assumption before calibrating how carefully to
+proceed. The assumption itself is often what determines whether the rest of the plan is actually
+safe.
+
+## Fixing the bug unmasked the next bug underneath it
+
+- #: 21
+- Status: idea
+- Category: Engineering judgment
+- Potential format: Longer thread
+- Added: 2026-08-19
+
+**What happened:** A discovered-work issue (#296) was drafted with a plausible theory: "Inertia's
+own client automatically re-fetches the current page's URL." Manual smoke testing after the prior
+fix (#295) had shown a generic "Something went wrong" toast on Settings → Security for any account
+still completing mandatory 2FA, and that theory was the best explanation available at the time —
+honestly flagged in the issue itself as unconfirmed, with header capture named as a remaining task.
+Picking that issue back up, the real mechanism turned out to be different and sharper: a shared
+`organization` middleware group — not anything Security-specific — was silently redirecting *every*
+request from an unenrolled account, including background XHR calls the app already made on every
+authenticated page (the notification-bell poll). That redirect landed on the Security page with the
+caller's `Accept: application/json` header intact but no `X-Inertia` header, so the server returned
+a full HTML page instead of JSON, and the caller's `JSON.parse` crashed. Confirmed by reproducing
+live, matching a captured browser stack trace to an exact line in the shipped `@inertiajs/vue3`
+bundle, and temporarily instrumenting the middleware itself to log real request headers before
+reverting the instrumentation. The fix (a `423` for JSON-expecting requests, mirroring how
+Laravel's own `RequirePassword` middleware already handles the identical situation one layer over)
+finally let the *correct*, specific toast reach the user — which is exactly what exposed that a
+second, unrelated bug had been quietly firing underneath the whole time: the notification poll's
+own error handler had no `onHttpException`, so its `423` became an unhandled promise rejection,
+tripping the same generic toast from a completely different cause. Fixing #296 is what made #297
+visible; before that fix, the two failures were indistinguishable from a single symptom.
+
+**Why it's interesting:** A three-issue chain (#295 → #296 → #297) in one continuous session where
+each fix peels back the next layer, and the original bug report's own working theory — reasonable,
+honestly caveated, but wrong — only got corrected once the investigation went all the way to a real
+captured request instead of stopping at a plausible-sounding mechanism.
+
+**Core insight:** "The toast I finally fixed is what proved there was a second bug I hadn't fixed
+yet."
+
+**Engineering lesson:** A middleware written for "protect this one page" can end up guarding every
+request an app makes once it's grouped onto a shared middleware stack — the blast radius of a
+security gate is a property of where it's registered, not just what it was written to do. And two
+independent bugs stacked on the same symptom can look like one bug until the first one is actually
+fixed.
+
+**Human decision / agent responsibility boundary:** The user drove every checkpoint explicitly —
+approved moving from investigation to a concrete fix-direction question (exempt background JSON
+calls entirely, or return a clean `423`), chose the stricter option after the trade-off was named,
+approved the rename of the middleware to a name that actually describes what it does, and directed
+the follow-up investigation into #297 rather than the agent self-initiating it from a stray
+observation. The agent's job was tracing the actual mechanism with real evidence at each step —
+live reproduction, exact bundle line-matching, temporary and fully-reverted server instrumentation —
+and reporting findings and trade-offs rather than guessing.
+
+**Technical/architectural context:** `RequireTwoFactorAuthentication` (renamed from
+`EnsureTwoFactorRequirementIsMet`) on the `organization` middleware group; Laravel's
+`Illuminate\Auth\Middleware\RequirePassword` as the precedent for the `expectsJson()` branch;
+Inertia's `useHttp` composable, whose `submit()` only invokes `onError` for a `422` and
+`onHttpException` for anything else; `Inertia::flash('toast', ...)` replacing a plain Laravel
+session flash key the frontend's toast system never read.
+
+**Before → After:** Before — one visible symptom (a generic toast, sometimes with in-app navigation
+looking broken) with a plausible but unconfirmed cause. After — two distinct, understood, separately
+fixed defects: a middleware redirecting background JSON calls it was never meant to touch, and a
+frontend composable that didn't handle the one HTTP status the fixed middleware now correctly
+returns.
+
+**Hook:** "Fixing the bug made a different bug visible for the first time."
+
+**Audience takeaway:** When a fix changes what a user actually sees, don't assume a now-different
+symptom means the fix was wrong — it can mean the fix was right, and something else was hiding
+behind it the whole time.
+
+## The bug report that turned out to be a hard refresh
+
+- #: 22
+- Status: idea
+- Category: Agentic workflow evolution
+- Potential format: Single post
+- Added: 2026-08-19
+
+**What happened:** A manual report came in: after an Owner confirms "Reset 2FA" for a member, the
+action succeeds but no success toast appears once the modal closes. Investigated from source
+instead of assumed — the controller correctly flashes the toast and is backend-tested for exactly
+that; the frontend modal is structurally identical to a sibling modal (remove member) using the
+same pattern; the toast-delivery mechanism itself is registered globally at app boot and lives in
+the persistent layout, architecturally independent of any one modal's mount/unmount lifecycle.
+Reported honestly that static analysis found no code-level defect, rather than filing a
+discovered-work issue for a cause that hadn't actually been located — filing one would have been
+exactly what that workflow's own intake checklist warns against. It turned out to be a hard-refresh
+artifact on the user's end; nothing in the code needed to change.
+
+**Why it's interesting:** The discovered-work intake's job isn't to find a bug every time it runs —
+it's to refuse to manufacture one when the evidence doesn't support it. This is what that discipline
+looks like when it works exactly as designed and correctly produces no issue at all, in the same
+session that had just produced three real ones from a similarly-triggered investigation.
+
+**Core insight:** "The workflow's job isn't to find a bug every time — it's to not manufacture one
+when there isn't one."
+
+**Engineering lesson:** A structurally sound, backend-tested feedback mechanism with no evident
+frontend defect is legitimate evidence of "probably not a code bug" — reporting that conclusion
+plainly is more useful than either fabricating a plausible-sounding cause or silently dropping the
+investigation.
+
+**Human decision / agent responsibility boundary:** The user reported the symptom and explicitly
+scoped the investigation (code only, no browser reproduction this pass) and the workflow to use if
+it turned out to be real. The agent's job was to trace the actual code paths involved and report
+honestly that no defect was found, rather than either inventing one to look thorough or silently
+declaring it fine without evidence. The user then supplied the missing piece — confirming it was a
+hard refresh — closing the loop the agent couldn't close alone.
+
+**Technical/architectural context:** `OrganizationMembersResetTwoFactorController`'s
+`Inertia::flash('toast', ...)` + `return back()`, tested by
+`tests/Feature/Http/OrganizationMembers/ResetTwoFactorTest.php`; the same `v-if`-gated `<Form
+@success="member = null">` pattern shared with `RemoveMemberModal.vue`; the global `router.on('flash', ...)`
+listener registered once in `app.ts`, decoupled from any specific page component's lifecycle.
+
+**Hook:** "I investigated a bug report all the way down to 'there's no bug.'"
+
+**Audience takeaway:** A validated "I can't find a defect" is a legitimate, useful outcome of an
+investigation — not a failure to find something, and not grounds to file an issue anyway just
+because a report came in.

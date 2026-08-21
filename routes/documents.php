@@ -9,12 +9,12 @@ use App\Http\Controllers\Documents\DocumentsUploadBatchController;
 use App\Http\Controllers\Notifications\NotifyDocumentController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'verified', 'organization'])->group(function () {
+Route::middleware(['auth', 'organization'])->group(function () {
     Route::get('clients/{client:slug}/documents', [ClientDocumentsController::class, 'index'])->name('clients.documents.index');
     Route::post('clients/{client:slug}/documents', [ClientDocumentsController::class, 'store'])->name('clients.documents.store');
 });
 
-Route::middleware(['auth', 'verified', 'organization'])->prefix('documents')->name('documents.')->group(function () {
+Route::middleware(['auth', 'organization'])->prefix('documents')->name('documents.')->group(function () {
     Route::post('batch', DocumentsUploadBatchController::class)->name('batch');
     Route::get('{document}/download', DocumentsDownloadController::class)->name('download');
     Route::post('{document}/notify', NotifyDocumentController::class)->name('notify');
