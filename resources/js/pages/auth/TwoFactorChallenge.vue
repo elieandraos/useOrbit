@@ -5,6 +5,7 @@ import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import OtpInput from '@/components/ui/otp-input/OtpInput.vue';
 import { Spinner } from '@/components/ui/spinner';
 import { store } from '@/routes/two-factor/login';
 
@@ -17,6 +18,7 @@ defineOptions({
 });
 
 const usingRecoveryCode = ref(false);
+const code = ref('');
 
 function toggleRecoveryCode(): void {
     usingRecoveryCode.value = !usingRecoveryCode.value;
@@ -33,14 +35,12 @@ function toggleRecoveryCode(): void {
     >
         <div v-if="!usingRecoveryCode" class="grid gap-2">
             <Label for="code">Authentication code</Label>
-            <Input
+            <OtpInput
                 id="code"
                 name="code"
-                inputmode="numeric"
-                autocomplete="one-time-code"
+                v-model="code"
+                aria-label="Authentication code"
                 autofocus
-                required
-                placeholder="123456"
             />
             <InputError :message="errors.code" />
         </div>
