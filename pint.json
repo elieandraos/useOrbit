@@ -1,5 +1,8 @@
 {
     "preset": "laravel",
+    "notPath": [
+        "_ide_helper_macros.php"
+    ],
     "rules": {
         "declare_strict_types": true
     }
