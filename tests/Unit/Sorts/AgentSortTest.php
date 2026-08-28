@@ -55,3 +55,20 @@ test('an unrecognized column falls back to the default', function () {
 
     expect($agents->pluck('id')->all())->toBe([$alpha->id, $bravo->id]);
 });
+
+test('ties on every sortable column are broken by a stable primary key order', function (?string $column) {
+    /** @var Agent $first */
+    $first = Agent::factory()->create(['first_name' => 'Robin', 'last_name' => 'Haddad']);
+    /** @var Agent $second */
+    $second = Agent::factory()->create(['first_name' => 'Robin', 'last_name' => 'Haddad']);
+    /** @var Agent $third */
+    $third = Agent::factory()->create(['first_name' => 'Robin', 'last_name' => 'Haddad']);
+
+    /** @noinspection PhpUndefinedMethodInspection */
+    $agents = Agent::query()->withoutGlobalScope(CurrentOrganizationScope::class)->sort(new AgentSort($column, 'asc'))->get();
+
+    expect($agents->pluck('id')->all())->toBe([$first->id, $second->id, $third->id]);
+})->with([
+    'name' => 'name',
+    'default' => null,
+]);
