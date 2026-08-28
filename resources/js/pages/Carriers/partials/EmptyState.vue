@@ -2,7 +2,10 @@
 import { Link, router } from '@inertiajs/vue3';
 import { Archive, Building2, Plus, SearchX } from '@lucide/vue';
 import Button from '@/components/ui/button/Button.vue';
-import { create as carriersCreate, index as carriersIndex } from '@/routes/carriers';
+import {
+    create as carriersCreate,
+    index as carriersIndex,
+} from '@/routes/carriers';
 
 defineProps<{
     filtered?: boolean;
@@ -49,9 +52,8 @@ function clearFilters() {
                     results.</template
                 >
                 <template v-else
-                    >Add your first insurance carrier. Capture branches,
-                    contact people, and the policies you'll renew with
-                    them.</template
+                    >Add your first insurance carrier. Capture branches, contact
+                    people, and the policies you'll renew with them.</template
                 >
             </p>
             <div class="mt-6 flex justify-center">

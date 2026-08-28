@@ -16,7 +16,7 @@
     />
   </div>
 
-  <DropMenuItem>Marketing</DropMenuItem>
-  <DropMenuItem>Renewal</DropMenuItem>
-  <DropMenuItem>VIP</DropMenuItem>
+<DropMenuItem>Marketing</DropMenuItem>
+<DropMenuItem>Renewal</DropMenuItem>
+<DropMenuItem>VIP</DropMenuItem>
 </DropMenu>

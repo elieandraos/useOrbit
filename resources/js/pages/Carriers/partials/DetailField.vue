@@ -8,7 +8,13 @@ withDefaults(
         multiline?: boolean;
         accent?: boolean;
     }>(),
-    { value: null, mono: false, lowercase: false, multiline: false, accent: false },
+    {
+        value: null,
+        mono: false,
+        lowercase: false,
+        multiline: false,
+        accent: false,
+    },
 );
 </script>
 

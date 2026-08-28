@@ -1,11 +1,6 @@
 <script setup lang="ts">
 import Avatar from '@/components/ui/avatar/Avatar.vue';
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { ClientResource } from './client';
 
 defineProps<{

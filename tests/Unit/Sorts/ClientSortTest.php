@@ -105,3 +105,22 @@ test('an unrecognized column falls back to the default', function () {
 
     expect($clients->pluck('id')->all())->toBe([$newest->id, $oldest->id]);
 });
+
+test('ties on every sortable column are broken by a stable primary key order', function (?string $column) {
+    /** @var Client $first */
+    $first = Client::factory()->create(['first_name' => 'Robin', 'last_name' => 'Haddad', 'client_type' => 'individual', 'enrollment_date' => '2024-01-01']);
+    /** @var Client $second */
+    $second = Client::factory()->create(['first_name' => 'Robin', 'last_name' => 'Haddad', 'client_type' => 'individual', 'enrollment_date' => '2024-01-01']);
+    /** @var Client $third */
+    $third = Client::factory()->create(['first_name' => 'Robin', 'last_name' => 'Haddad', 'client_type' => 'individual', 'enrollment_date' => '2024-01-01']);
+
+    /** @noinspection PhpUndefinedMethodInspection */
+    $clients = Client::query()->withoutGlobalScope(CurrentOrganizationScope::class)->sort(new ClientSort($column, 'asc'))->get();
+
+    expect($clients->pluck('id')->all())->toBe([$first->id, $second->id, $third->id]);
+})->with([
+    'name' => 'name',
+    'type' => 'type',
+    'enrollment_date' => 'enrollment_date',
+    'default' => null,
+]);

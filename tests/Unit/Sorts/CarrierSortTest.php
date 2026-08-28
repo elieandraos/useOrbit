@@ -53,3 +53,20 @@ test('an unrecognized column falls back to the default', function () {
 
     expect($carriers->pluck('id')->all())->toBe([$alpha->id, $bravo->id]);
 });
+
+test('ties on every sortable column are broken by a stable primary key order', function (?string $column) {
+    /** @var Carrier $first */
+    $first = Carrier::factory()->create(['name' => 'Assurance Nationale']);
+    /** @var Carrier $second */
+    $second = Carrier::factory()->create(['name' => 'Assurance Nationale']);
+    /** @var Carrier $third */
+    $third = Carrier::factory()->create(['name' => 'Assurance Nationale']);
+
+    /** @noinspection PhpUndefinedMethodInspection */
+    $carriers = Carrier::query()->withoutGlobalScope(CurrentOrganizationScope::class)->sort(new CarrierSort($column, 'asc'))->get();
+
+    expect($carriers->pluck('id')->all())->toBe([$first->id, $second->id, $third->id]);
+})->with([
+    'name' => 'name',
+    'default' => null,
+]);

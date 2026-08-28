@@ -5,5 +5,7 @@ defineOptions({ layout: DesignFoundationLayout });
 </script>
 
 <template>
-    <div class="flex items-center justify-center h-64 text-tertiary text-sm">Select a component from the sidebar.</div>
+    <div class="flex h-64 items-center justify-center text-sm text-tertiary">
+        Select a component from the sidebar.
+    </div>
 </template>

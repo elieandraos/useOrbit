@@ -5,7 +5,8 @@ import AppLogoIcon from '@/components/shell/AppLogoIcon.vue';
 <template>
     <div class="flex items-center gap-[9px]">
         <AppLogoIcon />
-        <span class="text-[14.5px] font-semibold tracking-[-0.01em] text-primary"
+        <span
+            class="text-[14.5px] font-semibold tracking-[-0.01em] text-primary"
             >useOrbit</span
         >
     </div>

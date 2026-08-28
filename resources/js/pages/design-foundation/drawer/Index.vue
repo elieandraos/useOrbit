@@ -21,7 +21,9 @@ const sections = [
     { id: 'content-only', label: 'Content-only drawer' },
 ];
 
-const views = ref<Record<string, ViewMode>>(Object.fromEntries(sections.map((s) => [s.id, 'preview'])));
+const views = ref<Record<string, ViewMode>>(
+    Object.fromEntries(sections.map((s) => [s.id, 'preview'])),
+);
 
 const codeSnippets: Record<string, string> = {
     filters: filtersCode,
@@ -33,7 +35,10 @@ const highlighted = ref<Record<string, string>>({});
 onMounted(async () => {
     const entries = await Promise.all(
         Object.entries(codeSnippets).map(async ([id, code]) => {
-            const html = await codeToHtml(code, { lang: 'vue', theme: 'github-dark' });
+            const html = await codeToHtml(code, {
+                lang: 'vue',
+                theme: 'github-dark',
+            });
 
             return [id, html] as [string, string];
         }),
@@ -62,22 +67,41 @@ const contentOpen = ref(false);
     <h1 class="mb-10 text-2xl font-semibold">Drawer</h1>
 
     <div class="flex flex-col gap-10">
-        <div v-for="section in sections" :id="section.id" :key="section.id" class="flex flex-col gap-3">
+        <div
+            v-for="section in sections"
+            :id="section.id"
+            :key="section.id"
+            class="flex flex-col gap-3"
+        >
             <!-- Section header -->
             <div class="flex items-center justify-between">
-                <p class="text-xs font-mono text-tertiary uppercase tracking-widest">{{ section.label }}</p>
+                <p
+                    class="font-mono text-xs tracking-widest text-tertiary uppercase"
+                >
+                    {{ section.label }}
+                </p>
 
-                <div class="flex items-center gap-0.5 rounded-md border border-border p-0.5 text-xs">
+                <div
+                    class="flex items-center gap-0.5 rounded-md border border-border p-0.5 text-xs"
+                >
                     <button
-                        class="px-2.5 py-1 rounded transition-colors"
-                        :class="views[section.id] === 'preview' ? 'bg-surface text-primary' : 'text-tertiary hover:text-secondary'"
+                        class="rounded px-2.5 py-1 transition-colors"
+                        :class="
+                            views[section.id] === 'preview'
+                                ? 'bg-surface text-primary'
+                                : 'text-tertiary hover:text-secondary'
+                        "
                         @click="views[section.id] = 'preview'"
                     >
                         Preview
                     </button>
                     <button
-                        class="px-2.5 py-1 rounded transition-colors"
-                        :class="views[section.id] === 'code' ? 'bg-surface text-primary' : 'text-tertiary hover:text-secondary'"
+                        class="rounded px-2.5 py-1 transition-colors"
+                        :class="
+                            views[section.id] === 'code'
+                                ? 'bg-surface text-primary'
+                                : 'text-tertiary hover:text-secondary'
+                        "
                         @click="views[section.id] = 'code'"
                     >
                         Code
@@ -88,28 +112,50 @@ const contentOpen = ref(false);
             <!-- Preview panel -->
             <div
                 v-if="views[section.id] === 'preview'"
-                class="relative rounded-lg border border-border p-6 h-[300px] flex items-center justify-center overflow-hidden"
+                class="relative flex h-[300px] items-center justify-center overflow-hidden rounded-lg border border-border p-6"
                 style="background: #f8f8f8"
             >
                 <!-- Filters drawer -->
                 <div v-if="section.id === 'filters'">
                     <Button @click="filtersOpen = true">Filters</Button>
 
-                    <Drawer v-model:open="filtersOpen" title="Filters" description="Refine the client list">
+                    <Drawer
+                        v-model:open="filtersOpen"
+                        title="Filters"
+                        description="Refine the client list"
+                    >
                         <div class="flex flex-col gap-5">
                             <div class="flex flex-col gap-2">
                                 <Label for="df-drawer-search">Search</Label>
-                                <Input id="df-drawer-search" v-model="search" placeholder="Name, phone, or email" />
+                                <Input
+                                    id="df-drawer-search"
+                                    v-model="search"
+                                    placeholder="Name, phone, or email"
+                                />
                             </div>
 
                             <div class="flex flex-col gap-2">
                                 <Label>Gender</Label>
-                                <RadioChips v-model="gender" :options="['Any', 'Female', 'Male', 'Non-binary']" />
+                                <RadioChips
+                                    v-model="gender"
+                                    :options="[
+                                        'Any',
+                                        'Female',
+                                        'Male',
+                                        'Non-binary',
+                                    ]"
+                                />
                             </div>
 
                             <div class="flex flex-col gap-2">
-                                <Label for="df-drawer-source">Lead source</Label>
-                                <Select id="df-drawer-source" v-model="source" placeholder="Any source">
+                                <Label for="df-drawer-source"
+                                    >Lead source</Label
+                                >
+                                <Select
+                                    id="df-drawer-source"
+                                    v-model="source"
+                                    placeholder="Any source"
+                                >
                                     <option value="referral">Referral</option>
                                     <option value="website">Website</option>
                                     <option value="partner">Partner</option>
@@ -118,25 +164,37 @@ const contentOpen = ref(false);
                         </div>
 
                         <template #footer>
-                            <Button variant="ghost" @click="clearFilters">Clear filters</Button>
+                            <Button variant="ghost" @click="clearFilters"
+                                >Clear filters</Button
+                            >
                             <div class="flex-1" />
-                            <Button @click="filtersOpen = false">Apply filters</Button>
+                            <Button @click="filtersOpen = false"
+                                >Apply filters</Button
+                            >
                         </template>
                     </Drawer>
                 </div>
 
                 <!-- Content-only drawer -->
                 <div v-else-if="section.id === 'content-only'">
-                    <Button variant="secondary" @click="contentOpen = true">Open panel</Button>
+                    <Button variant="secondary" @click="contentOpen = true"
+                        >Open panel</Button
+                    >
 
                     <Drawer v-model:open="contentOpen">
                         <p class="text-sm leading-relaxed text-secondary">
-                            This drawer has no title or description — the header row still shows the close button, but the title
-                            block is omitted entirely. Useful for previews or any panel where the content speaks for itself.
+                            This drawer has no title or description — the header
+                            row still shows the close button, but the title
+                            block is omitted entirely. Useful for previews or
+                            any panel where the content speaks for itself.
                         </p>
 
                         <template #footer>
-                            <Button variant="secondary" @click="contentOpen = false">Close</Button>
+                            <Button
+                                variant="secondary"
+                                @click="contentOpen = false"
+                                >Close</Button
+                            >
                         </template>
                     </Drawer>
                 </div>
@@ -145,7 +203,7 @@ const contentOpen = ref(false);
             <!-- Code panel -->
             <div
                 v-else
-                class="rounded-lg overflow-hidden border border-border text-sm h-[300px] overflow-y-auto [&>pre]:!m-0 [&>pre]:min-h-full [&>pre]:p-5 [&>pre]:leading-relaxed"
+                class="h-[300px] overflow-hidden overflow-y-auto rounded-lg border border-border text-sm [&>pre]:!m-0 [&>pre]:min-h-full [&>pre]:p-5 [&>pre]:leading-relaxed"
                 v-html="highlighted[section.id] ?? ''"
             />
         </div>
