@@ -49,5 +49,6 @@ function clear() {
       <div class="flex-1" />
       <Button @click="open = false">Apply filters</Button>
     </template>
+
   </Drawer>
 </template>

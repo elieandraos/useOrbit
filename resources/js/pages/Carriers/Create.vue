@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import PageHeader from '@/components/shell/PageHeader.vue';
-import { index as carriersIndex, store as carriersStore } from '@/routes/carriers';
+import {
+    index as carriersIndex,
+    store as carriersStore,
+} from '@/routes/carriers';
 import CarrierForm from './partials/CarrierForm.vue';
 
 defineProps<{

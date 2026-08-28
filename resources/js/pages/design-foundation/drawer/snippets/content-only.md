@@ -19,5 +19,6 @@ const open = ref(false);
     <template #footer>
       <Button variant="secondary" @click="open = false">Close</Button>
     </template>
+
   </Drawer>
 </template>

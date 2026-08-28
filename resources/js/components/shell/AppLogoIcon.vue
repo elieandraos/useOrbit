@@ -16,6 +16,6 @@ const props = defineProps<{
             )
         "
     >
-        <span class="text-sm font-bold leading-none tracking-tight">O</span>
+        <span class="text-sm leading-none font-bold tracking-tight">O</span>
     </div>
 </template>
