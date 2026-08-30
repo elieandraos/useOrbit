@@ -1,327 +1,702 @@
-# Composer & JavaScript Dependency Upgrade
+# Corrected audit — useOrbit `tests/` (reconciliation pass)
 
-> This section is the source of truth for the subsequent `my-feature-planning` pass. It captures
-> decisions, not a frozen snapshot — exact versions and file line numbers should be re-verified
-> against the codebase when individual issues are actually built, since the lockfiles will have
-> moved on by then. Issue decomposition belongs to `my-feature-planning`; commit boundaries and
-> sequencing belong to `my-git-workflow`. Neither is decided here.
+Read-only throughout: zero `Write`/`Edit`/`NotebookEdit` calls this session. `testing-best-practices` (Boost) is now loaded alongside `my-laravel-stack`, per the companion requirement. `my-laravel-patterns` was never opened.
 
-## Context / Problem
+**Baselines confirmed:**
 
-useOrbit's Composer and npm dependencies have drifted from latest. Most direct dependencies only
-need in-range minor/patch bumps, but several majors are available across both ecosystems, and the
-CI verification model that's supposed to catch regressions from any of this has gaps of its own.
-This initiative scopes and sequences the dependency upgrade *and* the verification-gate correction
-needed to trust it — investigated via `composer outdated`/`npm outdated`, registry
-peer-dependency queries, targeted breaking-change research, and a direct read of the two GitHub
-Actions workflows, using the
-[hodstack deps-upgrade methodology](https://github.com/hodstack/hodstack/blob/0.x/skills/skills/deps-upgrade/SKILL.md)
-as an execution reference (baseline test → batch minor/patch → investigate each major individually
-→ manifest alignment → report).
-
-## Current State
-
-- **Composer**: `composer.json` requires `php: ^8.4`, `laravel/framework: ^13.7` (installed
-  `v13.25.0`), and `maatwebsite/excel: ^3.1` (installed `v3.1.69`) among other direct deps. No
-  installed package is abandoned.
-- **npm is the actual package manager**: `package-lock.json` is the committed, canonical lockfile;
-  both CI workflows invoke `npm`; `.npmrc` carries an npm-specific setting (below). `package.json`
-  has no `packageManager` field. `pnpm-workspace.yaml` exists at the repo root but there is no
-  `pnpm-lock.yaml`, nothing in either CI workflow or `composer.json` invokes `pnpm`, and it is
-  unreferenced anywhere else in the repo — it is stale, inherited unchanged from the original
-  starter-kit scaffold, not evidence of an intended package manager.
-- **`.npmrc`** sets `ignore-scripts=true` — this disables npm lifecycle scripts (`preinstall`,
-  `install`, `postinstall`, `prepare`, etc.) for every package during install, a supply-chain-attack
-  mitigation against malicious install scripts. It does not affect the platform-conditional
-  `optionalDependencies` (`@rollup/rollup-*`, `@tailwindcss/oxide-*`, `lightningcss-*`) since those
-  resolve via npm's own platform-matching, not via install scripts. This setting must be preserved
-  exactly as-is by any CI correction.
-- **`.github/dependabot.yml`** exists but only configures `package-ecosystem: "github-actions"`.
-  There is no `npm` or `composer` ecosystem entry — automated dependency-update PRs are not
-  currently configured for either manifest this initiative is upgrading.
-- **CI verification, as it actually runs today** (corrects the prior version of this plan, which
-  claimed the existing scripts already covered this — they don't):
-  - `.github/workflows/lint.yml` (internal workflow name `linter`, not to be confused with the
-    filename) installs with `npm install` (resolves against `package.json` ranges, not guaranteed
-    to reproduce `package-lock.json` exactly), then runs `composer lint` (`pint --parallel`,
-    **mutating** — writes style fixes) and `npm run format` (`prettier --write`, **mutating**) and
-    `npm run lint` (`eslint . --fix`, **mutating**) — all three *fix* rather than *check*, and
-    nothing after them asserts the resulting diff is clean. A branch with unformatted or
-    unlinted code as committed can still pass this workflow, because the workflow silently fixes it
-    in the ephemeral runner and exits 0.
-  - `.github/workflows/tests.yml` installs with `npm i` (same non-reproducible-install issue as
-    `npm install`), builds assets, then runs `./vendor/bin/pest` directly. It never runs
-    `npm run types:check` (`vue-tsc --noEmit`), `npm run lint:check`, or `npm run format:check`.
-  - **No workflow currently invokes `composer.json`'s own `ci:check` script**
-    (`npm run lint:check && npm run format:check && npm run types:check && @test`), even though
-    that script already encodes exactly the non-mutating, complete verification surface this
-    project wants. CI and the repo's own scripts have drifted apart.
-  - Net effect: **`vue-tsc` type-checking currently never runs in CI at all**, and neither ESLint
-    nor Prettier nor Pint actually gate a PR — they only ever self-correct a checkout that's already
-    thrown away.
-- **Pre-upgrade baseline**: not established in this investigation. No full `composer test` /
-  `php artisan test` run, and no `npm run types:check` run, was actually observed passing against
-  the current `main` before any dependency change is proposed. This must not be assumed green.
-- **FromQuery ordering invariant** (Laravel-Excel v4 requires exports built on `FromQuery` to have
-  deterministic ordering, since the export walks the query via `Builder::chunk()`/`LIMIT`/`OFFSET`
-  pagination — see `Maatwebsite\Excel\Concerns\FromQuery::query()`'s docblock): correcting the
-  prior version of this plan, which never checked this — **the invariant is already satisfied in
-  current code**. `app/Sorts/Sort.php:20-24`'s `apply()` method centrally appends
-  `->orderBy($sorted->getModel()->getKeyName())` after resolving *any* sort (a named column method
-  or the `default()` fallback), and `app/Models/Concerns/Sortable.php`'s `#[Scope] sort()` wires
-  `Sort::apply()` into every `->sort()` call — including the three Export classes'
-  `query()` methods (`app/Exports/{Clients,Agents,Carriers}Export.php`). None of `AgentSort`,
-  `CarrierSort`, or `ClientSort` need a code change; the primary-key tie-breaker is already
-  guaranteed for all of them. What's actually missing is **proof**: no test in
-  `tests/Unit/Sorts/{Agent,Carrier,Client}SortTest.php` constructs rows that are genuinely tied on
-  every sortable column to confirm the resolved order stays stable via the primary key — existing
-  tests distinguish fixtures by the sorted column itself, so they'd pass even if the tie-breaker
-  were silently removed.
-- **Excel export coverage** (`app/Exports/{Clients,Agents,Carriers}Export.php`,
-  `app/Actions/{Clients,Agents,Carriers}/Export*ToExcelAction.php`,
-  `app/Http/Controllers/{Clients,Agents,Carriers}/*ExcelExportController.php`): the three export
-  classes' `headings()`/`map()` methods are covered by
-  `tests/Unit/Exports/{Clients,Agents,Carriers}ExportTest.php`. No test exercises the
-  `Excel::download()` facade call itself (the actions/controllers that invoke it).
-
-## Approved Target Architecture
-
-Everything else direct stays on its current major; only the specific bumps below change scope.
-In-range updates (patch/minor within the current constraint) are taken across the board as a
-routine batch — lower risk than a major, but still gated by the corrected CI, not assumed
-automatically safe. CI itself moves from mutating, non-reproducible installs to reproducible,
-non-mutating verification that actually runs the full `ci:check` surface, including `vue-tsc`.
-
-## Locked Decisions
-
-- **`maatwebsite/excel` 3.1.69 → 4.0.2**: upgrade is in scope. Verified compatible —
-  `illuminate/support: ^12||^13` and `php: ^8.3` requirements are already satisfied; `FromQuery`,
-  `WithHeadings`, `WithMapping` concerns and the `Excel::download()` signature are unchanged;
-  the app's three export classes already satisfy the new marker `Export` interface for free.
-  **Verification is split, per explicit user direction**: the earlier decision to skip new
-  automated coverage covered only the `Excel::download()` facade call path (manual verification of
-  the three export downloads before this lands) — it did **not** decline coverage of the
-  query-ordering invariant. A targeted test proving the tie-breaker holds under genuinely tied rows
-  is in scope (see Tests / Behavioral Impact); no application-code change is needed since the
-  invariant is already correctly implemented.
-- **TypeScript 5.9.3 → 6.0.3 + vue-tsc 2.2.12 → 3.3.11**: both in scope, bumped together.
-  TypeScript 7.x is explicitly **not** in scope — `typescript-eslint`'s peer range is
-  `>=4.8.4 <6.1.0`, so 7.x has no supported path yet. `tsconfig.json` was already checked against
-  TS 6.0's removed/deprecated surface (ES5 target, `amd`/`umd`/`systemjs` modules, `baseUrl`,
-  `moduleResolution: node`, `outFile`) — none are in use, so no tsconfig edit is expected, but
-  `vue-tsc --noEmit` must be re-run clean as verification, not assumed — and per the CI correction
-  below, this must run somewhere CI actually enforces it.
-- **`@types/node` stays on `^22`**: take the in-range `22.19.20 → 22.20.1` patch bump only. The
-  major (`26.4.0`) is explicitly declined — CI (`tests.yml`) and local dev both run Node 22, and
-  types ahead of the runtime invite phantom type errors for APIs that don't exist yet at runtime.
-- **`@eslint/js` removal is locked, not open**: it is a devDependency with zero references anywhere
-  in `eslint.config.js` or elsewhere in the repo (confirmed by grep). It is removed outright as
-  part of this initiative rather than retained against a hypothetical future flat-config need.
-- **`pnpm-workspace.yaml` removal is locked**: no `pnpm-lock.yaml` exists, nothing invokes `pnpm`
-  anywhere in the repo (CI, `composer.json`, `package.json`), and npm is the package manager
-  actually used everywhere else (canonical `package-lock.json`, `.npmrc`, both workflows). It is
-  removed as stale scaffold leftover.
-- **CI verification model must be corrected to reproducible installs and non-mutating validation**:
-  - Replace `npm install` (`lint.yml`) and `npm i` (`tests.yml`) with `npm ci`, which installs
-    strictly from the committed `package-lock.json` and fails if the manifest and lockfile have
-    drifted, instead of silently re-resolving.
-  - Replace the mutating `composer lint` (`pint --parallel`), `npm run format`
-    (`prettier --write`), and `npm run lint` (`eslint . --fix`) steps in `lint.yml` with their
-    non-mutating equivalents — `composer lint:check` (`pint --parallel --test`),
-    `npm run format:check`, `npm run lint:check` — or, equivalently and with less drift risk,
-    invoke the repo's own `composer run ci:check` script directly, since it already composes
-    `lint:check`, `format:check`, `types:check`, and the full Pest run in one non-mutating pass.
-  - Wire `npm run types:check` (`vue-tsc --noEmit`) into CI — it currently runs nowhere. This is
-    the direct enforcement gap for the TypeScript/vue-tsc major bump above: without it, a
-    type-check regression from that bump would ship unnoticed.
-  - `.npmrc`'s `ignore-scripts=true` must be preserved untouched by this correction — neither
-    `npm ci` nor any other change here requires or implies removing it.
-  - This is a workflow-file change, not a dependency-version change — it belongs in this
-    initiative's scope because the dependency bumps above (especially TypeScript/vue-tsc and the
-    eslint major) are only verified if CI actually runs the checks that exercise them.
-- **A green pre-upgrade baseline is a mandatory gate, not an assumed fact**: before any manifest or
-  lockfile is touched, the full existing verification surface (`composer run ci:check`, i.e.
-  Pint check + ESLint check + Prettier check + `vue-tsc --noEmit` + the full Pest suite) must
-  actually be run and observed passing against current `main`. This plan does not claim that
-  baseline already passes — it wasn't run as part of this investigation. If it fails, that failure
-  must be resolved (or explicitly scoped as pre-existing and out of this initiative) before any
-  upgrade tranche begins, per the hodstack methodology's own rule: no regression can be demonstrated
-  against a baseline that wasn't already green.
-- **npm/Composer Dependabot automation is explicitly out of scope for this initiative** — it is
-  separate, follow-on work, not silently omitted. This initiative is a one-time version-currency
-  catch-up plus a CI-correctness fix; configuring `package-ecosystem: npm` and
-  `package-ecosystem: composer` entries in `.github/dependabot.yml` for ongoing automated updates
-  is a distinct decision (update cadence, grouping, auto-merge policy) that hasn't been made and
-  isn't implied by anything decided here.
-
-## Preserved Behavior / Existing Pieces
-
-- Laravel framework stays on major `13` (no v14 exists yet); PHP requirement stays `^8.4`.
-- Vue stays on `3.5.x` (`3.5.35 → 3.5.42` patch only), Tailwind stays on `4.x`
-  (`4.3.0 → 4.3.3` patch only), Inertia stays on `3.x` (`3.3.1 → 3.7.0` minor only) — none of
-  these have a major available.
-- `.npmrc`'s `ignore-scripts=true` is preserved exactly as-is (see Locked Decisions).
-- The existing `ci:check` / `test` Composer scripts are preserved as the definition of "what CI
-  should check" — the correction here is making CI actually call them, not replacing them.
-
-## Changes
-
-**Composer — in-range (lower risk, still gated by the corrected CI, not assumed automatically
-safe):**
-`laravel/boost 2.5.3→2.7.0`, `laravel/fortify 1.38.0→1.39.0`,
-`laravel/framework 13.25.0→13.29.0`, `laravel/sail 1.66.0→1.67.0`,
-`mockery/mockery 1.6.12→1.6.15`, `pestphp/pest 5.1.0→5.1.3`.
-
-**Composer — major (investigated above):**
-`maatwebsite/excel 3.1.69→4.0.2` (transitively bumps `phpoffice/phpspreadsheet ^1.30→^5.8`; the
-app only references `PhpOffice\PhpSpreadsheet\Exception`/`Writer\Exception` for typing in
-`app/Actions/*/Export*ToExcelAction.php` and `app/Http/Controllers/*/​*ExcelExportController.php`,
-which are stable across that bump). Query-ordering invariant already satisfied — see Locked
-Decisions.
-
-**npm — in-range (lower risk, still gated by the corrected CI, not assumed automatically safe):**
-`@inertiajs/vite 3.3.1→3.7.0`, `@inertiajs/vue3 3.3.1→3.7.0`, `@lucide/vue 1.17.0→1.34.0`,
-`@tailwindcss/vite 4.3.0→4.3.3`, `@types/node 22.19.20→22.20.1`, `@vitejs/plugin-vue 6.0.7→6.0.8`,
-`@vue/eslint-config-typescript 14.8.0→14.9.0` (also required for the eslint major below),
-`laravel-vite-plugin 3.1.0→3.2.0`, `prettier 3.8.3→3.9.6`, `pusher-js 8.5.0→8.6.0`,
-`shiki 4.2.0→4.4.3`, `tailwindcss 4.3.0→4.3.3`, `typescript-eslint 8.60.1→8.68.0`,
-`vite 8.0.16→8.2.2`, `vue 3.5.35→3.5.42`.
-
-**npm — majors (investigated above, coordinated where noted):**
-- `eslint 9.39.4→10.9.1` + `eslint-plugin-vue 9.33.0→10.10.0` — **must move together**;
-  `eslint-plugin-vue@9`'s peer range excludes eslint 10, and `@vue/eslint-config-typescript` only
-  gained eslint-10 support at `14.9.0`.
-- `typescript 5.9.3→6.0.3` + `vue-tsc 2.2.12→3.3.11` (locked decision above).
-- `@vueuse/core 12.8.2→14.4.0` — only `useVModel` is consumed (5 files); confirmed unchanged
-  across the v13 and v14 release notes.
-- `concurrently 9.2.1→10.0.5` — requires Node ≥22 (already satisfied); `--kill-others` (used in
-  `composer.json`'s `dev` script) is unaffected, only the underlying `killOthers` API option is
-  deprecated in favor of `killOthersOn`.
-
-**Cleanup (locked, not version currency):**
-- Remove `@eslint/js` devDependency (unreferenced).
-- Remove `pnpm-workspace.yaml` (stale, no pnpm lockfile or usage anywhere).
-
-**CI workflow correction (locked, mechanism partly open — see below):**
-`.github/workflows/lint.yml` and `.github/workflows/tests.yml` move to `npm ci` and non-mutating
-validation, with `vue-tsc` wired in where it currently never runs. See Locked Decisions for the
-specific required change and Open Implementation Decisions for the remaining mechanism choice.
-
-## Invariants / Boundaries
-
-- Every upgrade tranche (batch, then each major) must pass the corrected, actually-enforced CI
-  gate — reproducible install + non-mutating lint/format/type/test checks — before the next
-  tranche begins. This gate does not exist in its required form today; making it exist is part of
-  this initiative (see Locked Decisions).
-- `.npmrc`'s `ignore-scripts=true` must not be weakened or removed by the CI correction.
-- CI runs on `ubuntu-latest`; the `@rollup/rollup-linux-x64-gnu` pin is the one cleanup item that
-  actually executes in CI (not just locally on macOS) — whichever resolution is chosen (see Open
-  Implementation Decisions) must be verified there, not just via a local install.
-- `Sort::apply()`'s primary-key tie-breaker (`app/Sorts/Sort.php:20-24`) must keep running for every
-  `->sort()` call; nothing in this initiative touches it, but the new ordering-invariant test
-  exists specifically to guard it going forward.
-- A red pre-upgrade baseline blocks the start of any upgrade tranche (see Locked Decisions) —
-  this is a gate, not a formality.
-
-## Open Implementation Decisions
-
-- **CI correction mechanism**: swap the individual mutating commands for their non-mutating
-  equivalents inline in each workflow step, or replace those steps with a single
-  `composer run ci:check` invocation (which already bundles all of them, including `types:check`).
-  Both satisfy the locked requirement (reproducible install + non-mutating validation +
-  `vue-tsc` actually running); the choice doesn't change what CI guarantees, only how the YAML
-  expresses it. Left for implementation, verified by a green CI run either way.
-- **`@rollup/rollup-linux-x64-gnu` / `@rollup/rollup-win32-x64-msvc` pins**: realign the exact
-  `4.9.5` pins to a version matching what Vite 8's bundled Rollup actually needs, or remove them
-  from `optionalDependencies` entirely and let npm's platform-optional-dependency resolution
-  handle it unpinned. This stays open **only** on the condition that whichever option is chosen is
-  verified under `npm ci`, `npm run build`, and a green `ubuntu-latest` CI run — not assumed safe
-  from a local macOS install, since these packages don't even resolve on macOS.
-- **Upgrade sequencing and commit boundaries**: not decided here. Issue decomposition for this
-  initiative is `my-feature-planning`'s job; how the resulting work is actually sequenced into
-  commits is `my-git-workflow`'s job. This plan states what must end up true, not the order of
-  edits that gets there.
-
-## Tests / Behavioral Impact
-
-- **Pre-upgrade baseline must be run and observed green first** (Locked Decisions) — this is a
-  precondition for everything below, not an assumption.
-- Existing Pest suite (156 files) must stay green through every tranche.
-- **New, targeted test for the FromQuery ordering invariant**: construct rows tied on every column
-  a given `Sort` class's named methods and `default()` can sort by, and assert the resolved order
-  is stable via the primary key — for `ClientSort`, `AgentSort`, and `CarrierSort`. This proves the
-  Laravel-Excel v4 `FromQuery` requirement holds, without requiring a code change, since
-  `Sort::apply()` already implements it.
-- `maatwebsite/excel` v4: `tests/Unit/Exports/{Clients,Agents,Carriers}ExportTest.php` must pass
-  unmodified (they exercise `headings()`/`map()`, the concerns most exposed to the major bump).
-  The `Excel::download()` call path itself has **no automated coverage** by locked decision above —
-  manually exercise all three export downloads before this lands.
-- TypeScript 6.0 / vue-tsc 3.x: `npm run types:check` (`vue-tsc --noEmit`) must pass clean, and —
-  per the CI correction — must actually run in CI going forward, not just locally.
-- eslint 10 / eslint-plugin-vue 10: `npm run lint:check` must pass clean; watch for any flat-config
-  rule renames surfaced only at run time (registry peer-dependency checks didn't surface rule-level
-  breaking changes, but weren't exhaustive of every rule).
-- CI correction itself is validated by a green run of both corrected workflows on a real PR/push
-  to `ubuntu-latest`, not just a local `composer run ci:check` pass.
-
-## Before → After
-
-| Package | Current | Target | Type |
-|---|---|---|---|
-| maatwebsite/excel | 3.1.69 | 4.0.2 | major |
-| laravel/boost | 2.5.3 | 2.7.0 | minor |
-| laravel/fortify | 1.38.0 | 1.39.0 | minor |
-| laravel/framework | 13.25.0 | 13.29.0 | minor |
-| laravel/sail | 1.66.0 | 1.67.0 | minor |
-| mockery/mockery | 1.6.12 | 1.6.15 | patch |
-| pestphp/pest | 5.1.0 | 5.1.3 | patch |
-| eslint | 9.39.4 | 10.9.1 | major |
-| eslint-plugin-vue | 9.33.0 | 10.10.0 | major |
-| @vue/eslint-config-typescript | 14.8.0 | 14.9.0 | minor (required for eslint 10) |
-| typescript | 5.9.3 | 6.0.3 | major (7.x deferred — see Locked Decisions) |
-| vue-tsc | 2.2.12 | 3.3.11 | major |
-| @vueuse/core | 12.8.2 | 14.4.0 | major |
-| concurrently | 9.2.1 | 10.0.5 | major |
-| @types/node | 22.19.20 | 22.20.1 | patch (26.x major declined) |
-| @inertiajs/vite, @inertiajs/vue3 | 3.3.1 | 3.7.0 | minor |
-| vite | 8.0.16 | 8.2.2 | minor |
-| vue | 3.5.35 | 3.5.42 | patch |
-| tailwindcss, @tailwindcss/vite | 4.3.0 | 4.3.3 | patch |
-| (+ remaining npm batch listed in Changes) | — | — | minor/patch |
-| @rollup/rollup-linux-x64-gnu/win32-msvc | 4.9.5 (stale pin) | realigned or removed | open, dual-path verification |
-| @eslint/js | 9.39.4 (unused) | removed | locked cleanup |
-| pnpm-workspace.yaml | present (stale) | removed | locked cleanup |
-
-**CI workflow corrections (not a package, tracked separately):**
-
-| Workflow | Current | Target |
+| | Expected | Actual |
 |---|---|---|
-| `.github/workflows/lint.yml` | `npm install`; mutating `pint --parallel`, `prettier --write`, `eslint --fix` with no diff check | `npm ci`; non-mutating `pint --test`, `prettier --check`, `eslint` (or a single `composer run ci:check`) |
-| `.github/workflows/tests.yml` | `npm i`; never runs `types:check`/`lint:check`/`format:check` | `npm ci`; `vue-tsc --noEmit` wired in (directly or via `composer run ci:check`) |
+| `useOrbit@main` | `68241fda696def6e9ca5723cb981533465c643ec` | ✅ match |
+| `agentic-engineering@main` | `b361f50eb53cef40fd4064fca9e2a6c418dc1dc7` | ✅ match |
+| `my-laravel-stack` provenance | `b361f50eb53cef40fd4064fca9e2a6c418dc1dc7` | ✅ match (`UPSTREAM_PROVENANCE.md`) |
 
-## Source References
+Working-tree state, untouched by me: `useOrbit` has one pre-existing unstaged diff — `plan.md` — which already contains the verbatim, uncorrected text of my first audit pass (wrong "31 files" count, the `Pest.php` contradiction). I made no edits to it; it will need a manual rewrite once this corrected proposal is reviewed. `agentic-engineering` has one pre-existing untracked `.idea/` directory (IDE noise). Neither relates to `tests/`.
 
-- `composer.json`, `composer.lock`, `package.json`, `package-lock.json` — manifests.
-- `.npmrc` — `ignore-scripts=true`, preserved invariant.
-- `pnpm-workspace.yaml` — stale, locked for removal; no corresponding `pnpm-lock.yaml` exists.
-- `.github/dependabot.yml` — `github-actions` ecosystem only; npm/composer ecosystems out of scope.
-- `eslint.config.js` — flat config built via `defineConfigWithVueTs`, `vueTsConfigs.recommended`;
-  confirms `@eslint/js` is unreferenced.
-- `tsconfig.json:14,32,34,35,68` — target/module/moduleResolution/baseUrl/outFile settings audited
-  against TS 6.0's removed/deprecated surface.
-- `.github/workflows/lint.yml`, `.github/workflows/tests.yml` — actual CI steps, read directly
-  (not assumed from `composer.json`'s scripts).
-- `app/Sorts/Sort.php:20-24` — the existing primary-key tie-breaker, applied to every sort.
-- `app/Models/Concerns/Sortable.php` — wires `Sort::apply()` into the `->sort()` scope used by all
-  three Export `query()` methods.
-- `app/Sorts/{Agent,Carrier,Client}Sort.php`,
-  `tests/Unit/Sorts/{Agent,Carrier,Client}SortTest.php` — no code change needed; test coverage gap
-  for the tie-breaker under genuine ties.
-- `app/Exports/{Clients,Agents,Carriers}Export.php` — Laravel-Excel concerns usage.
-- `app/Actions/{Clients,Agents,Carriers}/Export*ToExcelAction.php`,
-  `app/Http/Controllers/{Clients,Agents,Carriers}/*ExcelExportController.php` — `Excel::download()`
-  call sites, uncovered by automated tests (manual verification only, by locked decision).
-- `tests/Unit/Exports/{Clients,Agents,Carriers}ExportTest.php` — existing coverage for the export
-  concerns.
-- `resources/js/**` (5 files) — `useVModel` usage from `@vueuse/core`, confirmed unaffected by the
-  v13/v14 bumps.
+---
+
+## 1. Corrected inventory
+
+| Metric | Your figure | Verified |
+|---|---|---|
+| Total files under `tests/` | 156 | **156** ✅ |
+| `tests/Feature/` | 77 | **77** ✅ |
+| `tests/Unit/` | 77 | **77** ✅ |
+| Root files | 2 | **2** (`Pest.php`, `TestCase.php`) ✅ |
+| `tests/Unit/Actions/` | 33 | **33** ✅ |
+| Genuinely isolated Unit tests | 3 | **3** (`Enums/NotificationReasonTest.php`, `Enums/OrganizationRoleTest.php`, `Support/Tenancy/OrganizationContextTest.php`) ✅ |
+| Unit files requiring a non-Unit disposition | 74 | **74** (77 − 3) ✅ |
+
+**Exact discrepancy in my first pass:** I under-counted `tests/Unit/Actions/` as 31 — a plain manual-enumeration miss of `CreateCarrierBranchActionTest.php` and `DeleteCarrierBranchActionTest.php`, not a different classification. Every other figure was already correct.
+
+Isolation basis for the 3 survivors, verified by direct read: `tests/TestCase.php` is a thin `Illuminate\Foundation\Testing\TestCase` subclass whose only helper (`skipUnlessFortifyHas`) is used exclusively by 3 `Feature/Http/Auth|Settings` files — never by the 3 candidates. `app/Support/Tenancy/OrganizationContext.php` is a `final class` with zero framework imports. Grepped every caller of the two container/DB-dependent global Pest helpers (`setOrganizationContext`, `createNotificationFor`): every caller is among the 74 migrating files or already in `Feature` — none among the 3 survivors.
+
+---
+
+## 2. Skill-routing evidence
+
+**`my-laravel-stack` files loaded/re-read this pass:** `SKILL.md`, `blueprints/pest-testing.md`, `rules/test-ownership.md`.
+
+**Boost `testing-best-practices` — loaded this pass:** `SKILL.md`, `rules/isolation.md`, `rules/review.md`, `rules/naming.md`, `rules/endpoint-tests.md`, `rules/test-data.md`. Not opened (not material here): `finding-features.md`, `assertions.md`, `security.md`, `performance.md`.
+
+**Which materially informed the audit:**
+- `isolation.md` line 52 recommends `LazilyRefreshDatabase` generally; `pest-testing.md` calls that "a measured future candidate... not a requirement to adopt" for this suite — I did not propose adopting it (§5).
+- `review.md` ("a duplicate shrinks at the higher layer to the one case that proves the wiring") + `endpoint-tests.md` ("assert both the response and the persisted state"; "never remove the last case") — this is the load-bearing evidence for §8's exact-minimal-assertion analysis. `test-ownership.md` says HTTP shouldn't duplicate; Boost says what floor must remain.
+- `naming.md` lines 5–6 ("Name each file `{ClassName}Test.php`... same relative path as the class under test") — the actual textual basis for the `DocumentsPruningTest.php`/`UsersPruningTest.php` finding (§6), not `test-ownership.md`.
+- `test-data.md` line 12 (`make()` only when DB isn't needed) corroborated but didn't change the Notifications classification — direct-read evidence (`::factory()->create()`) was already decisive.
+
+**`my-laravel-patterns` confirmation:** never opened this session.
+
+**Execution miss, recorded honestly:** the first pass loaded only `my-laravel-stack`'s own files and never loaded `testing-best-practices`, despite `SKILL.md` stating it is "additive only" and must load "alongside the matching Boost skill(s), never alone." That was a miss in the first pass, not prior use I'm now hiding.
+
+---
+
+## 3. Corrected `Pest.php` disposition
+
+**Current:**
+```php
+pest()->extend(TestCase::class)
+    ->use(RefreshDatabase::class)
+    ->in('Feature', 'Unit');
+```
+
+**Required change** — a config/content correction, not a file move, and only safe to apply **after** the 74-file move (§10) completes, since files still sitting in `Unit` mid-migration would otherwise lose `TestCase`/`RefreshDatabase`:
+
+```php
+pest()->extend(TestCase::class)
+    ->use(RefreshDatabase::class)
+    ->in('Feature');
+```
+
+Dropping `'Unit'` from the chain entirely (not adding a second `->in('Unit')` without `RefreshDatabase`) is the exact fix: `Illuminate\Foundation\Testing\TestCase` boots the full application in `setUp()` regardless of `RefreshDatabase`, so binding `TestCase::class` to `Unit` at all still violates `pest-testing.md`'s "no Laravel application boot" for genuinely isolated tests. The 3 survivors need nothing from the container, so they fall back cleanly to Pest's bare `PHPUnit\Framework\TestCase`.
+
+**Consequences checked:** `pest()->tia()->always()->locally()` is orthogonal — no change. Both global helpers (`setOrganizationContext()`, `createNotificationFor()`) are called only by files that end up in `Feature` after the move (verified by grep — zero callers among the 3 survivors). No unrelated cleanup proposed (`something()`, the `toBeOne` expectation extension are untouched — no evidence they're affected).
+
+---
+
+## 4. Literal 156-file disposition ledger
+
+Legend: **stay** / **move** / **move+rename** / **merge+delete** / **config**. Finding IDs defined in §4a.
+
+### `tests/` root (2)
+| Current | Target | Disposition | Finding |
+|---|---|---|---|
+| `tests/Pest.php` | `tests/Pest.php` | config | F14 |
+| `tests/TestCase.php` | `tests/TestCase.php` | stay | — |
+
+### `tests/Unit/Actions/**` (33) — all **move**, identical subpath under `Feature/Actions/`
+| Current | Target |
+|---|---|
+| `tests/Unit/Actions/Agents/CreateAgentActionTest.php` | `tests/Feature/Actions/Agents/CreateAgentActionTest.php` |
+| `tests/Unit/Actions/Agents/DestroyAgentActionTest.php` | `tests/Feature/Actions/Agents/DestroyAgentActionTest.php` |
+| `tests/Unit/Actions/Agents/UpdateAgentActionTest.php` | `tests/Feature/Actions/Agents/UpdateAgentActionTest.php` |
+| `tests/Unit/Actions/Carriers/CreateCarrierActionTest.php` | `tests/Feature/Actions/Carriers/CreateCarrierActionTest.php` |
+| `tests/Unit/Actions/Carriers/CreateCarrierBranchActionTest.php` | `tests/Feature/Actions/Carriers/CreateCarrierBranchActionTest.php` |
+| `tests/Unit/Actions/Carriers/DeleteCarrierBranchActionTest.php` | `tests/Feature/Actions/Carriers/DeleteCarrierBranchActionTest.php` |
+| `tests/Unit/Actions/Carriers/UpdateCarrierActionTest.php` | `tests/Feature/Actions/Carriers/UpdateCarrierActionTest.php` |
+| `tests/Unit/Actions/Carriers/UpdateCarrierBranchActionTest.php` | `tests/Feature/Actions/Carriers/UpdateCarrierBranchActionTest.php` |
+| `tests/Unit/Actions/Clients/CreateClientActionTest.php` | `tests/Feature/Actions/Clients/CreateClientActionTest.php` |
+| `tests/Unit/Actions/Clients/UpdateClientActionTest.php` | `tests/Feature/Actions/Clients/UpdateClientActionTest.php` |
+| `tests/Unit/Actions/Documents/CountDocumentsUploadBatchOutcomeActionTest.php` | `tests/Feature/Actions/Documents/CountDocumentsUploadBatchOutcomeActionTest.php` |
+| `tests/Unit/Actions/Documents/DeleteDocumentActionTest.php` | `tests/Feature/Actions/Documents/DeleteDocumentActionTest.php` |
+| `tests/Unit/Actions/Documents/FinalizeDocumentsUploadBatchActionTest.php` | `tests/Feature/Actions/Documents/FinalizeDocumentsUploadBatchActionTest.php` |
+| `tests/Unit/Actions/Documents/UploadDocumentActionTest.php` | `tests/Feature/Actions/Documents/UploadDocumentActionTest.php` |
+| `tests/Unit/Actions/Notes/CreateNoteActionTest.php` | `tests/Feature/Actions/Notes/CreateNoteActionTest.php` |
+| `tests/Unit/Actions/Notes/DeleteNoteActionTest.php` | `tests/Feature/Actions/Notes/DeleteNoteActionTest.php` |
+| `tests/Unit/Actions/Notes/UpdateNoteActionTest.php` | `tests/Feature/Actions/Notes/UpdateNoteActionTest.php` |
+| `tests/Unit/Actions/Notifications/MarkAllNotificationsAsReadActionTest.php` | `tests/Feature/Actions/Notifications/MarkAllNotificationsAsReadActionTest.php` |
+| `tests/Unit/Actions/Notifications/MarkNotificationAsReadActionTest.php` | `tests/Feature/Actions/Notifications/MarkNotificationAsReadActionTest.php` |
+| `tests/Unit/Actions/Notifications/NotifyActionTest.php` | `tests/Feature/Actions/Notifications/NotifyActionTest.php` |
+| `tests/Unit/Actions/OrganizationMembers/AcceptOrganizationInvitationActionTest.php` | `tests/Feature/Actions/OrganizationMembers/AcceptOrganizationInvitationActionTest.php` |
+| `tests/Unit/Actions/OrganizationMembers/ChangeOrganizationMemberRoleActionTest.php` | `tests/Feature/Actions/OrganizationMembers/ChangeOrganizationMemberRoleActionTest.php` |
+| `tests/Unit/Actions/OrganizationMembers/FindPendingOrganizationInvitationActionTest.php` | `tests/Feature/Actions/OrganizationMembers/FindPendingOrganizationInvitationActionTest.php` |
+| `tests/Unit/Actions/OrganizationMembers/InviteOrganizationMemberActionTest.php` | `tests/Feature/Actions/OrganizationMembers/InviteOrganizationMemberActionTest.php` |
+| `tests/Unit/Actions/OrganizationMembers/RemoveOrganizationMemberActionTest.php` | `tests/Feature/Actions/OrganizationMembers/RemoveOrganizationMemberActionTest.php` |
+| `tests/Unit/Actions/OrganizationMembers/ResetTwoFactorAuthenticationActionTest.php` | `tests/Feature/Actions/OrganizationMembers/ResetTwoFactorAuthenticationActionTest.php` |
+| `tests/Unit/Actions/OrganizationMembers/RevokeOrganizationInvitationActionTest.php` | `tests/Feature/Actions/OrganizationMembers/RevokeOrganizationInvitationActionTest.php` |
+| `tests/Unit/Actions/Organizations/ProvisionOrganizationActionTest.php` | `tests/Feature/Actions/Organizations/ProvisionOrganizationActionTest.php` |
+| `tests/Unit/Actions/Tags/AttachTagActionTest.php` | `tests/Feature/Actions/Tags/AttachTagActionTest.php` |
+| `tests/Unit/Actions/Tags/CreateTagActionTest.php` | `tests/Feature/Actions/Tags/CreateTagActionTest.php` |
+| `tests/Unit/Actions/Tags/DeleteTagActionTest.php` | `tests/Feature/Actions/Tags/DeleteTagActionTest.php` |
+| `tests/Unit/Actions/Tags/DetachTagActionTest.php` | `tests/Feature/Actions/Tags/DetachTagActionTest.php` |
+| `tests/Unit/Actions/Tags/UpdateTagActionTest.php` | `tests/Feature/Actions/Tags/UpdateTagActionTest.php` |
+
+*Rationale (all 33): each `handle()`-invoking Action test uses factories/DB/container (`app()`, `setOrganizationContext()`); per `test-ownership.md`, Action tests belong under `Feature/Actions/{Domain}/`.*
+
+### `tests/Unit/Enums/*` (2) — **stay**
+| Current | Rationale |
+|---|---|
+| `tests/Unit/Enums/NotificationReasonTest.php` | Pure backed-enum calls, no framework |
+| `tests/Unit/Enums/OrganizationRoleTest.php` | Pure backed-enum calls, no framework |
+
+### `tests/Unit/Exports/*` (3) — **move**
+| Current | Target |
+|---|---|
+| `tests/Unit/Exports/AgentsExportTest.php` | `tests/Feature/Exports/AgentsExportTest.php` |
+| `tests/Unit/Exports/CarriersExportTest.php` | `tests/Feature/Exports/CarriersExportTest.php` |
+| `tests/Unit/Exports/ClientsExportTest.php` | `tests/Feature/Exports/ClientsExportTest.php` |
+
+*Rationale: each uses `Model::factory()->create()` (Agent/Carrier/CarrierBranch/Client/Country/State).*
+
+### `tests/Unit/Filters/*` (3) — **move**
+| Current | Target |
+|---|---|
+| `tests/Unit/Filters/AgentFilterTest.php` | `tests/Feature/Filters/AgentFilterTest.php` |
+| `tests/Unit/Filters/CarrierFilterTest.php` | `tests/Feature/Filters/CarrierFilterTest.php` |
+| `tests/Unit/Filters/ClientFilterTest.php` | `tests/Feature/Filters/ClientFilterTest.php` |
+
+### `tests/Unit/Jobs/` (1) — **move**
+| Current | Target |
+|---|---|
+| `tests/Unit/Jobs/StoreDocumentJobTest.php` | `tests/Feature/Jobs/StoreDocumentJobTest.php` |
+
+*Rationale: `Storage::fake()`, `User::factory()`, `Document::factory()`, real `->handle()` against DB.*
+
+### `tests/Unit/Listeners/` (1) — **move**
+| Current | Target |
+|---|---|
+| `tests/Unit/Listeners/UpdateLastLoginTimestampTest.php` | `tests/Feature/Listeners/UpdateLastLoginTimestampTest.php` |
+
+### `tests/Unit/Models/*` (10)
+| Current | Target | Disposition | Finding |
+|---|---|---|---|
+| `tests/Unit/Models/AgentTest.php` | `tests/Feature/Models/AgentTest.php` | move | — |
+| `tests/Unit/Models/CarrierTest.php` | `tests/Feature/Models/CarrierTest.php` | move | — |
+| `tests/Unit/Models/ClientTest.php` | `tests/Feature/Models/ClientTest.php` | move | — |
+| `tests/Unit/Models/CurrentOrganizationScopeTest.php` | `tests/Feature/Models/CurrentOrganizationScopeTest.php` | move | see §6 note |
+| `tests/Unit/Models/DocumentsPruningTest.php` | `tests/Feature/Models/DocumentTest.php` | **move+rename** | F1 |
+| `tests/Unit/Models/NoteTest.php` | `tests/Feature/Models/NoteTest.php` | move | — |
+| `tests/Unit/Models/OrganizationTest.php` | `tests/Feature/Models/OrganizationTest.php` | move | — |
+| `tests/Unit/Models/TagTest.php` | `tests/Feature/Models/TagTest.php` | move | — |
+| `tests/Unit/Models/UserTest.php` | `tests/Feature/Models/UserTest.php` (absorbs content below) | move | F2 |
+| `tests/Unit/Models/UsersPruningTest.php` | *(none — content merges into `UserTest.php`)* | **merge+delete** | F2 |
+
+### `tests/Unit/Notifications/*` (9) — **move**
+| Current | Target |
+|---|---|
+| `tests/Unit/Notifications/DocumentsUploadBatchProcessedNotificationTest.php` | `tests/Feature/Notifications/DocumentsUploadBatchProcessedNotificationTest.php` |
+| `tests/Unit/Notifications/MemberJoinedNotificationTest.php` | `tests/Feature/Notifications/MemberJoinedNotificationTest.php` |
+| `tests/Unit/Notifications/MemberRemovedNotificationTest.php` | `tests/Feature/Notifications/MemberRemovedNotificationTest.php` |
+| `tests/Unit/Notifications/MemberRoleChangedNotificationTest.php` | `tests/Feature/Notifications/MemberRoleChangedNotificationTest.php` |
+| `tests/Unit/Notifications/ResourceArchivedNotificationTest.php` | `tests/Feature/Notifications/ResourceArchivedNotificationTest.php` |
+| `tests/Unit/Notifications/ResourceMessageNotificationTest.php` | `tests/Feature/Notifications/ResourceMessageNotificationTest.php` |
+| `tests/Unit/Notifications/ResourceUnarchivedNotificationTest.php` | `tests/Feature/Notifications/ResourceUnarchivedNotificationTest.php` |
+| `tests/Unit/Notifications/YourRoleChangedNotificationTest.php` | `tests/Feature/Notifications/YourRoleChangedNotificationTest.php` |
+| `tests/Unit/Notifications/YourTwoFactorAuthenticationWasResetNotificationTest.php` | `tests/Feature/Notifications/YourTwoFactorAuthenticationWasResetNotificationTest.php` |
+
+*Rationale: each builds its actor/subject with `Model::factory()->create()`, not `make()`.*
+
+### `tests/Unit/Policies/*` (9) — **move**
+| Current | Target |
+|---|---|
+| `tests/Unit/Policies/AgentPolicyTest.php` | `tests/Feature/Policies/AgentPolicyTest.php` |
+| `tests/Unit/Policies/CarrierBranchPolicyTest.php` | `tests/Feature/Policies/CarrierBranchPolicyTest.php` |
+| `tests/Unit/Policies/CarrierPolicyTest.php` | `tests/Feature/Policies/CarrierPolicyTest.php` |
+| `tests/Unit/Policies/ClientPolicyTest.php` | `tests/Feature/Policies/ClientPolicyTest.php` |
+| `tests/Unit/Policies/DocumentPolicyTest.php` | `tests/Feature/Policies/DocumentPolicyTest.php` |
+| `tests/Unit/Policies/NotePolicyTest.php` | `tests/Feature/Policies/NotePolicyTest.php` |
+| `tests/Unit/Policies/OrganizationMemberPolicyTest.php` | `tests/Feature/Policies/OrganizationMemberPolicyTest.php` |
+| `tests/Unit/Policies/OrganizationPolicyTest.php` | `tests/Feature/Policies/OrganizationPolicyTest.php` |
+| `tests/Unit/Policies/TagPolicyTest.php` | `tests/Feature/Policies/TagPolicyTest.php` |
+
+### `tests/Unit/Providers/*` (2) — **move**
+| Current | Target |
+|---|---|
+| `tests/Unit/Providers/AppServiceProviderTest.php` | `tests/Feature/Providers/AppServiceProviderTest.php` |
+| `tests/Unit/Providers/TestingServiceProviderTest.php` | `tests/Feature/Providers/TestingServiceProviderTest.php` |
+
+*Rationale: resolve `Password::default()`/`Validator` via container, `app()->instance()`.*
+
+### `tests/Unit/Sorts/*` (3) — **move**
+| Current | Target |
+|---|---|
+| `tests/Unit/Sorts/AgentSortTest.php` | `tests/Feature/Sorts/AgentSortTest.php` |
+| `tests/Unit/Sorts/CarrierSortTest.php` | `tests/Feature/Sorts/CarrierSortTest.php` |
+| `tests/Unit/Sorts/ClientSortTest.php` | `tests/Feature/Sorts/ClientSortTest.php` |
+
+### `tests/Unit/Support/Tenancy/` (1) — **stay**
+| Current | Rationale |
+|---|---|
+| `tests/Unit/Support/Tenancy/OrganizationContextTest.php` | Plain final class, no framework dependency |
+
+### `tests/Feature/Console/*` (2) — **stay**
+`ProvisionOrganizationTest.php`, `ResetOwnerTwoFactorAuthenticationTest.php` — already correct.
+
+### `tests/Feature/` root (2)
+| Current | Target | Disposition | Finding |
+|---|---|---|---|
+| `tests/Feature/ErrorPageTest.php` | unchanged | stay | — |
+| `tests/Feature/HandleInertiaRequestsTest.php` | `tests/Feature/Middlewares/HandleInertiaRequestsTest.php` | move | F13 |
+
+### `tests/Feature/Middlewares/*` (2) — **stay**
+`EnsureOrganizationContextTest.php`, `RequireTwoFactorAuthenticationTest.php` — already correct.
+
+### `tests/Feature/Http/**` (71) — **all stay** (already correctly domain-organized); content findings noted
+| Current path | Finding |
+|---|---|
+| `tests/Feature/Http/Agents/ArchiveTest.php` | — |
+| `tests/Feature/Http/Agents/DestroyTest.php` | — |
+| `tests/Feature/Http/Agents/ExcelExportTest.php` | — |
+| `tests/Feature/Http/Agents/IndexTest.php` | — |
+| `tests/Feature/Http/Agents/PdfExportTest.php` | — |
+| `tests/Feature/Http/Agents/ShowTest.php` | — |
+| `tests/Feature/Http/Agents/StoreTest.php` | **F3** |
+| `tests/Feature/Http/Agents/UnarchiveTest.php` | — |
+| `tests/Feature/Http/Agents/UpdateTest.php` | **F12** |
+| `tests/Feature/Http/Auth/AuthenticationTest.php` | — |
+| `tests/Feature/Http/Auth/PasswordConfirmationTest.php` | — |
+| `tests/Feature/Http/Auth/PasswordResetTest.php` | — |
+| `tests/Feature/Http/Auth/TwoFactorAuthenticationTest.php` | — |
+| `tests/Feature/Http/Auth/TwoFactorChallengeTest.php` | — |
+| `tests/Feature/Http/Carriers/ArchiveTest.php` | — |
+| `tests/Feature/Http/Carriers/DestroyBranchTest.php` | — |
+| `tests/Feature/Http/Carriers/DestroyTest.php` | — |
+| `tests/Feature/Http/Carriers/ExcelExportTest.php` | — |
+| `tests/Feature/Http/Carriers/IndexTest.php` | — |
+| `tests/Feature/Http/Carriers/PdfExportTest.php` | — |
+| `tests/Feature/Http/Carriers/ShowTest.php` | — |
+| `tests/Feature/Http/Carriers/StoreBranchTest.php` | — |
+| `tests/Feature/Http/Carriers/StoreTest.php` | **F4** |
+| `tests/Feature/Http/Carriers/UnarchiveTest.php` | — |
+| `tests/Feature/Http/Carriers/UpdateBranchTest.php` | — |
+| `tests/Feature/Http/Carriers/UpdateTest.php` | **F12** |
+| `tests/Feature/Http/Clients/ArchiveTest.php` | — |
+| `tests/Feature/Http/Clients/DestroyTest.php` | — |
+| `tests/Feature/Http/Clients/DocumentsIndexTest.php` | — |
+| `tests/Feature/Http/Clients/DocumentsStoreTest.php` | **F6** |
+| `tests/Feature/Http/Clients/ExcelExportTest.php` | — |
+| `tests/Feature/Http/Clients/IndexTest.php` | — |
+| `tests/Feature/Http/Clients/NotesIndexTest.php` | — |
+| `tests/Feature/Http/Clients/NotesStoreTest.php` | **F5** |
+| `tests/Feature/Http/Clients/PdfExportTest.php` | — |
+| `tests/Feature/Http/Clients/ShowTest.php` | — |
+| `tests/Feature/Http/Clients/StoreTest.php` | — |
+| `tests/Feature/Http/Clients/UnarchiveTest.php` | — |
+| `tests/Feature/Http/Clients/UpdateTest.php` | — |
+| `tests/Feature/Http/DashboardTest.php` | — |
+| `tests/Feature/Http/Documents/BatchTest.php` | — |
+| `tests/Feature/Http/Documents/DestroyTest.php` | **F12** |
+| `tests/Feature/Http/Documents/DocumentTagsDestroyTest.php` | **F8** |
+| `tests/Feature/Http/Documents/DocumentTagsStoreTest.php` | **F7** |
+| `tests/Feature/Http/Documents/DownloadTest.php` | — |
+| `tests/Feature/Http/Notes/DestroyTest.php` | — |
+| `tests/Feature/Http/Notes/UpdateTest.php` | **F9** |
+| `tests/Feature/Http/Notifications/IndexTest.php` | — |
+| `tests/Feature/Http/Notifications/NotifiableMembersTest.php` | — |
+| `tests/Feature/Http/Notifications/NotifyAgentTest.php` | — |
+| `tests/Feature/Http/Notifications/NotifyCarrierTest.php` | — |
+| `tests/Feature/Http/Notifications/NotifyClientTest.php` | — |
+| `tests/Feature/Http/Notifications/NotifyDocumentTest.php` | — |
+| `tests/Feature/Http/Notifications/ReadAllTest.php` | **F12** |
+| `tests/Feature/Http/Notifications/ReadTest.php` | **F12** |
+| `tests/Feature/Http/Notifications/RecentTest.php` | — |
+| `tests/Feature/Http/OrganizationInvitations/AcceptInvitationTest.php` | — |
+| `tests/Feature/Http/OrganizationMembers/ChangeRoleTest.php` | **F12** |
+| `tests/Feature/Http/OrganizationMembers/DestroyTest.php` | **F12** |
+| `tests/Feature/Http/OrganizationMembers/IndexTest.php` | — |
+| `tests/Feature/Http/OrganizationMembers/ResetTwoFactorTest.php` | — |
+| `tests/Feature/Http/OrganizationMembers/RevokeInvitationTest.php` | — |
+| `tests/Feature/Http/OrganizationMembers/StoreTest.php` | — |
+| `tests/Feature/Http/Settings/OrganizationTest.php` | — |
+| `tests/Feature/Http/Settings/ProfileUpdateTest.php` | — |
+| `tests/Feature/Http/Settings/SecurityTest.php` | — |
+| `tests/Feature/Http/Tags/TagsDestroyTest.php` | **F11** |
+| `tests/Feature/Http/Tags/TagsIndexTest.php` | — |
+| `tests/Feature/Http/Tags/TagsStoreTest.php` | **F10** |
+| `tests/Feature/Http/Tags/TagsUpdateTest.php` | — |
+| `tests/Feature/Http/World/StatesIndexTest.php` | — |
+
+That's 33+2+3+3+1+1+10+9+9+2+3+1+2+2+71 = **156**, every file accounted for exactly once.
+
+### 4a. Finding index
+- **F1** — rename `DocumentsPruningTest.php` → `DocumentTest.php` (only Document model test; Boost naming rule).
+- **F2** — merge `UsersPruningTest.php`'s 6 cases into `UserTest.php`; delete the file.
+- **F3** — `Agents/StoreTest.php` duplicates `CreateAgentActionTest`.
+- **F4** — `Carriers/StoreTest.php` duplicates `CreateCarrierActionTest` (partially — see §8).
+- **F5** — `Clients/NotesStoreTest.php` duplicates `CreateNoteActionTest` (1 of 6 cases).
+- **F6** — `Clients/DocumentsStoreTest.php` duplicates `UploadDocumentActionTest`.
+- **F7** — `Documents/DocumentTagsStoreTest.php` duplicates `AttachTagActionTest`.
+- **F8** — `Documents/DocumentTagsDestroyTest.php` duplicates `DetachTagActionTest`.
+- **F9** — `Notes/UpdateTest.php` duplicates `UpdateNoteActionTest` (1 of 6 cases).
+- **F10** — `Tags/TagsStoreTest.php` duplicates `CreateTagActionTest`.
+- **F11** — `Tags/TagsDestroyTest.php` duplicates `DeleteTagActionTest` (near-verbatim).
+- **F12** — opposite problem: 7 files' HTTP success case asserts **zero** persisted state, below `endpoint-tests.md`'s floor.
+- **F13** — `HandleInertiaRequestsTest.php` → `Middlewares/` for directory-naming consistency.
+- **F14** — `Pest.php` config correction (§3).
+
+*(One internal discrepancy between my two research forks on F7/F8: one fork initially called these two "clean" without quoting code; the other quoted the literal duplicated `assertDatabaseHas(['tag_id' => ..., 'document_id' => ...])` byte-for-byte matching the paired Action test. I'm reporting the quote-verified version.)*
+
+---
+
+## 5. Exact target manifest (155 files, literal, one path per line)
+
+```
+tests/Pest.php
+tests/TestCase.php
+tests/Feature/Actions/Agents/CreateAgentActionTest.php
+tests/Feature/Actions/Agents/DestroyAgentActionTest.php
+tests/Feature/Actions/Agents/UpdateAgentActionTest.php
+tests/Feature/Actions/Carriers/CreateCarrierActionTest.php
+tests/Feature/Actions/Carriers/CreateCarrierBranchActionTest.php
+tests/Feature/Actions/Carriers/DeleteCarrierBranchActionTest.php
+tests/Feature/Actions/Carriers/UpdateCarrierActionTest.php
+tests/Feature/Actions/Carriers/UpdateCarrierBranchActionTest.php
+tests/Feature/Actions/Clients/CreateClientActionTest.php
+tests/Feature/Actions/Clients/UpdateClientActionTest.php
+tests/Feature/Actions/Documents/CountDocumentsUploadBatchOutcomeActionTest.php
+tests/Feature/Actions/Documents/DeleteDocumentActionTest.php
+tests/Feature/Actions/Documents/FinalizeDocumentsUploadBatchActionTest.php
+tests/Feature/Actions/Documents/UploadDocumentActionTest.php
+tests/Feature/Actions/Notes/CreateNoteActionTest.php
+tests/Feature/Actions/Notes/DeleteNoteActionTest.php
+tests/Feature/Actions/Notes/UpdateNoteActionTest.php
+tests/Feature/Actions/Notifications/MarkAllNotificationsAsReadActionTest.php
+tests/Feature/Actions/Notifications/MarkNotificationAsReadActionTest.php
+tests/Feature/Actions/Notifications/NotifyActionTest.php
+tests/Feature/Actions/OrganizationMembers/AcceptOrganizationInvitationActionTest.php
+tests/Feature/Actions/OrganizationMembers/ChangeOrganizationMemberRoleActionTest.php
+tests/Feature/Actions/OrganizationMembers/FindPendingOrganizationInvitationActionTest.php
+tests/Feature/Actions/OrganizationMembers/InviteOrganizationMemberActionTest.php
+tests/Feature/Actions/OrganizationMembers/RemoveOrganizationMemberActionTest.php
+tests/Feature/Actions/OrganizationMembers/ResetTwoFactorAuthenticationActionTest.php
+tests/Feature/Actions/OrganizationMembers/RevokeOrganizationInvitationActionTest.php
+tests/Feature/Actions/Organizations/ProvisionOrganizationActionTest.php
+tests/Feature/Actions/Tags/AttachTagActionTest.php
+tests/Feature/Actions/Tags/CreateTagActionTest.php
+tests/Feature/Actions/Tags/DeleteTagActionTest.php
+tests/Feature/Actions/Tags/DetachTagActionTest.php
+tests/Feature/Actions/Tags/UpdateTagActionTest.php
+tests/Feature/Console/ProvisionOrganizationTest.php
+tests/Feature/Console/ResetOwnerTwoFactorAuthenticationTest.php
+tests/Feature/ErrorPageTest.php
+tests/Feature/Exports/AgentsExportTest.php
+tests/Feature/Exports/CarriersExportTest.php
+tests/Feature/Exports/ClientsExportTest.php
+tests/Feature/Filters/AgentFilterTest.php
+tests/Feature/Filters/CarrierFilterTest.php
+tests/Feature/Filters/ClientFilterTest.php
+tests/Feature/Http/Agents/ArchiveTest.php
+tests/Feature/Http/Agents/DestroyTest.php
+tests/Feature/Http/Agents/ExcelExportTest.php
+tests/Feature/Http/Agents/IndexTest.php
+tests/Feature/Http/Agents/PdfExportTest.php
+tests/Feature/Http/Agents/ShowTest.php
+tests/Feature/Http/Agents/StoreTest.php
+tests/Feature/Http/Agents/UnarchiveTest.php
+tests/Feature/Http/Agents/UpdateTest.php
+tests/Feature/Http/Auth/AuthenticationTest.php
+tests/Feature/Http/Auth/PasswordConfirmationTest.php
+tests/Feature/Http/Auth/PasswordResetTest.php
+tests/Feature/Http/Auth/TwoFactorAuthenticationTest.php
+tests/Feature/Http/Auth/TwoFactorChallengeTest.php
+tests/Feature/Http/Carriers/ArchiveTest.php
+tests/Feature/Http/Carriers/DestroyBranchTest.php
+tests/Feature/Http/Carriers/DestroyTest.php
+tests/Feature/Http/Carriers/ExcelExportTest.php
+tests/Feature/Http/Carriers/IndexTest.php
+tests/Feature/Http/Carriers/PdfExportTest.php
+tests/Feature/Http/Carriers/ShowTest.php
+tests/Feature/Http/Carriers/StoreBranchTest.php
+tests/Feature/Http/Carriers/StoreTest.php
+tests/Feature/Http/Carriers/UnarchiveTest.php
+tests/Feature/Http/Carriers/UpdateBranchTest.php
+tests/Feature/Http/Carriers/UpdateTest.php
+tests/Feature/Http/Clients/ArchiveTest.php
+tests/Feature/Http/Clients/DestroyTest.php
+tests/Feature/Http/Clients/DocumentsIndexTest.php
+tests/Feature/Http/Clients/DocumentsStoreTest.php
+tests/Feature/Http/Clients/ExcelExportTest.php
+tests/Feature/Http/Clients/IndexTest.php
+tests/Feature/Http/Clients/NotesIndexTest.php
+tests/Feature/Http/Clients/NotesStoreTest.php
+tests/Feature/Http/Clients/PdfExportTest.php
+tests/Feature/Http/Clients/ShowTest.php
+tests/Feature/Http/Clients/StoreTest.php
+tests/Feature/Http/Clients/UnarchiveTest.php
+tests/Feature/Http/Clients/UpdateTest.php
+tests/Feature/Http/DashboardTest.php
+tests/Feature/Http/Documents/BatchTest.php
+tests/Feature/Http/Documents/DestroyTest.php
+tests/Feature/Http/Documents/DocumentTagsDestroyTest.php
+tests/Feature/Http/Documents/DocumentTagsStoreTest.php
+tests/Feature/Http/Documents/DownloadTest.php
+tests/Feature/Http/Notes/DestroyTest.php
+tests/Feature/Http/Notes/UpdateTest.php
+tests/Feature/Http/Notifications/IndexTest.php
+tests/Feature/Http/Notifications/NotifiableMembersTest.php
+tests/Feature/Http/Notifications/NotifyAgentTest.php
+tests/Feature/Http/Notifications/NotifyCarrierTest.php
+tests/Feature/Http/Notifications/NotifyClientTest.php
+tests/Feature/Http/Notifications/NotifyDocumentTest.php
+tests/Feature/Http/Notifications/ReadAllTest.php
+tests/Feature/Http/Notifications/ReadTest.php
+tests/Feature/Http/Notifications/RecentTest.php
+tests/Feature/Http/OrganizationInvitations/AcceptInvitationTest.php
+tests/Feature/Http/OrganizationMembers/ChangeRoleTest.php
+tests/Feature/Http/OrganizationMembers/DestroyTest.php
+tests/Feature/Http/OrganizationMembers/IndexTest.php
+tests/Feature/Http/OrganizationMembers/ResetTwoFactorTest.php
+tests/Feature/Http/OrganizationMembers/RevokeInvitationTest.php
+tests/Feature/Http/OrganizationMembers/StoreTest.php
+tests/Feature/Http/Settings/OrganizationTest.php
+tests/Feature/Http/Settings/ProfileUpdateTest.php
+tests/Feature/Http/Settings/SecurityTest.php
+tests/Feature/Http/Tags/TagsDestroyTest.php
+tests/Feature/Http/Tags/TagsIndexTest.php
+tests/Feature/Http/Tags/TagsStoreTest.php
+tests/Feature/Http/Tags/TagsUpdateTest.php
+tests/Feature/Http/World/StatesIndexTest.php
+tests/Feature/Jobs/StoreDocumentJobTest.php
+tests/Feature/Listeners/UpdateLastLoginTimestampTest.php
+tests/Feature/Middlewares/EnsureOrganizationContextTest.php
+tests/Feature/Middlewares/HandleInertiaRequestsTest.php
+tests/Feature/Middlewares/RequireTwoFactorAuthenticationTest.php
+tests/Feature/Models/AgentTest.php
+tests/Feature/Models/CarrierTest.php
+tests/Feature/Models/ClientTest.php
+tests/Feature/Models/CurrentOrganizationScopeTest.php
+tests/Feature/Models/DocumentTest.php
+tests/Feature/Models/NoteTest.php
+tests/Feature/Models/OrganizationTest.php
+tests/Feature/Models/TagTest.php
+tests/Feature/Models/UserTest.php
+tests/Feature/Notifications/DocumentsUploadBatchProcessedNotificationTest.php
+tests/Feature/Notifications/MemberJoinedNotificationTest.php
+tests/Feature/Notifications/MemberRemovedNotificationTest.php
+tests/Feature/Notifications/MemberRoleChangedNotificationTest.php
+tests/Feature/Notifications/ResourceArchivedNotificationTest.php
+tests/Feature/Notifications/ResourceMessageNotificationTest.php
+tests/Feature/Notifications/ResourceUnarchivedNotificationTest.php
+tests/Feature/Notifications/YourRoleChangedNotificationTest.php
+tests/Feature/Notifications/YourTwoFactorAuthenticationWasResetNotificationTest.php
+tests/Feature/Policies/AgentPolicyTest.php
+tests/Feature/Policies/CarrierBranchPolicyTest.php
+tests/Feature/Policies/CarrierPolicyTest.php
+tests/Feature/Policies/ClientPolicyTest.php
+tests/Feature/Policies/DocumentPolicyTest.php
+tests/Feature/Policies/NotePolicyTest.php
+tests/Feature/Policies/OrganizationMemberPolicyTest.php
+tests/Feature/Policies/OrganizationPolicyTest.php
+tests/Feature/Policies/TagPolicyTest.php
+tests/Feature/Providers/AppServiceProviderTest.php
+tests/Feature/Providers/TestingServiceProviderTest.php
+tests/Feature/Sorts/AgentSortTest.php
+tests/Feature/Sorts/CarrierSortTest.php
+tests/Feature/Sorts/ClientSortTest.php
+tests/Unit/Enums/NotificationReasonTest.php
+tests/Unit/Enums/OrganizationRoleTest.php
+tests/Unit/Support/Tenancy/OrganizationContextTest.php
+```
+
+**Final totals:** root = 2, `Feature` = **150**, `Unit` = **3**, complete suite = **155**. Reduction of exactly **1** file from 156, entirely attributable to the F2 merge (`UsersPruningTest.php` deleted after its content is absorbed into `UserTest.php`); F1 is a rename, not a deletion, so it doesn't change the count.
+
+---
+
+## 6. Model-test consolidation — corrected reasoning
+
+**What `rules/test-ownership.md` explicitly states:** one row, one canonical path — `Model | tests/Feature/Models/{Model}Test.php | ...`. It names *a* path; it contains **no sentence prohibiting** a second file for the same model. My first pass's "violates a one-file-per-model convention" phrasing overstated the skill's own text.
+
+**What actually backs the finding:** Boost's `testing-best-practices/rules/naming.md`, lines 5–6: *"Name each test file `{ClassName}Test.php`. Place each test file at the same relative path as the class under test."* Neither `DocumentsPruningTest.php` nor `UsersPruningTest.php` is named after a class — `DocumentsPruning`/`UsersPruning` don't exist as classes. That's the real, explicit rule they fail.
+
+| Case | Skill-resolved? | Recommendation | Strongest alternative |
+|---|---|---|---|
+| `DocumentsPruningTest.php` | **Yes** — Boost naming.md is unambiguous | Rename to `DocumentTest.php`. Read directly: 7 cases, 120 lines, entirely `Document::prunable()` behavior, and it's the *only* Document model test — nothing to consolidate, just rename | None credible |
+| `UsersPruningTest.php` + `UserTest.php` | **Partially** — naming.md still implies one file, but doesn't forbid a deliberate split | **Merge** the 6 cases (97 lines) into `UserTest.php` (17 cases/174 lines → ~23 cases/~270 lines combined). Read both directly: `UsersPruningTest` tests `User`'s *own* `prunable()` scope — no separate service class involved, unlike `CurrentOrganizationScopeTest.php` (which tests the shared `Scopes\CurrentOrganizationScope` class, using `Client` only as a proxy — genuinely a different subject, correctly kept standalone). Nothing else in the codebase exercises `User::prunable()` separately | Keep it standalone if a future reviewer judges ~270 combined lines too large for discoverability — defensible, but weaker here than for `CurrentOrganizationScopeTest.php` because the subject under test really is `User` itself |
+
+**Whether a later canonical wording clarification is warranted:** yes — `test-ownership.md`'s Model row could note in one sentence that it inherits Boost's `{ClassName}Test.php` naming constraint, so a future auditor doesn't have to reach into the companion skill to justify a rename/merge finding, as I did here.
+
+**Unresolved note on `CurrentOrganizationScopeTest.php`:** the class under test is `app/Models/Scopes/CurrentOrganizationScope.php`. Strict application of Boost's "same relative path" rule would put its test at `tests/Feature/Models/Scopes/CurrentOrganizationScopeTest.php`, not flatly in `Models/`. `test-ownership.md` has no row for global-scope classes at all. I'm leaving the target at the flat `tests/Feature/Models/CurrentOrganizationScopeTest.php` (matching its current flat placement, least churn) but flagging this as a **genuinely unresolved** naming question rather than silently picking one — worth a human call or a canonical clarification.
+
+---
+
+## 7. Resource-by-Resource coverage assessment (all 10 read directly)
+
+Per `test-ownership.md`: warranted only for "non-trivial project-defined transformations and conditional-field behavior." Per `pest-testing.md`'s warning: HTTP tests using `assertHasResource`/`hasResource` (confirmed in use, e.g. `Carriers/UpdateTest.php`, `Agents/UpdateTest.php`) prove integration only and can't catch a self-consistent regression in the Resource's own logic.
+
+| Resource | Verdict | Reasoning |
+|---|---|---|
+| `AgentResource` | **Warranted now** | `tenure()` (bespoke y/m diff string), `age` (derived from DOB), `full_address` (collect/filter/implode composition), `date_of_birth_formatted`/`joined_at_formatted`, a `relationLoaded()`-gated `country_name`/`state_name` — none proven outside self-referential checks. |
+| `CarrierBranchResource` | Not warranted now | Straight passthrough + two ordinary `whenLoaded()` relations — no computed logic. |
+| `CarrierResource` | Not warranted now | Passthrough + `whenLoaded('updatedBy')` + nested `CarrierBranchResource::collection()` — no logic of its own. |
+| `ClientResource` | **Warranted now** | `full_name` branches on `client_type === Company` (company name vs. concatenated person name), four `->label()` enum calls, plus the same `full_address`/`age` pattern as Agent. |
+| `CountryResource` | Not warranted now | `id`/`name` only. |
+| `DocumentResource` | **Warranted now** | `download_url` conditional on `status === Completed`, `error_message` conditional on `status === Failed`, `can_delete` embeds a policy check. Proposed path: `tests/Feature/Resources/DocumentResourceTest.php`, owning: `download_url` present only when completed, `error_message` present only when failed, `can_delete` reflecting policy result for an authorized vs. unauthorized user. |
+| `NoteResource` | **Uncertain** | Only logic is two thin embedded policy checks (`can_update`, `can_delete`) — real but minimal; defensible as a small Resource test or as adequately covered at HTTP level; neither currently proves either state. |
+| `NotificationResource` | Not warranted now | `created_at->diffForHumans()` is Carbon's own formatting, not project logic; rest is passthrough. |
+| `OrganizationMemberResource` | **Warranted now** | `is_you` (`$this->id === $request->user()?->id`) plus four embedded policy checks (`can_change_role`, `can_remove`, `can_revoke`, `can_reset_two_factor`) — the richest authorization surface of any Resource here, exercised nowhere directly. Proposed path: `tests/Feature/Resources/OrganizationMemberResourceTest.php`, owning: `is_you` true/false, each `can_*` flag per its paired policy method. |
+| `TagResource` | **Uncertain, partially covered** | `usage_count` via `whenCounted('documents')` is real conditional logic, but already has non-self-referential literal-value coverage via raw `response->json('0.usage_count')` assertions in `Documents/DocumentTagsStoreTest.php`/`DocumentTagsDestroyTest.php`. The two embedded policy checks (`can_update`, `can_delete`) are untested anywhere, though. |
+
+**Total: 4 warranted now** (Agent, Client, Document, OrganizationMember), **4 not warranted now** (CarrierBranch, Carrier, Country, Notification), **2 uncertain** (Note, Tag). These are future test *additions* only — **not** part of the move manifest in §5.
+
+---
+
+## 8. HTTP-versus-Action ownership pairing — complete reconciliation
+
+**Revalidated by direct re-read, both originally-reported findings:**
+
+- **`Agents/StoreTest.php` vs `CreateAgentActionTest.php`:** confirmed. `'store creates the agent with the submitted fields'` (asserts `first_name`/`last_name`/`email`/`city`) duplicates a subset of the Action test's `'stores the submitted attributes'`. **What remains:** nothing needs adding — a sibling case, `'store redirects to agents.show with toast on success'`, already asserts `expect(Agent::query()->count())->toBe(1)`, the one persistence-existence check needed. The duplicate case can simply be **removed**.
+- **`Carriers/StoreTest.php` vs `CreateCarrierActionTest.php`:** confirmed, narrower than first reported. `'store creates the branch with the submitted branch and contact fields'` duplicates 3 of the Action test's 7 asserted branch fields (`city`, `contact_name`, `contact_email`). **Not fully redundant**, though: `expect($carrier->branches)->toHaveCount(1)` in the same case proves something no sibling test does (a sub-resource branch was created alongside the carrier). Fix: **keep** the branch-count assertion, **drop** the 3 field-value assertions.
+
+**Complete pairing ledger** — every `Feature/Http/**` file checked against its Action counterpart:
+
+| HTTP test | Action test | Verdict |
+|---|---|---|
+| `Agents/StoreTest.php` | `CreateAgentActionTest.php` | **duplication — F3** |
+| `Agents/UpdateTest.php` | `UpdateAgentActionTest.php` | clean split, but zero persisted-state check on success — **F12** |
+| `Agents/DestroyTest.php` | `DestroyAgentActionTest.php` | conforming (single `assertSoftDeleted`) |
+| `Agents/ArchiveTest.php`, `UnarchiveTest.php`, `ExcelExportTest.php`, `PdfExportTest.php`, `IndexTest.php`, `ShowTest.php` | — | no Action test exists (Action classes exist, untested at that layer) |
+| `Carriers/StoreTest.php` | `CreateCarrierActionTest.php` | **duplication — F4** |
+| `Carriers/UpdateTest.php` | `UpdateCarrierActionTest.php` | clean split, zero persisted-state check — **F12** |
+| `Carriers/StoreBranchTest.php` | `CreateCarrierBranchActionTest.php` | conforming (count-only) |
+| `Carriers/UpdateBranchTest.php` | `UpdateCarrierBranchActionTest.php` | conforming (single-field minimal check) |
+| `Carriers/DestroyBranchTest.php` | `DeleteCarrierBranchActionTest.php` | conforming |
+| `Carriers/ArchiveTest.php`, `UnarchiveTest.php`, `ExcelExportTest.php`, `PdfExportTest.php`, `IndexTest.php`, `ShowTest.php`, `DestroyTest.php` | — | no counterpart |
+| `Clients/StoreTest.php` | `CreateClientActionTest.php` | conforming |
+| `Clients/UpdateTest.php` | `UpdateClientActionTest.php` | conforming |
+| `Clients/NotesStoreTest.php` | `CreateNoteActionTest.php` | **duplication — F5** (1 of 6 cases) |
+| `Clients/DocumentsStoreTest.php` | `UploadDocumentActionTest.php` | **duplication — F6** |
+| `Clients/DestroyTest.php`, `ArchiveTest.php`, `UnarchiveTest.php`, `ExcelExportTest.php`, `PdfExportTest.php`, `IndexTest.php`, `ShowTest.php`, `NotesIndexTest.php`, `DocumentsIndexTest.php` | — | no counterpart (no Client-destroy Action layer exists) |
+| `Notes/UpdateTest.php` | `UpdateNoteActionTest.php` | **duplication — F9** (1 of 6 cases; boundary/line-break cases untouched, conforming) |
+| `Notes/DestroyTest.php` | `DeleteNoteActionTest.php` | conforming |
+| `Documents/DestroyTest.php` | `DeleteDocumentActionTest.php` | conforming split, zero persisted-state check — **F12** |
+| `Documents/DocumentTagsStoreTest.php` | `AttachTagActionTest.php` | **duplication — F7** |
+| `Documents/DocumentTagsDestroyTest.php` | `DetachTagActionTest.php` | **duplication — F8** |
+| `Documents/BatchTest.php` | `CountDocumentsUploadBatchOutcomeActionTest.php`/`FinalizeDocumentsUploadBatchActionTest.php` | no direct counterpart — proves job-dispatch wiring (`Bus::assertBatched`), a distinct concern |
+| `Documents/DownloadTest.php` | — | no counterpart |
+| `Tags/TagsStoreTest.php` | `CreateTagActionTest.php` | **duplication — F10** |
+| `Tags/TagsUpdateTest.php` | `UpdateTagActionTest.php` | conforming (single-field minimal check) |
+| `Tags/TagsDestroyTest.php` | `DeleteTagActionTest.php` | **duplication — F11** (near-verbatim reproduction of the Action test's full matrix) |
+| `Tags/TagsIndexTest.php` | — | no counterpart |
+| `Notifications/ReadTest.php` | `MarkNotificationAsReadActionTest.php` | conforming split, zero persisted-state check — **F12** |
+| `Notifications/ReadAllTest.php` | `MarkAllNotificationsAsReadActionTest.php` | conforming split, zero persisted-state check — **F12** |
+| `Notifications/NotifyAgentTest.php`/`NotifyCarrierTest.php`/`NotifyClientTest.php`/`NotifyDocumentTest.php` | `NotifyActionTest.php` | conforming — exemplary complementary split (HTTP proves envelope shape, Action proves recipient-filtering matrix) |
+| `Notifications/IndexTest.php`, `NotifiableMembersTest.php`, `RecentTest.php` | — | no counterpart |
+| `OrganizationMembers/StoreTest.php` | `InviteOrganizationMemberActionTest.php` | conforming — exemplary existence-vs-exact-value split |
+| `OrganizationMembers/ChangeRoleTest.php` | `ChangeOrganizationMemberRoleActionTest.php` | conforming split, zero persisted-state check — **F12** |
+| `OrganizationMembers/DestroyTest.php` | `RemoveOrganizationMemberActionTest.php` | conforming split, zero persisted-state check — **F12** |
+| `OrganizationMembers/ResetTwoFactorTest.php` | `ResetTwoFactorAuthenticationActionTest.php` | conforming |
+| `OrganizationMembers/RevokeInvitationTest.php` | `RevokeOrganizationInvitationActionTest.php` | conforming |
+| `OrganizationMembers/IndexTest.php` | — | no counterpart |
+| `OrganizationInvitations/AcceptInvitationTest.php` | `AcceptOrganizationInvitationActionTest.php` | conforming — exemplary (zero field overlap) |
+| `Auth/*`, `Settings/*`, `World/StatesIndexTest.php`, `DashboardTest.php` | — | no `app/Actions/**` equivalent exists for these domains |
+
+**Expanded duplication findings (F3–F11), quoted:**
+
+3. **F3 — `Agents/StoreTest.php`:** duplicate is `expect($agent->first_name)->toBe('Mira')->and($agent->last_name)->toBe('Olsen')->and($agent->email)->toBe('mira.olsen@useorbit.com')->and($agent->city)->toBe('Beirut')` → **delete the case entirely** (a sibling case already proves `Agent::query()->count()->toBe(1)`).
+4. **F4 — `Carriers/StoreTest.php`:** duplicate is `->and($branch->city)->toBe('Beirut')->and($branch->contact_name)->toBe('Lina Karam')->and($branch->contact_email)->toBe('lina.karam@bankers.com.lb')` → **trim to** `expect($carrier->branches)->toHaveCount(1);` alone.
+5. **F5 — `Clients/NotesStoreTest.php`:** duplicate is `$this->assertDatabaseHas('notes', ['notable_type' => ..., 'notable_id' => ..., 'organization_id' => ..., 'created_by' => ..., 'body' => 'Called the client about renewal.'])` → keep the preceding `assertJson([...])`, **replace** with `$this->assertDatabaseCount('notes', 1);`.
+6. **F6 — `Clients/DocumentsStoreTest.php`:** duplicate is `$this->assertDatabaseHas('documents', ['documentable_type' => ..., 'documentable_id' => ..., 'uploaded_by' => ..., 'status' => DocumentStatus::Pending->value])` → keep the preceding `assertJson([...])`, **replace** with `$this->assertDatabaseCount('documents', 1);`.
+7. **F7 — `Documents/DocumentTagsStoreTest.php`:** duplicate is `$this->assertDatabaseHas('document_tag', ['tag_id' => $tag->id, 'document_id' => $document->id])` → **replace** with `$this->assertDatabaseCount('document_tag', 1);` (matches the file's own sibling idiom).
+8. **F8 — `Documents/DocumentTagsDestroyTest.php`:** duplicate is `$this->assertDatabaseMissing('document_tag', ['tag_id' => $tag->id, 'document_id' => $document->id])` → **replace** with `$this->assertDatabaseCount('document_tag', 0);`.
+9. **F9 — `Notes/UpdateTest.php`:** duplicate is `$this->assertDatabaseHas('notes', ['id' => $note->id, 'body' => 'Updated.', 'pinned' => true])` → keep the preceding `assertJson([...])`, **reduce** to `$this->assertDatabaseHas('notes', ['id' => $note->id, 'body' => 'Updated.']);` (single field).
+10. **F10 — `Tags/TagsStoreTest.php`:** duplicate is `$this->assertDatabaseHas('tags', ['organization_id' => ..., 'created_by' => ..., 'name' => 'Medicare'])` → keep the preceding `assertJson(['name' => 'Medicare', 'usage_count' => 0])` (HTTP/Resource-only field), **replace** with `$this->assertDatabaseCount('tags', 1);`.
+11. **F11 — `Tags/TagsDestroyTest.php`:** duplicate is the *complete* matrix — `assertModelMissing($tag)`, `assertDatabaseCount('document_tag', 0)`, and iterating `assertModelExists($document)` per tagged document — verbatim what `DeleteTagActionTest` already owns → **delete the case entirely** (a sibling case already proves `assertModelMissing($tag)`).
+
+**F12 — the opposite gap (not duplication, reported separately per your instruction not to over-trim):** these 7 files' HTTP success case asserts **only** redirect/flash/`assertNoContent()`, with **no** persisted-state check — below `endpoint-tests.md`'s floor ("assert both the response and the persisted state"): `Agents/UpdateTest.php`, `Carriers/UpdateTest.php`, `Documents/DestroyTest.php`, `Notifications/ReadAllTest.php`, `Notifications/ReadTest.php`, `OrganizationMembers/ChangeRoleTest.php`, `OrganizationMembers/DestroyTest.php`. This is a distinct, evidence-backed finding — the fix here is *adding* one minimal assertion, not trimming.
+
+---
+
+## 9. Middleware directory — deliberate decision
+
+**Candidates evaluated:** `tests/Feature/Middlewares/` (current) / `tests/Feature/Middleware/` (singular, matches `app/Http/Middleware/`) / `tests/Feature/Http/Middleware/` (full relative-path mirror per Boost `naming.md`).
+
+**Decision: keep `tests/Feature/Middlewares/`**, just complete the consistency move (F13, moving `HandleInertiaRequestsTest.php` in).
+
+- **Not skill-required** — neither `my-laravel-stack`'s ownership table nor its Boundary section covers middleware placement at all; it explicitly disclaims mandating an architecture beyond the rows it lists.
+- **Is an established useOrbit convention** — 2 of the 4 middleware classes already have tests filed under this exact plural directory name, predating this audit.
+- **Renaming would be pure churn** — these are plain procedural Pest files with no `namespace` declaration to keep in sync with a directory rename; `phpunit.xml` globs by the top-level `Feature`/`Unit` directory only, not by this subpath. Nesting under `Http/Middleware/` would also blend two different organizing schemes, since `Http/` is currently organized by controller *domain* (Agents, Carriers, …) and middleware isn't a domain.
+- Per Boost's own `SKILL.md` "Consistency First" section: *"A pattern repeated throughout the project is a convention, and project conventions take precedence over this skill... An existing test that follows a project convention is not defective merely because it conflicts with this skill."* That's a direct instruction not to rename an established local convention to match a generic naming rule.
+
+This is: **an established useOrbit convention**, protected by Boost's own consistency-first rule — not skill-required, not harmless-legacy-needing-correction, not a proposed cleanup.
+
+---
+
+## 10. Exact non-executed move plan
+
+Not run.
+
+```bash
+# --- Step 1: directory-level moves (uniform child relationship verified in §5; no target pre-exists) ---
+git mv tests/Unit/Actions        tests/Feature/Actions        # 33 files. Unit 77→44, Feature 77→110
+git mv tests/Unit/Policies       tests/Feature/Policies       # 9 files.  Unit 44→35, Feature 110→119
+git mv tests/Unit/Filters        tests/Feature/Filters        # 3 files.  Unit 35→32, Feature 119→122
+git mv tests/Unit/Sorts          tests/Feature/Sorts          # 3 files.  Unit 32→29, Feature 122→125
+git mv tests/Unit/Notifications  tests/Feature/Notifications  # 9 files.  Unit 29→20, Feature 125→134
+git mv tests/Unit/Exports        tests/Feature/Exports        # 3 files.  Unit 20→17, Feature 134→137
+git mv tests/Unit/Jobs           tests/Feature/Jobs           # 1 file.   Unit 17→16, Feature 137→138
+git mv tests/Unit/Listeners      tests/Feature/Listeners      # 1 file.   Unit 16→15, Feature 138→139
+git mv tests/Unit/Providers      tests/Feature/Providers      # 2 files.  Unit 15→13, Feature 139→141
+git mv tests/Unit/Models         tests/Feature/Models         # 10 files. Unit 13→3,  Feature 141→151
+
+# --- Step 2: single-file move into an existing directory ---
+git mv tests/Feature/HandleInertiaRequestsTest.php tests/Feature/Middlewares/HandleInertiaRequestsTest.php
+# Feature stays 151 (relocated within Feature, no net count change)
+
+# --- Step 3: content operations requiring an edit, not a plain mv ---
+git mv tests/Feature/Models/DocumentsPruningTest.php tests/Feature/Models/DocumentTest.php   # F1: rename only, no content edit
+# F2: manually copy UsersPruningTest.php's 6 test() cases into tests/Feature/Models/UserTest.php, then:
+git rm tests/Feature/Models/UsersPruningTest.php    # Feature 151→150
+
+# --- Step 4: content edits inside 9 non-moving Http files (no git mv) ---
+# tests/Feature/Http/Agents/StoreTest.php              — F3: delete the redundant case
+# tests/Feature/Http/Carriers/StoreTest.php            — F4: drop 3 field assertions, keep branch-count
+# tests/Feature/Http/Clients/NotesStoreTest.php        — F5
+# tests/Feature/Http/Clients/DocumentsStoreTest.php    — F6
+# tests/Feature/Http/Documents/DocumentTagsStoreTest.php   — F7
+# tests/Feature/Http/Documents/DocumentTagsDestroyTest.php — F8
+# tests/Feature/Http/Notes/UpdateTest.php              — F9
+# tests/Feature/Http/Tags/TagsStoreTest.php            — F10
+# tests/Feature/Http/Tags/TagsDestroyTest.php          — F11: delete the redundant case
+
+# --- Step 5 (optional, separate decision): add one minimal persisted-state assertion to the 7 F12 files ---
+# tests/Feature/Http/Agents/UpdateTest.php, Carriers/UpdateTest.php, Documents/DestroyTest.php,
+# Notifications/ReadAllTest.php, Notifications/ReadTest.php,
+# OrganizationMembers/ChangeRoleTest.php, OrganizationMembers/DestroyTest.php
+
+# --- Step 6: config edit, LAST — only after every file has left tests/Unit except the 3 isolated ones ---
+# tests/Pest.php — change ->in('Feature', 'Unit') to ->in('Feature')   (F14)
+```
+
+**Directory-level `git mv` safety, all 10 commands:** (1) complete ledger proves uniform child relationship — yes, Models' two exceptions are handled separately in Step 3, not hidden in Step 1; (2) no target pre-exists — confirmed by direct `find` (today `tests/Feature/` has only `Console`, `Http`, `Middlewares`); (3) each command is single-purpose, nothing bundled that could hide an exception; (4) before/after counts stated inline.
+
+**Empty directories expected afterward:** none — each Step 1 command relocates its entire source directory in one Git operation, so the source path ceases to exist. `tests/Unit/` itself survives, non-empty (`Enums/`, `Support/`).
+
+---
+
+## 11. Affected repository references (searched, not edited)
+
+- `phpunit.xml` — references `<directory>tests/Unit</directory>` / `<directory>tests/Feature</directory>` by top-level name only; neither is being renamed — **no edit needed**.
+- `.github/workflows/tests.yml` / `lint.yml` — run `./vendor/bin/pest` / lint scripts with no path filter — **no edit needed**.
+- `composer.json` (`scripts.test`, `scripts.ci:check`) — runs `@php artisan test`, no path filter — **no edit needed**.
+- `content-backlog.md` — 2 references, both to `tests/Feature/Http/OrganizationMembers/{Index,ResetTwoFactor}Test.php`, neither of which moves — **no edit needed**.
+- `plan.md` — contains the entire superseded first-draft audit as its current uncommitted content; will need a full rewrite once this corrected proposal is approved — **not edited now**, flagged for the authorized pass.
+- No test file references another test file's path; the two global Pest helpers are declared in `Pest.php` itself and resolvable regardless of caller directory, provided that directory still binds `TestCase`/container — which `Feature` will, post-§3.
+- No `phpstan.neon`/rector config exists; no `.idea` run configuration references any test path.
+
+---
+
+## 12. Verification plan for the authorized pass (not run now)
+
+1. **Pre-move baseline:** `git status --short` (expect only the pre-existing `plan.md` diff), `find tests -type f | wc -l` (expect 156).
+2. **Structure/count verification after Steps 1–3:** `find tests/Unit -type f | wc -l` (expect 3), `find tests/Feature -type f | wc -l` (expect 150), `find tests -type f | wc -l` (expect 155); diff the tree against §5's manifest file-by-file.
+3. **Targeted tests for Steps 3–4:** `./vendor/bin/pest tests/Feature/Models/DocumentTest.php tests/Feature/Models/UserTest.php` (F1/F2), then each of the 9 F3–F11 files alongside its paired Action test, to confirm the trimmed HTTP case and the still-passing Action test together still prove the same defects.
+4. **`Pest.php` edit (F14) — isolated first:** `./vendor/bin/pest tests/Unit` (expect exactly the 3 survivors passing, without booting the app) before the full suite, to catch a binding mistake early.
+5. **Full suite:** `./vendor/bin/pest` (or `php artisan test --compact` per `CLAUDE.md`'s convention) — must be fully green.
+6. **Formatting/static checks:** `vendor/bin/pint --dirty --format agent` (per `CLAUDE.md`'s Pint rule, since `git mv` + edits touch these files), then `composer lint:check`.
+7. **Stale-path search:** re-run the §11 grep sweep against the post-move tree — expect zero hits pointing at a moved path.
+8. **`git diff --check`** across every touched file for whitespace/conflict markers.
+9. **Final changed-file scope:** `git status --short` should show exactly 74 renames (Steps 1–2), 1 rename (F1), 1 deletion + 1 modification (F2), 9 modifications (F3–F11), optionally 7 more modifications if F12 is also authorized, 1 modification (`Pest.php`, F14) — nothing else.
+
+---
+
+## 13. Genuine skill ambiguity/defect exposed this pass
+
+1. `rules/test-ownership.md`'s Model row states a canonical path but silently relies on Boost's `naming.md` for the "one file, correctly named" constraint — worth an explicit cross-reference (§6).
+2. `blueprints/pest-testing.md`'s Unit/Feature boundary check is sound methodology but stops short of stating the actual `Pest.php` fix once the taxonomy is corrected — §3's proposal is a reasonable inference from its stated "no application boot" principle, not text the skill states outright.
+3. Neither skill resolves middleware test-directory naming (§9), nor does either skill have a row for testing a shared global-scope class like `CurrentOrganizationScope` (§6) — acknowledged gaps, not defects, since `my-laravel-stack`'s Boundary section explicitly disclaims mandating architecture beyond its listed rows.
+4. The first pass's own errors (Actions miscount, missed `testing-best-practices` activation, the `Pest.php` contradiction) were execution misses, not defects in either skill's content.
+
+---
+
+## 14. Confirmation that nothing changed
+
+Zero `Write`/`Edit`/`NotebookEdit` calls this session. Every action was `Read`, read-only `Bash` (`find`/`grep`/`wc`/`cat`/`git rev-parse`/`git status`), or research `Agent` forks. `git status --short` in both repositories shows only the two pre-existing states noted at the top (`useOrbit`: unstaged `plan.md`; `agentic-engineering`: untracked `.idea/`) — neither touched by this pass. Both repository HEADs and the skill provenance SHA match your expected values exactly.
