@@ -39,14 +39,14 @@ final class TestingServiceProvider extends ServiceProvider
 
         TestResponse::macro('assertHasResource', function (string $key, JsonResource $resource) {
             /** @var TestResponse $this */
-            return $this->assertInertia(function ($inertia) use ($key, $resource) {
+            return $this->assertInertia(function (AssertableInertia $inertia) use ($key, $resource) {
                 $inertia->hasResource($key, $resource);
             });
         });
 
         TestResponse::macro('assertHasPaginatedResource', function (string $key, ResourceCollection $resource) {
             /** @var TestResponse $this */
-            return $this->assertInertia(function ($inertia) use ($key, $resource) {
+            return $this->assertInertia(function (AssertableInertia $inertia) use ($key, $resource) {
                 $inertia->hasPaginatedResource($key, $resource);
             });
         });
