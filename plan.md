@@ -1,16 +1,34 @@
 # Corrected audit — useOrbit `tests/` (reconciliation pass)
 
-Read-only throughout: zero `Write`/`Edit`/`NotebookEdit` calls this session. `testing-best-practices` (Boost) is now loaded alongside `my-laravel-stack`, per the companion requirement. `my-laravel-patterns` was never opened.
+**Current state (as of the 2026-09-01 cleanup pass — read this first):** `useOrbit@main` is at
+`230a54be39e5d609edf882c9d81f4ee80e25c52c`; this file itself was reconciled against the corrected
+`my-laravel-stack` skill and committed as part of that history (see §15). The canonical `my-laravel-stack`
+skill and this project's installed snapshot/provenance are both at `agentic-engineering@560556f8a87a9ec5f9b6bb02ec964d88daaee1aa`
+(`UPSTREAM_PROVENANCE.md`). No test file, application code, or configuration has been touched by any pass
+that produced this document — every move, rename, merge, and content edit described below (§5, §10) remains
+**proposed and unexecuted**. `agentic-engineering` has one pre-existing untracked `.idea/` directory (IDE
+noise), unrelated to `tests/` and untouched throughout.
 
-**Baselines confirmed:**
+The paragraphs immediately below (through §14) are the **original audit pass's own account of itself** and
+are historical: they describe that pass's session state, not the document's current state. Read-only
+throughout that original pass: zero `Write`/`Edit`/`NotebookEdit` calls in it. `testing-best-practices`
+(Boost) was loaded alongside `my-laravel-stack` in it, per the companion requirement. `my-laravel-patterns`
+was never opened in it.
+
+**Baselines confirmed at the time of the original audit pass (historical):**
 
 | | Expected | Actual |
 |---|---|---|
-| `useOrbit@main` | `68241fda696def6e9ca5723cb981533465c643ec` | ✅ match |
-| `agentic-engineering@main` | `b361f50eb53cef40fd4064fca9e2a6c418dc1dc7` | ✅ match |
-| `my-laravel-stack` provenance | `b361f50eb53cef40fd4064fca9e2a6c418dc1dc7` | ✅ match (`UPSTREAM_PROVENANCE.md`) |
+| `useOrbit@main` | `68241fda696def6e9ca5723cb981533465c643ec` | ✅ match (at that time) |
+| `agentic-engineering@main` | `b361f50eb53cef40fd4064fca9e2a6c418dc1dc7` | ✅ match (at that time) |
+| `my-laravel-stack` provenance | `b361f50eb53cef40fd4064fca9e2a6c418dc1dc7` | ✅ match (at that time, `UPSTREAM_PROVENANCE.md`) |
 
-Working-tree state, untouched by me: `useOrbit` has one pre-existing unstaged diff — `plan.md` — which already contains the verbatim, uncorrected text of my first audit pass (wrong "31 files" count, the `Pest.php` contradiction). I made no edits to it; it will need a manual rewrite once this corrected proposal is reviewed. `agentic-engineering` has one pre-existing untracked `.idea/` directory (IDE noise). Neither relates to `tests/`.
+Working-tree state at the time of the original audit pass (historical, untouched by that pass): `useOrbit`
+had one pre-existing unstaged diff — `plan.md` — which at that time contained the verbatim, uncorrected
+text of an even earlier first-draft audit (wrong "31 files" count, the `Pest.php` contradiction). That
+draft has since been superseded by the corrected audit below, which was itself reconciled (see the
+"Reconciliation update" section that follows) and committed (§15) in later passes — this file no longer
+needs a further rewrite for that reason.
 
 ---
 
@@ -225,7 +243,7 @@ Legend: **stay** / **move** / **move+rename** / **merge+delete** / **config**. F
 | `tests/Unit/Models/AgentTest.php` | `tests/Feature/Models/AgentTest.php` | move | — |
 | `tests/Unit/Models/CarrierTest.php` | `tests/Feature/Models/CarrierTest.php` | move | — |
 | `tests/Unit/Models/ClientTest.php` | `tests/Feature/Models/ClientTest.php` | move | — |
-| `tests/Unit/Models/CurrentOrganizationScopeTest.php` | `tests/Feature/Models/CurrentOrganizationScopeTest.php` | move | see §6 note |
+| `tests/Unit/Models/CurrentOrganizationScopeTest.php` | `tests/Feature/Models/Scopes/CurrentOrganizationScopeTest.php` | **move+rename** | resolved, see §6 |
 | `tests/Unit/Models/DocumentsPruningTest.php` | `tests/Feature/Models/DocumentTest.php` | **move+rename** | F1 |
 | `tests/Unit/Models/NoteTest.php` | `tests/Feature/Models/NoteTest.php` | move | — |
 | `tests/Unit/Models/OrganizationTest.php` | `tests/Feature/Models/OrganizationTest.php` | move | — |
@@ -516,10 +534,10 @@ tests/Feature/Middlewares/RequireTwoFactorAuthenticationTest.php
 tests/Feature/Models/AgentTest.php
 tests/Feature/Models/CarrierTest.php
 tests/Feature/Models/ClientTest.php
-tests/Feature/Models/CurrentOrganizationScopeTest.php
 tests/Feature/Models/DocumentTest.php
 tests/Feature/Models/NoteTest.php
 tests/Feature/Models/OrganizationTest.php
+tests/Feature/Models/Scopes/CurrentOrganizationScopeTest.php
 tests/Feature/Models/TagTest.php
 tests/Feature/Models/UserTest.php
 tests/Feature/Notifications/DocumentsUploadBatchProcessedNotificationTest.php
@@ -567,7 +585,7 @@ tests/Unit/Support/Tenancy/OrganizationContextTest.php
 
 **Whether a later canonical wording clarification is warranted:** yes — `test-ownership.md`'s Model row could note in one sentence that it inherits Boost's `{ClassName}Test.php` naming constraint, so a future auditor doesn't have to reach into the companion skill to justify a rename/merge finding, as I did here.
 
-**Unresolved note on `CurrentOrganizationScopeTest.php`:** the class under test is `app/Models/Scopes/CurrentOrganizationScope.php`. Strict application of Boost's "same relative path" rule would put its test at `tests/Feature/Models/Scopes/CurrentOrganizationScopeTest.php`, not flatly in `Models/`. `test-ownership.md` has no row for global-scope classes at all. I'm leaving the target at the flat `tests/Feature/Models/CurrentOrganizationScopeTest.php` (matching its current flat placement, least churn) but flagging this as a **genuinely unresolved** naming question rather than silently picking one — worth a human call or a canonical clarification.
+**Resolved: `CurrentOrganizationScopeTest.php` target (2026-09-01 cleanup pass).** The class under test is `app/Models/Scopes/CurrentOrganizationScope.php`. Strict application of Boost `naming.md`'s "same relative path as the class under test" rule — the identical rule already used to justify F1's `DocumentsPruningTest.php` → `DocumentTest.php` rename above — puts its test at `tests/Feature/Models/Scopes/CurrentOrganizationScopeTest.php`, not flatly in `Models/`. `test-ownership.md` still has no row for global-scope classes specifically (that gap is real and remains open — see §13), but the naming question itself doesn't depend on such a row: Boost's naming rule alone settles it. The target in §4, §5, and §10 has been corrected to the Boost-compliant path; this is no longer left as an open naming question.
 
 ---
 
@@ -698,6 +716,8 @@ git mv tests/Feature/HandleInertiaRequestsTest.php tests/Feature/Middlewares/Han
 git mv tests/Feature/Models/DocumentsPruningTest.php tests/Feature/Models/DocumentTest.php   # F1: rename only, no content edit
 # F2: manually copy UsersPruningTest.php's 6 test() cases into tests/Feature/Models/UserTest.php, then:
 git rm tests/Feature/Models/UsersPruningTest.php    # Feature 151→150
+git mv tests/Feature/Models/CurrentOrganizationScopeTest.php tests/Feature/Models/Scopes/CurrentOrganizationScopeTest.php
+# resolved per §6: Boost-compliant path (same relative path as App\Models\Scopes\CurrentOrganizationScope); creates the new Scopes/ subdirectory, no target pre-exists, no net count change
 
 # --- Step 4: content edits inside 7 non-moving Http files (no git mv) ---
 # tests/Feature/Http/Agents/StoreTest.php              — F3: delete the redundant case
@@ -718,7 +738,7 @@ git rm tests/Feature/Models/UsersPruningTest.php    # Feature 151→150
 # tests/Pest.php — change ->in('Feature', 'Unit') to ->in('Feature')   (F14)
 ```
 
-**Directory-level `git mv` safety, all 10 commands:** (1) complete ledger proves uniform child relationship — yes, Models' two exceptions are handled separately in Step 3, not hidden in Step 1; (2) no target pre-exists — confirmed by direct `find` (today `tests/Feature/` has only `Console`, `Http`, `Middlewares`); (3) each command is single-purpose, nothing bundled that could hide an exception; (4) before/after counts stated inline.
+**Directory-level `git mv` safety, all 10 commands:** (1) complete ledger proves uniform child relationship — yes, Models' three exceptions (F1 rename, F2 merge+delete, and the `CurrentOrganizationScopeTest.php` → `Scopes/` relocation resolved in §6) are handled separately in Step 3, not hidden in Step 1; (2) no target pre-exists — confirmed by direct `find` (today `tests/Feature/` has only `Console`, `Http`, `Middlewares`); the `Models/Scopes/` subdirectory Step 3 creates is likewise new, not a pre-existing target; (3) each command is single-purpose, nothing bundled that could hide an exception; (4) before/after counts stated inline.
 
 **Empty directories expected afterward:** none — each Step 1 command relocates its entire source directory in one Git operation, so the source path ceases to exist. `tests/Unit/` itself survives, non-empty (`Enums/`, `Support/`).
 
@@ -730,7 +750,7 @@ git rm tests/Feature/Models/UsersPruningTest.php    # Feature 151→150
 - `.github/workflows/tests.yml` / `lint.yml` — run `./vendor/bin/pest` / lint scripts with no path filter — **no edit needed**.
 - `composer.json` (`scripts.test`, `scripts.ci:check`) — runs `@php artisan test`, no path filter — **no edit needed**.
 - `content-backlog.md` — 2 references, both to `tests/Feature/Http/OrganizationMembers/{Index,ResetTwoFactor}Test.php`, neither of which moves — **no edit needed**.
-- `plan.md` — contains the entire superseded first-draft audit as its current uncommitted content; will need a full rewrite once this corrected proposal is approved — **not edited now**, flagged for the authorized pass.
+- `plan.md` — this file. The superseded first-draft audit it once contained has been replaced by the corrected audit below, which has itself been reconciled and committed (§15) — no further rewrite of this file is needed for that reason. This cleanup pass's own edits (the `CurrentOrganizationScopeTest.php` target fix, stale-state corrections, and the arithmetic in §12) are recorded in §16.
 - No test file references another test file's path; the two global Pest helpers are declared in `Pest.php` itself and resolvable regardless of caller directory, provided that directory still binds `TestCase`/container — which `Feature` will, post-§3.
 - No `phpstan.neon`/rector config exists; no `.idea` run configuration references any test path.
 
@@ -738,7 +758,7 @@ git rm tests/Feature/Models/UsersPruningTest.php    # Feature 151→150
 
 ## 12. Verification plan for the authorized pass (not run now)
 
-1. **Pre-move baseline:** `git status --short` (expect only the pre-existing `plan.md` diff), `find tests -type f | wc -l` (expect 156).
+1. **Pre-move baseline:** `git status --short` (expect a clean tree — `plan.md` has since been committed, see the "Current state" note at the top of this file; if this file itself has an uncommitted diff at execution time, account for that separately from the move), `find tests -type f | wc -l` (expect 156).
 2. **Structure/count verification after Steps 1–3:** `find tests/Unit -type f | wc -l` (expect 3), `find tests/Feature -type f | wc -l` (expect 150), `find tests -type f | wc -l` (expect 155); diff the tree against §5's manifest file-by-file.
 3. **Targeted tests for Steps 3–4:** `./vendor/bin/pest tests/Feature/Models/DocumentTest.php tests/Feature/Models/UserTest.php` (F1/F2), then each of the 7 F3, F4, F5, F6, F9, F10, F11 files (F7/F8 excluded — resolved, not findings, see Reconciliation update) alongside its paired Action test, to confirm the trimmed HTTP case and the still-passing Action test together still prove the same defects.
 4. **`Pest.php` edit (F14) — isolated first:** `./vendor/bin/pest tests/Unit` (expect exactly the 3 survivors passing, without booting the app) before the full suite, to catch a binding mistake early.
@@ -746,22 +766,41 @@ git rm tests/Feature/Models/UsersPruningTest.php    # Feature 151→150
 6. **Formatting/static checks:** `vendor/bin/pint --dirty --format agent` (per `CLAUDE.md`'s Pint rule, since `git mv` + edits touch these files), then `composer lint:check`.
 7. **Stale-path search:** re-run the §11 grep sweep against the post-move tree — expect zero hits pointing at a moved path.
 8. **`git diff --check`** across every touched file for whitespace/conflict markers.
-9. **Final changed-file scope:** `git status --short` should show exactly 74 renames (Steps 1–2), 1 rename (F1), 1 deletion + 1 modification (F2), 7 modifications (F3, F4, F5, F6, F9, F10, F11 — F7/F8 excluded, resolved as not findings), optionally 7 more modifications if F12 is also authorized, 1 modification (`Pest.php`, F14) — nothing else.
+9. **Final changed-file scope, described logically** (not by an exact `git status` rename count — `git`'s similarity detection may represent a moved-and-renamed file, such as F1's `DocumentsPruningTest.php` → `DocumentTest.php` or the `CurrentOrganizationScopeTest.php` → `Scopes/` relocation resolved in §6, as a single rename or as a delete+add depending on staging order and content similarity; validate against §5's 155-file manifest instead of expecting a specific rename count):
+   - **73** surviving files moved from `Unit` to `Feature` (the 74 files Step 1 relocates, minus `UsersPruningTest.php`, deleted in Step 3 after its content merges into `UserTest.php`);
+   - **1** existing `Feature` file relocated (`HandleInertiaRequestsTest.php`, Step 2);
+   - **1** `Unit`-originated file deleted after merging its content (`UsersPruningTest.php`, F2);
+   - `UserTest.php` modified (receives the merged content, F2);
+   - **7** HTTP files modified (F3, F4, F5, F6, F9, F10, F11 — F7/F8 excluded, resolved as not findings);
+   - `Pest.php` modified (F14);
+   - optionally **7** more HTTP files modified if F12 is also authorized.
+   Nothing else. Confirm by diffing the final tree's file list against §5's manifest, not by counting git-reported renames.
 
 ---
 
-## 13. Genuine skill ambiguity/defect exposed this pass
+## 13. Consumer observations and skill boundaries
 
-1. `rules/test-ownership.md`'s Model row states a canonical path but silently relies on Boost's `naming.md` for the "one file, correctly named" constraint — worth an explicit cross-reference (§6).
-2. ~~`blueprints/pest-testing.md`'s Unit/Feature boundary check is sound methodology but stops short of stating the actual `Pest.php` fix once the taxonomy is corrected — §3's proposal is a reasonable inference from its stated "no application boot" principle, not text the skill states outright.~~ **RESOLVED as of the 2026-09-01 refresh** (`agentic-engineering@560556f8...`, see Reconciliation update above): `blueprints/pest-testing.md` now states this outright — the project's `TestCase`/database-refresh binding narrows to `Feature` only, isolated `Unit` tests get no separate binding, and migration order (move tests first, then narrow the binding) is explicit. §3's proposal was exactly right; it is no longer merely inferred.
-3. Neither skill resolves middleware test-directory naming (§9), nor does either skill have a row for testing a shared global-scope class like `CurrentOrganizationScope` (§6) — acknowledged gaps, not defects, since `my-laravel-stack`'s Boundary section explicitly disclaims mandating architecture beyond its listed rows.
+Observations from applying `my-laravel-stack` to this project's `tests/` tree — none of these require another
+canonical `my-laravel-stack` update. Two (point 1, point 3) are cross-skill naming dependencies this
+document resolved on its own by reaching into Boost's `naming.md`, exactly as `my-laravel-stack`'s own
+Boundary section expects a consumer to do; the skill isn't missing anything it claims to own. Point 2 is
+historical: it names a gap this document itself once flagged, and records that the gap has since closed
+upstream.
+
+1. `rules/test-ownership.md`'s Model row states a canonical path but relies on Boost's `naming.md` for the "one file, correctly named" constraint. This document reached into `naming.md` to resolve both the F1 rename (`DocumentsPruningTest.php` → `DocumentTest.php`, §6) and the `CurrentOrganizationScopeTest.php` → `tests/Feature/Models/Scopes/CurrentOrganizationScopeTest.php` target (§6, resolved in the 2026-09-01 cleanup pass) — a project consumer following the Boundary section's own instruction to consult the companion Boost skill, not a defect in `test-ownership.md` itself.
+2. **Historical, resolved:** ~~`blueprints/pest-testing.md`'s Unit/Feature boundary check is sound methodology but stops short of stating the actual `Pest.php` fix once the taxonomy is corrected — §3's proposal is a reasonable inference from its stated "no application boot" principle, not text the skill states outright.~~ **RESOLVED as of the 2026-09-01 refresh** (`agentic-engineering@560556f8...`, see Reconciliation update above): `blueprints/pest-testing.md` now states this outright — the project's `TestCase`/database-refresh binding narrows to `Feature` only, isolated `Unit` tests get no separate binding, and migration order (move tests first, then narrow the binding) is explicit. §3's proposal was exactly right; it is no longer merely inferred. This is the one point in this section that was ever a canonical gap, and it has already closed — nothing further to act on.
+3. Neither skill resolves middleware test-directory naming (§9), nor does either skill have a row for testing a shared global-scope class like `CurrentOrganizationScope` — this document resolved the latter's file *path* on its own by applying Boost's general naming rule (§6), but neither skill has (or needs) a dedicated row naming this category of class. Both are consumer-level applications of general rules to a specific project structure, not gaps `my-laravel-stack`'s Boundary section claims to cover — it explicitly disclaims mandating an architecture beyond the rows it lists.
 4. The first pass's own errors (Actions miscount, missed `testing-best-practices` activation, the `Pest.php` contradiction) were execution misses, not defects in either skill's content.
 
 ---
 
-## 14. Confirmation that nothing changed
+## 14. Confirmation that nothing changed (historical — original audit pass only)
 
-Zero `Write`/`Edit`/`NotebookEdit` calls this session. Every action was `Read`, read-only `Bash` (`find`/`grep`/`wc`/`cat`/`git rev-parse`/`git status`), or research `Agent` forks. `git status --short` in both repositories shows only the two pre-existing states noted at the top (`useOrbit`: unstaged `plan.md`; `agentic-engineering`: untracked `.idea/`) — neither touched by this pass. Both repository HEADs and the skill provenance SHA match your expected values exactly.
+This section is a record of the original audit pass's own session, not a claim about this document's
+current state — see the "Current state" note at the very top of this file and §15/§16 below for what
+actually happened afterward (this file *was* subsequently edited, reconciled, committed, and pushed).
+
+Zero `Write`/`Edit`/`NotebookEdit` calls in that original session. Every action in it was `Read`, read-only `Bash` (`find`/`grep`/`wc`/`cat`/`git rev-parse`/`git status`), or research `Agent` forks. `git status --short` in both repositories at that time showed only the two pre-existing states noted in the historical baseline above (`useOrbit`: unstaged `plan.md`; `agentic-engineering`: untracked `.idea/`) — neither touched by that pass. Both repository HEADs and the skill provenance SHA matched that pass's expected values exactly, at that time.
 
 ---
 
@@ -771,8 +810,49 @@ Unlike §14 above (which describes the original audit session that produced this
 Reconciliation update section near the top of this file, and the edits it made to §4, §4a, §8, §10, §12,
 and §13 point 2, **were** written with `Edit` calls in this pass, against the corrected `my-laravel-stack`
 skill refreshed the same day. No test file, application code, or configuration was touched — the edits
-are confined to this document. `plan.md` is tracked in `useOrbit` and, exactly as this document's own
-top-of-file note already described (its "one pre-existing unstaged diff"), continues to carry an unstaged
-diff after this pass — `git status --porcelain -- plan.md` shows ` M plan.md`, nothing else in `useOrbit`
-changed. `agentic-engineering` was not touched in this pass. No move, rename, or content edit described
-anywhere in this document (§5, §10) was executed against `tests/**` — this remains a proposal only.
+are confined to this document. At the time these edits were made, `plan.md` carried an unstaged diff in
+`useOrbit` (`git status --porcelain -- plan.md` showed ` M plan.md`, nothing else in `useOrbit` changed).
+That diff was subsequently staged, committed as `230a54be39e5d609edf882c9d81f4ee80e25c52c`
+("Reconcile tests/ audit findings against the corrected my-laravel-stack skill"), and pushed to
+`origin/main` — see the "Current state" note at the top of this file for the resulting baseline.
+`agentic-engineering` was not touched in this pass. No move, rename, or content edit described anywhere in
+this document (§5, §10) was executed against `tests/**` — this remains a proposal only.
+
+---
+
+## 16. Cleanup pass — 2026-09-01 (this document was edited again)
+
+A final cleanup pass over this file alone, at `useOrbit@230a54be39e5d609edf882c9d81f4ee80e25c52c` (the
+commit §15 produced) and canonical/installed `my-laravel-stack` provenance unchanged at
+`agentic-engineering@560556f8a87a9ec5f9b6bb02ec964d88daaee1aa`. Four corrections:
+
+1. **`CurrentOrganizationScopeTest.php` resolved to its Boost-compliant target**,
+   `tests/Feature/Models/Scopes/CurrentOrganizationScopeTest.php` — updated in §4's ledger (disposition
+   changed to **move+rename**), §5's target manifest, §6's note (rewritten from "genuinely unresolved" to
+   resolved), and §10's move plan (a new Step 3 `git mv` relocates it out of the uniform Step 1 bulk move,
+   into the new `Models/Scopes/` subdirectory; the "Models' two exceptions" safety note became "three
+   exceptions").
+2. **Stale audit-session state replaced with current state.** The top-of-file intro now leads with a
+   "Current state" note (`useOrbit@230a54b`, provenance `560556f`, this file reconciled and committed,
+   `tests/**`/application code untouched, restructuring proposed and unexecuted) and explicitly labels the
+   original pass's baseline table, working-tree account, and §14 as historical snapshots of that pass's own
+   session — not current-state claims. §11's `plan.md` bullet and §15's closing paragraph, which both
+   asserted the file was still uncommitted/needing a rewrite, were corrected to reflect that this file has
+   since been reconciled, committed, and pushed.
+3. **§12 item 9's changed-scope arithmetic corrected**, described logically (73 surviving Unit→Feature
+   moves, 1 Feature-root relocation, 1 deletion after merge, `UserTest.php` modified, 7 HTTP files
+   modified, `Pest.php` modified, optionally 7 more for F12) rather than as a single "74 renames" figure
+   that conflated Steps 1 and 2 and didn't account for git's similarity-detection variability on renamed
+   files (F1, and now the `Scopes/` relocation) — validation should diff the final tree against §5's
+   manifest, not count git-reported renames.
+4. **§13 renamed and reframed** from "Genuine skill ambiguity/defect exposed this pass" to "Consumer
+   observations and skill boundaries," clarifying that the Boost-naming-dependency and shared-global-scope
+   observations (points 1 and 3) are this document's own consumer-level applications of general rules, not
+   defects requiring another `my-laravel-stack` update, while preserving point 2's already-resolved F14
+   history (the `Pest.php` sequencing gap that *did* close upstream) accurately and without alteration to
+   its substance.
+
+No test file, application code, or configuration was touched — the edits are confined to this document, and
+no `.claude/skills/**` file, provenance record, or `agentic-engineering` file was read or modified in this
+pass. The reconciled F3–F12 conclusions (§4a, §8) and the Resource assessment (§7) were left unchanged, as
+scoped.
