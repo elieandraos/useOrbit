@@ -1,13 +1,66 @@
-# Corrected audit — useOrbit `tests/` (reconciliation pass)
+# Approved implementation plan — useOrbit `tests/` restructuring
 
-**Current state (as of the 2026-09-01 cleanup pass — read this first):** `useOrbit@main` is at
-`230a54be39e5d609edf882c9d81f4ee80e25c52c`; this file itself was reconciled against the corrected
-`my-laravel-stack` skill and committed as part of that history (see §15). The canonical `my-laravel-stack`
-skill and this project's installed snapshot/provenance are both at `agentic-engineering@560556f8a87a9ec5f9b6bb02ec964d88daaee1aa`
-(`UPSTREAM_PROVENANCE.md`). No test file, application code, or configuration has been touched by any pass
-that produced this document — every move, rename, merge, and content edit described below (§5, §10) remains
-**proposed and unexecuted**. `agentic-engineering` has one pre-existing untracked `.idea/` directory (IDE
-noise), unrelated to `tests/` and untouched throughout.
+**Status: audit evidence reviewed and reconciled; implementation scope owner-approved; restructuring not
+yet executed.** The findings, ledger, target manifest, and move plan below have been reviewed and
+reconciled against the corrected `my-laravel-stack` skill (see "Reconciliation update"). The scope defined
+immediately below in "Approved implementation scope" has been approved by the project owner for execution.
+**No restructuring has been executed against this repository's `tests/` tree yet** — every move, rename,
+merge, deletion, and content edit described in this document (§4, §5, §10) remains approved-but-unapplied
+against the current tree.
+
+**Current baseline:** `useOrbit@main` is at `230a54be39e5d609edf882c9d81f4ee80e25c52c`; this file itself was
+reconciled against the corrected `my-laravel-stack` skill and committed as part of that history (see §15).
+The canonical `my-laravel-stack` skill and this project's installed snapshot/provenance are both at
+`agentic-engineering@560556f8a87a9ec5f9b6bb02ec964d88daaee1aa` (`UPSTREAM_PROVENANCE.md`). No test file,
+application code, or configuration has been touched by any pass that produced this document.
+`agentic-engineering` has one pre-existing untracked `.idea/` directory (IDE noise), unrelated to `tests/`
+and untouched throughout.
+
+---
+
+## Approved implementation scope
+
+### Approved — execute exactly as specified below
+
+- **Restructure `tests/` around the Unit/Feature execution boundary** (§1, §4, §5, §10): relocate every
+  framework-dependent test currently misfiled under `tests/Unit` into `tests/Feature`, per the complete
+  156-file disposition ledger, leaving only the 3 genuinely isolated survivors in `tests/Unit`.
+- **Apply F1 through F6 and F9 through F14** (§4a, §8, §10) exactly as specified: the `DocumentsPruningTest.php`
+  rename (F1), the `UsersPruningTest.php` merge into `UserTest.php` (F2), the `Agents/StoreTest.php` and
+  `Carriers/StoreTest.php` trims (F3, F4), the `Clients/NotesStoreTest.php` and `Clients/DocumentsStoreTest.php`
+  single-field trims (F5, F6), the `Notes/UpdateTest.php` reduction (F9), the `Tags/TagsStoreTest.php`
+  single-field trim (F10), the `Tags/TagsDestroyTest.php` case deletion (F11), the `HandleInertiaRequestsTest.php`
+  relocation (F13), and the `Pest.php` config correction (F14).
+- **F12 is approved and required** — add the one minimal persisted-state assertion to each of the 7 files
+  it names, as part of this same execution (see "F12 is required, not optional" below).
+- **Leave F7 and F8 unchanged, intentionally** — both are resolved as minimal wiring-proof, not
+  duplication (see "Reconciliation update", §4a); no edit is approved or needed for
+  `Documents/DocumentTagsStoreTest.php` or `Documents/DocumentTagsDestroyTest.php`.
+- **Update `tests/Pest.php` last** (F14, §3, §10 Step 6) — only after every other file has left
+  `tests/Unit` except the 3 genuinely isolated survivors, per the migration-order requirement in §3.
+- **Verify the final 155-file manifest (§5) and the complete test suite**, per the full verification plan
+  in §12, before considering this restructuring complete.
+
+### F12 is required, not optional
+
+F12 (§4a, §8, §10 Step 5, §12) is part of this approved scope on the same footing as F1–F6 and F9–F11 and
+F13–F14 — not a separate or optional decision. The 7 files below each currently have an HTTP success case
+that asserts zero persisted state, below the required floor; each gets exactly one minimal persisted-state
+assertion added: `Agents/UpdateTest.php`, `Carriers/UpdateTest.php`, `Documents/DestroyTest.php`,
+`Notifications/ReadAllTest.php`, `Notifications/ReadTest.php`, `OrganizationMembers/ChangeRoleTest.php`,
+`OrganizationMembers/DestroyTest.php`.
+
+### Deferred — not part of this approved scope
+
+- **Every Resource-test recommendation in §7** (the `AgentResource`, `ClientResource`, `DocumentResource`,
+  and `OrganizationMemberResource` cases marked "Warranted now," and the two "Uncertain" cases). §7 is
+  preserved below as useful evidence for a future pass — it is not approved for execution in this scope.
+- **The future Clients CRUD vertical-slice exercise** that would build on §7's Resource findings.
+- **Any unrelated test improvement or application refactor** not named by F1–F14 above.
+- **Any change to the canonical `my-laravel-stack` skill or this project's installed skill
+  snapshot/provenance.** This document proposes changes to this repository's `tests/` tree only.
+
+---
 
 The paragraphs immediately below (through §14) are the **original audit pass's own account of itself** and
 are historical: they describe that pass's session state, not the document's current state. Read-only
@@ -400,7 +453,7 @@ That's 33+2+3+3+1+1+10+9+9+2+3+1+2+2+71 = **156**, every file accounted for exac
 - **F9** — `Notes/UpdateTest.php` duplicates `UpdateNoteActionTest` (1 of 6 cases).
 - **F10** — `Tags/TagsStoreTest.php` duplicates `CreateTagActionTest` on one plain mapped field only — the case's `organization_id`/`created_by` are wiring evidence, not duplication; see Reconciliation update.
 - **F11** — `Tags/TagsDestroyTest.php` duplicates `DeleteTagActionTest` (near-verbatim).
-- **F12** — opposite problem: 7 files' HTTP success case asserts **zero** persisted state, below `endpoint-tests.md`'s floor.
+- **F12** — approved, required (see "Approved implementation scope" above): opposite problem — 7 files' HTTP success case asserts **zero** persisted state, below `endpoint-tests.md`'s floor.
 - **F13** — `HandleInertiaRequestsTest.php` → `Middlewares/` for directory-naming consistency.
 - **F14** — `Pest.php` config correction (§3).
 
@@ -589,7 +642,12 @@ tests/Unit/Support/Tenancy/OrganizationContextTest.php
 
 ---
 
-## 7. Resource-by-Resource coverage assessment (all 10 read directly)
+## 7. Resource-by-Resource coverage assessment (all 10 read directly) — DEFERRED, not part of this approved scope
+
+**This entire section is deferred.** None of the recommendations below are approved for execution in this
+pass — see "Approved implementation scope" above. It is preserved here as useful evidence for a future
+pass (including the future Clients CRUD vertical-slice exercise), not as a to-do list for this
+restructuring.
 
 Per `test-ownership.md`: warranted only for "non-trivial project-defined transformations and conditional-field behavior." Per `pest-testing.md`'s warning: HTTP tests using `assertHasResource`/`hasResource` (confirmed in use, e.g. `Carriers/UpdateTest.php`, `Agents/UpdateTest.php`) prove integration only and can't catch a self-consistent regression in the Resource's own logic.
 
@@ -672,7 +730,7 @@ Per `test-ownership.md`: warranted only for "non-trivial project-defined transfo
 10. **F10 — `Tags/TagsStoreTest.php` (corrected):** original quote was `$this->assertDatabaseHas('tags', ['organization_id' => ..., 'created_by' => ..., 'name' => 'Medicare'])`. `organization_id` proves the tenant was wired in and `created_by` proves the acting actor was wired in — the case's own title, `'creates a tag scoped to the acting user\'s organization with created_by set'`, is about exactly these two facts. Only `'name' => 'Medicare'` is a plain mapped field already proven by the preceding `assertJson(['name' => 'Medicare', 'usage_count' => 0])`. **Fix:** drop only the `'name'` key; keep `organization_id`, `created_by`. Do **not** replace with `assertDatabaseCount()`, for the same reason as F5/F6.
 11. **F11 — `Tags/TagsDestroyTest.php`:** duplicate is the *complete* matrix — `assertModelMissing($tag)`, `assertDatabaseCount('document_tag', 0)`, and iterating `assertModelExists($document)` per tagged document — verbatim what `DeleteTagActionTest` already owns → **delete the case entirely** (a sibling case already proves `assertModelMissing($tag)`).
 
-**F12 — the opposite gap (not duplication, reported separately per your instruction not to over-trim):** these 7 files' HTTP success case asserts **only** redirect/flash/`assertNoContent()`, with **no** persisted-state check — below `endpoint-tests.md`'s floor ("assert both the response and the persisted state"): `Agents/UpdateTest.php`, `Carriers/UpdateTest.php`, `Documents/DestroyTest.php`, `Notifications/ReadAllTest.php`, `Notifications/ReadTest.php`, `OrganizationMembers/ChangeRoleTest.php`, `OrganizationMembers/DestroyTest.php`. This is a distinct, evidence-backed finding — the fix here is *adding* one minimal assertion, not trimming.
+**F12 — the opposite gap (not duplication), approved and required:** these 7 files' HTTP success case asserts **only** redirect/flash/`assertNoContent()`, with **no** persisted-state check — below `endpoint-tests.md`'s floor ("assert both the response and the persisted state"): `Agents/UpdateTest.php`, `Carriers/UpdateTest.php`, `Documents/DestroyTest.php`, `Notifications/ReadAllTest.php`, `Notifications/ReadTest.php`, `OrganizationMembers/ChangeRoleTest.php`, `OrganizationMembers/DestroyTest.php`. This is a distinct, evidence-backed finding, on the same approved footing as F1–F6 and F9–F11/F13–F14 — the fix here is *adding* one minimal assertion, not trimming.
 
 ---
 
@@ -719,7 +777,8 @@ git rm tests/Feature/Models/UsersPruningTest.php    # Feature 151→150
 git mv tests/Feature/Models/CurrentOrganizationScopeTest.php tests/Feature/Models/Scopes/CurrentOrganizationScopeTest.php
 # resolved per §6: Boost-compliant path (same relative path as App\Models\Scopes\CurrentOrganizationScope); creates the new Scopes/ subdirectory, no target pre-exists, no net count change
 
-# --- Step 4: content edits inside 7 non-moving Http files (no git mv) ---
+# --- Step 4: content edits inside 7 non-moving Http files (no git mv) — trims (F3-F6, F9-F11) ---
+# Combined with Step 5 below, these two steps modify 14 HTTP files total, both required.
 # tests/Feature/Http/Agents/StoreTest.php              — F3: delete the redundant case
 # tests/Feature/Http/Carriers/StoreTest.php            — F4: drop 3 field assertions, keep branch-count
 # tests/Feature/Http/Clients/NotesStoreTest.php        — F5: drop only the 'body' key, keep notable_type/notable_id/organization_id/created_by
@@ -729,7 +788,8 @@ git mv tests/Feature/Models/CurrentOrganizationScopeTest.php tests/Feature/Model
 # tests/Feature/Http/Tags/TagsStoreTest.php            — F10: drop only the 'name' key, keep organization_id/created_by
 # tests/Feature/Http/Tags/TagsDestroyTest.php          — F11: delete the redundant case
 
-# --- Step 5 (optional, separate decision): add one minimal persisted-state assertion to the 7 F12 files ---
+# --- Step 5: content edits inside 7 non-moving Http files (no git mv) — additions (F12, approved, required) ---
+# add one minimal persisted-state assertion to each of the 7 F12 files:
 # tests/Feature/Http/Agents/UpdateTest.php, Carriers/UpdateTest.php, Documents/DestroyTest.php,
 # Notifications/ReadAllTest.php, Notifications/ReadTest.php,
 # OrganizationMembers/ChangeRoleTest.php, OrganizationMembers/DestroyTest.php
@@ -750,7 +810,7 @@ git mv tests/Feature/Models/CurrentOrganizationScopeTest.php tests/Feature/Model
 - `.github/workflows/tests.yml` / `lint.yml` — run `./vendor/bin/pest` / lint scripts with no path filter — **no edit needed**.
 - `composer.json` (`scripts.test`, `scripts.ci:check`) — runs `@php artisan test`, no path filter — **no edit needed**.
 - `content-backlog.md` — 2 references, both to `tests/Feature/Http/OrganizationMembers/{Index,ResetTwoFactor}Test.php`, neither of which moves — **no edit needed**.
-- `plan.md` — this file. The superseded first-draft audit it once contained has been replaced by the corrected audit below, which has itself been reconciled and committed (§15) — no further rewrite of this file is needed for that reason. This cleanup pass's own edits (the `CurrentOrganizationScopeTest.php` target fix, stale-state corrections, and the arithmetic in §12) are recorded in §16.
+- `plan.md` — this file. The superseded first-draft audit it once contained has been replaced by the corrected audit below, which has itself been reconciled and committed (§15) — no further rewrite of this file is needed for that reason. The cleanup pass's own edits (the `CurrentOrganizationScopeTest.php` target fix, stale-state corrections, and the arithmetic in §12) are recorded in §16; this document's later conversion into an approved implementation source of truth (the "Approved implementation scope" section, the F12 reconciliation, and §7's deferred label) is recorded in §17.
 - No test file references another test file's path; the two global Pest helpers are declared in `Pest.php` itself and resolvable regardless of caller directory, provided that directory still binds `TestCase`/container — which `Feature` will, post-§3.
 - No `phpstan.neon`/rector config exists; no `.idea` run configuration references any test path.
 
@@ -760,7 +820,7 @@ git mv tests/Feature/Models/CurrentOrganizationScopeTest.php tests/Feature/Model
 
 1. **Pre-move baseline:** `git status --short` (expect a clean tree — `plan.md` has since been committed, see the "Current state" note at the top of this file; if this file itself has an uncommitted diff at execution time, account for that separately from the move), `find tests -type f | wc -l` (expect 156).
 2. **Structure/count verification after Steps 1–3:** `find tests/Unit -type f | wc -l` (expect 3), `find tests/Feature -type f | wc -l` (expect 150), `find tests -type f | wc -l` (expect 155); diff the tree against §5's manifest file-by-file.
-3. **Targeted tests for Steps 3–4:** `./vendor/bin/pest tests/Feature/Models/DocumentTest.php tests/Feature/Models/UserTest.php` (F1/F2), then each of the 7 F3, F4, F5, F6, F9, F10, F11 files (F7/F8 excluded — resolved, not findings, see Reconciliation update) alongside its paired Action test, to confirm the trimmed HTTP case and the still-passing Action test together still prove the same defects.
+3. **Targeted tests for Steps 3–5:** `./vendor/bin/pest tests/Feature/Models/DocumentTest.php tests/Feature/Models/UserTest.php` (F1/F2), then each of the 7 F3, F4, F5, F6, F9, F10, F11 files (F7/F8 excluded — resolved, not findings, see Reconciliation update) alongside its paired Action test, to confirm the trimmed HTTP case and the still-passing Action test together still prove the same defects; then each of the 7 F12 files (`Agents/UpdateTest.php`, `Carriers/UpdateTest.php`, `Documents/DestroyTest.php`, `Notifications/ReadAllTest.php`, `Notifications/ReadTest.php`, `OrganizationMembers/ChangeRoleTest.php`, `OrganizationMembers/DestroyTest.php`), required and not optional, to confirm the newly added minimal persisted-state assertion passes.
 4. **`Pest.php` edit (F14) — isolated first:** `./vendor/bin/pest tests/Unit` (expect exactly the 3 survivors passing, without booting the app) before the full suite, to catch a binding mistake early.
 5. **Full suite:** `./vendor/bin/pest` (or `php artisan test --compact` per `CLAUDE.md`'s convention) — must be fully green.
 6. **Formatting/static checks:** `vendor/bin/pint --dirty --format agent` (per `CLAUDE.md`'s Pint rule, since `git mv` + edits touch these files), then `composer lint:check`.
@@ -771,9 +831,12 @@ git mv tests/Feature/Models/CurrentOrganizationScopeTest.php tests/Feature/Model
    - **1** existing `Feature` file relocated (`HandleInertiaRequestsTest.php`, Step 2);
    - **1** `Unit`-originated file deleted after merging its content (`UsersPruningTest.php`, F2);
    - `UserTest.php` modified (receives the merged content, F2);
-   - **7** HTTP files modified (F3, F4, F5, F6, F9, F10, F11 — F7/F8 excluded, resolved as not findings);
-   - `Pest.php` modified (F14);
-   - optionally **7** more HTTP files modified if F12 is also authorized.
+   - **14** HTTP files modified: **7** F3–F11 files (F3, F4, F5, F6, F9, F10, F11 — F7/F8 excluded, resolved
+     as not findings) plus **7** F12 files (`Agents/UpdateTest.php`, `Carriers/UpdateTest.php`,
+     `Documents/DestroyTest.php`, `Notifications/ReadAllTest.php`, `Notifications/ReadTest.php`,
+     `OrganizationMembers/ChangeRoleTest.php`, `OrganizationMembers/DestroyTest.php`) — both required, on
+     equal footing, not one of them conditional on the other;
+   - `Pest.php` modified (F14).
    Nothing else. Confirm by diffing the final tree's file list against §5's manifest, not by counting git-reported renames.
 
 ---
@@ -841,10 +904,11 @@ commit §15 produced) and canonical/installed `my-laravel-stack` provenance unch
    since been reconciled, committed, and pushed.
 3. **§12 item 9's changed-scope arithmetic corrected**, described logically (73 surviving Unit→Feature
    moves, 1 Feature-root relocation, 1 deletion after merge, `UserTest.php` modified, 7 HTTP files
-   modified, `Pest.php` modified, optionally 7 more for F12) rather than as a single "74 renames" figure
-   that conflated Steps 1 and 2 and didn't account for git's similarity-detection variability on renamed
-   files (F1, and now the `Scopes/` relocation) — validation should diff the final tree against §5's
-   manifest, not count git-reported renames.
+   modified, `Pest.php` modified, and a further 7 files for F12 framed conditionally at the time — a
+   framing later revised, see the approved-scope note at the top of this document) rather than as a single
+   "74 renames" figure that conflated Steps 1 and 2 and didn't account for git's similarity-detection
+   variability on renamed files (F1, and now the `Scopes/` relocation) — validation should diff the final
+   tree against §5's manifest, not count git-reported renames.
 4. **§13 renamed and reframed** from "Genuine skill ambiguity/defect exposed this pass" to "Consumer
    observations and skill boundaries," clarifying that the Boost-naming-dependency and shared-global-scope
    observations (points 1 and 3) are this document's own consumer-level applications of general rules, not
@@ -856,3 +920,40 @@ No test file, application code, or configuration was touched — the edits are c
 no `.claude/skills/**` file, provenance record, or `agentic-engineering` file was read or modified in this
 pass. The reconciled F3–F12 conclusions (§4a, §8) and the Resource assessment (§7) were left unchanged, as
 scoped.
+
+---
+
+## 17. Approval pass — 2026-09-01 (this document was edited again)
+
+Converted this document from a reconciled audit artifact into an explicitly approved implementation source
+of truth, at `useOrbit@04cb29de17c9975fdefde9754a3a598aedfe2976` (the commit §16 produced) and
+canonical/installed `my-laravel-stack` provenance unchanged at
+`agentic-engineering@560556f8a87a9ec5f9b6bb02ec964d88daaee1aa`. Four changes:
+
+1. **Title and opening status rewritten** to lead with approval: the audit evidence has been reviewed and
+   reconciled, the implementation scope is owner-approved, and the restructuring has not yet been executed
+   — replacing the prior "Corrected audit ... (reconciliation pass)" framing, which read as an audit
+   narrative rather than an approved source of truth.
+2. **New "Approved implementation scope" section added**, immediately after the opening status: restructuring
+   `tests/` around the Unit/Feature execution boundary; applying F1–F6 and F9–F14; F7/F8 intentionally left
+   unchanged; `Pest.php` updated last; verifying the final 155-file manifest and complete suite — plus an
+   explicit deferred list (every §7 Resource-test recommendation, the future Clients CRUD vertical-slice
+   exercise, unrelated test/application changes, and any canonical-skill or installed-snapshot change).
+3. **F12 reconciled everywhere as approved and required, not optional.** Removed every "optional"/"separate
+   decision"/"if... also authorized" framing (§4a, §8, §10 Step 5's header, §12 items 3 and 9); §10's Step 5
+   now reads as required, on equal footing with Step 4; §12 item 3's targeted-test step now covers the 7
+   F12 files alongside F3–F11; §12 item 9's arithmetic now states **14** HTTP files modified (7 F3–F11 plus
+   7 F12), not 7 required plus 7 optional. §16 point 3's own historical description of the prior arithmetic
+   was reworded to avoid restating "optional" as an unqualified claim, while still accurately recording
+   that the prior pass used conditional language at the time.
+4. **§7 labeled deferred at its own heading**, with a short note that it is preserved as evidence for a
+   future pass (including the future Clients CRUD vertical-slice exercise) and is not approved for
+   execution in this scope — its findings, verdicts, and reasoning are otherwise untouched.
+
+No test file, application code, or configuration was touched. No `.claude/skills/**` file, provenance
+record, or `agentic-engineering` file was read or modified. No GitHub issue was created, and no
+issue-count, decomposition, milestone, sequencing, or Backlog decision was introduced anywhere in this
+pass — those remain for the later `my-feature-planning` exercise. The reconciled F1–F14 technical
+conclusions, the complete ledger (§4), the exact target manifest (§5), the move plan (§10), the historical
+evidence (§1–§3, §6, "Reconciliation update"), and the skill-boundary findings (§13) were left unchanged in
+substance.
