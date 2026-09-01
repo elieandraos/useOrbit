@@ -14,6 +14,69 @@ Working-tree state, untouched by me: `useOrbit` has one pre-existing unstaged di
 
 ---
 
+## Reconciliation update — 2026-09-01
+
+The findings below (F3–F11, F14) were produced against `my-laravel-stack` at commit `b361f50e...`. This
+document's own F5–F8 and F14 evidence was submitted upstream and landed as two corrections in
+`agentic-engineering` commit `560556f8a87a9ec5f9b6bb02ec964d88daaee1aa`, refreshed into this project's
+`.claude/skills/my-laravel-stack/` snapshot the same day (see `UPSTREAM_PROVENANCE.md`, "Refresh:
+`my-laravel-stack` — 2026-09-01"). This section reconciles the findings below against the corrected text.
+`rules/test-ownership.md` and `blueprints/pest-testing.md` were re-read in full for this pass.
+
+**What changed upstream:**
+1. `rules/test-ownership.md`'s no-redundancy rule now explicitly protects one minimal persisted-state or
+   association assertion in an HTTP test — proving the endpoint wired the correct route-bound model,
+   parent/child relationship, authenticated actor, tenant, or pivot pair into the Action — and explicitly
+   states that a global `assertDatabaseCount()` does not substitute for that proof, since it passes
+   regardless of which parent/actor/tenant/pivot pair was actually wired in.
+2. `blueprints/pest-testing.md` now states outright that once framework-dependent tests move out of
+   `Unit`, the project's Laravel `TestCase` and database-refresh trait bind only to `Feature`, and that
+   this must happen only after the move (matching migration order), rather than leaving that sequencing
+   as an inference from the boundary principle alone.
+
+**Effect on this document, verified by direct re-read of the affected test files (not re-derived from
+the original quotes alone):**
+- **F7 and F8 are resolved, not findings.** Both flagged `assertDatabaseHas`/`assertDatabaseMissing`
+  calls are the *only* assertion in their file proving which specific pivot pair was (dis)associated — no
+  sibling case checks pair identity, only idempotency (`assertDatabaseCount('document_tag', 1)`/`(..., 0)`
+  for a repeat-attach/never-attached scenario, a different concern). This is precisely the minimal
+  wiring-proof case the corrected rule protects, and directly resolves the internal discrepancy this
+  document's own §4a footnote flagged between the two research forks — the "clean" fork was right. No
+  edit needed to either file.
+- **F5, F6, and F10's proposed fixes are corrected — narrower than originally proposed, not withdrawn.**
+  All three originally proposed collapsing an `assertDatabaseHas()` to a raw `assertDatabaseCount()`.
+  `assertDatabaseCount`/`assertDatabaseHas`/`assertDatabaseMissing` run raw SQL against the table directly
+  and never apply an Eloquent global scope, so — unlike this document's `Agent::query()->count()` (F3) or
+  `$carrier->fresh()->branches->toHaveCount(1)` (F4), both Eloquent-relation-scoped and therefore already
+  identity/tenant-aware — a raw count on `notes`/`documents`/`tags` proves existence only, not that the
+  correct client, tenant, or actor was wired in. Direct re-read of each file confirmed each duplicate
+  assertion mixes true wiring evidence (a route-bound parent's morph type/id, the tenant's
+  `organization_id`, the acting user's `created_by`) with one plain mapped field already proven elsewhere
+  in the same file (a literal `body`/`status`/`name` value, also asserted via the preceding `assertJson()`
+  and, for F5, sibling cases). The corrected fix keeps the wiring-relevant columns and drops only the
+  single redundant mapped field — see the revised text in §4a, §8, and §10 below.
+- **F3, F4, F9, F11, and F12 are unaffected** — spot-checked directly against the corrected rule: F3 and
+  F4 already use Eloquent-relation-scoped assertions (identity/tenant-aware by construction, not raw
+  counts); F9 already asserts by note `id` (identity), not a count; F11's flagged case tests cascade-delete
+  *mutation* behavior (pivot cleanup across multiple documents), not endpoint wiring, so it remains genuine
+  duplication of `DeleteTagActionTest`'s own matrix; F12 is the opposite gap (adding a minimal assertion,
+  not trimming one) and the corrected rule doesn't change what "minimal" means for that direction. A spot
+  check of one further "conforming (count-only)" ledger entry (`Carriers/StoreBranchTest.php`) confirmed
+  it also uses an Eloquent-relation-scoped count, not a raw one — the "conforming" set was not re-audited
+  wholesale in this pass, since it was not itself produced by applying the corrected rule, but this spot
+  check found no evidence its idiom differs from F3/F4's.
+- **F14 needs no substantive change** — this document's §3 already independently arrived at the corrected
+  skill's exact end state (drop `'Unit'` from the `->in()` chain, only after the file move completes,
+  because `Illuminate\Foundation\Testing\TestCase` boots the app regardless of `RefreshDatabase`). What
+  changes is only the citation: this was previously "a reasonable inference," per §13 point 2; it is now
+  text the skill states outright, closing that gap.
+
+Downstream edits made in this pass: §4a (F5/F6/F7/F8/F10), §4 (Http table markers for F7/F8), §8 (ledger
+verdicts and expanded-findings text), §10 (Step 4 content-edit list), §12 (verification counts), §13
+(point 2 resolved).
+
+---
+
 ## 1. Corrected inventory
 
 | Metric | Your figure | Verified |
@@ -275,8 +338,8 @@ Legend: **stay** / **move** / **move+rename** / **merge+delete** / **config**. F
 | `tests/Feature/Http/DashboardTest.php` | — |
 | `tests/Feature/Http/Documents/BatchTest.php` | — |
 | `tests/Feature/Http/Documents/DestroyTest.php` | **F12** |
-| `tests/Feature/Http/Documents/DocumentTagsDestroyTest.php` | **F8** |
-| `tests/Feature/Http/Documents/DocumentTagsStoreTest.php` | **F7** |
+| `tests/Feature/Http/Documents/DocumentTagsDestroyTest.php` | — (F8 resolved, see Reconciliation update) |
+| `tests/Feature/Http/Documents/DocumentTagsStoreTest.php` | — (F7 resolved, see Reconciliation update) |
 | `tests/Feature/Http/Documents/DownloadTest.php` | — |
 | `tests/Feature/Http/Notes/DestroyTest.php` | — |
 | `tests/Feature/Http/Notes/UpdateTest.php` | **F9** |
@@ -312,18 +375,18 @@ That's 33+2+3+3+1+1+10+9+9+2+3+1+2+2+71 = **156**, every file accounted for exac
 - **F2** — merge `UsersPruningTest.php`'s 6 cases into `UserTest.php`; delete the file.
 - **F3** — `Agents/StoreTest.php` duplicates `CreateAgentActionTest`.
 - **F4** — `Carriers/StoreTest.php` duplicates `CreateCarrierActionTest` (partially — see §8).
-- **F5** — `Clients/NotesStoreTest.php` duplicates `CreateNoteActionTest` (1 of 6 cases).
-- **F6** — `Clients/DocumentsStoreTest.php` duplicates `UploadDocumentActionTest`.
-- **F7** — `Documents/DocumentTagsStoreTest.php` duplicates `AttachTagActionTest`.
-- **F8** — `Documents/DocumentTagsDestroyTest.php` duplicates `DetachTagActionTest`.
+- **F5** — `Clients/NotesStoreTest.php` duplicates `CreateNoteActionTest` on one plain mapped field only (1 of 6 cases) — the case's `notable_type`/`notable_id`/`organization_id`/`created_by` are wiring evidence, not duplication; see Reconciliation update.
+- **F6** — `Clients/DocumentsStoreTest.php` duplicates `UploadDocumentActionTest` on one plain mapped field only — the case's `documentable_type`/`documentable_id`/`uploaded_by` are wiring evidence, not duplication; see Reconciliation update.
+- **F7** — RESOLVED, not a finding. `Documents/DocumentTagsStoreTest.php`'s `assertDatabaseHas('document_tag', [...])` is the file's only proof of which pivot pair was attached — minimal wiring evidence, not duplication of `AttachTagActionTest`; see Reconciliation update.
+- **F8** — RESOLVED, not a finding. `Documents/DocumentTagsDestroyTest.php`'s `assertDatabaseMissing('document_tag', [...])` is the file's only proof of which pivot pair was detached — minimal wiring evidence, not duplication of `DetachTagActionTest`; see Reconciliation update.
 - **F9** — `Notes/UpdateTest.php` duplicates `UpdateNoteActionTest` (1 of 6 cases).
-- **F10** — `Tags/TagsStoreTest.php` duplicates `CreateTagActionTest`.
+- **F10** — `Tags/TagsStoreTest.php` duplicates `CreateTagActionTest` on one plain mapped field only — the case's `organization_id`/`created_by` are wiring evidence, not duplication; see Reconciliation update.
 - **F11** — `Tags/TagsDestroyTest.php` duplicates `DeleteTagActionTest` (near-verbatim).
 - **F12** — opposite problem: 7 files' HTTP success case asserts **zero** persisted state, below `endpoint-tests.md`'s floor.
 - **F13** — `HandleInertiaRequestsTest.php` → `Middlewares/` for directory-naming consistency.
 - **F14** — `Pest.php` config correction (§3).
 
-*(One internal discrepancy between my two research forks on F7/F8: one fork initially called these two "clean" without quoting code; the other quoted the literal duplicated `assertDatabaseHas(['tag_id' => ..., 'document_id' => ...])` byte-for-byte matching the paired Action test. I'm reporting the quote-verified version.)*
+*(F7/F8 resolution: the two research forks' disagreement — one called these "clean," the other flagged the literal byte-for-byte `assertDatabaseHas(['tag_id' => ..., 'document_id' => ...])` match with the paired Action test as duplication — is now settled by the corrected `rules/test-ownership.md`: a byte-for-byte match with the Action test is not itself proof of duplication when it is also the file's only proof of pivot-pair identity. The "clean" fork was right; see Reconciliation update above.)*
 
 ---
 
@@ -558,8 +621,8 @@ Per `test-ownership.md`: warranted only for "non-trivial project-defined transfo
 | `Notes/UpdateTest.php` | `UpdateNoteActionTest.php` | **duplication — F9** (1 of 6 cases; boundary/line-break cases untouched, conforming) |
 | `Notes/DestroyTest.php` | `DeleteNoteActionTest.php` | conforming |
 | `Documents/DestroyTest.php` | `DeleteDocumentActionTest.php` | conforming split, zero persisted-state check — **F12** |
-| `Documents/DocumentTagsStoreTest.php` | `AttachTagActionTest.php` | **duplication — F7** |
-| `Documents/DocumentTagsDestroyTest.php` | `DetachTagActionTest.php` | **duplication — F8** |
+| `Documents/DocumentTagsStoreTest.php` | `AttachTagActionTest.php` | conforming — minimal pivot-pair wiring proof (F7 resolved, not a finding) |
+| `Documents/DocumentTagsDestroyTest.php` | `DetachTagActionTest.php` | conforming — minimal pivot-pair wiring proof (F8 resolved, not a finding) |
 | `Documents/BatchTest.php` | `CountDocumentsUploadBatchOutcomeActionTest.php`/`FinalizeDocumentsUploadBatchActionTest.php` | no direct counterpart — proves job-dispatch wiring (`Bus::assertBatched`), a distinct concern |
 | `Documents/DownloadTest.php` | — | no counterpart |
 | `Tags/TagsStoreTest.php` | `CreateTagActionTest.php` | **duplication — F10** |
@@ -583,12 +646,12 @@ Per `test-ownership.md`: warranted only for "non-trivial project-defined transfo
 
 3. **F3 — `Agents/StoreTest.php`:** duplicate is `expect($agent->first_name)->toBe('Mira')->and($agent->last_name)->toBe('Olsen')->and($agent->email)->toBe('mira.olsen@useorbit.com')->and($agent->city)->toBe('Beirut')` → **delete the case entirely** (a sibling case already proves `Agent::query()->count()->toBe(1)`).
 4. **F4 — `Carriers/StoreTest.php`:** duplicate is `->and($branch->city)->toBe('Beirut')->and($branch->contact_name)->toBe('Lina Karam')->and($branch->contact_email)->toBe('lina.karam@bankers.com.lb')` → **trim to** `expect($carrier->branches)->toHaveCount(1);` alone.
-5. **F5 — `Clients/NotesStoreTest.php`:** duplicate is `$this->assertDatabaseHas('notes', ['notable_type' => ..., 'notable_id' => ..., 'organization_id' => ..., 'created_by' => ..., 'body' => 'Called the client about renewal.'])` → keep the preceding `assertJson([...])`, **replace** with `$this->assertDatabaseCount('notes', 1);`.
-6. **F6 — `Clients/DocumentsStoreTest.php`:** duplicate is `$this->assertDatabaseHas('documents', ['documentable_type' => ..., 'documentable_id' => ..., 'uploaded_by' => ..., 'status' => DocumentStatus::Pending->value])` → keep the preceding `assertJson([...])`, **replace** with `$this->assertDatabaseCount('documents', 1);`.
-7. **F7 — `Documents/DocumentTagsStoreTest.php`:** duplicate is `$this->assertDatabaseHas('document_tag', ['tag_id' => $tag->id, 'document_id' => $document->id])` → **replace** with `$this->assertDatabaseCount('document_tag', 1);` (matches the file's own sibling idiom).
-8. **F8 — `Documents/DocumentTagsDestroyTest.php`:** duplicate is `$this->assertDatabaseMissing('document_tag', ['tag_id' => $tag->id, 'document_id' => $document->id])` → **replace** with `$this->assertDatabaseCount('document_tag', 0);`.
-9. **F9 — `Notes/UpdateTest.php`:** duplicate is `$this->assertDatabaseHas('notes', ['id' => $note->id, 'body' => 'Updated.', 'pinned' => true])` → keep the preceding `assertJson([...])`, **reduce** to `$this->assertDatabaseHas('notes', ['id' => $note->id, 'body' => 'Updated.']);` (single field).
-10. **F10 — `Tags/TagsStoreTest.php`:** duplicate is `$this->assertDatabaseHas('tags', ['organization_id' => ..., 'created_by' => ..., 'name' => 'Medicare'])` → keep the preceding `assertJson(['name' => 'Medicare', 'usage_count' => 0])` (HTTP/Resource-only field), **replace** with `$this->assertDatabaseCount('tags', 1);`.
+5. **F5 — `Clients/NotesStoreTest.php` (corrected):** original quote was `$this->assertDatabaseHas('notes', ['notable_type' => ..., 'notable_id' => ..., 'organization_id' => ..., 'created_by' => ..., 'body' => 'Called the client about renewal.'])`. `notable_type`/`notable_id` prove the note was attached to the route-bound `$client`, `organization_id` proves the acting user's tenant was wired in (no other case in the file checks it), and `created_by` proves the acting actor was wired in (the case's own title, `'creates a note with created_by set to the acting user'`, is about exactly this) — none of that is duplication. Only `'body' => '...'` is a plain mapped field already proven by the preceding `assertJson([...])` and by two sibling cases (`'preserves line breaks in the body'`, `'accepts a body exactly at the configured max length'`). **Fix:** drop only the `'body'` key from the array; keep `notable_type`, `notable_id`, `organization_id`, `created_by` exactly as they are. Do **not** replace with `assertDatabaseCount()` — a raw count runs outside Eloquent's global scopes and proves none of the four wiring facts above.
+6. **F6 — `Clients/DocumentsStoreTest.php` (corrected):** original quote was `$this->assertDatabaseHas('documents', ['documentable_type' => ..., 'documentable_id' => ..., 'uploaded_by' => ..., 'status' => DocumentStatus::Pending->value])`. `documentable_type`/`documentable_id` prove the document was attached to the route-bound `$client`, `uploaded_by` proves the acting actor was wired in — neither is duplication. Only `'status' => DocumentStatus::Pending->value` is a plain derived default with no wiring significance, already covered by the preceding `assertJson([...])`. **Fix:** drop only the `'status'` key; keep `documentable_type`, `documentable_id`, `uploaded_by`. Do **not** replace with `assertDatabaseCount()`, for the same reason as F5.
+7. **F7 — RESOLVED, not a finding.** `Documents/DocumentTagsStoreTest.php`'s `$this->assertDatabaseHas('document_tag', ['tag_id' => $tag->id, 'document_id' => $document->id])` is the file's only assertion proving *which* tag/document pair was attached (the sibling `assertDatabaseCount('document_tag', 1)` in `'attaching the same tag twice...'` proves idempotency, not identity). This is exactly the minimal pivot-pair wiring proof the corrected rule protects. **No change.**
+8. **F8 — RESOLVED, not a finding.** `Documents/DocumentTagsDestroyTest.php`'s `$this->assertDatabaseMissing('document_tag', ['tag_id' => $tag->id, 'document_id' => $document->id])` is likewise the file's only proof of which pair was detached. **No change.**
+9. **F9 — `Notes/UpdateTest.php`:** duplicate is `$this->assertDatabaseHas('notes', ['id' => $note->id, 'body' => 'Updated.', 'pinned' => true])` → keep the preceding `assertJson([...])`, **reduce** to `$this->assertDatabaseHas('notes', ['id' => $note->id, 'body' => 'Updated.']);` (single field). Unaffected by the correction — already identity-scoped by `id`, not a raw count.
+10. **F10 — `Tags/TagsStoreTest.php` (corrected):** original quote was `$this->assertDatabaseHas('tags', ['organization_id' => ..., 'created_by' => ..., 'name' => 'Medicare'])`. `organization_id` proves the tenant was wired in and `created_by` proves the acting actor was wired in — the case's own title, `'creates a tag scoped to the acting user\'s organization with created_by set'`, is about exactly these two facts. Only `'name' => 'Medicare'` is a plain mapped field already proven by the preceding `assertJson(['name' => 'Medicare', 'usage_count' => 0])`. **Fix:** drop only the `'name'` key; keep `organization_id`, `created_by`. Do **not** replace with `assertDatabaseCount()`, for the same reason as F5/F6.
 11. **F11 — `Tags/TagsDestroyTest.php`:** duplicate is the *complete* matrix — `assertModelMissing($tag)`, `assertDatabaseCount('document_tag', 0)`, and iterating `assertModelExists($document)` per tagged document — verbatim what `DeleteTagActionTest` already owns → **delete the case entirely** (a sibling case already proves `assertModelMissing($tag)`).
 
 **F12 — the opposite gap (not duplication, reported separately per your instruction not to over-trim):** these 7 files' HTTP success case asserts **only** redirect/flash/`assertNoContent()`, with **no** persisted-state check — below `endpoint-tests.md`'s floor ("assert both the response and the persisted state"): `Agents/UpdateTest.php`, `Carriers/UpdateTest.php`, `Documents/DestroyTest.php`, `Notifications/ReadAllTest.php`, `Notifications/ReadTest.php`, `OrganizationMembers/ChangeRoleTest.php`, `OrganizationMembers/DestroyTest.php`. This is a distinct, evidence-backed finding — the fix here is *adding* one minimal assertion, not trimming.
@@ -636,15 +699,14 @@ git mv tests/Feature/Models/DocumentsPruningTest.php tests/Feature/Models/Docume
 # F2: manually copy UsersPruningTest.php's 6 test() cases into tests/Feature/Models/UserTest.php, then:
 git rm tests/Feature/Models/UsersPruningTest.php    # Feature 151→150
 
-# --- Step 4: content edits inside 9 non-moving Http files (no git mv) ---
+# --- Step 4: content edits inside 7 non-moving Http files (no git mv) ---
 # tests/Feature/Http/Agents/StoreTest.php              — F3: delete the redundant case
 # tests/Feature/Http/Carriers/StoreTest.php            — F4: drop 3 field assertions, keep branch-count
-# tests/Feature/Http/Clients/NotesStoreTest.php        — F5
-# tests/Feature/Http/Clients/DocumentsStoreTest.php    — F6
-# tests/Feature/Http/Documents/DocumentTagsStoreTest.php   — F7
-# tests/Feature/Http/Documents/DocumentTagsDestroyTest.php — F8
+# tests/Feature/Http/Clients/NotesStoreTest.php        — F5: drop only the 'body' key, keep notable_type/notable_id/organization_id/created_by
+# tests/Feature/Http/Clients/DocumentsStoreTest.php    — F6: drop only the 'status' key, keep documentable_type/documentable_id/uploaded_by
+# (F7 tests/Feature/Http/Documents/DocumentTagsStoreTest.php and F8 .../DocumentTagsDestroyTest.php: RESOLVED, not findings — no edit, see Reconciliation update)
 # tests/Feature/Http/Notes/UpdateTest.php              — F9
-# tests/Feature/Http/Tags/TagsStoreTest.php            — F10
+# tests/Feature/Http/Tags/TagsStoreTest.php            — F10: drop only the 'name' key, keep organization_id/created_by
 # tests/Feature/Http/Tags/TagsDestroyTest.php          — F11: delete the redundant case
 
 # --- Step 5 (optional, separate decision): add one minimal persisted-state assertion to the 7 F12 files ---
@@ -678,20 +740,20 @@ git rm tests/Feature/Models/UsersPruningTest.php    # Feature 151→150
 
 1. **Pre-move baseline:** `git status --short` (expect only the pre-existing `plan.md` diff), `find tests -type f | wc -l` (expect 156).
 2. **Structure/count verification after Steps 1–3:** `find tests/Unit -type f | wc -l` (expect 3), `find tests/Feature -type f | wc -l` (expect 150), `find tests -type f | wc -l` (expect 155); diff the tree against §5's manifest file-by-file.
-3. **Targeted tests for Steps 3–4:** `./vendor/bin/pest tests/Feature/Models/DocumentTest.php tests/Feature/Models/UserTest.php` (F1/F2), then each of the 9 F3–F11 files alongside its paired Action test, to confirm the trimmed HTTP case and the still-passing Action test together still prove the same defects.
+3. **Targeted tests for Steps 3–4:** `./vendor/bin/pest tests/Feature/Models/DocumentTest.php tests/Feature/Models/UserTest.php` (F1/F2), then each of the 7 F3, F4, F5, F6, F9, F10, F11 files (F7/F8 excluded — resolved, not findings, see Reconciliation update) alongside its paired Action test, to confirm the trimmed HTTP case and the still-passing Action test together still prove the same defects.
 4. **`Pest.php` edit (F14) — isolated first:** `./vendor/bin/pest tests/Unit` (expect exactly the 3 survivors passing, without booting the app) before the full suite, to catch a binding mistake early.
 5. **Full suite:** `./vendor/bin/pest` (or `php artisan test --compact` per `CLAUDE.md`'s convention) — must be fully green.
 6. **Formatting/static checks:** `vendor/bin/pint --dirty --format agent` (per `CLAUDE.md`'s Pint rule, since `git mv` + edits touch these files), then `composer lint:check`.
 7. **Stale-path search:** re-run the §11 grep sweep against the post-move tree — expect zero hits pointing at a moved path.
 8. **`git diff --check`** across every touched file for whitespace/conflict markers.
-9. **Final changed-file scope:** `git status --short` should show exactly 74 renames (Steps 1–2), 1 rename (F1), 1 deletion + 1 modification (F2), 9 modifications (F3–F11), optionally 7 more modifications if F12 is also authorized, 1 modification (`Pest.php`, F14) — nothing else.
+9. **Final changed-file scope:** `git status --short` should show exactly 74 renames (Steps 1–2), 1 rename (F1), 1 deletion + 1 modification (F2), 7 modifications (F3, F4, F5, F6, F9, F10, F11 — F7/F8 excluded, resolved as not findings), optionally 7 more modifications if F12 is also authorized, 1 modification (`Pest.php`, F14) — nothing else.
 
 ---
 
 ## 13. Genuine skill ambiguity/defect exposed this pass
 
 1. `rules/test-ownership.md`'s Model row states a canonical path but silently relies on Boost's `naming.md` for the "one file, correctly named" constraint — worth an explicit cross-reference (§6).
-2. `blueprints/pest-testing.md`'s Unit/Feature boundary check is sound methodology but stops short of stating the actual `Pest.php` fix once the taxonomy is corrected — §3's proposal is a reasonable inference from its stated "no application boot" principle, not text the skill states outright.
+2. ~~`blueprints/pest-testing.md`'s Unit/Feature boundary check is sound methodology but stops short of stating the actual `Pest.php` fix once the taxonomy is corrected — §3's proposal is a reasonable inference from its stated "no application boot" principle, not text the skill states outright.~~ **RESOLVED as of the 2026-09-01 refresh** (`agentic-engineering@560556f8...`, see Reconciliation update above): `blueprints/pest-testing.md` now states this outright — the project's `TestCase`/database-refresh binding narrows to `Feature` only, isolated `Unit` tests get no separate binding, and migration order (move tests first, then narrow the binding) is explicit. §3's proposal was exactly right; it is no longer merely inferred.
 3. Neither skill resolves middleware test-directory naming (§9), nor does either skill have a row for testing a shared global-scope class like `CurrentOrganizationScope` (§6) — acknowledged gaps, not defects, since `my-laravel-stack`'s Boundary section explicitly disclaims mandating architecture beyond its listed rows.
 4. The first pass's own errors (Actions miscount, missed `testing-best-practices` activation, the `Pest.php` contradiction) were execution misses, not defects in either skill's content.
 
@@ -700,3 +762,17 @@ git rm tests/Feature/Models/UsersPruningTest.php    # Feature 151→150
 ## 14. Confirmation that nothing changed
 
 Zero `Write`/`Edit`/`NotebookEdit` calls this session. Every action was `Read`, read-only `Bash` (`find`/`grep`/`wc`/`cat`/`git rev-parse`/`git status`), or research `Agent` forks. `git status --short` in both repositories shows only the two pre-existing states noted at the top (`useOrbit`: unstaged `plan.md`; `agentic-engineering`: untracked `.idea/`) — neither touched by this pass. Both repository HEADs and the skill provenance SHA match your expected values exactly.
+
+---
+
+## 15. Reconciliation pass — 2026-09-01 (this document was edited)
+
+Unlike §14 above (which describes the original audit session that produced this document), the
+Reconciliation update section near the top of this file, and the edits it made to §4, §4a, §8, §10, §12,
+and §13 point 2, **were** written with `Edit` calls in this pass, against the corrected `my-laravel-stack`
+skill refreshed the same day. No test file, application code, or configuration was touched — the edits
+are confined to this document. `plan.md` is tracked in `useOrbit` and, exactly as this document's own
+top-of-file note already described (its "one pre-existing unstaged diff"), continues to carry an unstaged
+diff after this pass — `git status --porcelain -- plan.md` shows ` M plan.md`, nothing else in `useOrbit`
+changed. `agentic-engineering` was not touched in this pass. No move, rename, or content edit described
+anywhere in this document (§5, §10) was executed against `tests/**` — this remains a proposal only.
