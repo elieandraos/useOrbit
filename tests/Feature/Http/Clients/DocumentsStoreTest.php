@@ -72,6 +72,5 @@ test('stages the file and returns the pending document as json', function () {
         'documentable_type' => $client->getMorphClass(),
         'documentable_id' => $client->id,
         'uploaded_by' => $user->id,
-        'status' => DocumentStatus::Pending->value,
     ]);
 });

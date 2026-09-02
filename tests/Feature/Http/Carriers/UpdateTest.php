@@ -54,6 +54,8 @@ test('update redirects to carriers.show with toast on success', function () use 
         ->patch(route('carriers.update', $carrier), $validPayload)
         ->assertRedirect(route('carriers.show', $carrier->fresh()))
         ->assertHasInertiaFlash('success', 'Carrier updated.');
+
+    expect($carrier->fresh()->name)->toBe('Beta Traders');
 });
 
 test('user gets 404 when updating a carrier from another organization', function () use ($validPayload) {

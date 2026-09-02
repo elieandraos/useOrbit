@@ -56,6 +56,8 @@ test('update redirects to agents.show with toast on success', function () use ($
         ->patch(route('agents.update', $agent), $validPayload)
         ->assertRedirect(route('agents.show', $agent->fresh()))
         ->assertHasInertiaFlash('success', 'Agent updated.');
+
+    expect($agent->fresh()->first_name)->toBe('Nadia');
 });
 
 test('user gets 404 when updating an agent from another organization', function () use ($validPayload) {

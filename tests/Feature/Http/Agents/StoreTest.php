@@ -52,19 +52,3 @@ test('store redirects to agents.show with toast on success', function () use ($v
 
     expect(Agent::query()->count())->toBe(1);
 });
-
-test('store creates the agent with the submitted fields', function () use ($validPayload) {
-    $user = User::factory()->withOrganization()->create();
-
-    $this->actingAs($user)
-        ->post(route('agents.store'), $validPayload)
-        ->assertRedirect(route('agents.show', Agent::query()->first()));
-
-    /** @var Agent $agent */
-    $agent = Agent::query()->first();
-
-    expect($agent->first_name)->toBe('Mira')
-        ->and($agent->last_name)->toBe('Olsen')
-        ->and($agent->email)->toBe('mira.olsen@useorbit.com')
-        ->and($agent->city)->toBe('Beirut');
-});

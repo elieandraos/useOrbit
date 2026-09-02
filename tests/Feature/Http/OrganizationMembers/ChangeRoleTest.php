@@ -61,4 +61,6 @@ test('change-role redirects with a success toast on the happy path', function ()
         ->patch(route('organization-members.change-role', $member), ['role' => 'admin'])
         ->assertRedirect()
         ->assertHasInertiaFlash('success', 'Member role updated.');
+
+    expect($member->fresh()->role)->toBe(OrganizationRole::Admin);
 });

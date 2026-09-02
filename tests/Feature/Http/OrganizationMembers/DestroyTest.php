@@ -86,4 +86,6 @@ test('destroy redirects with a success toast on the happy path', function () {
         ->delete(route('organization-members.destroy', $member), ['reassign_to' => $successor->id])
         ->assertRedirect()
         ->assertHasInertiaFlash('success', 'Member removed.');
+
+    $this->assertModelMissing($member);
 });
