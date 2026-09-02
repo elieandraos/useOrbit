@@ -11,8 +11,11 @@ test('guests are redirected to the login page', function () {
 
 test('member can mark all their notifications as read', function () {
     $user = User::factory()->withOrganization()->create();
+    $notification = createNotificationFor($user);
 
     $this->actingAs($user)
         ->post(route('notifications.read-all'))
         ->assertNoContent();
+
+    expect($notification->fresh()->read_at)->not->toBeNull();
 });

@@ -19,6 +19,8 @@ test('member can mark their own notification as read', function () {
     $this->actingAs($user)
         ->post(route('notifications.read', $notification))
         ->assertNoContent();
+
+    expect($notification->fresh()->read_at)->not->toBeNull();
 });
 
 test('member cannot mark another user\'s notification as read', function () {

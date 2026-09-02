@@ -20,6 +20,8 @@ test('member can delete their own completed document', function () {
         ->delete(route('documents.destroy', $document))
         ->assertRedirectBack()
         ->assertHasInertiaFlash('success', 'Document deleted.');
+
+    $this->assertModelMissing($document);
 });
 
 test('member who did not upload the document is forbidden from deleting it', function () {
