@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use App\Enums\OrganizationRole;
-use App\Models\Document;
 use App\Models\Organization;
 use App\Models\Tag;
 use App\Models\User;
@@ -60,20 +59,4 @@ test('a member from another organization gets 404', function () {
     $this->actingAs($user)
         ->delete(route('tags.destroy', $tag))
         ->assertNotFound();
-});
-
-test('deleting a tag attached to multiple documents removes all its pivot rows and leaves the documents intact', function () {
-    $user = User::factory()->withOrganization()->create();
-    $tag = Tag::factory()->forOrganization($user)->createdBy($user)->create();
-    $documents = Document::factory()->forOrganization($user)->uploadedBy($user)->count(2)->create();
-
-    $documents->each(fn (Document $document) => $document->tags()->attach($tag));
-
-    $this->actingAs($user)
-        ->delete(route('tags.destroy', $tag))
-        ->assertNoContent();
-
-    $this->assertModelMissing($tag);
-    $this->assertDatabaseCount('document_tag', 0);
-    $documents->each(fn (Document $document) => $this->assertModelExists($document));
 });

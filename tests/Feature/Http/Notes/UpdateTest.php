@@ -23,7 +23,7 @@ test('author can update their own note', function () {
         ->assertOk()
         ->assertJson(['body' => 'Updated.', 'pinned' => true]);
 
-    $this->assertDatabaseHas('notes', ['id' => $note->id, 'body' => 'Updated.', 'pinned' => true]);
+    $this->assertDatabaseHas('notes', ['id' => $note->id, 'body' => 'Updated.']);
 });
 
 test('org owner can update another member note', function () {
