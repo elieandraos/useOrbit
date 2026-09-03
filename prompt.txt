@@ -1,3 +1,8 @@
+LLM debug:
+---------
+- preserve the important decisions and findings for our next session
+- skill execution trace
+
 artifact review prompt:
 -----------------
 Review it as if I'm the lead engineer deciding whether this is documentation I'd want in my team's repository.
@@ -16,6 +21,23 @@ mentions in notes => notification
 ui uplifts: phone number input with lebanon flag +961 6digits
 address and phone related to user country for now. (just logging for onboarding later)
 maybe put user country id in inertia request, because we only need it for frontend to select default country (to the user country id) if not set.
+
+skill execution trace skill?
+============================
+For this run, also provide a concise skill-execution trace at each review gate.
+
+Report observable evidence only—not private chain-of-thought:
+
+the installed my-feature-planning provenance used;
+every skill file and rule file read;
+why each rule was applicable;
+the concrete decision or validation each rule governed;
+rules inspected but determined not applicable;
+approval gates reached;
+any ambiguity, conflict, exception, or deviation from the normal workflow;
+cross-skill handoffs identified but not invoked.
+
+Keep this trace separate from the proposed issue content so it does not influence or contaminate the issue decomposition.
 
 SELF-ASSESSMENT/CALIBRATION laboratory to add/elaborate-on:
 ------------------------------------------------------------
@@ -115,318 +137,6 @@ Less repeating.
 More deciding.
 
 Boring prompts. Thoughtful systems.
-
-
-
-ARCHITECTURE-LABORATORY / FEATURE-PLANNING v3 PLAN
---------------------------------------------------
-Goal:
-
-Turn the current internal architecture + planning workflow into a genuinely reusable public skill pair for skills.sh.
-
-Do NOT start portability work yet.
-First continue using the current skills on real features until the methodology is stable and we have enough evidence to know what is truly project-specific.
-
-==================================================
-CURRENT STATE
-==================================================
-
-v2.0 is an internal, project-tuned workflow.
-
-architecture-laboratory
-→ understand the real system
-→ validate the understanding
-→ reason about the target state
-→ capture human decisions
-→ produce either:
-   - Architecture Artifact
-   - plan.md
-
-my-feature-planning
-→ consume approved plan.md
-→ classify/scope the initiative
-→ reconcile design
-→ resolve implementation details
-→ draft canonical issues
-→ validate dependencies/structure
-→ create GitHub issues only after approval
-
-The important rule is:
-
-> The codebase tells us what exists. The human decides what it should become.
-
-==================================================
-V3 GOAL
-==================================================
-
-Make the methodology portable across projects while preserving the workflow quality we have developed.
-
-The public version should work on:
-
-- Laravel
-- Rails
-- Django
-- Node/TypeScript
-- .NET
-- other stacks
-
-without assuming useOrbit's directory structure, frontend framework, architecture-doc tooling, GitHub conventions, or issue taxonomy.
-
-The public version should preserve the reasoning methodology, not the current project's implementation details.
-
-==================================================
-CORE IDEA
-==================================================
-
-Separate:
-
-1. Core methodology
-   → portable
-
-2. Project adapter / conventions
-   → project-specific
-
-The public skill should know HOW to think about architecture and planning.
-
-The project using it should supply HOW that project's repository works.
-
-==================================================
-PORTABLE CORE
-==================================================
-
-Keep the following as the reusable heart of architecture-laboratory:
-
-- understand before changing;
-- investigate the real implementation;
-- use tests as evidence of actual contracts;
-- identify the architectural center of gravity;
-- distinguish reusable infrastructure from feature-specific integration;
-- compare against existing project precedent;
-- separate current-state facts from target-state decisions;
-- surface decisions that require human input;
-- never silently invent product decisions;
-- validate understanding before writing;
-- synthesize approved decisions into a canonical plan when appropriate;
-- keep architecture documentation separate from implementation planning.
-
-Plan Synthesis remains:
-
-investigate
-→ target-state reasoning
-→ user-approved decisions
-→ plan
-→ downstream feature planning
-
-The exact plan filename/location should become configurable rather than hardcoded to `plan.md`.
-
-==================================================
-PORTABLE CORE FOR my-feature-planning
-==================================================
-
-Keep the planning methodology portable:
-
-approved architectural plan
-→ classify initiative
-→ determine scope
-→ reconcile design/context
-→ resolve implementation-level open questions
-→ define coherent work items
-→ validate dependencies
-→ validate issue completeness/extensibility claims
-→ review
-→ downstream project management
-
-Do not hardcode:
-- GitHub
-- milestone naming
-- label names
-- TDD labels
-- specific issue title formats
-- Laravel Actions
-- Vue
-- specific directory names
-
-Those belong in the project adapter.
-
-==================================================
-PROJECT ADAPTER
-==================================================
-
-Introduce a small, explicit project-conventions layer.
-
-It should describe things such as:
-
-- language/framework;
-- backend conventions;
-- frontend conventions;
-- where architecture artifacts live/publish;
-- repository planning file conventions;
-- issue tracker;
-- milestone naming;
-- labels;
-- issue title/body conventions;
-- design-file location and workflow;
-- project-specific security/documentation rules;
-- any existing architecture guides used as precedent.
-
-The adapter should be optional from the perspective of the core methodology, but strongly recommended when using the skills inside a specific project.
-
-Do not force every project to adopt the same conventions.
-
-==================================================
-ARCHITECTURE-LABORATORY V3 WORKFLOW
-==================================================
-
-The public skill should still expose two main uses:
-
-1. Understand and document an existing capability
-
-existing capability
-→ investigate
-→ validate
-→ Architecture Guide
-
-2. Understand and plan a new capability or major change
-
-existing system / new capability
-→ investigate
-→ target-state discussion
-→ user decisions
-→ plan
-→ feature planning
-
-The README should explain these two branches in simple English.
-
-==================================================
-ARTIFACT OUTPUT
-==================================================
-
-Architecture Guide remains a possible output.
-
-However, the mechanism for publishing an architecture guide must become adapter-driven.
-
-For useOrbit:
-→ Claude Artifacts + existing template/design workflow.
-
-For another project:
-→ could be Markdown, docs site, repository file, or another supported output.
-
-Do not make Claude Artifacts part of the portable architectural methodology.
-
-==================================================
-PLAN OUTPUT
-==================================================
-
-The canonical plan remains a planning handoff, not an issue list.
-
-The methodology must preserve:
-
-current-state fact
-locked decision
-derived constraint
-open implementation detail
-
-Never blur those together.
-
-The plan should explicitly state where its source-of-truth handoff is going.
-
-For useOrbit:
-→ my-feature-planning
-
-For another project:
-→ project-specific planning workflow.
-
-==================================================
-PUBLIC SKILL BOUNDARIES
-==================================================
-
-architecture-laboratory owns:
-
-- architectural investigation;
-- target-state reasoning;
-- decision capture;
-- architecture documentation;
-- plan synthesis.
-
-my-feature-planning owns:
-
-- feature classification;
-- scope;
-- design reconciliation;
-- implementation-level planning;
-- issue decomposition;
-- dependency/review validation;
-- downstream project-management integration.
-
-Do not merge those responsibilities.
-
-==================================================
-V3 QUALITY BAR
-==================================================
-
-Before publishing publicly, prove the methodology works on multiple project shapes.
-
-Use at least:
-
-- this Laravel/Vue project;
-- one substantially different stack/project;
-- one cross-cutting architecture problem;
-- one new feature;
-- one existing subsystem redesign.
-
-The goal is to discover which rules are genuinely universal and which are only project habits.
-
-==================================================
-V3 PUBLIC POSITIONING
-==================================================
-
-The public positioning should be simple:
-
-> Understand before you change.
-> Validate before you document.
-> Decide before you plan.
-
-architecture-laboratory
-→ understand + decide
-
-my-feature-planning
-→ plan + execute through project work items
-
-The public skills should feel like a reusable engineering workflow, not a copy of one application's Claude setup.
-
-==================================================
-PORTABILITY TEST
-==================================================
-
-Before calling v3 ready:
-
-1. Remove project-specific assumptions from the core skill.
-2. Replace them with adapter/configuration points.
-3. Run the methodology against another stack.
-4. Confirm the skill can still:
-   - investigate;
-   - find architectural boundaries;
-   - ask the right human decisions;
-   - synthesize a plan;
-   - hand off cleanly to feature planning.
-5. Check that no Laravel/Vue/GitHub/useOrbit assumptions leaked into the portable core.
-6. Keep the project-specific adapter separate from the methodology.
-
-==================================================
-PUBLISHING TO SKILLS.SH
-==================================================
-
-Only after the methodology survives the portability tests:
-
-- create a clean public repository for the skills;
-- publish architecture-laboratory;
-- publish my-feature-planning;
-- include concise READMEs explaining the methodology in simple developer-friendly English;
-- document installation/use;
-- publish the pair as complementary skills;
-- keep project-specific adapters/examples separate from the portable core.
-
-Do NOT publish the current project-specific version unchanged.
 
 ==================================================
 SUCCESS CRITERIA
