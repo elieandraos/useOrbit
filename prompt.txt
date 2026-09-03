@@ -2,6 +2,11 @@ LLM debug:
 ---------
 - preserve the important decisions and findings for our next session
 - skill execution trace
+- skill-creator claude plugin vlaidate skill health (too long, too token consuming)
+- skill authoring
+
+mattpollock skills
+
 
 artifact review prompt:
 -----------------
