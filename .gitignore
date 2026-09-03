@@ -28,7 +28,13 @@ yarn-error.log
 /.vscode
 /.zed
 /.junie
-/.claude
+/.claude/*
+!/.claude/skills
+/.claude/skills/*
+!/.claude/skills/my-architecture-laboratory
+!/.claude/skills/my-feature-planning
+!/.claude/skills/my-git-workflow
+!/.claude/skills/my-laravel-stack
 .editorconfig
 _design/
 _ide_helper_macros.php

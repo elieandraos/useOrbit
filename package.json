@@ -10,6 +10,7 @@
         "format:check": "prettier --check resources/",
         "lint": "eslint . --fix",
         "lint:check": "eslint .",
+        "skills:refresh": "skills update my-architecture-laboratory my-feature-planning my-git-workflow my-laravel-stack -p -y",
         "types:check": "vue-tsc --noEmit"
     },
     "devDependencies": {
@@ -27,6 +28,7 @@
         "eslint-plugin-vue": "^10.10.0",
         "prettier": "^3.9.6",
         "prettier-plugin-tailwindcss": "^0.6.11",
+        "skills": "^1.5.23",
         "typescript": "^6.0.3",
         "typescript-eslint": "^8.68.0",
         "vite": "^8.2.2",
