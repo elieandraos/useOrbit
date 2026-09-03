@@ -8,10 +8,8 @@ backlog brainstorming:
 ----------------------
 policies/roles/permission overview => members invitation
 universal audit (org owner to see who changed what)
-tests that test laravel built-in: pruning, note test relations, Unit/Models/DocumentTest
 some actions with no db transactions and multiple db transactions (like deletedocumentaction)
 audit deletes on the db level: migrations cascadesOnDelete(), restrictOnDelete()
-what falls in unit/feature tests ? define structure once for all.
 notification ui redesign like mymusic website
 deployment production/dev. s3 storage. nightwatch. server upgrade choice.
 mentions in notes => notification

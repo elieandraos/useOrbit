@@ -1,6 +1,5 @@
 backlog milestone:
 - audit (what changed) and activity log (Who changed)
-- file uploads/documents
 - optimization: caching, inertia ssr, db indexes based on filters
 
 onboarding:
@@ -9,12 +8,6 @@ country
 companies (brokers)
 document tags
 currency?
-
-
-#[CurrentUser] attribute (instead of request()->user())
-
-testing philosophy:
-testing folder structure
 
 major decision:
 ---------------
@@ -25,20 +18,3 @@ insurance companies would be brokers.
 
 policies history/renewal process
 group policies ? on policy per employee/family member?
-
- Research: existing release style (turn into a skill)
------------------------------------------------------
- Every prior release (gh release view v0.3.0 through v0.7.0) follows the same shape:
- - Title: vX.Y.Z — Short Theme Title (2-4 words, matches the milestone's spirit but reworded punchier)
- - Body: single ## What's included header, then ### Section Name subsections grouped by theme (not one bullet per commit — synthesized/grouped feature
- summaries)
- - Bullets are short, noun-phrase, occasionally with a brief technical aside in parens (e.g. "Dropped PHP 8.5 from the CI matrix (maatwebsite/excel's
- phpspreadsheet dependency doesn't support it yet)")
- - No issue/PR number references, no commit hashes, no AI/Claude mentions
- - Section order: headline feature(s) first, then supporting Primitive Components (when a new UI primitive shipped for that feature), then smaller
- Infrastructure/Dev Environment bullets last — not every release has every section
- - Versioning: sequential minor bump, one release per milestone (v0.3.0 → v0.7.0 so far) → next is v0.8.0
-
- Key judgment call: the addresses work internally adopted nnjeim/world then reverted it back to an app-owned schema (visible in the commit log as
- back-and-forth). Release notes should describe the shipped end state only (Typeahead-driven country/state selection, free-text city, app-owned reference
- data) — not narrate the mid-flight architecture reversal. This matches how every prior release reads (outcomes, not process).
