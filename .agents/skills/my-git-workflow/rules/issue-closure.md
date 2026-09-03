@@ -18,12 +18,72 @@ issue on a shared branch, several issues can close this way before the branch is
 PR — `rules/milestone-completion.md`'s "Milestone PR readiness" gate is what checks the aggregate
 state of all that already-closed work before it moves toward a PR.
 
+Closing before a PR exists never means closing before the commits themselves exist remotely, though:
+this closure still requires the issue's commits to already be on the branch this work was actually
+done on — the repository's trunk for Backlog/hotfix work, or the milestone's shared branch otherwise.
+See "Push readiness" below.
+
+## Push readiness
+
+> Closure marks an issue's commits as done — reachable on the remote branch this workflow actually
+> tracks that work against, not merely present in a local checkout. A closing comment that cites a
+> SHA GitHub cannot resolve is not a durable record.
+
+Once the completed-issue full-suite verification (`rules/verification.md`) passes, and before "Ask
+first" below, confirm the issue's commits are reachable on the correct remote branch.
+
+1. **Identify the correct remote branch.** `rules/sequencing.md`'s "Branch readiness" already
+   selected it for this issue — the repository's trunk branch for Backlog/hotfix work, or the
+   milestone's shared branch for milestone work. This rule reads that selection; it does not
+   re-derive or override it.
+2. **Check whether the commits are already there.**
+
+   ```
+   git fetch origin <branch>
+   git log origin/<branch>..HEAD --oneline
+   ```
+
+   An empty result means every local commit, including the issue's, is already on the remote
+   branch — skip straight to "Ask first." A non-empty result means the issue's commits still need to
+   be pushed.
+3. **If they aren't remote yet, ask for explicit authorization to push.** This is a permission check
+   for a mutating remote action, not a third review gate — Gate 1 and Gate 2
+   (`rules/review-gates.md`) already approved the implementation and the commit structure; this only
+   asks whether to make those already-approved commits reachable on the remote.
+4. **Push normally once authorized.** A plain push to the branch identified in step 1 — never
+   `--force` or an equivalent override. A push rejected because the remote has diverged is a genuine
+   problem to surface to the human, not something to force past.
+5. **Verify the result; don't trust the exit code.**
+
+   ```
+   git fetch origin <branch>
+   git log origin/<branch>..HEAD --oneline             # empty: local/remote parity restored
+   git merge-base --is-ancestor <sha> origin/<branch>  # per commit implementing the issue
+   ```
+
+   Both must hold: nothing local remains unpushed, and every commit that implements the issue is
+   specifically an ancestor of the remote branch.
+
+Only once step 2 or step 5 confirms remote reachability does "Ask first," below, begin.
+
+**This is a reachability check, not a milestone or release event.**
+
+- It does not create, review, or merge a PR. A milestone issue can close while its shared branch is
+  still well before PR creation, exactly as described above — the branch itself carrying the pushed
+  commits is what this step adds, not a PR.
+- It does not trigger or imply a release (`rules/release.md`) or milestone closure
+  (`rules/milestone-completion.md`) — those stay gated on their own, later, post-merge authorization.
+- It is not a reason to rerun the completed-issue full-suite verification. That verification already
+  proved the commits correct on the working tree that produced them; pushing that same,
+  already-verified state to the remote doesn't change what it proved.
+
 ## Ask first
 
-Once a committed, approved issue has passed verification, ask the human whether they want to close
-it now.
+Once a committed, approved issue has passed verification and push readiness (above), ask the human
+whether they want to close it now.
 
-- **Don't ask before that point.** There's nothing to close until the relevant work is committed.
+- **Don't ask before that point.** There's nothing to close until the relevant work is committed,
+  verified, and reachable on the correct remote branch.
 - **Don't close automatically** just because the commits landed and verification passed — closure is
   opt-in, never inferred from a green build.
 - **If the answer is no or not yet**, leave the issue open and don't ask again unprompted. The human
@@ -87,7 +147,8 @@ from commits and conversation. It should be a concise summary, not a transcript.
 
 - **What was implemented** — a short summary of the outcome.
 - **Verification results** — test counts, full-suite pass/skip/fail, per `rules/verification.md`.
-- **The actual commit SHAs** that implement the issue.
+- **The actual commit SHAs** that implement the issue — the same SHAs "Push readiness" above
+  confirmed are reachable on the remote branch.
 - **Anything discovered during implementation or review that's worth preserving** — the kind of
   thing a future maintainer would otherwise have to reconstruct from the diff or ask about. For
   example:
@@ -132,6 +193,10 @@ a link. Don't re-print the full issue body or the closing comment — the reader
 
 - **It does not decide whether the issue should be closed.** That's always the human's call, made in
   "Ask first" above — this rule only carries out and validates a closure once approved.
+- **It does not create, review, or merge a PR, and does not trigger a release or milestone
+  closure.** Pushing the issue's commits to the correct remote branch (see "Push readiness" above)
+  only makes them reachable — those later events stay gated on their own separate authorizations
+  (`rules/release.md`, `rules/milestone-completion.md`).
 - **It only operates on the single issue** associated with the work that was just committed and
   verified. It does not touch any other issue.
 - **It does not create issues.** That's `my-feature-planning`'s territory, not this rule's.
@@ -144,7 +209,11 @@ a link. Don't re-print the full issue body or the closing comment — the reader
 ## Do / Don't
 
 **Do**
-- Ask before closing, once work is committed and verified.
+- Confirm the issue's commits are reachable on the correct remote branch before asking to close,
+  requesting explicit authorization to push when they aren't.
+- Push with a plain, non-force push once authorized, and verify the remote ref afterward instead of
+  trusting the exit code.
+- Ask before closing, once work is committed, verified, and reachable on the correct remote branch.
 - Check off only genuinely completed tasks; explain deferred ones instead of checking them.
 - Record useful, durable discoveries in the closing comment.
 - Validate every GitHub mutation in this procedure by re-fetching and reading the result back.
@@ -152,6 +221,8 @@ a link. Don't re-print the full issue body or the closing comment — the reader
   before asking to close, rather than closing past it silently.
 
 **Don't**
+- Ask to close before the issue's commits are reachable on the correct remote branch.
+- Force-push, or treat a push's exit code as proof it reached the remote.
 - Close automatically because commits landed or verification passed.
 - Check off deferred or out-of-scope work to make the issue look complete.
 - Treat a successful CLI exit code as proof of the resulting state.

@@ -17,10 +17,20 @@ not reproduce the pipeline.
 
 ## 1. Validation timing
 
+Each timing point names surfaces that must actually execute against the current canonical set or
+its current rendered artifact — not surfaces a reviewer judges relevant from habit or from a partial
+recollection of this file. Naming only the surfaces that happened to run, while a surface whose own
+trigger condition is met for the current canonical set goes unrun — most commonly §5's member-level
+closed-set trigger — does not satisfy the corresponding timing point below, regardless of how the
+pass is later described.
+
 1. **After canonical issue definitions are drafted, and after every revision** — issue quality,
    conditional extensibility-claim validation, dependency quality, canonical structural integrity.
-2. **Before the user's full content review** — freshly render each issue body from its canonical
-   definition, then run issue-body content integrity.
+2. **Before presenting the full content review, and again before every re-presentation of it after
+   a correction** — freshly render each affected issue body from its current canonical definition,
+   then run issue-body content integrity. A correction to any part of an issue's canonical
+   definition requires rerendering and rechecking that issue's complete body, not only the corrected
+   field.
 3. **Immediately before presenting the compact manifest for final approval** — revalidate the
    current canonical set, freshly render the manifest, run rendered-manifest integrity.
 4. **Immediately before any issue body is created or edited** — freshly render it from the current
@@ -118,13 +128,22 @@ Validate the canonical definitions themselves — never a rendered preview:
 - no canonical definition was reconstructed from an earlier render.
 
 **Member-level closed-set coverage.** When approved scope defines an exhaustive set — through an
-inventory, named members, an exact count, or "all/every" wording — validate:
+inventory, named members, an exact count, or "all/every" wording — that condition makes the
+following validation mandatory for the current canonical set. It does not depend on a reviewer's own
+judgment of whether it seems necessary, and canonical structural integrity is not satisfied while a
+triggered closed-set check has not actually run. Validate:
 
 - every in-scope member from that source appears exactly once across the canonical issues, checked
   against the actual members and never inferred from a matching headline total;
 - any member the approved scope explicitly defers or excludes remains outside the canonical issue
   set;
 - any count claimed for that set reconciles with the canonical issues' actual membership.
+
+Closed-set fidelity does not dictate issue-body granularity: every approved member must remain
+traceably represented in its assigned canonical issue's Tasks, Acceptance Criteria, or Tests, but
+this check does not require one checkbox per source-plan step or any other fixed mapping.
+Proportional Task authoring stays `rules/issue-conventions.md`'s own contract (§4); this check does
+not restate or override it.
 
 This validates fidelity to the membership already established by the approved scope — it does not
 require searching for members beyond what that source defines. When the affected set itself isn't
@@ -139,7 +158,10 @@ the change affects.
 ## 6. Issue-body content integrity
 
 Validates the freshly rendered full body text of one issue — not the canonical collection, and not
-the compact manifest.
+the compact manifest. A claim that this body is complete is proven only by inspecting that complete,
+literal rendered text end to end; an intended draft, a separate section-to-source mapping, a
+reasoning ledger, or a headline count that matches expectations is evidence to reason from, never a
+substitute for reading the actual text presented.
 
 **References**
 - No `#N` represents a canonical planning identifier, plan decision, or other non-GitHub number.
@@ -178,7 +200,7 @@ the compact manifest.
   dependency numbers.
 - Where Context, Tasks, Acceptance Criteria, or Tests present members of a canonical exhaustive set
   (§5's member-level closed-set coverage), the rendered body preserves the exact membership and
-  count assigned to that canonical issue — a missing, duplicated, or additional member blocks
+  count assigned to that canonical issue — a missing, duplicated, extra, or truncated member blocks
   presentation or creation.
 
 **If the check fails:** block presentation or mutation at the applicable stage; report the exact

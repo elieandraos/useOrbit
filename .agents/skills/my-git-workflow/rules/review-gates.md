@@ -16,6 +16,11 @@ The post-merge release workflow has its own separate approval boundary (`rules/r
 the proposed version, tag target, title, and body. That boundary is not part of either gate below —
 a merged PR does not satisfy it.
 
+`rules/issue-closure.md`'s push-authorization request — asking whether to push already-approved
+commits to the correct remote branch, before asking to close the issue — is a similar separate
+boundary, not a third review gate. It approves nothing about the implementation or the commit
+structure; Gate 1 and Gate 2 below remain the only approvals of either.
+
 ## Gate 1 — implementation review
 
 Stop here once:

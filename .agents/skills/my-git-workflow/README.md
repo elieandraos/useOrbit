@@ -69,6 +69,7 @@ choose a dependency-ready, approved issue
   → STOP — human reviews the commit plan
   → (approved) build the commits, narrowest-reliable verification per commit
   → full regression suite once, at the completed-issue boundary
+  → confirm commits reachable on the correct remote branch (push, with authorization, if not)
   → ask: close the issue?
   → (if yes) check Tasks, closing comment, close, post-mutation validation
       (this closure intentionally precedes the milestone's PR merging — see below)
@@ -106,11 +107,13 @@ commit, stash the rest, verify what's landed in isolation, pop, repeat. Watch fo
 activation retroactively un-skipping tests whose supporting code hasn't landed yet — reorder before
 it lands red, not after. Full detail: `rules/verification.md`.
 
-**Issue closure** is opt-in and always after the commits exist — ask first. If yes: check off
-completed Tasks, add a closing comment (summary, verification numbers, commit SHAs), close it, then
-re-fetch and confirm state, checkboxes, and comment actually landed — a `gh` command's exit code is
-never proof by itself. This closure is intentionally before the milestone's PR merges — closure marks
-implementation and verification as done, not that the commits reached the trunk branch. If a later
+**Issue closure** is opt-in and always after the commits exist and are confirmed reachable on the
+correct remote branch — pushed, with explicit authorization if they weren't already — then ask first.
+If yes: check off completed Tasks, add a closing comment (summary, verification numbers, commit
+SHAs), close it, then re-fetch and confirm state, checkboxes, and comment actually landed — a `gh`
+command's exit code is never proof by itself. This closure is intentionally before the milestone's PR
+merges — closure marks implementation and verification as done, and its commits pushed to the branch
+this work was actually done on, not that they've reached the trunk branch. If a later
 finding (e.g. milestone manual testing) concerns work an issue already closed, the default is a new
 issue referencing the original, not reopening it. Full detail: `rules/issue-closure.md`.
 

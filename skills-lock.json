@@ -11,13 +11,13 @@
       "source": "elieandraos/agentic-engineering",
       "sourceType": "github",
       "skillPath": "skills/my-feature-planning/SKILL.md",
-      "computedHash": "4e62ab0ee2cb3422130061402c7c5a3dad64293f9ba718e362cab64c90409aca"
+      "computedHash": "e18346d35d9b5ee6c77f6ab1a6006d3ce8c41b70e43983cc510f56e319f1923f"
     },
     "my-git-workflow": {
       "source": "elieandraos/agentic-engineering",
       "sourceType": "github",
       "skillPath": "skills/my-git-workflow/SKILL.md",
-      "computedHash": "c8e2f5204d804eb6e0247821f77b7fb19a4557dd4bd75e7b854063d10a890e86"
+      "computedHash": "c1729e0d6b2bc0fa62c858c9f74b3acbd72ec3ca78aad3c3797c8ef8bc710325"
     },
     "my-laravel-stack": {
       "source": "elieandraos/agentic-engineering",
