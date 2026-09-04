@@ -38,6 +38,18 @@ pass is later described.
 5. **After every GitHub mutation episode** — independently re-fetch the live state, validate it,
    report a compact summary.
 
+**Proving timing was honored.** Naming which surfaces ran is not optional narration. Before
+presenting the full content review, and again before every re-presentation of it after a correction,
+produce a compact review-execution record covering every surface in §§2-6 that applies to the current
+canonical set — each named as applied against the exact literal bodies being presented, or genuinely
+not applicable with the reason, including whether §5's member-level closed-set check was triggered
+and, if triggered, actually ran. A record that omits an applicable surface, or marks one not
+applicable without a real reason, does not satisfy this file's timing requirements, regardless of how
+the pass is later described. Keep the record internal by default; surface it only when the user asks
+for a skill/debug trace. A correction to any part of a presented issue invalidates that issue's prior
+record entry — its complete body is re-rendered fresh and every applicable surface reruns against
+that render, not only the corrected field, before it is re-presented.
+
 ## 2. Semantic issue-quality review
 
 Validate that:
@@ -161,7 +173,10 @@ Validates the freshly rendered full body text of one issue — not the canonical
 the compact manifest. A claim that this body is complete is proven only by inspecting that complete,
 literal rendered text end to end; an intended draft, a separate section-to-source mapping, a
 reasoning ledger, or a headline count that matches expectations is evidence to reason from, never a
-substitute for reading the actual text presented.
+substitute for reading the actual text presented. The same standard applies to a claim about a body
+rendered earlier in this pass: state what it contained only while that literal text is still
+available to inspect; once it is no longer available, say plainly that it cannot be verified rather
+than reconstructing it from memory or from this file's description of what it should contain.
 
 **References**
 - No `#N` represents a canonical planning identifier, plan decision, or other non-GitHub number.

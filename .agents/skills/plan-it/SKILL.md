@@ -50,6 +50,11 @@ never gets a lighter-weight issue.
   conversation, and this skill's own prior output all disappeared.
 - Two review surfaces gate creation — a full content review, then a final compact-manifest/metadata
   approval — and nothing (no milestone, label, or issue) is created until both are approved.
+- Reaching the content-review gate requires proof, not narration: every `rules/review.md` surface
+  applicable to the current canonical set has actually run against the exact literal bodies being
+  presented, captured in that file's compact review-execution record — a general claim that review
+  was applied does not satisfy this, and a correction invalidates the affected issue's prior record
+  entry until it is re-rendered and rechecked.
 - Every issue body is re-validated against its canonical definition immediately before it touches
   GitHub, and every mutation is re-fetched from GitHub and validated again afterward, at creation and
   on any later change — a `gh` command succeeding is never treated as proof by itself.
