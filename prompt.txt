@@ -1,12 +1,24 @@
 LLM debug:
 ---------
 - preserve the important decisions and findings for our next session
-- skill execution trace
+- skill execution trace: include a compact skill-execution trace stating:
+
+                         the exact installed my-feature-planning path/version or lock hash used;
+                         which rules/review.md sections were actually executed;
+                         why the previous pass claimed five README members were present when its literal Tasks section contained only four.
+
 - skill-creator claude plugin vlaidate skill health (too long, too token consuming)
 - skill authoring
 
 mattpollock skills
+my ecosystem:
+proven personal engineering system into a public, consumable toolkit—and yes, I can definitely feel it
 
+Until now, the question was:
+“Does this accurately encode Elie’s workflow and work reliably in useOrbit?”
+
+Now it becomes:
+“Can an unfamiliar engineer discover this, understand it, trust it, install it, and know which skill to use?”
 
 artifact review prompt:
 -----------------
