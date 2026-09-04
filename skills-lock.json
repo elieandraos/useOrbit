@@ -13,30 +13,6 @@
       "skillPath": "skills/laravel-inertia-stack/SKILL.md",
       "computedHash": "e1994e66926ed78fe05d2bc0c4fbccdab3cd430fc3a79c5e181d99f16394a849"
     },
-    "my-architecture-laboratory": {
-      "source": "elieandraos/agentic-engineering",
-      "sourceType": "github",
-      "skillPath": "skills/my-architecture-laboratory/SKILL.md",
-      "computedHash": "45c8f0cce2df862694041c515aeccc21aa5d2a18d225730beb05217492884ffe"
-    },
-    "my-feature-planning": {
-      "source": "elieandraos/agentic-engineering",
-      "sourceType": "github",
-      "skillPath": "skills/my-feature-planning/SKILL.md",
-      "computedHash": "e18346d35d9b5ee6c77f6ab1a6006d3ce8c41b70e43983cc510f56e319f1923f"
-    },
-    "my-git-workflow": {
-      "source": "elieandraos/agentic-engineering",
-      "sourceType": "github",
-      "skillPath": "skills/my-git-workflow/SKILL.md",
-      "computedHash": "c1729e0d6b2bc0fa62c858c9f74b3acbd72ec3ca78aad3c3797c8ef8bc710325"
-    },
-    "my-laravel-stack": {
-      "source": "elieandraos/agentic-engineering",
-      "sourceType": "github",
-      "skillPath": "skills/my-laravel-stack/SKILL.md",
-      "computedHash": "1c41d3c60fb57ade0de9bd3130ff885b559a3566f35c1111d26a43f84d037bd3"
-    },
     "plan-it": {
       "source": "elieandraos/agentic-engineering",
       "sourceType": "github",
