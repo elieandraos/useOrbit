@@ -31,10 +31,10 @@ yarn-error.log
 /.claude/*
 !/.claude/skills
 /.claude/skills/*
-!/.claude/skills/my-architecture-laboratory
-!/.claude/skills/my-feature-planning
-!/.claude/skills/my-git-workflow
-!/.claude/skills/my-laravel-stack
+!/.claude/skills/lab-it
+!/.claude/skills/plan-it
+!/.claude/skills/ship-it
+!/.claude/skills/laravel-inertia-stack
 .editorconfig
 _design/
 _ide_helper_macros.php

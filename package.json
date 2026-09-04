@@ -10,7 +10,7 @@
         "format:check": "prettier --check resources/",
         "lint": "eslint . --fix",
         "lint:check": "eslint .",
-        "skills:refresh": "skills update my-architecture-laboratory my-feature-planning my-git-workflow my-laravel-stack -p -y",
+        "skills:refresh": "skills update lab-it plan-it ship-it laravel-inertia-stack -p -y",
         "types:check": "vue-tsc --noEmit"
     },
     "devDependencies": {
