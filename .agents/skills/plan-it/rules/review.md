@@ -68,7 +68,7 @@ Validate that:
   recipes;
 - verification instructions inside a multi-group issue's Tasks/Tests are proportional to each
   checkpoint's affected surface, not a uniform full-regression instruction copied after every group
-  merely for symmetry (`rules/issue-conventions.md` §10);
+  merely for symmetry (`rules/issue-conventions.md` §10, `rules/verification-checkpoints.md`);
 - every completion requirement (Acceptance Criteria or Tests) is satisfiable at this issue's own
   expected closure boundary under the consuming delivery workflow — not stated as a per-issue gate
   when it can only be proven at a later milestone/PR boundary (`rules/issue-conventions.md` §11);
@@ -290,4 +290,5 @@ It does not own: defining issue syntax or metadata policy (`rules/issue-conventi
 decomposing or sequencing work (`rules/sequencing.md`); investigating raw findings
 (`rules/discovered-work.md`); resolving product/design decisions
 (`rules/design-reconciliation.md`, `rules/plan-md-input.md`); approval-gate ownership
-(`SKILL.md`); implementation review, issue closure, or delivery progression (`ship-it`).
+(`SKILL.md`); issue closure (`implement-it`); milestone/release delivery progression (`ship-it`);
+independent implementation review (`review-it`).

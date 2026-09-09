@@ -1,33 +1,64 @@
 # laravel-inertia-stack
 
-A companion for a **Laravel + InertiaJS + Vue 3 + Pest** stack. It carries evidence-backed
-conventions, implementation blueprints, and reusable code templates — the delta genuinely additive
-to Laravel Boost, not a standalone Laravel education.
+Bring evidence-backed Laravel, InertiaJS, Vue 3, and Pest conventions into the Implement
+stage.
 
-## What it is, and isn't
+## When to use it
 
-Laravel Boost's `laravel-best-practices` and `testing-best-practices` own the general Laravel and
-Pest baseline; `inertia-vue-development` owns Inertia/Vue client-side patterns.
-`laravel-inertia-stack` loads **alongside** those, never instead of them, and contains only what they
-don't already cover. It's not a universal architecture every project must adopt — its blueprints
-(tenancy, non-CRUD shapes, filters/sorters) stay conditional, not mandatory.
+- Writing or reviewing a Laravel controller, Form Request, Action, Policy, or Resource on
+  this stack.
+- Adding query filtering or sorting to an Eloquent index query.
+- Writing or organizing a Pest test.
+- Implementing an approved issue that touches this stack.
 
-Evidence is strongest for Laravel, Inertia, and Pest; Vue-specific questions route to
-`inertia-vue-development`.
+This is an optional stack companion, not a pipeline stage — and not a replacement for
+Laravel Boost. It loads **alongside** Boost's `laravel-best-practices`,
+`testing-best-practices`, and `inertia-vue-development`, carrying only the delta genuinely
+additive to them.
 
-## Three kinds of content
+## Boring prompts
 
-- **`rules/`** — independently applicable conventions (Actions, `#[Authorize]`, `#[Scope]`, request
+```shell
+"Add an is_active field with its migration, factory state, and tests."
+"Build a filterable resource index."
+"Implement issue #42 using this project's Laravel conventions."
+```
+
+## What normally happens
+
+A task loads only the specific rule, blueprint, or template it needs — never the whole
+skill at once. Three kinds of content back that up:
+
+- **`rules/`** — independently applicable conventions (Actions, authorization, request
   normalization, and more).
-- **`blueprints/`** — multi-component shapes composing several rules (resource-controller
-  composition, filtering/sorting, Pest testing taxonomy).
-- **`templates/`** — installable PHP starting points mirroring their project-relative path
-  (`QueryFilter`, `Filterable`, `QuerySorter`, `Sortable`, Inertia testing macros).
+- **`blueprints/`** — conditional shapes for multi-component work (resource controllers,
+  filtering/sorting, Pest test taxonomy) — not mandatory architecture every project must
+  adopt.
+- **`templates/`** — adaptable starting points, never blindly copied: the consuming
+  project is inspected for an existing equivalent, reconciled, and validated before a
+  template is installed.
 
-See `SKILL.md`'s routing table for exactly which file a task needs.
+## Ownership
 
-## Installing a template
+The consuming project remains authoritative over its own conventions. This skill fills
+the gap between Laravel Boost's general baseline and this specific stack's delta — it
+isn't a generic Laravel manual, a complete Vue guide, or documentation for any one
+project.
 
-A template is a starting point, not a fact about any project. Inspect the consuming project for an
-existing equivalent first, reconcile rather than overwrite, adapt only where needed, and validate the
-result — never install blindly.
+## Context consumption
+
+Activation loads only `SKILL.md`, whose own routing note also points a reader to this `README.md`
+for what `rules/`, `blueprints/`, and `templates/` each mean. `SKILL.md`'s routing table names the
+primary file(s) a given task needs, but a blueprint can route further on its own — the
+filtering/sorting blueprint's "Testing" section, for example, additionally routes to
+`rules/test-ownership.md` and `blueprints/pest-testing.md` for how its classes are tested. See
+[the context-consumption model and representative-workflow
+estimates](https://github.com/elieandraos/agentic-engineering/blob/main/docs/skill-context.md#laravel-inertia-stack).
+
+## Install
+
+```shell
+npx skills add elieandraos/agentic-engineering --skill laravel-inertia-stack
+```
+
+See [`SKILL.md`](SKILL.md) for the complete operational contract.

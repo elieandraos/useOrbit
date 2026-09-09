@@ -1,31 +1,36 @@
 ---
 name: lab-it
-description: "Investigates and validates how an existing system or capability actually works, from real implementation, tests, and current evidence — never conventions or guesses — then produces one of three results: a new architecture guide documenting existing architecture, an updated existing guide reconciled with verified current reality, or an approved `plan.md` handed to `plan-it`, capturing feature-architecture decisions reached with the user. Trigger to document existing architecture, update an architecture guide, resolve architecture or design decisions for a proposed feature, or synthesize approved findings into `plan.md`. Not for explaining one function, debugging, reviewing a diff, or writing API reference docs."
+description: "Investigates and validates how an existing system or capability actually works, from real implementation, tests, and current evidence — never conventions or guesses — producing a verified answer, an architecture decision reached with the user, or an approved `plan.md` handed to `plan-it`. Trigger to investigate or explain how a system works, resolve architecture or design decisions for a proposed feature, or synthesize approved findings into `plan.md`. Not for explaining one function, debugging, reviewing a diff, writing API reference docs, or creating, updating, or reviewing an architecture guide — route guide work to `document-it`."
 ---
 
 # lab-it
 
 ## What this skill does
 
-This skill investigates a real system and turns the resulting understanding into one of three
-results:
+This skill investigates a real system and turns the resulting understanding into one of the
+following:
 
-| User intention                                   | Result                                             |
-| ------------------------------------------------ | --------------------------------------------------- |
-| Understand and document existing architecture    | New Claude Artifact architecture guide             |
-| Reconcile a guide with verified changed reality  | Updated existing Artifact                          |
-| Design feature architecture through conversation | Approved `plan.md` handed to `plan-it` |
+| User intention                                                                | Result                                                                                     |
+| -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Understand how a system actually works                                        | A verified answer — investigation and recap, no guide required                            |
+| Resolve a feature's architecture through conversation, no `plan.md` requested  | A verified answer or resolved architecture discussion — no document produced              |
+| Explicitly request `plan.md` synthesis                                        | Approved `plan.md` handed to `plan-it`, via the existing synthesis and approval procedure  |
+| Create, update, or review an architecture guide                               | Routed to `document-it`                                                                    |
 
 Investigation comes first in every workflow — whether user confirmation follows, and when, is
 conditional; see "Shared investigation and decision discipline" below. Investigation and recap
-alone may be the complete result: no guide and no `plan.md` gets produced just because an
-investigation happened.
+alone may be the complete result: no `plan.md` gets produced just because an investigation
+happened.
 
 ## Shared investigation and decision discipline
 
-Every workflow below starts with the same evidence discipline:
+Every workflow below starts with the same evidence discipline — including an investigation
+`document-it` routes here when its own available evidence is missing or stale:
 
-1. Inspect the real current system and relevant evidence — not conventions or assumptions.
+1. Inspect the real current system and relevant evidence, proportionally to the request — not
+   conventions or assumptions, and not past what establishing the answer or the architectural fit
+   actually requires. Reuse reliable findings and already-approved decisions already established in
+   this conversation or another identifiable prior context instead of re-investigating them.
 2. Reconcile implementation, configuration, schema, tests, runtime evidence, and reliable history.
 3. Explain the current architecture and identify uncertainty.
 
@@ -37,77 +42,13 @@ since tests can be incomplete or stale. Implementation is authoritative for impl
 configuration, schema, runtime observations, and external-system state are authoritative for
 whatever they each actually govern. If asked, check issue and commit history for *why* — reliable
 history explains rationale, it doesn't establish current behavior. Never document something
-history says was planned but the evidence doesn't show. Do not begin drafting a guide or a
-`plan.md` during this step.
+history says was planned but the evidence doesn't show. Do not begin writing a `plan.md` — or,
+when this investigation was routed from `document-it`, a guide — during this step.
 
-What happens next is conditional, not uniform, per workflow: creating a new guide requires recap
-confirmation before publication; planning feature architecture requires explicit, user-approved
-decisions before writing `plan.md`; updating an existing guide asks the user only when authority,
-intent, or a material decision is unclear — routine, verified current-state documentation does not
-require a new product decision.
-
-## Document existing architecture
-
-Route: investigate the real system → recap and obtain confirmation → decide structure from the
-center of gravity → load the guide-writing and Artifact-design instructions → use the template →
-publish the Claude Artifact → run the architecture-guide review.
-
-1. **Investigate.** Inspect every architectural surface the system
-   actually has before writing anything. Typical concerns: persistence and data relationships;
-   business rules and lifecycle behavior; request or interaction boundaries; authorization and
-   security; background or asynchronous work; external integrations; user-facing surfaces and
-   reusable UI logic; schema and operational constraints. These are investigation categories, not
-   a fixed checklist — the consuming project supplies its own framework, directories, and concrete
-   artifacts. Identify the **architectural center of gravity** — the one idea everything else
-   hangs off (a polymorphic contract, a queue pipeline, a runtime subsystem boundary, a
-   sync-vs-async split) — as a hypothesis the guide-writing step will need.
-
-2. **Recap and confirm.** Write the recap directly as chat
-   output, not a file or an artifact. Cover, with concrete implementation references threaded
-   throughout, whichever of these actually apply to the system: the problem being solved, the core
-   architecture, reusable pieces versus integration-specific code, runtime behavior, the data
-   model, the integration seam, security, testing, architectural decisions, and remaining gaps.
-   Don't invent a data model, runtime lifecycle, security boundary, reuse seam, or integration
-   split the system doesn't have just to fill out the list. Keep it bullet-driven and honest about
-   gaps. **Stop here and wait for the user to confirm before this investigation becomes a
-   published guide.** A correction here is real signal about what the guide needs to get right.
-
-3. **Write and publish the guide.** Only after the recap
-   is approved:
-   - Decide the document's structure from the confirmed center of gravity. Architecture guides do
-     not use one fixed section inventory: structure follows the system being explained. See
-     `rules/doc-style.md` for the writing grammar and content-block vocabulary.
-   - Load the `artifact-design` skill (required before writing any Artifact page).
-   - Write the HTML using `rules/template.html` as the starting scaffold. Replace content;
-     keep the design system unless the system genuinely needs a new block type.
-   - Publish with the `Artifact` tool: title `"{Capability} Architecture"`, a one-sentence
-     description, and a stable, domain-appropriate favicon (see
-     `rules/doc-style.md#choosing-a-favicon`).
-   - Run `rules/review.md`'s checklist against the published guide before considering it
-     complete — see "Output-specific non-negotiables" for what the guide itself must do.
-
-Publishing to a Claude Artifact is specific to this workflow (and to updating an existing guide,
-below) — investigating and recapping don't depend on it, and neither does the `plan.md` output of
-planning feature architecture.
-
-## Update an existing architecture guide
-
-Use this workflow when a published guide needs reconciling with verified current reality —
-triggered by a stale architectural claim, a stale evidence reference, changed configuration or
-runtime behavior, or a prior documentation defect, not only a changed implementation. This is its
-own workflow, not an automatic fourth stage after creating a new guide.
-
-Route: locate the existing Claude Artifact, rather than minting a new one → compare its
-architectural claims against verified current implementation, configuration, runtime evidence, and
-tests → follow the complete affected claim graph, not only the section where the change was first
-noticed → update to describe how the architecture works now, not as a changelog → preserve its
-identity and stable presentation metadata (same `url`, same favicon) → run `rules/review.md`
-against the whole updated guide, with emphasis on the changed claims and whatever depends on them.
-
-`rules/maintenance.md` governs every judgment call in this route — read it before making any
-edit. It preserves a guide's unaffected architectural meaning without freezing architecture the
-evidence shows has genuinely changed: the center of gravity, structure, ownership, or reasoning can
-move when verified reality requires it.
+What happens next is conditional, not uniform: investigation can end in a verified answer alone,
+with no further output required; planning feature architecture requires explicit, user-approved
+decisions before writing `plan.md`; an investigation routed here from `document-it` ends by
+handing back verified findings rather than drafting a guide itself.
 
 ## Plan feature architecture
 
@@ -123,6 +64,38 @@ The workflow may need to:
 - obtain explicit decisions for material product/architecture questions;
 - leave implementation details open when every viable option preserves the approved guarantees.
 
+A request resembling an established pattern does not automatically need a design interview or a
+`plan.md`. When comparable features already establish the applicable conventions and investigation
+finds no genuine architectural difference or material product decision, a short verified answer with
+a recommendation to proceed to `plan-it` completes the request. Existing instances establish
+conventions, not automatic approval of new product behavior — investigate only enough to confirm
+architectural fit and surface a real difference before deciding whether a decision conversation is
+even needed.
+
+When a material decision conversation is needed, scale it to what's actually unresolved:
+
+- **Question only unresolved material choices**, applying the materiality test in
+  `rules/plan-synthesis.md` during the conversation itself, not only while drafting the plan — an
+  ordinary implementation detail stays open under that same rule. Order questions by dependency:
+  settle a foundational choice before asking one that depends on its answer, and raise independent
+  questions alongside it when doing so helps.
+- **Keep exchanges understandable**: a small, coherent group of related questions, or one question
+  when the topic needs focused discussion. Explain the meaningful consequences of a choice and give a
+  reasoned recommendation when evidence supports one — a recommendation is guidance, never an approved
+  decision.
+- **Clarify ambiguous language with concrete scenarios.** When a term could be read more than one
+  way and the readings would change behavior, ownership, lifecycle, or guarantees, work through a
+  concrete example rather than asking the user to define the term abstractly, and separate what the
+  system currently does from what the user wants.
+- **Name evidence-dependent uncertainty instead of guessing.** When discussion alone cannot resolve a
+  choice, say so and name what would help — closer inspection, an experiment, or a prototype. Stay
+  inside existing authorization boundaries: don't silently start implementing to find out, and don't
+  treat "I don't know" as approval of a default.
+- **Finish proportionally.** Stop once the material decisions are resolved; don't keep exploring
+  design branches nobody raised. This doesn't relax Plan Synthesis's own preconditions or approval
+  gate below — a narrow initiative can still warrant a short `plan.md` when the user explicitly asks
+  for one.
+
 Only after the architecture is sufficiently investigated and the material decisions are approved
 does this workflow perform its final writing step, **Plan Synthesis** — consolidating an
 already-investigated current state and already-approved user decisions into a draft `plan.md`
@@ -133,10 +106,10 @@ decisions from conversation history.
 automatic next step after investigation, and never treat a plain "document/explain X" request as
 implicitly asking for one.
 
-**Preconditions**, both required: an investigation of the same quality "Document existing
-architecture" requires (concrete references, not conventions or guesses), and explicit,
-user-approved decisions about the target state. If either is missing, do that work first — Plan
-Synthesis never manufactures a decision on the user's behalf.
+**Preconditions**, both required: an investigation meeting the same evidence discipline as
+"Shared investigation and decision discipline" above (concrete references, not conventions or
+guesses), and explicit, user-approved decisions about the target state. If either is missing, do
+that work first — Plan Synthesis never manufactures a decision on the user's behalf.
 
 Every claim in the plan must fall into exactly one of four categories — see "Output-specific
 non-negotiables" for the rule. `rules/plan-synthesis.md` owns the full methodology: the
@@ -150,8 +123,11 @@ by itself prove approval. `plan-it` treats a plan as canonical only once the ini
 matches and the user's explicit approval is established; see
 `plan-it/rules/plan-md-input.md` for the full recognition procedure.
 
-**Skill boundary.** This workflow stops at an approved `plan.md` — see "Ownership and handoff" for
-what belongs to `plan-it` instead.
+**Skill boundary.** This workflow ends at one of two points: a verified answer recommending
+`plan-it` directly, when no material decision remains, or an approved `plan.md` handed to `plan-it`,
+when Plan Synthesis ran. Document approval gates only the second — it is not a universal
+prerequisite for entering `plan-it`. See "Ownership and handoff" for what belongs to `plan-it`
+instead.
 
 ## Ownership and handoff
 
@@ -160,12 +136,15 @@ This skill owns:
 - architecture investigation;
 - architectural explanation;
 - surfacing and resolving material decisions with the user;
-- new architecture guides;
-- maintenance of existing guides;
 - synthesis of approved architecture into `plan.md`.
+
+An investigation may end in a verified answer alone — a guide is never a required next step.
 
 This skill does not own:
 
+- creating or updating an architecture guide, or guide review (→ `document-it` — draws on this
+  skill's investigation method when its own available evidence is missing or stale, rather than
+  duplicating it);
 - application implementation;
 - debugging or diff review;
 - API reference documentation;
@@ -176,34 +155,13 @@ This skill does not own:
 
 ## Rule and supporting-file routing
 
-These are loaded only when their workflow needs them — none is a universal prerequisite:
+- the materiality test consulted throughout the decision conversation, and plan writing →
+  `rules/plan-synthesis.md`, loaded only when "Plan feature architecture" needs it.
 
-- guide writing → `rules/doc-style.md`
-- guide scaffold → `rules/template.html`
-- guide review → `rules/review.md`
-- guide maintenance → `rules/maintenance.md`
-- plan writing → `rules/plan-synthesis.md`
+Guide-writing, guide-scaffold, guide-review, and guide-maintenance rules live under `document-it`
+and are not duplicated here.
 
 ## Output-specific non-negotiables
-
-Guide rules (apply to "Document existing architecture" and "Update an existing architecture
-guide"):
-
-- Explain architecture, not implementation: why it exists, why it's shaped that way, and — where
-  extension is relevant — how it can be extended. Code blocks exist only at genuine extension
-  seams, never a walkthrough of a whole method body.
-- When a real line exists between reusable infrastructure and integration-specific code, make it
-  explicit in whatever structure the guide already uses — never a mandated section or table.
-- Explain runtime ownership and lifecycle wherever the system has either — don't invent one for a
-  capability with no runtime story.
-- Ground material architectural claims in concrete evidence or enforcement references when an
-  identifiable mechanism exists; never force a misleading one.
-- No API documentation, no endpoint inventories, no line-by-line implementation walkthroughs, no
-  duplicated explanations across sections.
-- Not every guide needs a limitations section. When limitations or deferred work materially affect
-  understanding, state the reason rather than adding a generic TODO list.
-- A guide is never done until it has passed a `rules/review.md` pass — writing and reviewing
-  are two separate steps.
 
 Plan rules (apply to "Plan feature architecture"; full contract in
 `rules/plan-synthesis.md`):
@@ -212,4 +170,5 @@ Plan rules (apply to "Plan feature architecture"; full contract in
   visually and textually distinct — the locked-vs-open rule above all.
 - Never present an unresolved decision as settled without the user's explicit confirmation.
 
-Don't apply the guide rules to a `plan.md`, or the plan rules to a guide.
+Guide-specific non-negotiables live in `document-it/SKILL.md` and `document-it/rules/review.md` —
+not duplicated here.

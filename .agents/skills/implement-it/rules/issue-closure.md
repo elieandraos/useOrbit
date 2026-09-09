@@ -15,8 +15,8 @@ milestone issue, even before that PR exists.** Closure marks that this issue's i
 verification are done, not that its commits have reached the trunk branch. For a Backlog/hotfix issue
 worked directly on the trunk branch, that gap is usually momentary or nonexistent; for a milestone
 issue on a shared branch, several issues can close this way before the branch is ever proposed as a
-PR — `rules/milestone-completion.md`'s "Milestone PR readiness" gate is what checks the aggregate
-state of all that already-closed work before it moves toward a PR.
+PR — `ship-it/rules/milestone-pr-readiness.md`'s "Milestone PR readiness" gate is what checks the
+aggregate state of all that already-closed work before it moves toward a PR.
 
 Closing before a PR exists never means closing before the commits themselves exist remotely, though:
 this closure still requires the issue's commits to already be on the branch this work was actually
@@ -44,12 +44,23 @@ first" below, confirm the issue's commits are reachable on the correct remote br
    ```
 
    An empty result means every local commit, including the issue's, is already on the remote
-   branch — skip straight to "Ask first." A non-empty result means the issue's commits still need to
-   be pushed.
-3. **If they aren't remote yet, ask for explicit authorization to push.** This is a permission check
-   for a mutating remote action, not a third review gate — Gate 1 and Gate 2
-   (`rules/review-gates.md`) already approved the implementation and the commit structure; this only
-   asks whether to make those already-approved commits reachable on the remote.
+   branch. A non-empty result means the issue's commits still need to be pushed.
+3. **Either way, confirm the approval this step relies on is still valid** — per
+   `rules/review-gates.md`'s "Approval validity before Gate 2 and before push," which owns the
+   substantive check; this rule only routes to it. Run it on both paths, not only the one that
+   pushes — resumed work with nothing left to push still needs its Gate 1/Gate 2 approval confirmed
+   applicable before advancing toward closure, exactly as much as work that still needs pushing
+   does. Remote presence never substitutes for that confirmation, and closure never proceeds on
+   presence alone. If the check finds missing or stale approval evidence, report it and resolve it
+   the way `rules/review-gates.md` directs — never silently assume the approval still applies.
+   - **Already remote (step 2 was empty).** Once approval validity is confirmed, skip straight to
+     "Ask first" below.
+   - **Not remote yet.** Once approval validity is confirmed, ask for explicit authorization to
+     push — unless push authorization for this exact content was already granted earlier in this
+     same session and remains applicable, in which case proceed to step 4 without asking a second,
+     redundant time. Re-check applicability again immediately before the actual push mutation, even
+     when authorization was granted earlier: preserve it if it still demonstrably applies; if it no
+     longer does, that's a stop, not a silent reuse.
 4. **Push normally once authorized.** A plain push to the branch identified in step 1 — never
    `--force` or an equivalent override. A push rejected because the remote has diverged is a genuine
    problem to surface to the human, not something to force past.
@@ -71,8 +82,9 @@ Only once step 2 or step 5 confirms remote reachability does "Ask first," below,
 - It does not create, review, or merge a PR. A milestone issue can close while its shared branch is
   still well before PR creation, exactly as described above — the branch itself carrying the pushed
   commits is what this step adds, not a PR.
-- It does not trigger or imply a release (`rules/release.md`) or milestone closure
-  (`rules/milestone-completion.md`) — those stay gated on their own, later, post-merge authorization.
+- It does not trigger or imply a release (`ship-it/rules/release.md`) or milestone closure
+  (`ship-it/rules/milestone-completion.md`) — those stay gated on their own, later, post-merge
+  authorization.
 - It is not a reason to rerun the completed-issue full-suite verification. That verification already
   proved the commits correct on the working tree that produced them; pushing that same,
   already-verified state to the remote doesn't change what it proved.
@@ -147,6 +159,8 @@ from commits and conversation. It should be a concise summary, not a transcript.
 
 - **What was implemented** — a short summary of the outcome.
 - **Verification results** — test counts, full-suite pass/skip/fail, per `rules/verification.md`.
+  When the completed-issue checkpoint was satisfied by reuse rather than a fresh run, say so, and
+  name the earlier run being reused — never state a reused result as if it were freshly executed.
 - **The actual commit SHAs** that implement the issue — the same SHAs "Push readiness" above
   confirmed are reachable on the remote branch.
 - **Anything discovered during implementation or review that's worth preserving** — the kind of
@@ -196,15 +210,16 @@ a link. Don't re-print the full issue body or the closing comment — the reader
 - **It does not create, review, or merge a PR, and does not trigger a release or milestone
   closure.** Pushing the issue's commits to the correct remote branch (see "Push readiness" above)
   only makes them reachable — those later events stay gated on their own separate authorizations
-  (`rules/release.md`, `rules/milestone-completion.md`).
+  (`ship-it/rules/release.md`, `ship-it/rules/milestone-completion.md`).
 - **It only operates on the single issue** associated with the work that was just committed and
   verified. It does not touch any other issue.
 - **It does not create issues.** That's `plan-it`'s territory, not this rule's.
 - **It does not reopen issues.** This rule owns closing a committed, verified issue — not reopening
   one. The observed default, when a later finding (e.g. milestone manual testing) concerns work this
   rule already closed, is a *new* issue referencing the original — not reopening it — per
-  `rules/milestone-completion.md`'s "When manual testing finds something." That default doesn't make
-  reopening this rule's job; it just means reopening isn't the path a normal finding takes.
+  `ship-it/rules/milestone-pr-readiness.md`'s "When manual testing finds something." That default
+  doesn't make reopening this rule's job; it just means reopening isn't the path a normal finding
+  takes.
 
 ## Do / Don't
 

@@ -78,9 +78,10 @@ The procedure:
 3. Inspect the actual diff (`git status`, `git diff --stat`, then per-file diffs).
 4. Identify the implementation decisions the diff actually contains.
 5. Group changes by decision, not by file location or type.
-6. Order the groups by dependency. `rules/verification.md`'s activation-ordering rule can require
-   reordering on top of this — see that rule's "Relationship to dependency ordering" for how the two
-   interact.
+6. Order the groups by dependency — always required. Before treating that order as final, check
+   whether any group changes configuration, a feature flag, environment-conditioned behavior, or
+   otherwise could affect runtime activation; never assume it doesn't without checking. If it does,
+   `rules/activation-ordering.md` can require reordering on top of dependency order.
 7. Verify each intermediate state would be coherent, per "What makes a commit coherent" above.
 8. Propose the commit plan for human review (Gate 2 — `rules/review-gates.md`) before writing a
    single commit.
@@ -155,18 +156,15 @@ depends on whether anything has been committed yet.
 No separate "fix review comments" commit exists, because none of the work had been committed when
 the correction was made.
 
-**Something already committed, correction needed before push.** Don't bolt a fixup commit on top.
-Rebuild history so the correction lands inside the commit it actually belongs to:
-
-1. `git reset --soft HEAD~1` — undoes the commit, keeps every change staged.
-2. Selectively `git add` and `git commit` per semantic group.
-3. Verify each resulting commit in isolation before moving to the next (`rules/verification.md`).
-
-The result reads as if it had been built that way from the start — there's no trace in the history
-that it was originally committed differently.
-
-Never preserve every conversational step as its own commit "for the record." The history should read
-as a sequence of decisions, not a transcript.
+**Something already committed, correction needed before push.** This is a rarer case than the one
+above, and needs a dedicated procedure — history reconstruction, not an in-place edit. Don't bolt a
+fixup commit on top; the correction must land inside the commit it actually belongs to, and only
+within the unpublished range. See `rules/commit-reconstruction.md`, loaded only once this specific
+situation actually arises — a correction belongs to a commit that already exists locally but hasn't
+been pushed yet. Ordinary commit building, including the common "nothing committed yet" case above,
+never needs it. Rewriting a commit already reachable on the remote branch is outside that recipe
+entirely: that requires specific human authorization and a different path, never a silent rewrite.
+This maintenance boundary applies generally, not only to this skill's own commits.
 
 ## Do / Don't summary
 

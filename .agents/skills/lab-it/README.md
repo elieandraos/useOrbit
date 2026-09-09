@@ -1,47 +1,63 @@
 # lab-it
 
-Investigates how a system actually works, from real implementation, tests, and current evidence —
-never conventions or guesses — then produces one of three results:
-
-| Intention | Result |
-|---|---|
-| Understand and document existing architecture | New architecture guide |
-| Reconcile a guide with verified changed reality | Updated existing guide |
-| Design feature architecture through conversation | Approved `plan.md` handed to `plan-it` |
-
-Investigation and a recap can be the whole result on their own — a guide or a `plan.md` is something
-someone has to ask for, not an automatic next step.
+Investigate how a system actually works, answer architecture questions, and—when
+useful—turn approved decisions into a change plan.
 
 ## When to use it
 
-- You want to understand or document how something in the codebase actually works.
-- A published architecture guide is stale relative to verified current behavior.
-- You're about to build a feature and need the architecture decisions settled before planning or
+- You need an answer about how something in the codebase actually works, backed by real
+  implementation, tests, and current evidence — not conventions or guesses.
+- A feature idea needs its architecture decisions settled before planning or
   implementation starts.
 
-Not for explaining one function, debugging, reviewing a diff, or writing API reference docs.
+Not for explaining one function, debugging, reviewing a diff, writing API reference docs, or
+creating, updating, or reviewing an architecture guide — see [`document-it`](../document-it/) for
+guide work, which draws on this skill's investigation method when its own evidence is missing or
+stale.
 
-## How it works
+## Boring prompts
 
-Every workflow starts the same way: inspect the real system, reconcile evidence (implementation,
-config, schema, tests, history), and explain the architecture including what's still uncertain — the
-system establishes what exists, the user decides what it should become. What happens next differs by
-workflow: a new guide needs recap confirmation before publishing; planning feature architecture needs
-explicit, user-approved decisions before `plan.md` is written; updating a guide only asks the user
-when authority or a material decision is unclear.
+```shell
+"How does authentication work across the application?"
+"Plan how invoice exports should fit into the system."
+```
 
-A `plan.md` produced here keeps every claim in one of four categories — current-state fact, locked
-decision, derived constraint, or open implementation detail — so `plan-it` can treat it as canonical
-without re-deriving decisions from conversation.
+## What normally happens
+
+Every request starts with the same investigation: inspect the real system, reconcile
+implementation, config, schema, tests, and history, and explain what's there — including
+what's still uncertain. Investigation and any decision conversation scale to the request: a
+feature that closely follows established, already-approved conventions may need only enough
+inspection to confirm architectural fit, with no design interview or `plan.md` required — existing
+instances establish conventions, not automatic approval of new product behavior. From there, one of
+two outcomes follows:
+
+1. Investigation and a direct answer — the complete result on its own.
+2. An approved `plan.md`, handed off as canonical input for planning.
+
+A `plan.md` is something a request specifically asks for, never an automatic next step after
+investigation.
 
 ## Ownership
 
-Owns architecture investigation and explanation, new and updated architecture guides, and synthesis
-of approved feature architecture into `plan.md`. Does not own application implementation, downstream
-issue planning, or Git/GitHub delivery — see `plan-it` and `ship-it`.
+Owns architecture investigation, architectural explanation, and turning approved
+decisions into a `plan.md`. Creating, updating, or reviewing an architecture guide belongs to
+[`document-it`](../document-it/) — file extension alone doesn't decide ownership; an approved
+`plan.md` stays this skill's even though it's a `.md` file. Planning the resulting work into
+GitHub issues belongs to [`plan-it`](../plan-it/); implementing it belongs to
+[`implement-it`](../implement-it/).
 
-## Rules
+## Context consumption
 
-`SKILL.md` routes to `rules/doc-style.md` (guide writing), `rules/template.html` (guide scaffold),
-`rules/review.md` (guide review), `rules/maintenance.md` (guide updates), and
-`rules/plan-synthesis.md` (`plan.md` methodology).
+Activation loads only `SKILL.md`. Its one rule file, `rules/plan-synthesis.md`, loads only for the
+"Plan feature architecture" workflow — a plain investigation-and-answer request never reaches it.
+See [the context-consumption model and representative-workflow
+estimates](https://github.com/elieandraos/agentic-engineering/blob/main/docs/skill-context.md#lab-it).
+
+## Install
+
+```shell
+npx skills add elieandraos/agentic-engineering --skill lab-it
+```
+
+See [`SKILL.md`](SKILL.md) for the complete operational contract.

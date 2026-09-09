@@ -8,7 +8,7 @@
 The same altitude relationship holds at every level of this workflow:
 
 - a **commit** explains one implementation decision — *why this diff, on its own terms*
-  (`rules/commit-boundaries.md`);
+  (`implement-it/rules/commit-boundaries.md`);
 - a **PR** is the integrated change being merged — what the reviewer is approving as a whole;
 - a **release** is the shipped outcome — what a user, operator, or downstream project actually gets,
   and why it's worth noting.
@@ -27,19 +27,19 @@ PR merged → human confirms it merged → STOP: authorization to begin the post
 
 The same authorization also opens `rules/milestone-completion.md`'s closure gate for a milestone
 issue. The two branches proceed independently from there — neither this rule's publication nor that
-rule's closure is a precondition for the other; see that rule's "Milestone closure and release do not
-gate each other."
+rule's closure is a precondition for the other; see `rules/milestone-lifecycle.md`'s "Milestone
+closure and release do not gate each other."
 
 - This phase starts only once a PR has been **successfully merged** — not when implementation
   finishes, and not when the last commit lands. A merged PR is the trigger; nothing earlier in the
   lifecycle is. This describes the milestone-PR path specifically; a Backlog/hotfix issue worked
-  directly on the trunk branch (`rules/sequencing.md`'s "Branch readiness") has no PR to merge, and
+  directly on the trunk branch (`implement-it/rules/sequencing.md`'s "Branch readiness") has no PR to merge, and
   what release cadence, if any, applies to that work is not designed by this rule — there's no
   evidence yet to extract a rule from.
 - **PR creation and merge strategy are not owned by this rule.** However a PR came to be merged is
   out of scope here — this rule picks up from "a PR merged," full stop. For a milestone issue, the
   observed convention is that its PR references the milestone it integrates — see
-  `rules/milestone-completion.md`'s "The milestone-PR reference convention"; this rule has no PR-
+  `rules/milestone-pr-readiness.md`'s "The milestone-PR reference convention"; this rule has no PR-
   content requirements of its own.
 - **The human's explicit confirmation that the PR merged is the integration gate.** Before that
   confirmation, the human is expected to have already waited on CI/CD checks, confirmed there's no
@@ -55,11 +55,11 @@ post-merge progression — which may include drafting and publishing a release (
 milestone issue, closing the milestone (`rules/milestone-completion.md`'s closure gate). A single
 question can cover both, e.g. "close the milestone and start the release?" — but they are separate
 mutations, and completing one is never a precondition for starting the other (see
-`rules/milestone-completion.md`'s "Milestone closure and release do not gate each other"). Do not
+`rules/milestone-lifecycle.md`'s "Milestone closure and release do not gate each other"). Do not
 begin policy discovery below until this authorization is explicit.
 
 This is a separate, earlier gate from step 4's approval of the exact release content, the same way
-Gate 1 and Gate 2 in `rules/review-gates.md` are separate: "may I start this phase at all" is not the
+Gate 1 and Gate 2 in `implement-it/rules/review-gates.md` are separate: "may I start this phase at all" is not the
 same question as "is this exact version/title/body correct." Do not treat "the PR merged" as an
 implicit green light to start drafting, and do not treat authorization to start as approval of what
 gets published.
@@ -91,7 +91,7 @@ what this repository actually does, in this order:
    examples.
 3. **If the evidence is ambiguous or conflicting** — no policy file, thin or inconsistent history,
    two competing conventions, or no history at all — stop and ask the human rather than inventing
-   one. This is the same "genuine unknown" stop `rules/review-gates.md` applies elsewhere in this
+   one. This is the same "genuine unknown" stop `implement-it/rules/review-gates.md` applies elsewhere in this
    skill, extended here to release policy: a missing decision does not get invented and presented as
    fact.
 
@@ -162,7 +162,7 @@ Before any publication mutation, present all of the following together and stop:
 - the release title;
 - the complete release body.
 
-This mirrors the two pre-merge review gates (`rules/review-gates.md`) and step 0 above: approval of
+This mirrors the two pre-merge review gates (`implement-it/rules/review-gates.md`) and step 0 above: approval of
 the release *content* is not implicit in the merge having happened, and is not implicit in the step-0
 authorization to begin either — a **merged PR is not publication approval, and authorization to start
 drafting is not approval of what got drafted**. Approving one wording tweak is not the same as
@@ -173,6 +173,15 @@ the *exact final content* before running any publish command. Do not tag or publ
 this approval is explicit and covers the version actually about to be published.
 
 ## 5. Publish using the project's discovered mechanism
+
+**Before running any part of this sequence, re-query the discovered mechanism's own source of truth
+for what a prior attempt may already have produced** — a tag pushed with no release created yet, a
+release drafted but not published, or an ambiguous outcome from a lost response. A failed or
+timed-out call is not proof nothing was published; requery before concluding the full sequence still
+needs to run. Validate whatever already exists against the approved version/target/title/body from
+step 4, then perform only the remaining steps. Never recreate, retarget, overwrite, or delete an
+existing, correct tag or release merely to restart the sequence from the beginning — preserve it and
+continue from where it actually left off.
 
 Use whatever release mechanism step 1 actually discovered — don't default to git tags, GitHub
 Releases, or any other specific tooling absent evidence for this project. Preserve the established
@@ -199,7 +208,7 @@ gh release create <version> --title "<title>" --target <branch> --notes-file <ap
 
 > A publish command's successful exit code is not proof anything actually landed correctly.
 
-This is the same discipline `rules/issue-closure.md` applies to every GitHub mutation in this skill,
+This is the same discipline `implement-it/rules/issue-closure.md` applies to every GitHub mutation in this skill,
 extended here to releases. Re-fetch the tag and release from the source of truth discovered in step
 1, and validate at minimum:
 
@@ -212,12 +221,18 @@ extended here to releases. Re-fetch the tag and release from the source of truth
 A mismatch on any field is a failed validation to report and fix, not a cosmetic discrepancy to gloss
 over because the publish command didn't error.
 
+A **partial outcome** — the tag exists but no release references it, or a release exists in draft
+state with the tag still missing — is not a failed validation to discard and restart; it's the
+remaining part of step 5's sequence still to perform, using the approved content already confirmed
+at step 4. Report it as what it actually is: what already exists and validated correctly, and what
+remains.
+
 Report the result compactly — what was created, and a field-by-field confirmation — not a re-print of
 the whole release body.
 
 ## What this rule does not do
 
-- **It does not close issues.** That already happened, per issue, in `rules/issue-closure.md`,
+- **It does not close issues.** That already happened, per issue, in `implement-it/rules/issue-closure.md`,
   before the PR was even opened.
 - **It does not decide whether or how a PR gets created or merged.** This rule starts from "a PR
   merged," however that happened, and has no opinion on PR creation or merge strategy.
@@ -228,9 +243,9 @@ the whole release body.
   beyond what step 1 actually found evidence for.
 - **It does not decide milestone closure, and does not gate it.** `rules/milestone-completion.md`'s
   closure gate starts from the same post-merge authorization this rule's step 0 asks for, not from
-  this rule's publication having completed — see that rule's "Milestone closure and release do not
-  gate each other." A milestone can close before, after, or without regard to the timing of this
-  rule's release.
+  this rule's publication having completed — see `rules/milestone-lifecycle.md`'s "Milestone closure
+  and release do not gate each other." A milestone can close before, after, or without regard to the
+  timing of this rule's release.
 
 ## Do / Don't
 
@@ -245,6 +260,8 @@ the whole release body.
 - Present version, tag target, title, and full body together, and get explicit approval before
   publishing.
 - Publish through the mechanism discovered in step 1, preserving its established semantics.
+- Re-query for a prior attempt's partial result before publishing, and perform only the remaining
+  steps when one exists.
 - Re-fetch and validate every required field after publication.
 - Report results compactly rather than re-printing the release body.
 
@@ -257,5 +274,9 @@ the whole release body.
 - Assume a specific tag/release command sequence without discovery evidence for this repository.
 - Publish before the human has approved the exact final version, target, title, and body.
 - Trust a publish command's exit code as proof of the resulting state.
+- Recreate, retarget, overwrite, or delete an existing correct tag or release merely to restart the
+  publish sequence.
+- Treat a partial publish outcome (e.g. a tag with no release) as a failure to discard rather than
+  remaining work to finish.
 - Invent deployment, rollback, prerelease, or changelog automation the repository shows no evidence
   of wanting.

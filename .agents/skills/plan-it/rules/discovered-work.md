@@ -171,7 +171,7 @@ validated into honest planning input. From there the finding is ordinary plannin
 
 This rule doesn't fix code, and it doesn't create a second, lighter issue-authoring path.
 
-After approved issue creation, `ship-it` owns the downstream Git/GitHub delivery
+After approved issue creation, `implement-it` owns the downstream Git/GitHub implementation
 workflow — branch readiness, live readiness, commits, verification, and closure — composing with the
 consuming project's own implementation skills, which own the actual application/framework code.
 Approved canonical scope is the implementation starting point, and implementation shouldn't

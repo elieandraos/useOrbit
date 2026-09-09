@@ -1,5 +1,5 @@
 <!--
-  Starting HTML/CSS scaffold for the lab-it guide-writing workflow. This is a
+  Starting HTML/CSS scaffold for the document-it guide-writing workflow. This is a
   starting point, not a form to fill in blindly: rules/doc-style.md decides a guide's actual
   section structure, content-block choices, and writing grammar — read it before deciding what
   this guide contains. rules/review.md checks a finished guide; rules/maintenance.md
@@ -13,7 +13,8 @@
   - no external requests or CDN dependencies — everything below is inline CSS/JS;
   - the <title> below is a placeholder, replaced with the real capability name;
   - a stable, domain-appropriate favicon emoji, supplied through the Artifact publish call and
-    re-supplied unchanged on every redeploy — see rules/doc-style.md#choosing-a-favicon;
+    re-supplied unchanged on every redeploy — see
+    rules/doc-style.md#choosing-a-favicon-artifact-only;
   - load the artifact-design skill before publishing a new guide.
 -->
 <title>{{Capability}} Architecture</title>
@@ -91,10 +92,12 @@
   a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   .shell { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 0; max-width: 1180px; margin: 0 auto; }
-  @media (max-width: 880px) { .shell { grid-template-columns: 1fr; } .nav { position: static; border-right: none; border-bottom: 1px solid var(--border); } }
+  @media (max-width: 880px) { .shell { grid-template-columns: 1fr; } }
 
   .nav { position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto; padding: 2.25rem 1.1rem 2rem; border-right: 1px solid var(--border); }
-  @media (max-width: 880px) { .nav { height: auto; } }
+  /* Must follow the base .nav rule above — same specificity, so an earlier occurrence would lose
+     the cascade to it and never take effect at mobile widths. */
+  @media (max-width: 880px) { .nav { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); } }
   .nav-mark { font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 1.5rem; }
   .nav ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.1rem; }
   .nav a { display: flex; gap: 0.55rem; align-items: baseline; text-decoration: none; color: var(--muted); padding: 0.32rem 0.5rem; border-radius: 5px; font-size: 0.83rem; }
@@ -280,11 +283,9 @@
 
     var escaped = escapeHtml(codeEl.textContent);
 
-    if (!SUPPORTED[lang]) {
-      // Explicit plain-code fallback: escaped, never tokenized — an unsupported or missing
-      // data-lang must not be processed by any supported-language rule below. Present-but-
-      // unsupported still shows its ordinary label (via pre[data-lang]::before); a genuinely
-      // absent data-lang shows no label, since that CSS rule never matches it.
+    if (!Object.prototype.hasOwnProperty.call(SUPPORTED, lang)) {
+      // Escaped, untokenized fallback for an unsupported or missing data-lang; hasOwnProperty
+      // avoids matching inherited Object.prototype properties (e.g. data-lang="constructor").
       codeEl.innerHTML = escaped;
       return;
     }
@@ -296,18 +297,23 @@
       return '\u0000' + (stash.length - 1) + '\u0002';
     }
 
-    if (lang === 'php') {
-      // One level of nested [...] handled explicitly (e.g. #[Authorize('x', [A::class, 'b'])]) —
-      // a plain [^\]]* would stop at the array's closing bracket instead of the attribute's.
-      out = out.replace(/#\[(?:[^\[\]]|\[[^\]]*\])*\]/g, function (m) { return keep('<span class="tok-comment">' + m + '</span>'); });
-    }
-    if (lang === 'php' || lang === 'ts') {
-      out = out.replace(/\/\/[^\n]*/g, function (m) { return keep('<span class="tok-comment">' + m + '</span>'); });
-    }
     if (lang === 'json') {
       out = out.replace(/"(?:\\.|[^"\\])*"(?=\s*:)/g, function (m) { return keep('<span class="tok-attr">' + m + '</span>'); });
     }
-    out = out.replace(/'(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*"|`(?:\\.|[^`\\])*`/g, function (m) { return keep('<span class="tok-string">' + m + '</span>'); });
+    if (lang === 'php' || lang === 'ts') {
+      // Attributes (php; one level of nested [...] handled explicitly), comments, and strings
+      // matched in a single pass so whichever construct starts first wins and consumes to its own
+      // end, instead of one being misread as starting inside another — see scenarios.md.
+      var pattern = lang === 'php'
+        ? /#\[(?:[^\[\]]|\[[^\]]*\])*\]|\/\/[^\n]*|'(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*"|`(?:\\.|[^`\\])*`/g
+        : /\/\/[^\n]*|'(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*"|`(?:\\.|[^`\\])*`/g;
+      out = out.replace(pattern, function (m) {
+        var cls = m.charAt(0) === '#' || m.slice(0, 2) === '//' ? 'tok-comment' : 'tok-string';
+        return keep('<span class="' + cls + '">' + m + '</span>');
+      });
+    } else {
+      out = out.replace(/'(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*"|`(?:\\.|[^`\\])*`/g, function (m) { return keep('<span class="tok-string">' + m + '</span>'); });
+    }
 
     if (lang === 'php') {
       // Stashed like comments/strings above — otherwise the keyword pass below re-matches the

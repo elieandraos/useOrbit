@@ -5,7 +5,7 @@
 This rule owns two connected decisions: decomposing canonical scope into coherent issues, and
 connecting and ordering them by real prerequisites. It does not decide implementation order, which
 ready issue gets worked next, branch strategy, or commit structure — those belong to
-`ship-it`, particularly its own `rules/sequencing.md`.
+`implement-it`, particularly its own `rules/sequencing.md`.
 
 ## Decompose canonical scope into coherent issues
 
@@ -79,7 +79,7 @@ implement. Present and create issues in that stable topological order, so every 
 points backward, as an operational convenience — not a claim that same-wave issues must be implemented
 serially. Ask the user to choose between equivalent topological orders only when it would materially
 change scope, boundaries, or risk. Live readiness, from actual issue closure, and the choice of which
-issue to implement next, are both `ship-it`'s job after creation — not this rule's.
+issue to implement next, are both `implement-it`'s job after creation — not this rule's.
 
 ## Project-supplied delivery constraints
 
@@ -116,9 +116,46 @@ Create issues in the stable topological order: capture each created issue's real
 created, resolve a dependent issue's canonical references to real `#N`s before creating it,
 and never derive the issue set back from created issues or a rendered preview.
 
+### Resuming an interrupted batch creation
+
+Before creating or mutating more of an approved batch, re-query GitHub for members this same
+interrupted attempt may already have created — a failed or timed-out call is not proof nothing
+happened; the create may have succeeded before its response was lost. Search by the approved
+canonical definition's actual content, not by title alone, since a title match doesn't prove it's
+the same member. Validate each match found against its approved canonical definition
+(`rules/review.md`'s applicable checks) before treating it as already done, capture its real GitHub
+number the same way a fresh creation would, and create only the remaining approved members —
+resolving their dependency references to the real `#N`s now captured for every member already
+created, in this attempt or an earlier one. Never recreate, retarget, or duplicate a correctly
+created member merely to restart the batch from the beginning.
+
+Continue only from canonical definitions, approved scope, and approval evidence actually available
+right now — and keep those as separate questions, because a live GitHub issue answers only the
+first of them. A created issue, once fetched, establishes its own current published content and
+identity — recovering that content directly from the issue is legitimate. It does **not**, by
+itself, establish that a human ever approved that content, or approved it as part of the original
+batch: the issue's existence, and even its conformity with `rules/issue-conventions.md`'s format,
+are evidence of what got published, never evidence of who approved it or under what scope. Require
+independently available evidence of the actual approval instead — this session's own record of it,
+or an explicit statement from the human confirming it — before treating a recovered definition as
+still approved.
+
+If the canonical definitions, the approved scope, or that independent approval evidence can no
+longer be reliably established — for example, a new session with no memory of the original planning
+conversation, and nothing durable to recover them from — explain plainly what's missing and ask the
+human. Never derive the approved batch from whatever subset already happens to be published, and
+never reconstruct it from guesses. A recovered definition backed by genuine, independently evidenced
+prior approval may resume straight into creation; recovering content without that evidence produces
+a **draft**, not an already-approved member — take it back through `rules/review.md`'s normal review
+and approval gates before creating it, the same as any other unapproved definition. Recovering
+content and recovering approval are different acts; only the second authorizes skipping approval a
+second time. A durable, canonical storage location for approved issue definitions is a deliberately
+deferred decision, not implemented by this rule — see `rules/issue-conventions.md`'s "Canonical
+definitions."
+
 ## Handoff
 
 `rules/review.md` owns issue quality, dependency-quality validation, structural/rendered integrity, and
 mutation validation. `SKILL.md` owns the two approval surfaces and creation pipeline. Once approved
-issues are created, `ship-it` owns branch readiness, the next ready issue, and recomputing the
+issues are created, `implement-it` owns branch readiness, the next ready issue, and recomputing the
 live dependency-ready set as issues close.

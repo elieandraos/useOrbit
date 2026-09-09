@@ -2,18 +2,20 @@
 
 This is a check on whether a finished guide actually communicates the architecture — not a
 proofreading pass. A guide can be well-written and still fail this review; a guide with rougher
-prose can pass it. Wording is not the subject.
+prose can pass it. Wording is not the subject. One shared checklist applies regardless of format —
+Markdown, Artifact, or both — with a small set of items conditional on which format is in play.
 
 ## When to consult this file
 
-- After publishing a new architecture guide, before considering it complete.
+- After publishing or saving a new architecture guide, before considering it complete.
 - After updating an existing architecture guide, before considering the update complete.
 - Any time you're explicitly asked to evaluate whether a guide is complete or still
-  architecturally misleading.
+  architecturally misleading — independent of whether this skill also just wrote it.
 
-**Not** while a guide is still being drafted — this is a review of a finished artifact, not a
-drafting aid. Drafting uses `rules/doc-style.md`; switch to this file once there's a document
-to hold up to the light.
+**Not** while a guide is still being drafted — this is a review of a finished guide, not a
+drafting aid. Drafting uses `rules/authoring.md` for the writing/update procedure and
+`rules/doc-style.md` for the grammar; switch to this file once there's a document to hold up to
+the light.
 
 ## Philosophy
 
@@ -32,17 +34,18 @@ to hold up to the light.
 
 ## How to run it
 
-1. Inspect the actual artifact — the published Claude Artifact when one exists, or the exact
-   artifact being proposed when it doesn't — the way a new engineer would actually encounter it,
-   not your own memory of drafting it. Working from memory lets gaps silently fill themselves in.
+1. Inspect the actual guide — the published Markdown file or Claude Artifact when one exists, or
+   the exact draft being proposed when it doesn't — the way a new engineer would actually
+   encounter it, not your own memory of drafting it. Working from memory lets gaps silently fill
+   themselves in. When both formats are maintained for the same guide, inspect each output that's
+   actually published or saved, not only one.
 2. Work through the checklist below. Treat each category as conditional: a question about a
    concern this architecture doesn't have (reuse, runtime, security, testing, decisions,
    limitations) is inapplicable, not failed — skip it rather than forcing an answer.
 3. When a claim's factual accuracy is in question, reconcile it against verified implementation or
    investigation evidence, not the guide's own wording. This is a truth check on an existing
-   claim, not a fresh investigation — investigating the system from scratch is `SKILL.md`'s
-   "Document existing architecture" or "Update an existing architecture guide" workflow, not this
-   review.
+   claim, not a fresh investigation — investigating the system from scratch is `lab-it`'s
+   investigation method, not this review.
 4. For every question you can't answer "yes" outright, write one finding: what's missing,
    unclear, or contradicted, and where in the guide. One sentence each — this stays lightweight.
 5. Stop there. Don't fix findings inline. Report them, or act on only the ones that clearly
@@ -147,6 +150,20 @@ to hold up to the light.
 - A known and accurately stated limitation is not itself a finding, unless it contradicts another
   claim, hides a consequence that matters, or is presented misleadingly.
 
+### Format-specific checks
+
+- **Artifact.** Is the favicon present, stable across redeploys, and domain-appropriate? For an
+  update, does the guide still live at its preserved `url`, per `rules/maintenance.md`?
+- **Markdown.** For a new guide, does the file live under the consuming repository's `docs/`
+  directory? For an update, does the file still live at the guide's existing path — accept a path
+  outside `docs/` as correctly preserved identity, not a defect, unless the user explicitly
+  authorized relocating it? Do internal links — to headings within the guide, to referenced source
+  paths, and to a paired Artifact if one exists — actually resolve?
+- **Both formats maintained.** Are the architectural claims synchronized between them, per
+  `SKILL.md`'s "Maintaining both formats" — or, when the user explicitly scoped this update to one
+  format, is the other output's resulting divergence reported rather than left unstated or
+  presented as current? Does each carry a working cross-reference to the other's location?
+
 ### Overall
 
 - Would another engineer understand *why* the system was designed this way, not just what it
@@ -181,3 +198,7 @@ to hold up to the light.
 - A "when applicable" checklist category that doesn't apply to this architecture.
 - A stated known gap, unless it contradicts another claim, hides a material consequence, or is
   presented misleadingly.
+- Divergence between two maintained formats that the user explicitly authorized for this update,
+  as long as the divergence is reported and neither output is presented as current when it isn't.
+- A Markdown guide's path outside the consuming repository's `docs/` directory, when that path is
+  the guide's preserved existing identity rather than a new guide's location choice.

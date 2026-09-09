@@ -12,6 +12,14 @@ current **canonical issue definition** — never reconstructed from an earlier p
 draft. See `SKILL.md`'s non-negotiable contracts and `rules/review.md`'s three integrity checks for
 how this is enforced; this file doesn't restate that mechanism.
 
+**A durable, canonical storage location for approved issue definitions — beyond the session that
+approved them and the GitHub issues eventually created from them — is explicitly deferred, not
+resolved.** No `issue-plan.md`-equivalent file, approval registry, or other persistence mechanism is
+introduced by this methodology. Recovery from an interrupted batch relies on the simpler procedure in
+`rules/sequencing.md`'s "Resuming an interrupted batch creation": query GitHub for what already
+exists, continue only from canonical definitions, scope, and approval that are actually still
+available, and ask the human rather than guessing when they aren't.
+
 ## 2. Title convention
 
 One form, for every issue regardless of layer, shape, or origin (planned, extension, bug, refactor,
@@ -151,12 +159,13 @@ the user.
 - Milestone creation requires the metadata approval in §5, same as any other field.
 
 Milestone lifecycle beyond this point is not this rule's job. This rule's responsibility stops at
-classifying and defining a milestone's scope during planning — milestone PR-readiness and closure
-belong entirely to `ship-it`'s `rules/milestone-completion.md`, whose current contract governs
-when a milestone is ready for a PR and when it's eligible to close, independently of when its release
-publishes. A scoped delivery milestone and a persistent catch-all milestone stay structurally distinct
-through that downstream lifecycle too, since it treats them differently. Always consult that rule's
-current contract directly rather than restating it here.
+classifying and defining a milestone's scope during planning — milestone PR-readiness belongs to
+`ship-it`'s `rules/milestone-pr-readiness.md`, and closure belongs to its
+`rules/milestone-completion.md`, whose current contracts govern when a milestone is ready for a PR
+and when it's eligible to close, independently of when its release publishes. A scoped delivery
+milestone and a persistent catch-all milestone stay structurally distinct through that downstream
+lifecycle too, since it treats them differently. Always consult those rules' current contracts
+directly rather than restating them here.
 
 ### Milestone descriptions
 
@@ -230,41 +239,10 @@ here.
 ## 10. Verification checkpoints inside a multi-group issue
 
 An issue whose Tasks span multiple implementation groups or checkpoints (a multi-tranche dependency
-upgrade, a multi-stage migration) may legitimately name a verification step after each group. What
-that step should ask for is a portable authoring question, distinct from how deeply `ship-it`
-actually executes verification once implementation starts (`ship-it/rules/verification.md`
-owns that).
-
-- **State what each intermediate checkpoint needs to prove, not a fixed command to run.** A checkpoint
-  after a frontend-only group needs to prove the frontend surface is sound; it does not automatically
-  need proof that an unrelated backend suite still passes.
-- **Do not copy the same full-regression instruction after every group merely for symmetry.** Wording
-  like "run the corrected CI gate and confirm green" after each of several groups, applied uniformly
-  regardless of which surface that group actually touches, reads as thorough but drives verification
-  disproportionate to what changed — re-running a full backend regression after a change that could
-  not have touched the backend proves nothing new each time.
-- **Scale the checkpoint to the affected surface.** A group that only touches one stack (frontend
-  tooling, a single package family) calls for verification scoped to that surface; a group that could
-  plausibly affect a different surface (a linter or type-checker major version, for instance, can
-  change results in files nobody touched) may legitimately warrant a broader check — justify the
-  broader ask by what that specific group could actually affect, not by habit.
-- **Reserve a full regression run for the issue's own completion, not every intermediate group.**
-  `ship-it/rules/verification.md` already owns exactly this run, at the completed-issue
-  boundary, once all of the issue's commits exist — an issue's own Tasks/Tests should not duplicate
-  that requirement at every checkpoint along the way. Ask for a full regression run at an intermediate
-  checkpoint only when that specific intermediate state genuinely needs broader proof (for example, a
-  reconstructed or reordered intermediate state whose own correctness must independently be shown) —
-  not as the default per-checkpoint instruction.
-- **A concrete project command may appear when current repository evidence makes it material** — e.g.
-  naming the one aggregate command a project actually exposes, when no narrower one exists yet — but
-  state it as evidence for this issue's own wording, not as a portable checkpoint methodology. A
-  project's specific command name is never itself the rule; the rule is proportionality to affected
-  surface.
-
-This section governs what an issue's own Tasks/Tests ask for. It does not change what
-`ship-it` actually runs once implementation starts — that remains
-`rules/verification.md`'s default narrowest-reliable-scope-per-commit model, with a full regression
-run reserved for the completed-issue boundary.
+upgrade, a multi-stage migration) may legitimately name a verification step after each group. An
+issue whose Tasks form one coherent implementation group needs nothing beyond §4's ordinary shape.
+Only when Tasks actually span multiple groups, see `rules/verification-checkpoints.md` for what each
+checkpoint should ask for — this section does not restate it.
 
 ## 11. Completion criteria must be satisfiable at their own closure boundary
 
@@ -274,7 +252,7 @@ it can actually be satisfied at the point this issue is expected to close under 
 project's own delivery workflow.
 
 `plan-it` does not own that delivery workflow, and this section does not redesign it — see
-`SKILL.md`'s "Handoff" and `ship-it/rules/milestone-completion.md`'s current contract for how
+`SKILL.md`'s "Handoff" and `ship-it/rules/milestone-pr-readiness.md`'s current contract for how
 and when a milestone issue actually closes relative to its milestone's PR. What this section owns is
 narrower: an issue's own stated completion bar must not describe proof that structurally cannot exist
 yet at that issue's own closure boundary.
@@ -294,7 +272,7 @@ yet at that issue's own closure boundary.
   limitation honestly is better than hiding it, but an issue whose own Tests section states a
   condition that cannot be met by its own closure is still an internally inconsistent contract — fix
   the requirement's placement, don't just caveat it.
-- **This is a narrow check, not a license to redesign delivery.** It doesn't decide branch strategy,
-  when a milestone issue actually closes, or when a milestone's PR opens — those stay
-  `ship-it`'s. It only stops planning from handing that workflow an issue whose own completion
-  bar was never satisfiable in the first place.
+- **This is a narrow check, not a license to redesign delivery.** It doesn't decide branch strategy
+  or when a milestone issue actually closes — those are `implement-it`'s — or when a milestone's PR
+  opens — that's `ship-it`'s. It only stops planning from handing that workflow an issue whose own
+  completion bar was never satisfiable in the first place.

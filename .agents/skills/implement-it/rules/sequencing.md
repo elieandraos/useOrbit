@@ -28,8 +28,8 @@ repository, not assumed to be a fixed name. If the current checkout is something
 branch, surface the mismatch to the human rather than proceeding — do not silently switch branches,
 and do not silently implement Backlog/hotfix work on whatever happens to be checked out.
 
-This path also does not end in a PR (see `rules/release.md`'s "Where this phase starts" for what that
-means for the release phase).
+This path also does not end in a PR (see `ship-it/rules/release.md`'s "Where this phase starts" for
+what that means for the release phase).
 
 **Delivery/phase milestone issue.** All issues in that milestone share one working branch —
 implementation does not get a fresh branch per issue.
@@ -97,18 +97,28 @@ sequencing decision.
 For a Backlog/hotfix issue, an empty ready set means nothing beyond itself — there is no milestone
 graph to exhaust, and no further handoff.
 
-For a delivery/phase milestone, recomputing after a closure can find zero open issues remaining —
-nothing ready, nothing blocked. That is not this rule's job to act on further: report the empty set
-and hand off to `rules/milestone-completion.md`'s "Milestone PR readiness" gate rather than
-recommending a next issue that doesn't exist. This rule does not check that gate's conditions itself
-(final manual testing, whether it found anything) — it only recognizes the empty-set state and points
-to where that question actually gets answered.
+For a delivery/phase milestone, recomputing after a closure can find no dependency-ready issue.
+Distinguish two different reasons before doing anything else, since only one of them can lead toward
+milestone delivery:
+
+- **Zero open issues remain.** The milestone genuinely has nothing left — no open issue, ready or
+  blocked. Report the empty set and hand off to `ship-it/rules/milestone-pr-readiness.md`'s "Milestone
+  PR readiness" gate rather than recommending a next issue that doesn't exist. This rule does not
+  check that gate's conditions itself (final manual testing, whether it found anything) — it only
+  recognizes this state and points to where that question actually gets answered.
+- **Open issues remain, but every one of them is currently blocked** on something that hasn't closed
+  yet. The milestone is not done, and this is not a hand-off to PR readiness — report which issues
+  are blocked and on what (per "Report the graph, recommend, let the human choose" above), the same
+  way a partially-blocked recompute does. Nothing dependency-ready right now is a normal, expected
+  state mid-milestone, not evidence the milestone is ready to move toward a PR.
+
+Only the first of these two cases hands off to milestone PR-readiness assessment.
 
 ## Do not chain into the next issue
 
 Recalculating and reporting the ready set ends this workflow pass. Do not start implementing the
 recommended or chosen next issue in the same pass — even when the human's answer is immediate and
-unambiguous. Starting the next issue is a new pass through `ship-it`, with its own explicit
+unambiguous. Starting the next issue is a new pass through `implement-it`, with its own explicit
 authorization.
 
 ## Do / Don't
@@ -124,8 +134,10 @@ authorization.
 - Explain newly ready, already ready, and blocked work — not just a flat ready list.
 - Recommend when the evidence supports one, with a concise rationale.
 - Let the human make the sequencing decision.
-- Hand off to `rules/milestone-completion.md`'s PR-readiness gate when the ready set is empty, rather
-  than treating "no next issue" as nothing to report.
+- Hand off to `ship-it/rules/milestone-pr-readiness.md`'s PR-readiness gate only when zero open issues
+  remain, rather than treating "no next issue" as nothing to report.
+- Report blocked issues, rather than handing off to PR readiness, when open issues remain but none is
+  currently dependency-ready.
 
 **Don't**
 - Propose or create a branch for a Backlog/hotfix issue.
@@ -136,4 +148,7 @@ authorization.
 - Treat a recommendation, or an immediate human answer, as authorization to start implementing.
 - Chain straight into the next issue within the same pass.
 - Check milestone PR-readiness or closure conditions from this rule — that's
-  `rules/milestone-completion.md`'s job.
+  `ship-it/rules/milestone-pr-readiness.md`'s and `ship-it/rules/milestone-completion.md`'s job,
+  respectively.
+- Hand off to milestone PR readiness merely because nothing is dependency-ready right now, when open,
+  blocked issues remain.
