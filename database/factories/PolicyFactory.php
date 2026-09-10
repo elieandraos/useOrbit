@@ -13,6 +13,7 @@ use App\Models\Client;
 use App\Models\Organization;
 use App\Models\Policy;
 use App\Models\PolicyAutomotiveDetails;
+use App\Models\PolicyExpatDetails;
 use App\Models\PolicyMedicalDetails;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -105,6 +106,21 @@ class PolicyFactory extends Factory
             PolicyAutomotiveDetails::factory()->for($policy)->create([
                 'valuation_amount' => $isAllRisk ? fake()->randomFloat(2, 5000, 150000) : null,
                 'valuation_source' => $isAllRisk ? fake()->randomElement(['Carrier assessor', 'Independent appraisal', 'Market value']) : null,
+            ]);
+        });
+    }
+
+    public function expat(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'class' => PolicyClass::Expat->value,
+            'subclass' => fake()->randomElement(['In', 'In-Out']),
+        ])->afterCreating(function (Policy $policy): void {
+            $isInOut = $policy->subclass === 'In-Out';
+
+            PolicyExpatDetails::factory()->for($policy)->create([
+                'coverage_zone' => $isInOut ? 'in_out' : 'in',
+                'travel_scope' => $isInOut ? fake()->randomElement(['Worldwide', 'Worldwide ex-USA/Canada', 'Regional']) : null,
             ]);
         });
     }
