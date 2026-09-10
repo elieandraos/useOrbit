@@ -38,7 +38,7 @@ $emailDomain = fake()->randomElement(['gmail.com', 'outlook.com', 'yahoo.com', '
 ## Chain date fields chronologically
 
 When a factory sets multiple date fields, don't randomize each independently within its own range — a
-later date should be derived from, or bounded by, an earlier one, so a seeded record can never describe
+later date should be derived from, or bounded by, an earlier date, so a seeded record can never describe
 an impossible timeline.
 
 ✅ *(illustrative — bound the later date's range using the earlier one)*
@@ -91,6 +91,29 @@ factory code is needed for the direct-model case. Reserve a custom state for a g
 
 When introducing a new state for a repeated pattern, replace every existing call site across the test
 suite, not only new ones going forward.
+
+## Avoid recursive parent states in child factories
+
+When a parent factory state creates a required child/detail record through `afterCreating()`, don't
+have the child factory create its parent by calling that same parent state. The parent state will run
+again and create another child, causing recursive factory creation and, for a unique 1:1 child
+relationship, a constraint collision.
+
+✅ *(use the base parent factory plus explicit state when the child needs a class-specific parent)*
+```php
+return $this->for(
+    Subscription::factory()->state(['kind' => SubscriptionKind::Premium->value])
+)->create();
+```
+
+❌
+```php
+return $this->for(Subscription::factory()->premium())->create();
+```
+
+Use the base parent factory plus `state(...)` (or another non-side-effecting parent configuration) when
+constructing the parent from a child factory. Reserve the side-effecting parent state for callers that
+actually want the complete parent-plus-child graph.
 
 ## Seeder structure
 

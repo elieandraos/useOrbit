@@ -10,10 +10,10 @@
     },
     "implement-it": {
       "source": "elieandraos/agentic-engineering",
-      "ref": "v2.0.3",
+      "ref": "v2.0.4",
       "sourceType": "github",
       "skillPath": "skills/implement-it/SKILL.md",
-      "computedHash": "2c87d2ad9fa225e18abda6c7cd94551a86b2bd4579aee5e0cf407f484f633e64"
+      "computedHash": "4a93cde9cf03b791e6ffda91f84fefa1357cd3c734922e1d32c547af71e5e47c"
     },
     "lab-it": {
       "source": "elieandraos/agentic-engineering",
@@ -24,10 +24,10 @@
     },
     "laravel-inertia-stack": {
       "source": "elieandraos/agentic-engineering",
-      "ref": "v2.0.3",
+      "ref": "v2.0.4",
       "sourceType": "github",
       "skillPath": "skills/laravel-inertia-stack/SKILL.md",
-      "computedHash": "7c9a4242302cb85d25623fce9e5b5ff90c35721b7bbd120fc72dc76982f93f54"
+      "computedHash": "7e346755aab8c57553680dd7c518f9a05ff2d7f447277ee3c1b67640af258334"
     },
     "plan-it": {
       "source": "elieandraos/agentic-engineering",
