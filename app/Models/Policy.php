@@ -55,6 +55,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read User $createdBy
  * @property-read User|null $updatedBy
  * @property-read PolicyMedicalDetails|null $medicalDetails
+ * @property-read PolicyAutomotiveDetails|null $automotiveDetails
  */
 #[Fillable([
     'organization_id', 'slug', 'policy_number', 'class', 'subclass', 'type', 'client_id', 'carrier_id',
@@ -99,6 +100,11 @@ final class Policy extends Model implements Documentable, Notable, NotificationS
     public function medicalDetails(): HasOne
     {
         return $this->hasOne(PolicyMedicalDetails::class);
+    }
+
+    public function automotiveDetails(): HasOne
+    {
+        return $this->hasOne(PolicyAutomotiveDetails::class);
     }
 
     public function createdBy(): BelongsTo
