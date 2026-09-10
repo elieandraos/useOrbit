@@ -12,6 +12,7 @@ use App\Models\Carrier;
 use App\Models\Client;
 use App\Models\Organization;
 use App\Models\Policy;
+use App\Models\PolicyMedicalDetails;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
@@ -25,6 +26,7 @@ class PolicyFactory extends Factory
      * Define the model's default state.
      *
      * @return array<string, mixed>
+     *
      * @throws \DateMalformedStringException
      */
     public function definition(): array
@@ -79,5 +81,15 @@ class PolicyFactory extends Factory
         return $this->state(fn (array $attributes): array => [
             'organization_id' => $user->organization_id,
         ]);
+    }
+
+    public function medical(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'class' => PolicyClass::Medical->value,
+            'subclass' => fake()->randomElement(['In', 'In-Out']),
+        ])->afterCreating(function (Policy $policy): void {
+            PolicyMedicalDetails::factory()->for($policy)->create();
+        });
     }
 }

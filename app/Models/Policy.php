@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -53,6 +54,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read Agent|null $agent
  * @property-read User $createdBy
  * @property-read User|null $updatedBy
+ * @property-read PolicyMedicalDetails|null $medicalDetails
  */
 #[Fillable([
     'organization_id', 'slug', 'policy_number', 'class', 'subclass', 'type', 'client_id', 'carrier_id',
@@ -92,6 +94,11 @@ final class Policy extends Model implements Documentable, Notable, NotificationS
     public function agent(): BelongsTo
     {
         return $this->belongsTo(Agent::class);
+    }
+
+    public function medicalDetails(): HasOne
+    {
+        return $this->hasOne(PolicyMedicalDetails::class);
     }
 
     public function createdBy(): BelongsTo
