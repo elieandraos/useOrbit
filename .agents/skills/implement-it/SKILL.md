@@ -28,18 +28,19 @@ set is empty"), or once it has performed a correction `ship-it` hands back.
 
 - Working-branch readiness: the Backlog/hotfix-vs-milestone-branch decision, before implementation
   starts.
+- Companion activation: determining which available stack, implementation, testing, and tooling skills apply before implementation begins, and activating all applicable companions rather than treating the first matching skill as sufficient.
 - Performing the approved implementation itself.
 - Applying project conventions and applicable implementation/testing/tooling skills, and loading an
   applicable custom stack companion when one is available.
-- Implementation and commit-plan review gates (Gate 1 and Gate 2), invoking `review-it` only after
-  the required verification decisions have been completed and consuming its result as Gate 1's third
+- Implementation and commit-plan review gates (Gate 1 and Gate 2), invoking `review-it` only after the
+  required verification decisions have been completed and consuming its result as Gate 1's third
   stop condition.
 - Verification, including the regression-baseline treatment of pre-existing lint/format/static debt.
 - Semantic commit planning and construction.
 - Authorized push and issue closure — intentionally before the milestone's PR merges.
 - Dependency-ready recalculation and the next-issue recommendation.
 - The authorized fix itself for an in-flight delivery correction `ship-it` hands back (see
-  "Delivery corrections" below), using this same lifecycle.
+  "Delivery corrections" below), using the same lifecycle.
 
 ## What it does not own
 
@@ -80,9 +81,9 @@ stays available whether or not an issue is open, or was ever created for that sc
 
 After each issue closes, recompute the dependency-ready set (`rules/sequencing.md`) and recommend
 the next issue, explaining the choice when several are ready. A recommendation is not authorization
-to continue — wait for the human's selection before implementing another issue. When the ready set
-is empty because every open issue remains blocked, report the blockers; only a genuinely empty
-milestone (zero open issues) hands off to `ship-it`'s milestone PR-readiness assessment.
+to continue — wait for the human's selection before implementing another issue. When the ready set is
+empty because every open issue remains blocked, report the blockers; only a genuinely empty milestone
+(zero open issues) hands off to `ship-it`'s milestone PR-readiness assessment.
 
 ## Delivery corrections
 
@@ -124,6 +125,9 @@ Trigger on requests shaped like:
 
 ## Rules
 
+- `companion-activation.md` — before writing code, enumerate available implementation, testing,
+  tooling, and stack-companion skills; inspect their trigger descriptions and activate every applicable
+  one. Do not treat the first matching skill as sufficient, and record relevant non-activation decisions.
 - `review-gates.md` — the two pre-merge human approval gates (implementation review, then
   commit-plan review), how Gate 1 consumes `review-it`'s result, the approval-validity check before
   Gate 2 and before push, and the conditions that always warrant a stop; consult once implementation
@@ -132,8 +136,8 @@ Trigger on requests shaped like:
   against the completed working tree only after required targeted verification and the full-suite
   run/skip decision are complete, before reporting at Gate 1 (`review-gates.md`'s "Consuming review-it's result").
 - `commit-boundaries.md` — how to turn an approved diff into semantic commits: boundary reasoning,
-  message content, the `Refs #N` trailer, and where a review correction lands; consult while
-  inspecting the diff and building the commit plan, after Gate 1.
+  message content, the `Refs #N` trailer, final commit-message validation, and where a review correction
+  lands; consult while inspecting the diff and building the commit plan, after Gate 1.
 - `commit-reconstruction.md` — the unpublished-history reconstruction procedure
   `commit-boundaries.md` hands off to; consult only for its one specific trigger — a review
   correction belongs to a commit already committed locally but not yet pushed. Ordinary commit

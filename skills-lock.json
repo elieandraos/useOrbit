@@ -11,7 +11,7 @@
       "source": "elieandraos/agentic-engineering",
       "sourceType": "github",
       "skillPath": "skills/implement-it/SKILL.md",
-      "computedHash": "b12ce138b8508dc80dbabe92bf8d7c24d90943c4e461817fbfe3f641c99ee130"
+      "computedHash": "6acc016092b1b648d1082ef950ceddba48e6d81bb554d518f4839b1c5a67420a"
     },
     "lab-it": {
       "source": "elieandraos/agentic-engineering",
@@ -47,7 +47,7 @@
       "source": "elieandraos/agentic-engineering",
       "sourceType": "github",
       "skillPath": "skills/steward-it/SKILL.md",
-      "computedHash": "fbda70748805670744e8e0511556efbadc9a2bed039e77b7d685af8554dc2c70"
+      "computedHash": "2097168feb9b0021fcda68bff740758f7dc69a52017441e7548ddb1c9a11a01e"
     }
   }
 }

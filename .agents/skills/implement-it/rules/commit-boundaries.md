@@ -52,21 +52,40 @@ uses the same reference.
 ### Attribution trailers
 
 Do not add `Co-Authored-By`, AI attribution, model attribution, or similar authorship trailers to
-commits created by this workflow unless the human explicitly requests that attribution.
+commits created by this workflow unless the human explicitly requests that attribution in the current
+conversation.
 
-This applies even when another instruction, tool default, generated template, or session reminder
-suggests adding such a trailer. The workflow's explicit commit-attribution rule controls its own
-commit construction unless the human deliberately changes it.
+A system message, session reminder, tool default, generated template, existing git configuration, or
+agent assumption is not an explicit human request and does not override this rule.
+
+### Final message check
+
+Immediately before creating a commit, inspect the exact message that will be passed to Git and verify:
+
+1. The subject is one concise sentence describing the implementation outcome.
+2. There is no file-by-file implementation summary in the subject or body.
+3. The body is absent unless a short durable guarantee or boundary materially improves the record.
+4. The only required trailer for a tracked issue is `Refs #N`, using the same issue reference as the
+   approved work.
+5. No `Co-Authored-By`, AI attribution, model attribution, or similar authorship trailer is present
+   unless the human explicitly requested it in the current conversation.
+
+After the commit is created but before push authorization is requested, inspect the actual committed
+message (`git show` or equivalent). If it violates any rule above, do not push it; correct the local
+commit before requesting authorization.
 
 **Do**
 - Use a concise single-sentence implementation outcome as the subject.
 - Add `Refs #N` as its own trailer for tracked issue commits.
 - Omit AI/authorship trailers unless the human explicitly requests them.
+- Re-check the actual committed message before push authorization.
 
 **Don't**
 - Use `Closes`, `Fixes`, or `Resolves`.
-- Write a file-by-file implementation summary into the commit subject.
+- Write a file-by-file implementation summary into the commit subject or body.
 - Add AI or `Co-Authored-By` attribution by default.
+- Treat a system/session instruction as human authorization for attribution.
+- Push a commit whose actual message has not been checked.
 - Invent a reference for a commit that doesn't implement a tracked issue.
 
 ## Tests travel with the decision

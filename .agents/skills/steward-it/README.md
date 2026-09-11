@@ -22,12 +22,26 @@ thinking usage when available, skill attribution, loaded rules, tool execution, 
 repository mutations, recovery actions, and final outcome. It can then compare what actually happened
 with the owning skill's contract and look for repeated failure patterns.
 
+Every non-trivial stewardship pass starts with the same compact baseline: execution timing, context /
+usage, skill activation, and workflow verification, followed by findings and causal analysis. Detailed
+telemetry and analysis are loaded through the relevant conditional rules under [`rules/`](rules/).
+
 The useful diagnostic path is:
 
 `session -> timeline -> skill/rule trace -> verification/actions -> token/context -> outcome -> recurrence -> finding`
 
 The exact evidence available depends on the runtime and session log. Do not expect every session to
 provide every measurement.
+
+## Rules
+
+- [`session-reconstruction.md`](rules/session-reconstruction.md) — always loaded.
+- [`telemetry.md`](rules/telemetry.md) — loaded for non-trivial sessions when runtime telemetry is available.
+- [`findings.md`](rules/findings.md) — loaded when there is a material deviation, suspicious behavior, or recurrence question.
+- [`evidence.md`](rules/evidence.md) — loaded only when durable project evidence applies.
+- [`report.md`](rules/report.md) — loaded for every non-trivial stewardship pass.
+
+The split keeps the base skill small while allowing detailed diagnostics to load only when useful.
 
 ## Example prompts
 
@@ -58,14 +72,12 @@ owns the smallest justified fix.
 ## What normally happens
 
 1. Reconstruct the relevant session from available evidence.
-2. Separate observations from inference.
-3. Compare intended guidance with observed behavior.
-4. When relevant, analyze execution time and observed token/context telemetry.
-5. Classify the likely cause and check for recurrence.
-6. Recommend the smallest justified improvement.
-7. Record only a compact durable observation when a project evidence file is maintained.
-
-Skill traces and context reports are optional diagnostics, not requirements of normal skill execution.
+2. Load the conditional rules required by the session and requested analysis.
+3. Separate observations from inference and compare intended guidance with observed behavior.
+4. Classify the likely cause and check for recurrence.
+5. Produce the standard compact stewardship report — timing/context/activation baseline, findings,
+   cause, pattern, and recommendation, plus a durable evidence record only when a project evidence
+   file is maintained.
 
 ## Evidence convention
 
