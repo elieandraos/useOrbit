@@ -102,13 +102,13 @@ relationship, a constraint collision.
 ✅ *(use the base parent factory plus explicit state when the child needs a class-specific parent)*
 ```php
 return $this->for(
-    Subscription::factory()->state(['kind' => SubscriptionKind::Premium->value])
+    Policy::factory()->state(['class' => PolicyClass::Medical->value])
 )->create();
 ```
 
 ❌
 ```php
-return $this->for(Subscription::factory()->premium())->create();
+return $this->for(Policy::factory()->medical())->create();
 ```
 
 Use the base parent factory plus `state(...)` (or another non-side-effecting parent configuration) when

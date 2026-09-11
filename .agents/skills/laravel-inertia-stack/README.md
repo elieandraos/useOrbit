@@ -45,16 +45,6 @@ the gap between Laravel Boost's general baseline and this specific stack's delta
 isn't a generic Laravel manual, a complete Vue guide, or documentation for any one
 project.
 
-## Context consumption
-
-Activation loads only `SKILL.md`, whose own routing note also points a reader to this `README.md`
-for what `rules/`, `blueprints/`, and `templates/` each mean. `SKILL.md`'s routing table names the
-primary file(s) a given task needs, but a blueprint can route further on its own — the
-filtering/sorting blueprint's "Testing" section, for example, additionally routes to
-`rules/test-ownership.md` and `blueprints/pest-testing.md` for how its classes are tested. See
-[the context-consumption model and representative-workflow
-estimates](https://github.com/elieandraos/agentic-engineering/blob/main/docs/skill-context.md#laravel-inertia-stack).
-
 ## Install
 
 ```shell

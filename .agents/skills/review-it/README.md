@@ -46,14 +46,6 @@ correction stays with [`implement-it`](../implement-it/); guide review stays wit
 [`lab-it`](../lab-it/); commit-plan review (Gate 2) stays with `implement-it`. A `review-it` result
 never grants authorization by itself — every gate it feeds stays a human approval.
 
-## Context consumption
-
-Activation loads only `SKILL.md`. Unlike some sibling skills, all three of its rule files
-(`scope.md`, `checklist.md`, `verification.md`) are consulted on essentially every invocation, in
-that order — there is no large conditional file a typical review skips. See [the context-consumption
-model and representative-workflow
-estimates](https://github.com/elieandraos/agentic-engineering/blob/main/docs/skill-context.md#review-it).
-
 ## Install
 
 ```shell

@@ -6,7 +6,7 @@ Take an approved GitHub issue from implementation through verified commits and c
 
 - Implementing, committing, verifying, or closing an approved issue.
 - Checking what's next once a milestone issue closes.
-- Performing a delivery correction that the human has explicitly authorized and `ship-it` has handed back.
+- Performing a delivery correction that the human has explicitly authorized and [`ship-it`](../ship-it/) has handed back.
 
 It is the implementation stage of `Lab -> Plan -> Implement -> Review -> Ship` and handles one approved
 issue at a time.
@@ -44,13 +44,6 @@ PR creation, and release belong to `ship-it`.
 
 A specific-issue request ends after that issue's own lifecycle — completing one issue is never by itself
 authorization to continue into another issue or into milestone delivery.
-
-## Context consumption
-
-Activation loads only `SKILL.md`. Supporting rules load when their workflow step requires them. The ordinary
-single-issue path uses the sequencing, verification, review-gates, commit-boundaries, and issue-closure rules,
-with additional rules only when their own escalation triggers fire. `review-it` is invoked separately before
-Gate 1. See [the context-consumption model and representative workflow estimates](https://github.com/elieandraos/agentic-engineering/blob/main/docs/skill-context.md#implement-it).
 
 ## Install
 

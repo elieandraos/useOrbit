@@ -3,52 +3,51 @@
   "skills": {
     "document-it": {
       "source": "elieandraos/agentic-engineering",
-      "ref": "v2.0.3",
       "sourceType": "github",
       "skillPath": "skills/document-it/SKILL.md",
-      "computedHash": "1435eb01405571e090aa159d905612f96e7217b6cac658746aea7cf87551e523"
+      "computedHash": "02045bce432a6f3abf56cd0b762a2d96c9431b923e3ee0e1c63e7ed310fed184"
     },
     "implement-it": {
       "source": "elieandraos/agentic-engineering",
-      "ref": "v2.0.4",
       "sourceType": "github",
       "skillPath": "skills/implement-it/SKILL.md",
-      "computedHash": "4a93cde9cf03b791e6ffda91f84fefa1357cd3c734922e1d32c547af71e5e47c"
+      "computedHash": "b12ce138b8508dc80dbabe92bf8d7c24d90943c4e461817fbfe3f641c99ee130"
     },
     "lab-it": {
       "source": "elieandraos/agentic-engineering",
-      "ref": "v2.0.3",
       "sourceType": "github",
       "skillPath": "skills/lab-it/SKILL.md",
-      "computedHash": "a8db6c31e20d8ac63f1d6c1bb6d5b6a21428c3e4a51a09a183cfa8f05e7c2925"
+      "computedHash": "0ed8b6f07af96ed002cfba5b1325df81bbdece6b39d229a1d53f5859b4344ce5"
     },
     "laravel-inertia-stack": {
       "source": "elieandraos/agentic-engineering",
-      "ref": "v2.0.4",
       "sourceType": "github",
       "skillPath": "skills/laravel-inertia-stack/SKILL.md",
-      "computedHash": "7e346755aab8c57553680dd7c518f9a05ff2d7f447277ee3c1b67640af258334"
+      "computedHash": "92035e58b9e8dac7761e0222e7de96d069ea89de15d667f975dae694b7766b6b"
     },
     "plan-it": {
       "source": "elieandraos/agentic-engineering",
-      "ref": "v2.0.3",
       "sourceType": "github",
       "skillPath": "skills/plan-it/SKILL.md",
-      "computedHash": "c22563cdb5ccb4de519076648840121780ec259c69af190dcef35022cedb12ef"
+      "computedHash": "3c1844fda27603092d684aecb8001a8372403b0195fdb6bf41c7393a7bd42188"
     },
     "review-it": {
       "source": "elieandraos/agentic-engineering",
-      "ref": "v2.0.3",
       "sourceType": "github",
       "skillPath": "skills/review-it/SKILL.md",
-      "computedHash": "0f9281a697b14f9af393502bf93caeafbcecbdfe8109f73d7a89712010ebb8dc"
+      "computedHash": "221a8b45f7fe66c697731a0b7410fdba27bc2caa682f040573e8c3ed6be55e06"
     },
     "ship-it": {
       "source": "elieandraos/agentic-engineering",
-      "ref": "v2.0.3",
       "sourceType": "github",
       "skillPath": "skills/ship-it/SKILL.md",
-      "computedHash": "c45edc1bf4b441c644924d10b904fbd64043f3a2038928893445d60129c97903"
+      "computedHash": "011c61280419976fa30a5bdefe7e4345cd1380c1b07f0dadf29f0272586445c4"
+    },
+    "steward-it": {
+      "source": "elieandraos/agentic-engineering",
+      "sourceType": "github",
+      "skillPath": "skills/steward-it/SKILL.md",
+      "computedHash": "fbda70748805670744e8e0511556efbadc9a2bed039e77b7d685af8554dc2c70"
     }
   }
 }
