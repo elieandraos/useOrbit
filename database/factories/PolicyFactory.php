@@ -15,6 +15,7 @@ use App\Models\Policy;
 use App\Models\PolicyAutomotiveDetails;
 use App\Models\PolicyExpatDetails;
 use App\Models\PolicyFireDetails;
+use App\Models\PolicyLifeDetails;
 use App\Models\PolicyMedicalDetails;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -133,6 +134,16 @@ class PolicyFactory extends Factory
             'subclass' => 'Standard',
         ])->afterCreating(function (Policy $policy): void {
             PolicyFireDetails::factory()->for($policy)->create();
+        });
+    }
+
+    public function life(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'class' => PolicyClass::Life->value,
+            'subclass' => 'Standard',
+        ])->afterCreating(function (Policy $policy): void {
+            PolicyLifeDetails::factory()->for($policy)->create();
         });
     }
 }
