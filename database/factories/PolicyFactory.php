@@ -17,6 +17,7 @@ use App\Models\PolicyExpatDetails;
 use App\Models\PolicyFireDetails;
 use App\Models\PolicyLifeDetails;
 use App\Models\PolicyMedicalDetails;
+use App\Models\PolicyTravelDetails;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
@@ -144,6 +145,18 @@ class PolicyFactory extends Factory
             'subclass' => 'Standard',
         ])->afterCreating(function (Policy $policy): void {
             PolicyLifeDetails::factory()->for($policy)->create();
+        });
+    }
+
+    public function travel(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'class' => PolicyClass::Travel->value,
+            'subclass' => fake()->randomElement(['Basic', 'Standard', 'Premium']),
+        ])->afterCreating(function (Policy $policy): void {
+            PolicyTravelDetails::factory()->for($policy)->create([
+                'coverage_tier' => $policy->subclass,
+            ]);
         });
     }
 }
