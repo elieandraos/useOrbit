@@ -20,9 +20,11 @@ use App\Models\Contracts\NotificationSubject;
 use Carbon\CarbonImmutable;
 use Database\Factories\PolicyFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -60,6 +62,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read PolicyFireDetails|null $fireDetails
  * @property-read PolicyLifeDetails|null $lifeDetails
  * @property-read PolicyTravelDetails|null $travelDetails
+ * @property-read Collection<int, PolicyInsured> $insureds
  */
 #[Fillable([
     'organization_id', 'slug', 'policy_number', 'class', 'subclass', 'type', 'client_id', 'carrier_id',
@@ -129,6 +132,11 @@ final class Policy extends Model implements Documentable, Notable, NotificationS
     public function travelDetails(): HasOne
     {
         return $this->hasOne(PolicyTravelDetails::class);
+    }
+
+    public function insureds(): HasMany
+    {
+        return $this->hasMany(PolicyInsured::class);
     }
 
     public function createdBy(): BelongsTo
