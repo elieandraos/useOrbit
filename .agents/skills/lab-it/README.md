@@ -47,13 +47,6 @@ decisions into a `plan.md`. Creating, updating, or reviewing an architecture gui
 GitHub issues belongs to [`plan-it`](../plan-it/); implementing it belongs to
 [`implement-it`](../implement-it/).
 
-## Context consumption
-
-Activation loads only `SKILL.md`. Its one rule file, `rules/plan-synthesis.md`, loads only for the
-"Plan feature architecture" workflow — a plain investigation-and-answer request never reaches it.
-See [the context-consumption model and representative-workflow
-estimates](https://github.com/elieandraos/agentic-engineering/blob/main/docs/skill-context.md#lab-it).
-
 ## Install
 
 ```shell

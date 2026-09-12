@@ -3,52 +3,59 @@
   "skills": {
     "document-it": {
       "source": "elieandraos/agentic-engineering",
-      "ref": "v2.0.3",
+      "ref": "v2.1.2",
       "sourceType": "github",
       "skillPath": "skills/document-it/SKILL.md",
-      "computedHash": "1435eb01405571e090aa159d905612f96e7217b6cac658746aea7cf87551e523"
+      "computedHash": "02045bce432a6f3abf56cd0b762a2d96c9431b923e3ee0e1c63e7ed310fed184"
     },
     "implement-it": {
       "source": "elieandraos/agentic-engineering",
-      "ref": "v2.0.3",
+      "ref": "v2.1.2",
       "sourceType": "github",
       "skillPath": "skills/implement-it/SKILL.md",
-      "computedHash": "2c87d2ad9fa225e18abda6c7cd94551a86b2bd4579aee5e0cf407f484f633e64"
+      "computedHash": "0d38ccc182064cd762780385d61ae2cd83d278b0698b245ef428000d6ec0906f"
     },
     "lab-it": {
       "source": "elieandraos/agentic-engineering",
-      "ref": "v2.0.3",
+      "ref": "v2.1.2",
       "sourceType": "github",
       "skillPath": "skills/lab-it/SKILL.md",
-      "computedHash": "a8db6c31e20d8ac63f1d6c1bb6d5b6a21428c3e4a51a09a183cfa8f05e7c2925"
+      "computedHash": "0ed8b6f07af96ed002cfba5b1325df81bbdece6b39d229a1d53f5859b4344ce5"
     },
     "laravel-inertia-stack": {
       "source": "elieandraos/agentic-engineering",
-      "ref": "v2.0.3",
+      "ref": "v2.1.2",
       "sourceType": "github",
       "skillPath": "skills/laravel-inertia-stack/SKILL.md",
-      "computedHash": "7c9a4242302cb85d25623fce9e5b5ff90c35721b7bbd120fc72dc76982f93f54"
+      "computedHash": "92035e58b9e8dac7761e0222e7de96d069ea89de15d667f975dae694b7766b6b"
     },
     "plan-it": {
       "source": "elieandraos/agentic-engineering",
-      "ref": "v2.0.3",
+      "ref": "v2.1.2",
       "sourceType": "github",
       "skillPath": "skills/plan-it/SKILL.md",
-      "computedHash": "c22563cdb5ccb4de519076648840121780ec259c69af190dcef35022cedb12ef"
+      "computedHash": "3c1844fda27603092d684aecb8001a8372403b0195fdb6bf41c7393a7bd42188"
     },
     "review-it": {
       "source": "elieandraos/agentic-engineering",
-      "ref": "v2.0.3",
+      "ref": "v2.1.2",
       "sourceType": "github",
       "skillPath": "skills/review-it/SKILL.md",
-      "computedHash": "0f9281a697b14f9af393502bf93caeafbcecbdfe8109f73d7a89712010ebb8dc"
+      "computedHash": "8f2352534a6fde20522cee8fa23400fb630c9994d7dd7062da2f13b58a640092"
     },
     "ship-it": {
       "source": "elieandraos/agentic-engineering",
-      "ref": "v2.0.3",
+      "ref": "v2.1.2",
       "sourceType": "github",
       "skillPath": "skills/ship-it/SKILL.md",
-      "computedHash": "c45edc1bf4b441c644924d10b904fbd64043f3a2038928893445d60129c97903"
+      "computedHash": "372097c3b2d7fcaa3df1ccf7a7bb2c12faa904d838d3bdb08b8b35cf93622627"
+    },
+    "steward-it": {
+      "source": "elieandraos/agentic-engineering",
+      "ref": "v2.1.2",
+      "sourceType": "github",
+      "skillPath": "skills/steward-it/SKILL.md",
+      "computedHash": "6981d97dedfe6314c3efb069c089cc55a97cbdaf39a8c296c1cb06ed46660685"
     }
   }
 }

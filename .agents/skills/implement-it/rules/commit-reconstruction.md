@@ -17,7 +17,7 @@ this skill's own commits.
 
 1. **Find the owning commit and confirm it's unpublished.** Identify which commit the correction
    actually belongs to — call it O. Confirm every commit from O through `HEAD` is still unpublished
-   (`rules/issue-closure.md`'s "Push readiness": `git fetch origin <branch>`, then
+   (`rules/push-readiness.md`'s unpushed-range check: `git fetch origin <branch>`, then
    `git log origin/<branch>..HEAD --oneline` — every commit this reconstruction touches must appear
    in that list). If O predates the unpublished range, this recipe does not apply.
 2. **Establish a scratch location for this reconstruction's own recovery artifacts, outside the
@@ -146,6 +146,11 @@ this skill's own commits.
       substitute for correct capture: it catches an obviously wrong diff, but a wrongly-included hunk
       that looks plausible in context can still slip past it — steps 4–6 are what make the diff
       trustworthy in the first place.
+    - Immediately after each `git commit` produced by this rebuild — including any amend needed to
+      correct one — run `rules/commit-boundaries.md`'s mandatory mechanical post-commit verification
+      against the actual committed object, exactly as for any other commit this workflow creates. A
+      rebuilt commit is not exempt from that check merely because its content was reconstructed rather
+      than newly written.
     - Commit, then verify the resulting commit in isolation before moving to the next group — every
       commit this reconstruction produces needs `rules/isolation-verification.md`'s technique (the
       same escalation `rules/verification.md`'s "Isolation verification" section reserves for exactly

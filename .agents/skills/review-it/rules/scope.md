@@ -79,7 +79,7 @@ isolation does not. Treat this as conditional, not universal.
 
 Discover intended scope from whatever is actually available: a linked issue or milestone
 description, a PR description, an approved `plan.md`, explicit scope stated directly in the
-request, or `Refs #N` trailers and commit messages already present in the diff.
+request, or `Refs #N` reference lines and commit messages already present in the diff.
 
 `review-it` does not require a `plan-it`-authored issue, an approved `plan.md`, or a prior
 `implement-it` session to run. A standalone worktree, branch, or PR with no issue at all is a

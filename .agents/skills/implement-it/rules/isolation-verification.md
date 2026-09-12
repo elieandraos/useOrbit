@@ -2,10 +2,10 @@
 
 ## When this applies
 
-See `rules/verification.md`'s "Isolation verification: a deliberate escalation, not the default" for
-the trigger — this file covers only the technique's mechanics, not the decision to use it. Do not
-load this file merely because an issue was split into multiple commits; consult it only once that
-section's own criteria actually apply.
+See `rules/verification.md`'s "Isolation verification: deliberate escalation" for the trigger — this
+file covers only the technique's mechanics, not the decision to use it. Do not load this file merely
+because an issue was split into multiple commits; consult it only once that section's own criteria
+actually apply.
 
 ## The technique
 
@@ -26,10 +26,11 @@ section's own criteria actually apply.
    verify in isolation, restore.
 6. After the final commit, satisfy the completed-issue checkpoint — ordinarily a fresh full-suite
    run with nothing stashed. When step 3's own full-suite run against the final commit's isolated
-   state already covered this exact content, with nothing left to stash afterward, that run
-   directly satisfies this checkpoint under `rules/verification.md`'s "Completed-issue verification:
-   run or reuse" — its content match (condition 2) holds by construction, since it already ran
-   against the final committed state itself, not an earlier one; conditions 1, 3, and 4 still need
-   confirming, the same as for any other reuse. Isolation verification's per-commit runs happening at
-   all does not by itself establish this: an isolated run for an earlier commit, superseded by a
-   later one, proves only that earlier state — not the final one now being reported done.
+   state already covered this exact content, with nothing left to stash afterward, that run can
+   itself satisfy `rules/verification.md`'s "Commit-building verification" reuse allowance: the
+   content-match condition holds by construction, since the run executed directly against the final
+   committed state, not an earlier one. Still confirm the human actually chose the full suite for this
+   issue and that no relevant content or environment changed afterward — the same conditions that
+   section requires for any other reuse. Isolation verification's per-commit runs happening at all does
+   not by itself establish this: an isolated run for an earlier commit, superseded by a later one,
+   proves only that earlier state — not the final one now being reported done.

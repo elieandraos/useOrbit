@@ -27,6 +27,7 @@ to `inertia-vue-development`.
 - Writing or organizing a Pest test.
 - Defining an Eloquent local scope, a migration column, or a backed enum used as select options.
 - Generating factory or seeder data.
+- Building or reviewing an Inertia form that uses the Laravel/Inertia request serialization boundary.
 
 ## Routing
 
@@ -45,6 +46,7 @@ than repeating them. See `README.md` for what `rules/`, `blueprints/`, and `temp
 | Exposing a backed enum as select options | `rules/enum-options.md` |
 | Coercing or defaulting request input | `rules/request-normalization.md` |
 | Building a JsonResource for Inertia | `rules/resources.md` |
+| Building an Inertia form or adapting custom controls to `<Form>` serialization | `rules/inertia-forms.md` |
 | Writing a factory or a dev-only seeder | `rules/factories-and-seeders.md` |
 | Adding a mid-chain conditional query clause | `rules/query-conditionals.md` |
 | Declaring a new concrete application class | `rules/php-conventions.md` |

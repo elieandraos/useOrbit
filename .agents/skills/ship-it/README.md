@@ -40,18 +40,6 @@ Does not implement code. Deciding what work should exist belongs to
 [`plan-it`](../plan-it/); implementation, verification, commits, and issue closure belong to
 [`implement-it`](../implement-it/); reviewing and merging the PR belongs to the human.
 
-## Context consumption
-
-Activation loads only `SKILL.md`. Each of its five rule files loads for its own phase — shared
-lifecycle orientation, PR readiness and creation, CI-failure investigation, closure, and release. The
-shared lifecycle-orientation file (`rules/milestone-lifecycle.md`) is freely consultable at any point
-and performs no mutation of its own; reaching it is not itself approval for anything. Each other
-file's own gated mutation is separate — readiness passing is not approval to create the PR, and a
-confirmed merge is not approval to publish the release. Each owning rule defines its own eligibility
-conditions and the separate human approval its mutation requires; this section does not restate them.
-See [the context-consumption model and representative-workflow
-estimates](https://github.com/elieandraos/agentic-engineering/blob/main/docs/skill-context.md#ship-it).
-
 ## Install
 
 ```shell

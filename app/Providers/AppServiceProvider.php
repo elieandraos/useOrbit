@@ -11,6 +11,7 @@ use App\Models\Client;
 use App\Models\Document;
 use App\Models\Note;
 use App\Models\Organization;
+use App\Models\Policy;
 use App\Models\Tag;
 use App\Models\User;
 use App\Policies\AgentPolicy;
@@ -73,6 +74,7 @@ class AppServiceProvider extends ServiceProvider
         Relation::enforceMorphMap([
             'clients' => Client::class,
             'documents' => Document::class,
+            'policies' => Policy::class,
             'users' => User::class,
         ]);
     }

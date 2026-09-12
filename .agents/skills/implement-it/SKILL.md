@@ -28,17 +28,19 @@ set is empty"), or once it has performed a correction `ship-it` hands back.
 
 - Working-branch readiness: the Backlog/hotfix-vs-milestone-branch decision, before implementation
   starts.
+- Companion activation: determining which available stack, implementation, testing, and tooling skills apply before implementation begins, and activating all applicable companions rather than treating the first matching skill as sufficient.
 - Performing the approved implementation itself.
 - Applying project conventions and applicable implementation/testing/tooling skills, and loading an
   applicable custom stack companion when one is available.
-- Implementation and commit-plan review gates (Gate 1 and Gate 2), invoking `review-it` before
-  Gate 1 and consuming its result as Gate 1's third stop condition.
+- Implementation and commit-plan review gates (Gate 1 and Gate 2), invoking `review-it` only after the
+  required verification decisions have been completed and consuming its result as Gate 1's third
+  stop condition.
 - Verification, including the regression-baseline treatment of pre-existing lint/format/static debt.
 - Semantic commit planning and construction.
 - Authorized push and issue closure — intentionally before the milestone's PR merges.
 - Dependency-ready recalculation and the next-issue recommendation.
 - The authorized fix itself for an in-flight delivery correction `ship-it` hands back (see
-  "Delivery corrections" below), using this same lifecycle.
+  "Delivery corrections" below), using the same lifecycle.
 
 ## What it does not own
 
@@ -64,12 +66,12 @@ idioms — belongs entirely to that companion or to project instructions, never 
 For ordinary implementation work, accept any GitHub issue that meets the structural and content
 quality bar `plan-it`'s `rules/issue-conventions.md` and `rules/review.md` define, and that carries
 the human's approval to implement it — regardless of whether `plan-it` drafted it or it was authored
-some other way. What matters is that it meets that bar and is approved, not who wrote it; do not
-recreate or replan an issue that already meets it merely because `plan-it` didn't produce it. For a
-single named issue, complete only that issue's authorized lifecycle (implementation through closure
-and the next-issue recommendation); this does not by itself authorize continuing into another issue,
-or into milestone delivery. For a milestone request, manage progress issue by issue, per "Milestone
-progression" below.
+some other way. What matters for entry is that it meets that bar and is approved, not who wrote it;
+do not recreate or replan an issue that already meets it merely because `plan-it` didn't produce it.
+For a single named issue, complete only that issue's authorized lifecycle (implementation through
+closure and the next-issue recommendation); this does not by itself authorize continuing into another
+issue, or into milestone delivery. For a milestone request, manage progress issue by issue, per
+"Milestone progression" below.
 
 An authorized delivery correction (see "Delivery corrections" below) is a separate entry route with
 a different prerequisite: it requires the human's explicit authorization, not an approved issue, and
@@ -79,9 +81,9 @@ stays available whether or not an issue is open, or was ever created for that sc
 
 After each issue closes, recompute the dependency-ready set (`rules/sequencing.md`) and recommend
 the next issue, explaining the choice when several are ready. A recommendation is not authorization
-to continue — wait for the human's selection before implementing another issue. When the ready set
-is empty because every open issue remains blocked, report the blockers; only a genuinely empty
-milestone (zero open issues) hands off to `ship-it`'s milestone PR-readiness assessment.
+to continue — wait for the human's selection before implementing another issue. When the ready set is
+empty because every open issue remains blocked, report the blockers; only a genuinely empty milestone
+(zero open issues) hands off to `ship-it`'s milestone PR-readiness assessment.
 
 ## Delivery corrections
 
@@ -91,13 +93,14 @@ within already-approved scope, and the human explicitly authorizes it
 authorized fix to this skill. Accept this entry only once that human authorization actually
 accompanies the handoff — `ship-it`'s own determination that a fix stays in scope is necessary but
 never sufficient by itself; without the human's explicit authorization there is nothing yet for this
-skill to perform. Once accepted, perform the correction through this same lifecycle — Gate 1 and
-Gate 2 as applicable (invoking `review-it` before Gate 1, the same standalone way — see "Rules"
-below), verification, commit construction, and authorized push — whether or not the original issue
-is still open. This route stays available without requiring an open issue to exist;
-it does not require reopening a closed issue, and it is separate from genuinely new scope, which
-still goes through `plan-it`'s discovered-work intake. Once the correction is verified and pushed,
-`ship-it` resumes the delivery workflow.
+skill to perform. Once accepted, perform the correction through this same lifecycle — targeted
+verification, the required full-suite decision, then Gate 1 and Gate 2 as applicable (invoking
+`review-it` only after verification is complete and the full-suite decision has been answered), commit
+construction, and authorized push (`rules/push-readiness.md`) — whether or not the original issue is
+still open. This route stays
+available without requiring an open issue to exist; it does not require reopening a closed issue, and
+it is separate from genuinely new scope, which still goes through `plan-it`'s discovered-work intake.
+Once the correction is verified and pushed, `ship-it` resumes the delivery workflow.
 
 ## Composition
 
@@ -123,28 +126,35 @@ Trigger on requests shaped like:
 
 ## Rules
 
+- `companion-activation.md` — before touching any implementation surface, enumerate available
+  implementation, testing, tooling, and stack-companion skills; inspect their trigger descriptions;
+  activate every applicable skill through the consuming agent's skill mechanism; complete and report
+  the activation checkpoint; and do not begin implementation until that checkpoint is complete. Reading
+  a not-yet-activated skill's rules file is itself the trigger to activate it through the mechanism
+  first. Do not treat the first matching skill or a direct file read as sufficient.
 - `review-gates.md` — the two pre-merge human approval gates (implementation review, then
   commit-plan review), how Gate 1 consumes `review-it`'s result, the approval-validity check before
   Gate 2 and before push, and the conditions that always warrant a stop; consult once implementation
   is ready to report, and again once a commit plan is ready to propose.
 - [`review-it`](../review-it/) — independently callable implementation review; invoke standalone
-  against the completed working tree once implementation and verification are complete, before
-  reporting at Gate 1 (`review-gates.md`'s "Consuming review-it's result").
+  against the completed working tree only after required targeted verification and the full-suite
+  run/skip decision are complete, before reporting at Gate 1 (`review-gates.md`'s "Consuming review-it's result").
 - `commit-boundaries.md` — how to turn an approved diff into semantic commits: boundary reasoning,
-  message content, the `Refs #N` trailer, and where a review correction lands; consult while
-  inspecting the diff and building the commit plan, after Gate 1.
+  message content, the `Refs #N` reference line, and where a review correction lands; consult while
+  inspecting the diff and building the commit plan, after Gate 1. Includes the no-Git-trailers policy
+  (no exception) and the mechanical, command-based check required immediately after every commit (and
+  amend) — not a self-reported "inspect and verify" pass — to confirm no Git trailer landed in the
+  actual committed message.
 - `commit-reconstruction.md` — the unpublished-history reconstruction procedure
   `commit-boundaries.md` hands off to; consult only for its one specific trigger — a review
   correction belongs to a commit already committed locally but not yet pushed. Ordinary commit
   building, and a correction found before anything is committed, never need it.
-- `verification.md` — verification scope: the narrowest reliable scope per commit across tests,
-  formatting, linting, and static analysis; the two distinct full-suite checkpoints, and when the
-  completed-issue one may be satisfied by an established reuse of an earlier full-suite result — the
-  pre-Gate-1 run, or a run already executed against the final committed state — instead of a fresh
-  run; when the stronger isolation escalation is warranted, routing to `isolation-verification.md`
-  for the technique itself; preserving pre-existing worktree changes using reliable provenance; and
-  checking each commit against runtime activation, routing to `activation-ordering.md` when that
-  check finds an effect; consult while implementing and while building/ordering commits.
+- `verification.md` — verification scope: required targeted verification before Gate 1; the human
+  full-suite run/skip decision that must be surfaced and answered before `review-it` or Gate 1; the
+  completed-issue consequences of that choice; narrowest-reliable verification per commit; cache/TIA/
+  replay distinctions; when isolation escalation is warranted; preserving pre-existing worktree
+  changes using reliable provenance; and runtime-activation checks that route to the specialized
+  rules when required. Consult before reporting Gate 1 and while building/ordering commits.
 - `activation-ordering.md` — reordering commits when checking one against runtime activation
   (configuration, a feature flag, environment-conditioned behavior) finds an effect; consult only
   once that check finds one — ordinary dependency ordering never needs it.
@@ -156,9 +166,17 @@ Trigger on requests shaped like:
   unrelated worktree content during a Git rewrite, shared by `isolation-verification.md` and
   `commit-reconstruction.md`; consult only from within one of those two procedures, never directly
   for ordinary work.
+- `push-readiness.md` — confirming a set of local commits is reachable on the correct remote branch,
+  and pushing them when it isn't: remote-branch identification, the unpushed-range determination, the
+  mechanical trailer re-check across the whole unpushed range as a second, independent gate, push
+  authorization, the push itself, and post-push reachability verification. Consult once commits exist
+  and the applicable verification has passed — before asking to close an issue
+  (`issue-closure.md`'s "Ask first"), before pushing an authorized delivery correction (no issue
+  closure involved), from `commit-reconstruction.md` to confirm a range is still unpublished, and from
+  `review-gates.md`'s approval-validity check.
 - `issue-closure.md` — whether and how to close an issue: asking first, the closing recipe, and
-  post-mutation validation; consult after the completed-issue full-suite pass, once commits exist.
-  Closure is intentional before a milestone's PR merges.
+  post-mutation validation; consult once `push-readiness.md` confirms the issue's commits are
+  reachable on the correct remote branch. Closure is intentional before a milestone's PR merges.
 - `sequencing.md` — branch readiness before starting an issue (Backlog/hotfix on the trunk branch vs.
   a shared milestone branch, inspected/recommended/created only with human approval), and, after a
   validated closure, recomputing the milestone's dependency-ready set and reporting/recommending the
