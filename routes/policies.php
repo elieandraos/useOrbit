@@ -7,4 +7,5 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'organization'])->group(function () {
     Route::get('policies', [PoliciesController::class, 'index'])->name('policies.index');
+    Route::post('policies', [PoliciesController::class, 'store'])->name('policies.store');
 });

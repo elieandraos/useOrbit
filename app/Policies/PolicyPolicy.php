@@ -12,4 +12,9 @@ final class PolicyPolicy
     {
         return $user->organization_id !== null;
     }
+
+    public function create(User $user): bool
+    {
+        return $user->organization_id !== null;
+    }
 }
