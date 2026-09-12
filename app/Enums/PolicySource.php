@@ -10,4 +10,14 @@ enum PolicySource: string
     case Client = 'client';
     case Friend = 'friend';
     case Agent = 'agent';
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::Owner => 'Owner',
+            self::Client => 'Client',
+            self::Friend => 'Friend',
+            self::Agent => 'Agent',
+        };
+    }
 }

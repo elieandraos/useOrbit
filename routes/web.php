@@ -18,6 +18,7 @@ require __DIR__.'/notes.php';
 require __DIR__.'/notifications.php';
 require __DIR__.'/organization-invitations.php';
 require __DIR__.'/organization-members.php';
+require __DIR__.'/policies.php';
 require __DIR__.'/tags.php';
 require __DIR__.'/world.php';
 require __DIR__.'/settings.php';
