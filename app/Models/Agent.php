@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\AgentStatus;
 use App\Models\Concerns\BelongsToCurrentOrganization;
 use App\Models\Concerns\Filterable;
+use App\Models\Concerns\HasFullAddress;
 use App\Models\Concerns\HasSlug;
 use App\Models\Concerns\Sortable;
 use App\Models\Contracts\NotificationSubject;
@@ -45,6 +46,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read Country|null $country
  * @property-read State|null $state
  * @property-read string $full_name
+ * @property-read string $full_address
  */
 #[Fillable([
     'organization_id', 'slug', 'first_name', 'last_name', 'date_of_birth', 'joined_at', 'phone', 'email',
@@ -53,7 +55,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 final class Agent extends Model implements NotificationSubject
 {
     /** @use HasFactory<AgentFactory> */
-    use BelongsToCurrentOrganization, Filterable, HasFactory, HasSlug, SoftDeletes, Sortable;
+    use BelongsToCurrentOrganization, Filterable, HasFactory, HasFullAddress, HasSlug, SoftDeletes, Sortable;
 
     protected function casts(): array
     {

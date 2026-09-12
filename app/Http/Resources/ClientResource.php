@@ -42,9 +42,7 @@ final class ClientResource extends JsonResource
             'city' => $this->city,
             'country_name' => $countryName,
             'state_name' => $stateName,
-            'full_address' => collect([$this->street, $this->building_floor, $this->city, $stateName, $countryName])
-                ->filter()
-                ->implode("\n"),
+            'full_address' => $this->full_address,
             'emergency_contact_name' => $this->emergency_contact_name,
             'emergency_contact_relationship' => $this->emergency_contact_relationship,
             'emergency_contact_relationship_label' => $this->emergency_contact_relationship?->label(),

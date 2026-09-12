@@ -37,9 +37,7 @@ final class AgentResource extends JsonResource
             'city' => $this->city,
             'country_name' => $countryName,
             'state_name' => $stateName,
-            'full_address' => collect([$this->street, $this->building_floor, $this->city, $stateName, $countryName])
-                ->filter()
-                ->implode("\n"),
+            'full_address' => $this->full_address,
             'status' => $this->status,
             'created_by' => $this->created_by,
             'updated_by' => $this->updated_by,

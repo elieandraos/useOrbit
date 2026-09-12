@@ -12,6 +12,7 @@ use App\Enums\LeadSource;
 use App\Models\Concerns\BelongsToCurrentOrganization;
 use App\Models\Concerns\Filterable;
 use App\Models\Concerns\HasDocuments;
+use App\Models\Concerns\HasFullAddress;
 use App\Models\Concerns\HasNotes;
 use App\Models\Concerns\HasSlug;
 use App\Models\Concerns\Sortable;
@@ -65,6 +66,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read State|null $state
  * @property-read Collection<int, Note> $notes
  * @property-read string $full_name
+ * @property-read string $full_address
  *
  * When client_type is Company, first_name/last_name/phone/email hold the contact person's info, not the client's own.
  */
@@ -77,7 +79,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 final class Client extends Model implements Documentable, Notable, NotificationSubject
 {
     /** @use HasFactory<ClientFactory> */
-    use BelongsToCurrentOrganization, Filterable, HasDocuments, HasFactory, HasNotes, HasSlug, SoftDeletes, Sortable;
+    use BelongsToCurrentOrganization, Filterable, HasDocuments, HasFactory, HasFullAddress, HasNotes, HasSlug, SoftDeletes, Sortable;
 
     protected function casts(): array
     {
