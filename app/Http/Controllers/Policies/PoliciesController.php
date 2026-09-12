@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Policies;
 
 use App\Actions\Policies\CreatePolicyAction;
+use App\Enums\PolicyType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Policies\StorePolicyRequest;
 use App\Http\Resources\PolicyResource;
@@ -40,10 +41,24 @@ final class PoliciesController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
-        $action->handle($user, $request->validated());
+        $policy = $action->handle($user, $request->validated());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Policy created.')]);
 
-        return to_route('policies.index');
+        return to_route('policies.show', $policy);
+    }
+
+    #[Authorize('view', 'policy')]
+    public function show(Policy $policy): Response
+    {
+        $policy->load(['client', 'carrier', 'agent', $policy->class->detailsRelation()]);
+
+        if ($policy->type === PolicyType::Group) {
+            $policy->load('insureds');
+        }
+
+        return inertia('Policies/Show', [
+            'policy' => PolicyResource::make($policy),
+        ]);
     }
 }

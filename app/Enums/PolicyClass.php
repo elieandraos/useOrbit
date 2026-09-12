@@ -24,4 +24,16 @@ enum PolicyClass: string
             self::Travel => 'Travel',
         };
     }
+
+    public function detailsRelation(): string
+    {
+        return match ($this) {
+            self::Medical => 'medicalDetails',
+            self::Automotive => 'automotiveDetails',
+            self::Expat => 'expatDetails',
+            self::Fire => 'fireDetails',
+            self::Life => 'lifeDetails',
+            self::Travel => 'travelDetails',
+        };
+    }
 }

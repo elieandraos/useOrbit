@@ -69,14 +69,14 @@ test('store returns validation errors when required fields are missing', functio
         ->assertSessionHasErrors(['class', 'subclass', 'type', 'client_id', 'carrier_id', 'effective_date', 'expiry_date', 'premium_amount', 'source']);
 });
 
-test('store redirects to policies.index with a toast on success', function () {
+test('store redirects to policies.show with a toast on success', function () {
     $user = User::factory()->withOrganization()->create();
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
     $this->actingAs($user)
         ->post(route('policies.store'), singlePayload($client, $carrier))
-        ->assertRedirect(route('policies.index'))
+        ->assertRedirect(route('policies.show', Policy::query()->first()))
         ->assertHasInertiaFlash('success', 'Policy created.');
 
     expect(Policy::query()->count())->toBe(1);
@@ -89,7 +89,7 @@ test('store wires the submitted client and carrier onto the created policy', fun
 
     $this->actingAs($user)
         ->post(route('policies.store'), singlePayload($client, $carrier))
-        ->assertRedirect(route('policies.index'));
+        ->assertRedirect(route('policies.show', Policy::query()->first()));
 
     $this->assertDatabaseHas('policies', [
         'client_id' => $client->id,
@@ -186,5 +186,5 @@ test('a co_insurance_share of 15 is accepted when co_insurance is true', functio
     $this->actingAs($user)
         ->post(route('policies.store'), $payload)
         ->assertSessionHasNoErrors()
-        ->assertRedirect(route('policies.index'));
+        ->assertRedirect(route('policies.show', Policy::query()->first()));
 });

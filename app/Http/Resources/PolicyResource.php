@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Enums\PolicyClass;
 use App\Models\Policy;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -32,6 +33,11 @@ final class PolicyResource extends JsonResource
                 'slug' => $this->carrier->slug,
                 'name' => $this->carrier->name,
             ]),
+            'agent' => $this->whenLoaded('agent', fn () => $this->agent === null ? null : [
+                'id' => $this->agent->id,
+                'slug' => $this->agent->slug,
+                'full_name' => $this->agent->full_name,
+            ]),
             'effective_date' => $this->effective_date->format('Y-m-d'),
             'effective_date_formatted' => $this->effective_date->format('M j, Y'),
             'expiry_date' => $this->expiry_date->format('Y-m-d'),
@@ -43,6 +49,11 @@ final class PolicyResource extends JsonResource
             'status_label' => $this->status->label(),
             'source' => $this->source,
             'source_label' => $this->source->label(),
+            'details' => $this->when($this->class === PolicyClass::Medical, fn () => $this->whenLoaded(
+                'medicalDetails',
+                fn () => PolicyMedicalDetailsResource::make($this->medicalDetails)
+            )),
+            'insureds' => PolicyInsuredResource::collection($this->whenLoaded('insureds')),
         ];
     }
 }
