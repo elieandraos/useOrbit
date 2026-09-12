@@ -22,4 +22,10 @@ Keep the default report compact but always include:
 Keep unavailable measurements visible as unavailable rather than silently dropping the baseline. Add deeper
 telemetry or phase reconstruction only when it materially helps explain the session.
 
+For any telemetry field, "unavailable" means `telemetry.md`'s discovery procedure was actually attempted
+and the evidence is genuinely absent or inaccessible — never that it simply wasn't looked for.
+Label each timing/context field measured, reconstructed, or unavailable per `telemetry.md`'s evidence
+states, and when a field is unavailable, state which discovery step failed rather than reporting the
+gap silently.
+
 Do not expand the retrospective into a full implementation or architecture review unless separately requested.

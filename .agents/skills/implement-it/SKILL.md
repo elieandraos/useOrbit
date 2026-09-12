@@ -66,12 +66,12 @@ idioms — belongs entirely to that companion or to project instructions, never 
 For ordinary implementation work, accept any GitHub issue that meets the structural and content
 quality bar `plan-it`'s `rules/issue-conventions.md` and `rules/review.md` define, and that carries
 the human's approval to implement it — regardless of whether `plan-it` drafted it or it was authored
-some other way. What matters is that it meets that bar and is approved, not who wrote it; do not
-recreate or replan an issue that already meets it merely because `plan-it` didn't produce it. For a
-single named issue, complete only that issue's authorized lifecycle (implementation through closure
-and the next-issue recommendation); this does not by itself authorize continuing into another issue,
-or into milestone delivery. For a milestone request, manage progress issue by issue, per "Milestone
-progression" below.
+some other way. What matters for entry is that it meets that bar and is approved, not who wrote it;
+do not recreate or replan an issue that already meets it merely because `plan-it` didn't produce it.
+For a single named issue, complete only that issue's authorized lifecycle (implementation through
+closure and the next-issue recommendation); this does not by itself authorize continuing into another
+issue, or into milestone delivery. For a milestone request, manage progress issue by issue, per
+"Milestone progression" below.
 
 An authorized delivery correction (see "Delivery corrections" below) is a separate entry route with
 a different prerequisite: it requires the human's explicit authorization, not an approved issue, and
@@ -96,7 +96,8 @@ never sufficient by itself; without the human's explicit authorization there is 
 skill to perform. Once accepted, perform the correction through this same lifecycle — targeted
 verification, the required full-suite decision, then Gate 1 and Gate 2 as applicable (invoking
 `review-it` only after verification is complete and the full-suite decision has been answered), commit
-construction, and authorized push — whether or not the original issue is still open. This route stays
+construction, and authorized push (`rules/push-readiness.md`) — whether or not the original issue is
+still open. This route stays
 available without requiring an open issue to exist; it does not require reopening a closed issue, and
 it is separate from genuinely new scope, which still goes through `plan-it`'s discovered-work intake.
 Once the correction is verified and pushed, `ship-it` resumes the delivery workflow.
@@ -125,9 +126,12 @@ Trigger on requests shaped like:
 
 ## Rules
 
-- `companion-activation.md` — before writing code, enumerate available implementation, testing,
-  tooling, and stack-companion skills; inspect their trigger descriptions and activate every applicable
-  one. Do not treat the first matching skill as sufficient, and record relevant non-activation decisions.
+- `companion-activation.md` — before touching any implementation surface, enumerate available
+  implementation, testing, tooling, and stack-companion skills; inspect their trigger descriptions;
+  activate every applicable skill through the consuming agent's skill mechanism; complete and report
+  the activation checkpoint; and do not begin implementation until that checkpoint is complete. Reading
+  a not-yet-activated skill's rules file is itself the trigger to activate it through the mechanism
+  first. Do not treat the first matching skill or a direct file read as sufficient.
 - `review-gates.md` — the two pre-merge human approval gates (implementation review, then
   commit-plan review), how Gate 1 consumes `review-it`'s result, the approval-validity check before
   Gate 2 and before push, and the conditions that always warrant a stop; consult once implementation
@@ -136,8 +140,11 @@ Trigger on requests shaped like:
   against the completed working tree only after required targeted verification and the full-suite
   run/skip decision are complete, before reporting at Gate 1 (`review-gates.md`'s "Consuming review-it's result").
 - `commit-boundaries.md` — how to turn an approved diff into semantic commits: boundary reasoning,
-  message content, the `Refs #N` trailer, final commit-message validation, and where a review correction
-  lands; consult while inspecting the diff and building the commit plan, after Gate 1.
+  message content, the `Refs #N` reference line, and where a review correction lands; consult while
+  inspecting the diff and building the commit plan, after Gate 1. Includes the no-Git-trailers policy
+  (no exception) and the mechanical, command-based check required immediately after every commit (and
+  amend) — not a self-reported "inspect and verify" pass — to confirm no Git trailer landed in the
+  actual committed message.
 - `commit-reconstruction.md` — the unpublished-history reconstruction procedure
   `commit-boundaries.md` hands off to; consult only for its one specific trigger — a review
   correction belongs to a commit already committed locally but not yet pushed. Ordinary commit
@@ -159,9 +166,17 @@ Trigger on requests shaped like:
   unrelated worktree content during a Git rewrite, shared by `isolation-verification.md` and
   `commit-reconstruction.md`; consult only from within one of those two procedures, never directly
   for ordinary work.
+- `push-readiness.md` — confirming a set of local commits is reachable on the correct remote branch,
+  and pushing them when it isn't: remote-branch identification, the unpushed-range determination, the
+  mechanical trailer re-check across the whole unpushed range as a second, independent gate, push
+  authorization, the push itself, and post-push reachability verification. Consult once commits exist
+  and the applicable verification has passed — before asking to close an issue
+  (`issue-closure.md`'s "Ask first"), before pushing an authorized delivery correction (no issue
+  closure involved), from `commit-reconstruction.md` to confirm a range is still unpublished, and from
+  `review-gates.md`'s approval-validity check.
 - `issue-closure.md` — whether and how to close an issue: asking first, the closing recipe, and
-  post-mutation validation; consult after the verification choice has been recorded, once commits
-  exist. Closure is intentional before a milestone's PR merges.
+  post-mutation validation; consult once `push-readiness.md` confirms the issue's commits are
+  reachable on the correct remote branch. Closure is intentional before a milestone's PR merges.
 - `sequencing.md` — branch readiness before starting an issue (Backlog/hotfix on the trunk branch vs.
   a shared milestone branch, inspected/recommended/created only with human approval), and, after a
   validated closure, recomputing the milestone's dependency-ready set and reporting/recommending the

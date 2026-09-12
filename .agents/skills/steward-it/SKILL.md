@@ -47,16 +47,18 @@ Typical prompts:
 - `session-reconstruction.md` — identifies the target, reconstructs the timeline, records the
   activation path, and separates observation from inference; always load.
 - `telemetry.md` — owns timing, human-wait detection, token/cache/thinking usage, phase timing, and
-  skill attribution; load for every non-trivial session when runtime telemetry is available or can be
-  reasonably discovered.
+  skill attribution; load for every non-trivial session when session or runtime evidence may be
+  available. Owns the explicit locate-then-parse discovery procedure for the session log and the
+  measured/reconstructed/unavailable evidence states — a field is never "unavailable" before that
+  procedure has actually been attempted.
 - `findings.md` — owns causal classification, recurrence, and finding quality; load when there is a
   deviation, suspicious behavior, possible waste, recurrence question, or other material finding to
   analyze.
 - `evidence.md` — owns the durable-evidence recording convention; load only when the consuming project
   maintains a stewardship evidence file and the current review produces durable evidence worth
   retaining.
-- `report.md` — owns the compact baseline report and presentation of measured versus unavailable
-  evidence; load for every non-trivial stewardship pass.
+- `report.md` — owns the compact baseline report and presentation of measured, reconstructed, and
+  unavailable evidence; load for every non-trivial stewardship pass.
 
 `session-reconstruction.md`, `telemetry.md`, and `report.md` form the standard baseline and load by
 default for any non-trivial pass. `findings.md` and `evidence.md` are the genuinely conditional rules —

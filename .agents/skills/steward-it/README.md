@@ -30,13 +30,17 @@ The useful diagnostic path is:
 
 `session -> timeline -> skill/rule trace -> verification/actions -> token/context -> outcome -> recurrence -> finding`
 
-The exact evidence available depends on the runtime and session log. Do not expect every session to
-provide every measurement.
+The exact evidence available depends on the runtime and session log — but "depends on the runtime"
+describes what discovery can find, not a reason to skip attempting it. Do not expect every session to
+provide every measurement, and do not conclude a measurement is unavailable before actually locating and
+parsing the session log.
 
 ## Rules
 
 - [`session-reconstruction.md`](rules/session-reconstruction.md) — always loaded.
-- [`telemetry.md`](rules/telemetry.md) — loaded for non-trivial sessions when runtime telemetry is available.
+- [`telemetry.md`](rules/telemetry.md) — loaded for non-trivial sessions when session or runtime evidence
+  may be available; owns actually locating and parsing the session log before concluding telemetry is
+  unavailable.
 - [`findings.md`](rules/findings.md) — loaded when there is a material deviation, suspicious behavior, or recurrence question.
 - [`evidence.md`](rules/evidence.md) — loaded only when durable project evidence applies.
 - [`report.md`](rules/report.md) — loaded for every non-trivial stewardship pass.

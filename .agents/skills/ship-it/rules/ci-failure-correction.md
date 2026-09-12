@@ -67,8 +67,9 @@ itself, and never substitutes for it.
    applicable (invoking `review-it` standalone before Gate 1, per
    `implement-it/rules/review-gates.md`'s "Consuming review-it's result"), commit construction
    (`implement-it/rules/commit-boundaries.md`), and verification
-   (`implement-it/rules/verification.md`) — then pushes once authorized. This rule resumes once the
-   correction is verified and pushed: confirm real CI runs again against the PR.
+   (`implement-it/rules/verification.md`) — then pushes once authorized
+   (`implement-it/rules/push-readiness.md`), with no issue closure required for this route. This rule
+   resumes once the correction is verified and pushed: confirm real CI runs again against the PR.
 7. **No merge, milestone closure, or release progression until the PR is genuinely green and the human
    authorizes the next boundary.** A second (or later) real CI failure on the same PR repeats this
    section from step 1 — there is no cap on how many times this can legitimately happen before the PR
