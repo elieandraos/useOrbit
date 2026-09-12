@@ -13,6 +13,7 @@ use App\Models\Contracts\NotificationSubject;
 use Carbon\CarbonImmutable;
 use Database\Factories\AgentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -43,6 +44,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read User|null $updatedBy
  * @property-read Country|null $country
  * @property-read State|null $state
+ * @property-read string $full_name
  */
 #[Fillable([
     'organization_id', 'slug', 'first_name', 'last_name', 'date_of_birth', 'joined_at', 'phone', 'email',
@@ -82,6 +84,13 @@ final class Agent extends Model implements NotificationSubject
         return $this->belongsTo(User::class, 'updated_by');
     }
 
+    protected function fullName(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => "$this->first_name $this->last_name",
+        );
+    }
+
     public function notificationSubjectKind(): string
     {
         return 'agent';
@@ -89,6 +98,6 @@ final class Agent extends Model implements NotificationSubject
 
     public function notificationSubjectName(): string
     {
-        return "$this->first_name $this->last_name";
+        return $this->full_name;
     }
 }

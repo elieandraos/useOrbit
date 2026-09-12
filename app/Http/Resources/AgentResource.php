@@ -21,7 +21,7 @@ final class AgentResource extends JsonResource
             'slug' => $this->slug,
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
-            'full_name' => "$this->first_name $this->last_name",
+            'full_name' => $this->full_name,
             'date_of_birth' => $this->date_of_birth->format('Y-m-d'),
             'date_of_birth_formatted' => $this->date_of_birth->format('M j, Y'),
             'age' => $this->date_of_birth->age,
