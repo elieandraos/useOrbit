@@ -23,4 +23,9 @@ final class PolicyPolicy
     {
         return $user->organization_id !== null;
     }
+
+    public function update(User $user, Policy $policy): bool
+    {
+        return $policy->organization_id === $user->organization_id;
+    }
 }

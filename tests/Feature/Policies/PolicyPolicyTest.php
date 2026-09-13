@@ -45,3 +45,19 @@ test('a user with no organization cannot create policies', function () {
 
     expect($user->can('create', Policy::class))->toBeFalse();
 });
+
+test('a user can update a policy from their own organization', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    expect($user->can('update', $policy))->toBeTrue();
+});
+
+test('a user cannot update a policy from another organization', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $otherOrganization = Organization::factory()->create();
+    $policy = Policy::factory()->create(['organization_id' => $otherOrganization->id]);
+
+    expect($user->can('update', $policy))->toBeFalse();
+});

@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Policies;
 
 use App\Actions\Policies\CreatePolicyAction;
+use App\Actions\Policies\UpdatePolicyAction;
 use App\Enums\PolicyType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Policies\StorePolicyRequest;
+use App\Http\Requests\Policies\UpdatePolicyRequest;
 use App\Http\Resources\PolicyResource;
 use App\Models\Policy;
 use App\Models\User;
@@ -60,5 +62,20 @@ final class PoliciesController extends Controller
         return inertia('Policies/Show', [
             'policy' => PolicyResource::make($policy),
         ]);
+    }
+
+    /**
+     * @throws \Throwable
+     */
+    #[Authorize('update', 'policy')]
+    public function update(UpdatePolicyRequest $request, Policy $policy, UpdatePolicyAction $action): RedirectResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        $policy = $action->handle($user, $policy, $request->validated());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Policy updated.')]);
+
+        return to_route('policies.show', $policy);
     }
 }

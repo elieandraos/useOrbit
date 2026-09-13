@@ -9,4 +9,5 @@ Route::middleware(['auth', 'organization'])->group(function () {
     Route::get('policies', [PoliciesController::class, 'index'])->name('policies.index');
     Route::post('policies', [PoliciesController::class, 'store'])->name('policies.store');
     Route::get('policies/{policy:slug}', [PoliciesController::class, 'show'])->name('policies.show');
+    Route::patch('policies/{policy:slug}', [PoliciesController::class, 'update'])->name('policies.update');
 });
