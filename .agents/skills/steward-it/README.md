@@ -26,6 +26,41 @@ Every non-trivial stewardship pass starts with the same compact baseline: execut
 usage, skill activation, and workflow verification, followed by findings and causal analysis. Detailed
 telemetry and analysis are loaded through the relevant conditional rules under [`rules/`](rules/).
 
+A plain `/steward-it` request produces that standard compact retrospective. When the human follows it
+with a specific diagnostic question, stewardship switches to focused causal investigation for that
+question and explicitly classifies the supported cause rather than merely repeating the baseline report.
+
+## Baseline report structure
+
+The standard retrospective keeps a stable semantic section order so reports remain comparable across
+sessions:
+
+1. **Expected** — why stewardship was requested and what was expected.
+2. **Execution** — elapsed time, active time, human wait, and phase breakdown when measurable.
+3. **Context / usage** — output, thinking, cache usage, and skill attribution when supported.
+4. **Skill activation** — expected and observed activation plus mismatches.
+5. **Verification / workflow** — tests, review, approvals, commits, closure, and other material events.
+6. **Findings** — confirmed problems or no material finding.
+7. **Cause** — evidence-backed causal classification.
+8. **Pattern** — recurrence status from available evidence.
+9. **Recommendation** — smallest justified improvement and likely owner.
+10. **Evidence record** — only when durable evidence applies.
+
+The semantic structure is stable, but presentation can adapt to the evidence. Tables are encouraged when
+they make comparable timing, usage, or attribution data easier to inspect. Narrative is appropriate when
+the evidence is better expressed that way. The baseline sections should not be silently renamed or
+omitted merely because a session is unusually small or rich; use `not applicable` or `unavailable` when
+necessary.
+
+Diagnostic follow-ups are intentionally different: when the human asks a specific causal question after
+invoking stewardship, answer that question directly with the relevant evidence, classification, and
+recommendation rather than repeating the entire baseline report.
+
+After a standard baseline report, when meaningful telemetry is available, offer one optional next step:
+request a detailed execution-time and context/usage breakdown by skill. Keep it opt-in so the default
+report remains compact. When that breakdown is requested, clearly caveat any sticky or otherwise
+non-causal skill-attribution field before presenting per-skill tables.
+
 The useful diagnostic path is:
 
 `session -> timeline -> skill/rule trace -> verification/actions -> token/context -> outcome -> recurrence -> finding`
@@ -41,7 +76,7 @@ parsing the session log.
 - [`telemetry.md`](rules/telemetry.md) — loaded for non-trivial sessions when session or runtime evidence
   may be available; owns actually locating and parsing the session log before concluding telemetry is
   unavailable.
-- [`findings.md`](rules/findings.md) — loaded when there is a material deviation, suspicious behavior, or recurrence question.
+- [`findings.md`](rules/findings.md) — loaded when there is a material deviation, suspicious behavior, recurrence question, or diagnostic question.
 - [`evidence.md`](rules/evidence.md) — loaded only when durable project evidence applies.
 - [`report.md`](rules/report.md) — loaded for every non-trivial stewardship pass.
 
@@ -65,6 +100,13 @@ the observed execution with their rules, identify any deviations or wasted work,
 what happened and why.
 ```
 
+### Diagnostic cause classification
+
+```text
+Steward this session. Why were the issues left unassigned? Was this a plan-it execution gap
+or a skill gap? Use repository evidence and the current plan-it rules to classify the cause.
+```
+
 ### Recurring pattern
 
 ```text
@@ -79,9 +121,10 @@ owns the smallest justified fix.
 2. Load the conditional rules required by the session and requested analysis.
 3. Separate observations from inference and compare intended guidance with observed behavior.
 4. Classify the likely cause and check for recurrence.
-5. Produce the standard compact stewardship report — timing/context/activation baseline, findings,
-   cause, pattern, and recommendation, plus a durable evidence record only when a project evidence
-   file is maintained.
+5. Produce either the standard compact stewardship report or, when a diagnostic question was asked,
+   a focused causal answer with evidence, classification, and recommendation, plus a durable evidence
+   record only when a project evidence file is maintained.
+6. After a standard report, offer the optional telemetry breakdown when meaningful telemetry exists.
 
 ## Evidence convention
 

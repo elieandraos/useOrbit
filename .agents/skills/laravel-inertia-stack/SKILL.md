@@ -25,7 +25,7 @@ to `inertia-vue-development`.
 - Writing or reviewing a Laravel controller, Form Request, Action, Policy, or Resource in this stack.
 - Adding query filtering or sorting to an Eloquent index query.
 - Writing or organizing a Pest test.
-- Defining an Eloquent local scope, a migration column, or a backed enum used as select options.
+- Defining an Eloquent local scope or computed model attribute, a migration column, or a backed enum used as select options.
 - Generating factory or seeder data.
 - Building or reviewing an Inertia form that uses the Laravel/Inertia request serialization boundary.
 
@@ -41,7 +41,7 @@ than repeating them. See `README.md` for what `rules/`, `blueprints/`, and `temp
 | Writing or organizing a Pest test | `blueprints/pest-testing.md`, then `rules/test-ownership.md` for the concrete class-ownership mapping |
 | Wiring Form Request -> Action -> Controller | `rules/actions.md` |
 | Authorizing a controller method | `rules/authorization.md` |
-| Defining an Eloquent local scope | `rules/eloquent-attributes.md` |
+| Defining an Eloquent local scope or computed model attribute | `rules/eloquent-attributes.md` |
 | Adding index filtering and/or sorting | `blueprints/filters-and-sorting.md` + `rules/request-normalization.md` (a sort `direction` must be defaulted, not left nullable) + `templates/app/Filters/QueryFilter.php`, `templates/app/Sorts/QuerySorter.php`, `templates/app/Models/Concerns/Filterable.php`, `templates/app/Models/Concerns/Sortable.php` |
 | Exposing a backed enum as select options | `rules/enum-options.md` |
 | Coercing or defaulting request input | `rules/request-normalization.md` |
@@ -63,5 +63,4 @@ This skill is not:
 - an architecture every project must adopt — the controller and Pest blueprints stay conditional
   (tenancy, non-CRUD shapes, filters/sorters) rather than mandatory for every feature.
 
-Code examples throughout this skill use neutral, invented domain concepts. They are not drawn from, and
-do not document, any specific consuming project.
+Code examples throughout this skill use neutral, invented domain concepts. They are not drawn from, and do not document, any specific consuming project.
