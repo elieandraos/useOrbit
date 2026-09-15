@@ -308,7 +308,8 @@ Route::get('agents/{agent:slug}/policies', [AgentPoliciesController::class, 'ind
 Route::get('carriers/{carrier:slug}/policies', [CarrierPoliciesController::class, 'index'])->name('carriers.policies.index');
 ```
 
-Per class (× 6, proposed shape — see "Still open"):
+Per class (× 6, confirmed — direct, static per-class path segment, own named routes, no shared
+dispatcher):
 
 ```php
 Route::get('policies/medical/create', [PoliciesMedicalController::class, 'create'])->name('policies.medical.create');
