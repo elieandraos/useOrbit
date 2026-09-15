@@ -128,6 +128,10 @@ consequences — not derived from the evidence above, which on its own pointed t
    `delete`/`destroy` method on any of them — locked decision 1 (below) is unchanged by the split:
    Policy has no delete action anywhere. Each per-class controller holds exactly `create`, `store`,
    `show`, `edit`, `update` — no `index` (browsing is exclusively the shared layer's job, decision 2).
+   **Confirmed: each has its own direct route** (`policies/medical/{policy:slug}` etc.) — the
+   `medical`/`automotive`/... segment is a plain static path string, not a dynamic/bound parameter.
+   No shared dispatcher, no route unification for show/edit/update — `PoliciesController` never
+   forwards into these; it only owns `index` and `create` (decision 2/4).
 4. **"New Policy" entry point**: `PoliciesController` also gets a `create` method (new — #322–325
    never built one), `GET policies/create`, rendering a **shared** `Policies/Create.vue` — step 1
    only (type toggle, insurance-class grid, parties, status/source per `_design/new-policy.jsx`'s
@@ -203,11 +207,6 @@ filter/sort — this directly narrows the original proposal's `PolicyMedicalFilt
 
 ## Still open (needs a decision before or during the relevant issue, not now)
 
-- **Route path shape** for the per-class stacks — proposed default: `policies/medical`,
-  `policies/medical/create`, `policies/medical/{policy:slug}`, `policies/medical/{policy:slug}/edit`,
-  named `policies.medical.create/store/show/edit/update` (mirrored ×6). Nothing else in this app
-  nests a type segment under a plural resource path this way, so treat this as a proposal to
-  confirm, not an established convention.
 - **Request composition shape** (see Recommendation above) — pick if/when it's revisited, not
   before.
 - **Resource composition** (see Recommendation above) — not raised, not decided; revisit only if
