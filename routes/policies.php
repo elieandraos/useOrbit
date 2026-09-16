@@ -7,6 +7,8 @@ use App\Http\Controllers\Policies\PoliciesAutomotivePdfExportController;
 use App\Http\Controllers\Policies\PoliciesController;
 use App\Http\Controllers\Policies\PoliciesExpatController;
 use App\Http\Controllers\Policies\PoliciesExpatPdfExportController;
+use App\Http\Controllers\Policies\PoliciesFireController;
+use App\Http\Controllers\Policies\PoliciesFirePdfExportController;
 use App\Http\Controllers\Policies\PoliciesMedicalController;
 use App\Http\Controllers\Policies\PoliciesMedicalPdfExportController;
 use App\Http\Controllers\Policies\PoliciesTravelController;
@@ -37,6 +39,13 @@ Route::middleware(['auth', 'organization'])->group(function () {
     Route::get('policies/expat/{policy:slug}/edit', [PoliciesExpatController::class, 'edit'])->name('policies.expat.edit');
     Route::patch('policies/expat/{policy:slug}', [PoliciesExpatController::class, 'update'])->name('policies.expat.update');
     Route::get('policies/expat/{policy:slug}/export', PoliciesExpatPdfExportController::class)->name('policies.expat.export-pdf');
+
+    Route::get('policies/fire/create', [PoliciesFireController::class, 'create'])->name('policies.fire.create');
+    Route::post('policies/fire', [PoliciesFireController::class, 'store'])->name('policies.fire.store');
+    Route::get('policies/fire/{policy:slug}', [PoliciesFireController::class, 'show'])->name('policies.fire.show');
+    Route::get('policies/fire/{policy:slug}/edit', [PoliciesFireController::class, 'edit'])->name('policies.fire.edit');
+    Route::patch('policies/fire/{policy:slug}', [PoliciesFireController::class, 'update'])->name('policies.fire.update');
+    Route::get('policies/fire/{policy:slug}/export', PoliciesFirePdfExportController::class)->name('policies.fire.export-pdf');
 
     Route::get('policies/travel/create', [PoliciesTravelController::class, 'create'])->name('policies.travel.create');
     Route::post('policies/travel', [PoliciesTravelController::class, 'store'])->name('policies.travel.store');
