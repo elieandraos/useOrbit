@@ -24,7 +24,7 @@ final class PoliciesMedicalController extends Controller
     #[Authorize('create', Policy::class)]
     public function create(): Response
     {
-        return inertia('Policies/Medical/Create');
+        return inertia('PolicyMedical/Create');
     }
 
     /**
@@ -53,7 +53,7 @@ final class PoliciesMedicalController extends Controller
             $policy->load('insureds');
         }
 
-        return inertia('Policies/Medical/Show', [
+        return inertia('PolicyMedical/Show', [
             'policy' => PolicyMedicalResource::make($policy),
         ]);
     }
@@ -69,7 +69,7 @@ final class PoliciesMedicalController extends Controller
             $policy->load('insureds');
         }
 
-        return inertia('Policies/Medical/Edit', [
+        return inertia('PolicyMedical/Edit', [
             'policy' => PolicyMedicalResource::make($policy),
         ]);
     }
