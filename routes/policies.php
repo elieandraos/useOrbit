@@ -10,6 +10,7 @@ use App\Http\Controllers\Policies\PoliciesExpatPdfExportController;
 use App\Http\Controllers\Policies\PoliciesMedicalController;
 use App\Http\Controllers\Policies\PoliciesMedicalPdfExportController;
 use App\Http\Controllers\Policies\PoliciesTravelController;
+use App\Http\Controllers\Policies\PoliciesTravelPdfExportController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'organization'])->group(function () {
@@ -42,4 +43,5 @@ Route::middleware(['auth', 'organization'])->group(function () {
     Route::get('policies/travel/{policy:slug}', [PoliciesTravelController::class, 'show'])->name('policies.travel.show');
     Route::get('policies/travel/{policy:slug}/edit', [PoliciesTravelController::class, 'edit'])->name('policies.travel.edit');
     Route::patch('policies/travel/{policy:slug}', [PoliciesTravelController::class, 'update'])->name('policies.travel.update');
+    Route::get('policies/travel/{policy:slug}/export', PoliciesTravelPdfExportController::class)->name('policies.travel.export-pdf');
 });
