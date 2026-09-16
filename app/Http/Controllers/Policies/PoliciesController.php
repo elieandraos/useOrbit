@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Policies;
 
 use App\Actions\Policies\CreatePolicyMedicalAction;
-use App\Actions\Policies\UpdatePolicyAction;
+use App\Actions\Policies\UpdatePolicyMedicalAction;
 use App\Enums\PolicyType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Policies\StorePolicyRequest;
@@ -68,7 +68,7 @@ final class PoliciesController extends Controller
      * @throws \Throwable
      */
     #[Authorize('update', 'policy')]
-    public function update(UpdatePolicyRequest $request, Policy $policy, UpdatePolicyAction $action): RedirectResponse
+    public function update(UpdatePolicyRequest $request, Policy $policy, UpdatePolicyMedicalAction $action): RedirectResponse
     {
         /** @var User $user */
         $user = $request->user();
