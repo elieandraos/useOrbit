@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Policies;
 
-use App\Actions\Policies\CreatePolicyAction;
+use App\Actions\Policies\CreatePolicyMedicalAction;
 use App\Actions\Policies\UpdatePolicyAction;
 use App\Enums\PolicyType;
 use App\Http\Controllers\Controller;
@@ -39,7 +39,7 @@ final class PoliciesController extends Controller
      * @throws \Throwable
      */
     #[Authorize('create', Policy::class)]
-    public function store(StorePolicyRequest $request, CreatePolicyAction $action): RedirectResponse
+    public function store(StorePolicyRequest $request, CreatePolicyMedicalAction $action): RedirectResponse
     {
         /** @var User $user */
         $user = $request->user();
