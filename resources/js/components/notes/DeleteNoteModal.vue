@@ -36,7 +36,7 @@ const isOpen = computed({
         <Dialog
             v-model:open="isOpen"
             title="Delete this note?"
-            description="This note will be permanently removed from this client's records. This can't be undone."
+            description="This note will be permanently removed. This can't be undone."
         >
             <template #footer>
                 <Button variant="secondary" @click="noteToDelete = null">

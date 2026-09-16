@@ -4,11 +4,12 @@ import { Tab, Tabs } from '@/components/ui/tabs';
 import { index as policiesIndex } from '@/routes/policies';
 import { index as policiesDocumentsIndex } from '@/routes/policies/documents';
 import { show as policiesMedicalShow } from '@/routes/policies/medical';
-import type { PolicyMedicalResource } from './policy';
+import { index as policiesNotesIndex } from '@/routes/policies/notes';
+import type { PolicyResource } from '@/types/policy';
 import PolicyMedicalShowHeader from './PolicyMedicalShowHeader.vue';
 
 const props = defineProps<{
-    policy: PolicyMedicalResource;
+    policy: PolicyResource;
 }>();
 
 setLayoutProps({
@@ -41,7 +42,7 @@ setLayoutProps({
                 <Tab :href="policiesDocumentsIndex(policy.slug).url"
                     >Documents</Tab
                 >
-                <Tab href="#">Notes</Tab>
+                <Tab :href="policiesNotesIndex(policy.slug).url">Notes</Tab>
             </Tabs>
         </div>
 
