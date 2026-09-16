@@ -2,6 +2,7 @@
 import { Head, setLayoutProps } from '@inertiajs/vue3';
 import { Tab, Tabs } from '@/components/ui/tabs';
 import { index as policiesIndex } from '@/routes/policies';
+import { index as policiesDocumentsIndex } from '@/routes/policies/documents';
 import { show as policiesMedicalShow } from '@/routes/policies/medical';
 import type { PolicyMedicalResource } from './policy';
 import PolicyMedicalShowHeader from './PolicyMedicalShowHeader.vue';
@@ -37,7 +38,9 @@ setLayoutProps({
                 <Tab :href="policiesMedicalShow(policy.slug).url">Overview</Tab>
                 <Tab v-if="policy.type === 'group'" href="#">Members</Tab>
                 <Tab href="#">Settlements</Tab>
-                <Tab href="#">Documents</Tab>
+                <Tab :href="policiesDocumentsIndex(policy.slug).url"
+                    >Documents</Tab
+                >
                 <Tab href="#">Notes</Tab>
             </Tabs>
         </div>
