@@ -86,6 +86,7 @@ test('a medical policy exposes its labeled and formatted detail fields', functio
     $policy = Policy::factory()->forOrganization($user)->medical()->create(['created_by' => $user->id]);
     $policy->medicalDetails->update([
         'coverage_scope' => 'in_out',
+        'class_tier' => 'class_a',
         'co_insurance' => true,
         'co_insurance_share' => '20.00',
         'insured_gender' => Gender::Female,
@@ -97,6 +98,8 @@ test('a medical policy exposes its labeled and formatted detail fields', functio
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->where('policy.details.coverage_scope', 'in_out')
+            ->where('policy.details.coverage_scope_label', 'In-Out')
+            ->where('policy.details.class_tier_label', 'Class A')
             ->where('policy.details.co_insurance', true)
             ->where('policy.details.co_insurance_share', '20.00')
             ->where('policy.details.insured_gender', 'female')

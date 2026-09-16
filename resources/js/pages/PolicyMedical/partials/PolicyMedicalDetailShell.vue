@@ -1,0 +1,47 @@
+<script setup lang="ts">
+import { Head, setLayoutProps } from '@inertiajs/vue3';
+import { Tab, Tabs } from '@/components/ui/tabs';
+import { index as policiesIndex } from '@/routes/policies';
+import { show as policiesMedicalShow } from '@/routes/policies/medical';
+import type { PolicyMedicalResource } from './policy';
+import PolicyMedicalShowHeader from './PolicyMedicalShowHeader.vue';
+
+const props = defineProps<{
+    policy: PolicyMedicalResource;
+}>();
+
+setLayoutProps({
+    breadcrumbs: [
+        {
+            title: 'Policies',
+            href: policiesIndex(),
+        },
+        {
+            title: props.policy.policy_number,
+        },
+    ],
+    breadcrumbsSurface: true,
+});
+</script>
+
+<template>
+    <Head :title="policy.policy_number" />
+
+    <div class="flex flex-1 flex-col">
+        <PolicyMedicalShowHeader :policy="policy" />
+
+        <div
+            class="-mx-4 overflow-x-auto border-b border-border-subtle bg-surface px-4 sm:mx-0 sm:mt-6 sm:overflow-visible sm:border-0 sm:bg-transparent sm:px-0"
+        >
+            <Tabs class="min-w-max">
+                <Tab :href="policiesMedicalShow(policy.slug).url">Overview</Tab>
+                <Tab v-if="policy.type === 'group'" href="#">Members</Tab>
+                <Tab href="#">Settlements</Tab>
+                <Tab href="#">Documents</Tab>
+                <Tab href="#">Notes</Tab>
+            </Tabs>
+        </div>
+
+        <slot />
+    </div>
+</template>

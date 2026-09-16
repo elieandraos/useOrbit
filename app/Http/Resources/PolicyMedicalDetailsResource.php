@@ -16,7 +16,9 @@ final class PolicyMedicalDetailsResource extends JsonResource
         return [
             'id' => $this->id,
             'coverage_scope' => $this->coverage_scope,
+            'coverage_scope_label' => $this->coverage_scope->label(),
             'class_tier' => $this->class_tier,
+            'class_tier_label' => $this->class_tier->label(),
             'co_insurance' => $this->co_insurance,
             'co_insurance_share' => $this->co_insurance_share,
             'guaranteed_renewable' => $this->guaranteed_renewable,
