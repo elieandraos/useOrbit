@@ -7,6 +7,7 @@ use App\Http\Controllers\Policies\PoliciesAutomotivePdfExportController;
 use App\Http\Controllers\Policies\PoliciesController;
 use App\Http\Controllers\Policies\PoliciesExpatController;
 use App\Http\Controllers\Policies\PoliciesExpatPdfExportController;
+use App\Http\Controllers\Policies\PoliciesLifeController;
 use App\Http\Controllers\Policies\PoliciesMedicalController;
 use App\Http\Controllers\Policies\PoliciesMedicalPdfExportController;
 use Illuminate\Support\Facades\Route;
@@ -35,4 +36,10 @@ Route::middleware(['auth', 'organization'])->group(function () {
     Route::get('policies/expat/{policy:slug}/edit', [PoliciesExpatController::class, 'edit'])->name('policies.expat.edit');
     Route::patch('policies/expat/{policy:slug}', [PoliciesExpatController::class, 'update'])->name('policies.expat.update');
     Route::get('policies/expat/{policy:slug}/export', PoliciesExpatPdfExportController::class)->name('policies.expat.export-pdf');
+
+    Route::get('policies/life/create', [PoliciesLifeController::class, 'create'])->name('policies.life.create');
+    Route::post('policies/life', [PoliciesLifeController::class, 'store'])->name('policies.life.store');
+    Route::get('policies/life/{policy:slug}', [PoliciesLifeController::class, 'show'])->name('policies.life.show');
+    Route::get('policies/life/{policy:slug}/edit', [PoliciesLifeController::class, 'edit'])->name('policies.life.edit');
+    Route::patch('policies/life/{policy:slug}', [PoliciesLifeController::class, 'update'])->name('policies.life.update');
 });
