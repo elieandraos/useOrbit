@@ -12,3 +12,14 @@ test('label returns the human-readable name for each class', function () {
         ->and(PolicyClass::Life->label())->toBe('Life')
         ->and(PolicyClass::Travel->label())->toBe('Travel');
 });
+
+test('all returns every case as a label/value pair', function () {
+    expect(PolicyClass::all())->toBe([
+        ['label' => 'Medical', 'value' => 'medical'],
+        ['label' => 'Automotive', 'value' => 'automotive'],
+        ['label' => 'Expat', 'value' => 'expat'],
+        ['label' => 'Fire', 'value' => 'fire'],
+        ['label' => 'Life', 'value' => 'life'],
+        ['label' => 'Travel', 'value' => 'travel'],
+    ]);
+});

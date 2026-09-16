@@ -10,3 +10,12 @@ test('label returns the human-readable name for each source', function () {
         ->and(PolicySource::Friend->label())->toBe('Friend')
         ->and(PolicySource::Agent->label())->toBe('Agent');
 });
+
+test('all returns every case as a label/value pair', function () {
+    expect(PolicySource::all())->toBe([
+        ['label' => 'Owner', 'value' => 'owner'],
+        ['label' => 'Client', 'value' => 'client'],
+        ['label' => 'Friend', 'value' => 'friend'],
+        ['label' => 'Agent', 'value' => 'agent'],
+    ]);
+});
