@@ -9,6 +9,7 @@ use App\Http\Controllers\Policies\PoliciesExpatController;
 use App\Http\Controllers\Policies\PoliciesExpatPdfExportController;
 use App\Http\Controllers\Policies\PoliciesMedicalController;
 use App\Http\Controllers\Policies\PoliciesMedicalPdfExportController;
+use App\Http\Controllers\Policies\PoliciesTravelController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'organization'])->group(function () {
@@ -35,4 +36,10 @@ Route::middleware(['auth', 'organization'])->group(function () {
     Route::get('policies/expat/{policy:slug}/edit', [PoliciesExpatController::class, 'edit'])->name('policies.expat.edit');
     Route::patch('policies/expat/{policy:slug}', [PoliciesExpatController::class, 'update'])->name('policies.expat.update');
     Route::get('policies/expat/{policy:slug}/export', PoliciesExpatPdfExportController::class)->name('policies.expat.export-pdf');
+
+    Route::get('policies/travel/create', [PoliciesTravelController::class, 'create'])->name('policies.travel.create');
+    Route::post('policies/travel', [PoliciesTravelController::class, 'store'])->name('policies.travel.store');
+    Route::get('policies/travel/{policy:slug}', [PoliciesTravelController::class, 'show'])->name('policies.travel.show');
+    Route::get('policies/travel/{policy:slug}/edit', [PoliciesTravelController::class, 'edit'])->name('policies.travel.edit');
+    Route::patch('policies/travel/{policy:slug}', [PoliciesTravelController::class, 'update'])->name('policies.travel.update');
 });
