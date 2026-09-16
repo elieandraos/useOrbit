@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /** @mixin Policy */
-final class PolicyResource extends JsonResource
+final class PolicyMedicalResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
@@ -48,6 +48,7 @@ final class PolicyResource extends JsonResource
             'status_label' => $this->status->label(),
             'source' => $this->source,
             'source_label' => $this->source->label(),
+            'details' => $this->whenLoaded('medicalDetails', fn () => PolicyMedicalDetailsResource::make($this->medicalDetails)),
             'insureds' => PolicyInsuredResource::collection($this->whenLoaded('insureds')),
         ];
     }

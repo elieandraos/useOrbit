@@ -59,7 +59,7 @@ function groupUpdatePayload(Client $client, Carrier $carrier, array $insureds = 
 test('guests are redirected to the login page', function () {
     $policy = Policy::factory()->medical()->create(['type' => 'single']);
 
-    $this->patch(route('policies.update', $policy))
+    $this->patch(route('policies.medical.update', $policy))
         ->assertRedirect(route('login'));
 });
 
@@ -71,7 +71,18 @@ test('a user gets 404 updating a policy from another organization', function () 
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
     $this->actingAs($user)
-        ->patch(route('policies.update', $policy), singleUpdatePayload($client, $carrier))
+        ->patch(route('policies.medical.update', $policy), singleUpdatePayload($client, $carrier))
+        ->assertNotFound();
+});
+
+test('a user gets 404 updating a non-medical policy', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->automotive()->create(['created_by' => $user->id]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->patch(route('policies.medical.update', $policy), singleUpdatePayload($client, $carrier))
         ->assertNotFound();
 });
 
@@ -80,19 +91,19 @@ test('update returns validation errors when required fields are missing', functi
     $policy = Policy::factory()->forOrganization($user)->medical()->create(['created_by' => $user->id, 'type' => 'single']);
 
     $this->actingAs($user)
-        ->patch(route('policies.update', $policy))
+        ->patch(route('policies.medical.update', $policy))
         ->assertSessionHasErrors(['class', 'subclass', 'type', 'client_id', 'carrier_id', 'effective_date', 'expiry_date', 'premium_amount', 'source']);
 });
 
-test('update redirects to policies.show with a toast on success', function () {
+test('update redirects to policies.medical.show with a toast on success', function () {
     $user = User::factory()->withOrganization()->create();
     $policy = Policy::factory()->forOrganization($user)->medical()->create(['created_by' => $user->id, 'type' => 'single']);
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
     $this->actingAs($user)
-        ->patch(route('policies.update', $policy), singleUpdatePayload($client, $carrier))
-        ->assertRedirect(route('policies.show', $policy->fresh()))
+        ->patch(route('policies.medical.update', $policy), singleUpdatePayload($client, $carrier))
+        ->assertRedirect(route('policies.medical.show', $policy->fresh()))
         ->assertHasInertiaFlash('success', 'Policy updated.');
 });
 
@@ -103,7 +114,7 @@ test('update wires the submitted client and carrier onto the policy', function (
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
     $this->actingAs($user)
-        ->patch(route('policies.update', $policy), singleUpdatePayload($client, $carrier));
+        ->patch(route('policies.medical.update', $policy), singleUpdatePayload($client, $carrier));
 
     $this->assertDatabaseHas('policies', [
         'id' => $policy->id,
@@ -125,7 +136,7 @@ test('an insureds.*.id belonging to another policy is rejected', function () {
     ]);
 
     $this->actingAs($user)
-        ->patch(route('policies.update', $policy), $payload)
+        ->patch(route('policies.medical.update', $policy), $payload)
         ->assertSessionHasErrors(['insureds.0.id']);
 });
 
@@ -139,7 +150,7 @@ test('a group policy requires an insureds array', function () {
     unset($payload['insureds']);
 
     $this->actingAs($user)
-        ->patch(route('policies.update', $policy), $payload)
+        ->patch(route('policies.medical.update', $policy), $payload)
         ->assertSessionHasErrors(['insureds']);
 });
 
@@ -153,6 +164,6 @@ test('a single policy prohibits an insureds array', function () {
     $payload['insureds'] = [['full_name' => 'Extra', 'relationship' => 'Child', 'date_of_birth' => '2020-01-01']];
 
     $this->actingAs($user)
-        ->patch(route('policies.update', $policy), $payload)
+        ->patch(route('policies.medical.update', $policy), $payload)
         ->assertSessionHasErrors(['insureds']);
 });

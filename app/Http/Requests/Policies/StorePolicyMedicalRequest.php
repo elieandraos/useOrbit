@@ -15,7 +15,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 
-final class StorePolicyRequest extends FormRequest
+final class StorePolicyMedicalRequest extends FormRequest
 {
     protected function prepareForValidation(): void
     {
