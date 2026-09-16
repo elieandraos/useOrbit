@@ -22,13 +22,16 @@ test('authenticated user can view a policy from their organization', function ()
     $user = User::factory()->withOrganization()->create();
     $policy = Policy::factory()->forOrganization($user)->medical()->create(['created_by' => $user->id]);
 
-    $this->actingAs($user)
+    $response = $this->actingAs($user)
         ->get(route('policies.medical.show', $policy))
-        ->assertOk()
-        ->assertHasResource(
-            'policy',
-            PolicyMedicalResource::make($policy->load(['client', 'carrier', 'agent', 'medicalDetails']))
-        );
+        ->assertOk();
+
+    $policy->load(['client', 'carrier', 'agent', 'medicalDetails']);
+    if ($policy->type === PolicyType::Group) {
+        $policy->load('insureds');
+    }
+
+    $response->assertHasResource('policy', PolicyMedicalResource::make($policy));
 });
 
 test('authenticated user gets 404 for a policy from another organization', function () {
