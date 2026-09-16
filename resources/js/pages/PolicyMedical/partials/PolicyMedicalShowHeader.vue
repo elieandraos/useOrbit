@@ -4,10 +4,10 @@ import { Pencil } from '@lucide/vue';
 import Badge from '@/components/ui/badge/Badge.vue';
 import Button from '@/components/ui/button/Button.vue';
 import { edit as policiesMedicalEdit } from '@/routes/policies/medical';
-import type { PolicyMedicalResource } from './policy';
+import type { PolicyResource } from '@/types/policy';
 
 defineProps<{
-    policy: PolicyMedicalResource;
+    policy: PolicyResource;
 }>();
 
 const statusTone = {
