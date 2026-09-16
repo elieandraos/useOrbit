@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Policies\PoliciesAutomotiveController;
 use App\Http\Controllers\Policies\PoliciesController;
 use App\Http\Controllers\Policies\PoliciesMedicalController;
 use App\Http\Controllers\Policies\PoliciesMedicalPdfExportController;
@@ -17,4 +18,10 @@ Route::middleware(['auth', 'organization'])->group(function () {
     Route::get('policies/medical/{policy:slug}/edit', [PoliciesMedicalController::class, 'edit'])->name('policies.medical.edit');
     Route::patch('policies/medical/{policy:slug}', [PoliciesMedicalController::class, 'update'])->name('policies.medical.update');
     Route::get('policies/medical/{policy:slug}/export', PoliciesMedicalPdfExportController::class)->name('policies.medical.export-pdf');
+
+    Route::get('policies/automotive/create', [PoliciesAutomotiveController::class, 'create'])->name('policies.automotive.create');
+    Route::post('policies/automotive', [PoliciesAutomotiveController::class, 'store'])->name('policies.automotive.store');
+    Route::get('policies/automotive/{policy:slug}', [PoliciesAutomotiveController::class, 'show'])->name('policies.automotive.show');
+    Route::get('policies/automotive/{policy:slug}/edit', [PoliciesAutomotiveController::class, 'edit'])->name('policies.automotive.edit');
+    Route::patch('policies/automotive/{policy:slug}', [PoliciesAutomotiveController::class, 'update'])->name('policies.automotive.update');
 });
