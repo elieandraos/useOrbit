@@ -8,6 +8,7 @@ use App\Http\Controllers\Policies\PoliciesController;
 use App\Http\Controllers\Policies\PoliciesExpatController;
 use App\Http\Controllers\Policies\PoliciesExpatPdfExportController;
 use App\Http\Controllers\Policies\PoliciesLifeController;
+use App\Http\Controllers\Policies\PoliciesLifePdfExportController;
 use App\Http\Controllers\Policies\PoliciesMedicalController;
 use App\Http\Controllers\Policies\PoliciesMedicalPdfExportController;
 use Illuminate\Support\Facades\Route;
@@ -42,4 +43,5 @@ Route::middleware(['auth', 'organization'])->group(function () {
     Route::get('policies/life/{policy:slug}', [PoliciesLifeController::class, 'show'])->name('policies.life.show');
     Route::get('policies/life/{policy:slug}/edit', [PoliciesLifeController::class, 'edit'])->name('policies.life.edit');
     Route::patch('policies/life/{policy:slug}', [PoliciesLifeController::class, 'update'])->name('policies.life.update');
+    Route::get('policies/life/{policy:slug}/export', PoliciesLifePdfExportController::class)->name('policies.life.export-pdf');
 });
