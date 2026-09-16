@@ -8,6 +8,7 @@ use App\Http\Controllers\Policies\PoliciesController;
 use App\Http\Controllers\Policies\PoliciesExpatController;
 use App\Http\Controllers\Policies\PoliciesExpatPdfExportController;
 use App\Http\Controllers\Policies\PoliciesFireController;
+use App\Http\Controllers\Policies\PoliciesFirePdfExportController;
 use App\Http\Controllers\Policies\PoliciesMedicalController;
 use App\Http\Controllers\Policies\PoliciesMedicalPdfExportController;
 use Illuminate\Support\Facades\Route;
@@ -42,4 +43,5 @@ Route::middleware(['auth', 'organization'])->group(function () {
     Route::get('policies/fire/{policy:slug}', [PoliciesFireController::class, 'show'])->name('policies.fire.show');
     Route::get('policies/fire/{policy:slug}/edit', [PoliciesFireController::class, 'edit'])->name('policies.fire.edit');
     Route::patch('policies/fire/{policy:slug}', [PoliciesFireController::class, 'update'])->name('policies.fire.update');
+    Route::get('policies/fire/{policy:slug}/export', PoliciesFirePdfExportController::class)->name('policies.fire.export-pdf');
 });
