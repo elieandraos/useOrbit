@@ -6,6 +6,7 @@ use App\Http\Controllers\Policies\PoliciesAutomotiveController;
 use App\Http\Controllers\Policies\PoliciesAutomotivePdfExportController;
 use App\Http\Controllers\Policies\PoliciesController;
 use App\Http\Controllers\Policies\PoliciesExpatController;
+use App\Http\Controllers\Policies\PoliciesExpatPdfExportController;
 use App\Http\Controllers\Policies\PoliciesMedicalController;
 use App\Http\Controllers\Policies\PoliciesMedicalPdfExportController;
 use Illuminate\Support\Facades\Route;
@@ -33,4 +34,5 @@ Route::middleware(['auth', 'organization'])->group(function () {
     Route::get('policies/expat/{policy:slug}', [PoliciesExpatController::class, 'show'])->name('policies.expat.show');
     Route::get('policies/expat/{policy:slug}/edit', [PoliciesExpatController::class, 'edit'])->name('policies.expat.edit');
     Route::patch('policies/expat/{policy:slug}', [PoliciesExpatController::class, 'update'])->name('policies.expat.update');
+    Route::get('policies/expat/{policy:slug}/export', PoliciesExpatPdfExportController::class)->name('policies.expat.export-pdf');
 });
