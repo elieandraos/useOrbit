@@ -8,7 +8,9 @@ use App\Enums\PolicyClass;
 use App\Enums\PolicySource;
 use App\Enums\PolicyStatus;
 use App\Enums\PolicyType;
+use App\Filters\PolicyFilter;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Policies\IndexPolicyRequest;
 use App\Http\Resources\AgentResource;
 use App\Http\Resources\CarrierResource;
 use App\Http\Resources\ClientResource;
@@ -23,10 +25,12 @@ use Inertia\Response;
 final class PoliciesController extends Controller
 {
     #[Authorize('viewAny', Policy::class)]
-    public function index(): Response
+    public function index(IndexPolicyRequest $request): Response
     {
+        /** @noinspection PhpUndefinedMethodInspection */
         $policies = Policy::query()
             ->with(['client', 'carrier'])
+            ->filter(new PolicyFilter($request->validated()))
             ->latest('effective_date')
             ->orderBy('id')
             ->paginate(7)
