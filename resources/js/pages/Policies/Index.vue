@@ -5,6 +5,7 @@ import PageHeader from '@/components/shell/PageHeader.vue';
 import type { Paginated } from '@/types';
 import type { PolicyResource } from '@/types/policy';
 import EmptyState from './partials/EmptyState.vue';
+import PoliciesTable from './partials/PoliciesTable.vue';
 
 const props = defineProps<{
     policies: Paginated<PolicyResource>;
@@ -22,7 +23,9 @@ const hasPolicies = computed(() => props.policies.data.length > 0);
             subtitle="All policies across Medical, Automotive, Fire, Life, Expat, and Travel"
         />
 
-        <div v-if="hasPolicies" class="mt-5 flex-1" />
+        <div v-if="hasPolicies" class="mt-5 flex-1">
+            <PoliciesTable :policies="policies" />
+        </div>
         <EmptyState v-else />
     </div>
 </template>
