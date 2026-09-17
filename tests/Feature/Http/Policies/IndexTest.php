@@ -122,3 +122,131 @@ test('the policy list computes an individual client\'s full name from first and 
             ->where('policies.data.0.client.full_name', 'Amelia Hartwell')
         );
 });
+
+test('a filter query param narrows the response to matching policies', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    /** @var Policy $match */
+    $match = Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'policy_number' => 'POL-1000']);
+    Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'policy_number' => 'POL-2000']);
+
+    $this->actingAs($user)
+        ->get(route('policies.index', ['search' => '1000']))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('policies.data', 1)
+            ->where('policies.data.0.id', $match->id)
+        );
+});
+
+test('no status is hidden by default, unlike the archived-by-default Client behavior', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'status' => PolicyStatus::Active]);
+    Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'status' => PolicyStatus::Cancelled]);
+    Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'status' => PolicyStatus::Frozen]);
+
+    $this->actingAs($user)
+        ->get(route('policies.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->has('policies.data', 3));
+});
+
+test('a status filter narrows the response to the exact matching status only', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    /** @var Policy $match */
+    $match = Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'status' => PolicyStatus::Frozen]);
+    Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'status' => PolicyStatus::Active]);
+
+    $this->actingAs($user)
+        ->get(route('policies.index', ['status' => PolicyStatus::Frozen->value]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('policies.data', 1)
+            ->where('policies.data.0.id', $match->id)
+        );
+});
+
+test('a class[] filter narrows the response to any of the selected classes', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    /** @var Policy $fire */
+    $fire = Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'class' => PolicyClass::Fire]);
+    Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'class' => PolicyClass::Travel]);
+
+    $this->actingAs($user)
+        ->get(route('policies.index', ['class' => [PolicyClass::Fire->value]]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('policies.data', 1)
+            ->where('policies.data.0.id', $fire->id)
+        );
+});
+
+test('an invalid status is rejected', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('policies.index', ['status' => 'unknown']))
+        ->assertInvalid(['status']);
+});
+
+test('an invalid type is rejected', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('policies.index', ['type' => 'unknown']))
+        ->assertInvalid(['type']);
+});
+
+test('an invalid class entry is rejected', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('policies.index', ['class' => ['unknown']]))
+        ->assertInvalid(['class.0']);
+});
+
+test('a carrier_id from another organization is rejected', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $otherOrganization = Organization::factory()->create();
+    $otherCarrier = Carrier::factory()->create(['organization_id' => $otherOrganization->id]);
+
+    $this->actingAs($user)
+        ->get(route('policies.index', ['carrier_id' => $otherCarrier->id]))
+        ->assertInvalid(['carrier_id']);
+});
+
+test('an invalid source is rejected', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('policies.index', ['source' => 'unknown']))
+        ->assertInvalid(['source']);
+});
+
+test('effective_to before effective_from is rejected', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('policies.index', ['effective_from' => '2024-01-10', 'effective_to' => '2024-01-01']))
+        ->assertInvalid(['effective_to']);
+});
+
+test('non-numeric amount bounds are rejected', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('policies.index', ['amount_min' => 'many']))
+        ->assertInvalid(['amount_min']);
+});
+
+test('amount_max below amount_min is rejected', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('policies.index', ['amount_min' => 500, 'amount_max' => 100]))
+        ->assertInvalid(['amount_max']);
+});
