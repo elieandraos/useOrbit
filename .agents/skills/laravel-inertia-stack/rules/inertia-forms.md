@@ -1,8 +1,7 @@
 # Inertia Forms
 
-## Prefer the `<Form>` component
-
-For Inertia v3 form pages in this stack, prefer the `<Form>` component over `useForm()` when the form can be represented by named inputs and the Wayfinder route helper can provide the action and method.
+Build a form with the `<Form>` component and named inputs, letting a Wayfinder route helper supply
+the action and method:
 
 ```vue
 <Form v-bind="routeHelper.form()" v-slot="{ errors, processing }">
@@ -10,7 +9,12 @@ For Inertia v3 form pages in this stack, prefer the `<Form>` component over `use
 </Form>
 ```
 
-Bind native form controls with `name="..."` so the `<Form>` component serializes the submitted fields. Keep using `useForm()` when `form.transform()` or another genuinely client-side transformation is required and cannot reasonably be handled by the backend.
+`inertia-vue-development` and `wayfinder-development` already document `<Form>`'s own mechanics and
+the Wayfinder integration; this stack's own fallback rule is narrower: reach for `useForm()` only when
+a transformation must run client-side and genuinely cannot be moved to the backend — the same bias
+toward backend-owned coercion that `request-normalization.md` states for request input generally, not
+a separate judgment call for forms. This file also adds the one delta Boost doesn't cover: making a
+custom Vue control participate in `<Form>` serialization.
 
 ## Make custom controls serializable
 

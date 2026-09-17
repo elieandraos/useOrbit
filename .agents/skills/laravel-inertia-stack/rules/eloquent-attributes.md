@@ -1,10 +1,14 @@
 # Eloquent Attributes
 
-This file owns the narrow Eloquent attribute conventions that are additive to the general Laravel baseline.
+Conventions for computed model attributes and local scopes. `laravel-best-practices` already covers
+the `#[Scope]` attribute's own mechanics; see "Local scopes" below for this stack's own migration-debt
+policy on top of that baseline.
 
 ## Computed attributes
 
-Expose a derived model property as an Eloquent `Attribute` accessor when the value is naturally consumed as a model attribute, especially when the same derived value is used by multiple consumers. Prefer a protected accessor returning `Attribute` over a public helper method that represents the same model property.
+Expose a derived model property as an `Attribute` accessor when the value is naturally consumed as a
+model attribute, especially when several consumers need the same derived value. Prefer a protected
+accessor returning `Attribute` over a public helper method that represents the same property.
 
 ```php
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -22,41 +26,41 @@ final class Client extends Model
 }
 ```
 
-Consume the derived value through Eloquent's attribute interface using the snake-cased property name:
+Consume the derived value through Eloquent's attribute interface, using the snake-cased property name:
 
 ```php
 $client->full_name;
 ```
 
-Use an accessor for a derived property, not as a generic replacement for domain behavior. A reusable operation with behavior or side effects remains a method or action rather than an Eloquent attribute.
+Reserve an accessor for a derived property, not as a generic replacement for domain behavior. A
+reusable operation with behavior or side effects stays a method or an Action, not an Eloquent
+attribute.
 
-Laravel's `Illuminate\Database\Eloquent\Casts\Attribute` supports `make()`, `get()`, and `set()` for defining accessors and mutators. Confirm the project's installed Laravel version supports the API before relying on it.
+`Illuminate\Database\Eloquent\Casts\Attribute` supports `make()`, `get()`, and `set()` for accessors
+and mutators. Confirm the project's installed Laravel version supports the API before relying on it.
 
 ## Local scopes
 
-Define local Eloquent scopes with the `#[Scope]` attribute, not the legacy `scope`-prefixed method-name convention. Requires a Laravel version that provides `Illuminate\Database\Eloquent\Attributes\Scope` — confirm this class exists in the project's installed `laravel/framework` version before relying on it.
+Every new local scope uses the `#[Scope]` attribute — never the legacy `scope`-prefixed method-name
+convention. `laravel-best-practices` already demonstrates the attribute's own mechanics, so this rule
+does not re-teach them; the stack's own position is narrower and durable: a model with older,
+legacy-named scopes is migration debt, not a pattern to extend, so a new scope on that same model
+still uses the attribute rather than matching the model's existing style.
 
 ```php
-// ✅ attribute-based
-use Illuminate\Database\Eloquent\Attributes\Scope;
-use Illuminate\Database\Eloquent\Builder;
-
-final class Order extends Model
+// ✅ every new scope, regardless of what else exists on the model
+#[Scope]
+protected function filter(Builder $query, QueryFilter $filters): Builder
 {
-    #[Scope]
-    protected function filter(Builder $query, QueryFilter $filters): Builder
-    {
-        return $filters->apply($query);
-    }
+    return $filters->apply($query);
 }
 
-// ❌ legacy naming convention — do not use for new scopes
+// ❌ do not add a new scope this way, even to match an older scope already on the model
 public function scopeFilter(Builder $query, QueryFilter $filters): Builder
 {
     return $filters->apply($query);
 }
 ```
 
-- The method name is the scope name itself — no `scope` prefix (`filter`, not `scopeFilter`).
-- Method visibility is `protected`.
-- The call site is unchanged either way: `Order::query()->filter(...)`.
+Requires a Laravel version that provides `Illuminate\Database\Eloquent\Attributes\Scope` — confirm
+this class exists in the project's installed `laravel/framework` version before relying on it.
