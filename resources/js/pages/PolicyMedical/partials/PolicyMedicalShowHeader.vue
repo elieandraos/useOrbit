@@ -3,18 +3,13 @@ import { Link } from '@inertiajs/vue3';
 import { Pencil } from '@lucide/vue';
 import Badge from '@/components/ui/badge/Badge.vue';
 import Button from '@/components/ui/button/Button.vue';
+import { policyStatusTone } from '@/lib/policyStatusTone';
 import { edit as policiesMedicalEdit } from '@/routes/policies/medical';
 import type { PolicyResource } from '@/types/policy';
 
 defineProps<{
     policy: PolicyResource;
 }>();
-
-const statusTone = {
-    active: 'success',
-    cancelled: 'danger',
-    frozen: 'warning',
-} as const;
 </script>
 
 <template>
@@ -26,13 +21,7 @@ const statusTone = {
                 <h1 class="text-xl font-semibold text-primary sm:text-2xl">
                     {{ policy.policy_number }}
                 </h1>
-                <Badge
-                    :tone="
-                        statusTone[policy.status as keyof typeof statusTone] ??
-                        'neutral'
-                    "
-                    dot
-                >
+                <Badge :tone="policyStatusTone[policy.status] ?? 'neutral'" dot>
                     {{ policy.status_label }}
                 </Badge>
                 <Badge tone="accent">{{ policy.type_label }}</Badge>
