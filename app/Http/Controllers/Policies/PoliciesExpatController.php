@@ -6,6 +6,8 @@ namespace App\Http\Controllers\Policies;
 
 use App\Actions\Policies\CreatePolicyExpatAction;
 use App\Actions\Policies\UpdatePolicyExpatAction;
+use App\Enums\ExpatCoverageZone;
+use App\Enums\Gender;
 use App\Enums\PolicyClass;
 use App\Enums\PolicySource;
 use App\Enums\PolicyStatus;
@@ -16,10 +18,12 @@ use App\Http\Requests\Policies\UpdatePolicyExpatRequest;
 use App\Http\Resources\AgentResource;
 use App\Http\Resources\CarrierResource;
 use App\Http\Resources\ClientResource;
+use App\Http\Resources\CountryResource;
 use App\Http\Resources\PolicyExpatResource;
 use App\Models\Agent;
 use App\Models\Carrier;
 use App\Models\Client;
+use App\Models\Country;
 use App\Models\Policy;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -104,6 +108,9 @@ final class PoliciesExpatController extends Controller
             'types' => collect(PolicyType::all()),
             'statuses' => collect(PolicyStatus::all()),
             'sources' => collect(PolicySource::all()),
+            'coverageZones' => collect(ExpatCoverageZone::all()),
+            'genders' => collect(Gender::all()),
+            'countries' => CountryResource::collection(Country::query()->orderBy('name')->get()),
         ];
     }
 }
