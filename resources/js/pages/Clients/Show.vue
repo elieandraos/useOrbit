@@ -40,7 +40,7 @@ defineProps<{
 
             <!-- Right column -->
             <div class="flex flex-col gap-4">
-                <ClientPoliciesCard />
+                <ClientPoliciesCard :client="client" />
 
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <QuickStatsCard />

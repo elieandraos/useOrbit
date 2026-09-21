@@ -19,6 +19,7 @@ use App\Models\Agent;
 use App\Models\Carrier;
 use App\Models\Client;
 use App\Models\Policy;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
 use Inertia\Response;
 
@@ -42,8 +43,10 @@ final class PoliciesController extends Controller
     }
 
     #[Authorize('create', Policy::class)]
-    public function create(): Response
+    public function create(Request $request): Response
     {
+        $selectedClient = Client::query()->find($request->integer('client_id'));
+
         return inertia('Policies/Create', [
             'clients' => ClientResource::collection(Client::query()->orderBy('id')->get()),
             'carriers' => CarrierResource::collection(Carrier::query()->orderBy('name')->get()),
@@ -52,6 +55,7 @@ final class PoliciesController extends Controller
             'types' => collect(PolicyType::all()),
             'statuses' => collect(PolicyStatus::all()),
             'sources' => collect(PolicySource::all()),
+            'selectedClientId' => $selectedClient?->id,
         ]);
     }
 }

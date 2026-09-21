@@ -31,6 +31,7 @@ const props = defineProps<{
     types: Option[];
     statuses: Option[];
     sources: Option[];
+    selectedClientId?: number | null;
 }>();
 
 defineOptions({
@@ -68,7 +69,7 @@ const agentOptions = computed<TypeaheadOption[]>(() =>
 
 const policyClass = ref<string | null>(null);
 const type = ref(props.types[0]?.value ?? 'single');
-const clientId = ref<number | null>(null);
+const clientId = ref<number | null>(props.selectedClientId ?? null);
 const carrierId = ref<number | null>(null);
 const agentId = ref<number | null>(null);
 const status = ref(props.statuses[0]?.value ?? 'active');
