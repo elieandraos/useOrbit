@@ -36,6 +36,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read User $createdBy
  * @property-read User|null $updatedBy
  * @property-read Collection<int, CarrierBranch> $branches
+ * @property-read Collection<int, Policy> $policies
  */
 #[Fillable([
     'organization_id', 'slug', 'name', 'phone', 'website', 'status', 'created_by', 'updated_by',
@@ -55,6 +56,11 @@ final class Carrier extends Model implements NotificationSubject
     public function branches(): HasMany
     {
         return $this->hasMany(CarrierBranch::class)->orderBy('id');
+    }
+
+    public function policies(): HasMany
+    {
+        return $this->hasMany(Policy::class);
     }
 
     public function createdBy(): BelongsTo
