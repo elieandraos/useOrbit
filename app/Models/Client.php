@@ -27,6 +27,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -65,6 +66,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read Country|null $country
  * @property-read State|null $state
  * @property-read Collection<int, Note> $notes
+ * @property-read Collection<int, Policy> $policies
  * @property-read string $full_name
  * @property-read string $full_address
  *
@@ -112,6 +114,11 @@ final class Client extends Model implements Documentable, Notable, NotificationS
     public function updatedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function policies(): HasMany
+    {
+        return $this->hasMany(Policy::class);
     }
 
     protected function fullName(): Attribute
