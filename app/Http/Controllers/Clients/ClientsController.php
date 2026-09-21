@@ -100,6 +100,7 @@ final class ClientsController extends Controller
 
         return inertia('Clients/Show', [
             'client' => ClientResource::make($client),
+            'policiesCount' => $client->policies()->count(),
         ]);
     }
 

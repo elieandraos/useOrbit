@@ -13,9 +13,8 @@ import RecentActivitiesCard from './partials/RecentActivitiesCard.vue';
 
 defineProps<{
     client: ClientResource;
+    policiesCount: number;
 }>();
-
-const policiesCount = 0;
 </script>
 
 <template>
