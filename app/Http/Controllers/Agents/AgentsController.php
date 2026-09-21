@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Agents;
 use App\Actions\Agents\CreateAgentAction;
 use App\Actions\Agents\DestroyAgentAction;
 use App\Actions\Agents\UpdateAgentAction;
+use App\Enums\PolicyStatus;
 use App\Filters\AgentFilter;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Agents\IndexAgentRequest;
@@ -14,6 +15,7 @@ use App\Http\Requests\Agents\StoreAgentRequest;
 use App\Http\Requests\Agents\UpdateAgentRequest;
 use App\Http\Resources\AgentResource;
 use App\Http\Resources\CountryResource;
+use App\Http\Resources\PolicyResource;
 use App\Models\Agent;
 use App\Models\Country;
 use App\Models\User;
@@ -25,6 +27,17 @@ use Inertia\Response;
 
 final class AgentsController extends Controller
 {
+    /**
+     * How many days ahead of its expiry a policy is surfaced as "renewing soon" on the agent's
+     * overview — a read-time concept derived from `expiry_date`, never stored.
+     */
+    private const int RENEWING_SOON_WINDOW_DAYS = 30;
+
+    /**
+     * How many of the agent's soonest-to-expire renewing policies the overview card shows.
+     */
+    private const int RENEWING_SOON_LIMIT = 5;
+
     #[Authorize('viewAny', Agent::class)]
     public function index(IndexAgentRequest $request): Response
     {
@@ -78,8 +91,19 @@ final class AgentsController extends Controller
     {
         $agent->load(['country', 'state']);
 
+        $renewingPolicies = $agent->policies()
+            ->with(['client', 'carrier'])
+            ->where('status', PolicyStatus::Active->value)
+            ->whereDate('expiry_date', '>=', now()->toDateString())
+            ->whereDate('expiry_date', '<=', now()->addDays(self::RENEWING_SOON_WINDOW_DAYS)->toDateString())
+            ->orderBy('expiry_date')
+            ->limit(self::RENEWING_SOON_LIMIT)
+            ->get();
+
         return inertia('Agents/Show', [
             'agent' => AgentResource::make($agent),
+            'policiesCount' => $agent->policies()->count(),
+            'renewingPolicies' => PolicyResource::collection($renewingPolicies),
         ]);
     }
 
