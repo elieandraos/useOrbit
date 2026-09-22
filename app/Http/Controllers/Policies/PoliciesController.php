@@ -39,6 +39,23 @@ final class PoliciesController extends Controller
 
         return inertia('Policies/Index', [
             'policies' => PolicyResource::collection($policies),
+            'statuses' => collect(PolicyStatus::all()),
+            'types' => collect(PolicyType::all()),
+            'classes' => collect(PolicyClass::all()),
+            'sources' => collect(PolicySource::all()),
+            'carriers' => CarrierResource::collection(Carrier::query()->orderBy('name')->get()),
+            'filters' => [
+                'search' => $request->validated('search'),
+                'status' => $request->validated('status'),
+                'type' => $request->validated('type'),
+                'class' => $request->validated('class'),
+                'carrier_id' => $request->validated('carrier_id'),
+                'source' => $request->validated('source'),
+                'effective_from' => $request->validated('effective_from'),
+                'effective_to' => $request->validated('effective_to'),
+                'amount_min' => $request->validated('amount_min'),
+                'amount_max' => $request->validated('amount_max'),
+            ],
         ]);
     }
 

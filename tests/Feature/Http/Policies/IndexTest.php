@@ -250,3 +250,85 @@ test('amount_max below amount_min is rejected', function () {
         ->get(route('policies.index', ['amount_min' => 500, 'amount_max' => 100]))
         ->assertInvalid(['amount_max']);
 });
+
+test('the page exposes the filter option lists used by the filters drawer', function () {
+    $user = User::factory()->withOrganization()->create();
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id, 'name' => 'Bankers Assurance']);
+
+    $this->actingAs($user)
+        ->get(route('policies.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('statuses', 3)
+            ->has('types', 2)
+            ->has('classes', 6)
+            ->has('sources', 4)
+            ->has('carriers', 1)
+            ->where('carriers.0.id', $carrier->id)
+            ->where('carriers.0.name', 'Bankers Assurance')
+        );
+});
+
+test('the page does not expose carriers from another organization', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $otherOrganization = Organization::factory()->create();
+    Carrier::factory()->create(['organization_id' => $otherOrganization->id]);
+
+    $this->actingAs($user)
+        ->get(route('policies.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->has('carriers', 0));
+});
+
+test('the filters prop reflects no applied filters by default', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('policies.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('filters.search', null)
+            ->where('filters.status', null)
+            ->where('filters.type', null)
+            ->where('filters.class', null)
+            ->where('filters.carrier_id', null)
+            ->where('filters.source', null)
+            ->where('filters.effective_from', null)
+            ->where('filters.effective_to', null)
+            ->where('filters.amount_min', null)
+            ->where('filters.amount_max', null)
+        );
+});
+
+test('the filters prop mirrors the applied query params', function () {
+    $user = User::factory()->withOrganization()->create();
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->get(route('policies.index', [
+            'search' => 'POL-1000',
+            'status' => PolicyStatus::Frozen->value,
+            'type' => PolicyType::Group->value,
+            'class' => [PolicyClass::Fire->value, PolicyClass::Life->value],
+            'carrier_id' => $carrier->id,
+            'source' => PolicySource::Agent->value,
+            'effective_from' => '2024-01-01',
+            'effective_to' => '2024-12-31',
+            'amount_min' => 100,
+            'amount_max' => 5000,
+        ]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('filters.search', 'POL-1000')
+            ->where('filters.status', PolicyStatus::Frozen->value)
+            ->where('filters.type', PolicyType::Group->value)
+            ->where('filters.class', [PolicyClass::Fire->value, PolicyClass::Life->value])
+            ->where('filters.carrier_id', (string) $carrier->id)
+            ->where('filters.source', PolicySource::Agent->value)
+            ->where('filters.effective_from', '2024-01-01')
+            ->where('filters.effective_to', '2024-12-31')
+            ->where('filters.amount_min', '100')
+            ->where('filters.amount_max', '5000')
+        );
+});
