@@ -23,6 +23,7 @@ export interface PolicyInsured {
     relationship: string;
     date_of_birth: string;
     date_of_birth_formatted: string;
+    age: number;
     gender: string | null;
     gender_label: string | null;
     medical_notes: string | null;

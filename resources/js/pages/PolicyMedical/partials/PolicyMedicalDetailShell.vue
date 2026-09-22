@@ -5,6 +5,7 @@ import { Tab, Tabs } from '@/components/ui/tabs';
 import { index as policiesIndex } from '@/routes/policies';
 import { index as policiesDocumentsIndex } from '@/routes/policies/documents';
 import { show as policiesMedicalShow } from '@/routes/policies/medical';
+import { index as policiesMembersIndex } from '@/routes/policies/members';
 import { index as policiesNotesIndex } from '@/routes/policies/notes';
 import type { PolicyResource } from '@/types/policy';
 import PolicyMedicalShowHeader from './PolicyMedicalShowHeader.vue';
@@ -40,7 +41,11 @@ setLayoutProps({
         >
             <Tabs class="min-w-max">
                 <Tab :href="policiesMedicalShow(policy.slug).url">Overview</Tab>
-                <Tab v-if="policy.type === 'group'" href="#">Members</Tab>
+                <Tab
+                    v-if="policy.type === 'group'"
+                    :href="policiesMembersIndex(policy.slug).url"
+                    >Members</Tab
+                >
                 <button
                     type="button"
                     class="cursor-pointer border-b-2 px-3 py-2 text-sm font-medium transition-colors"

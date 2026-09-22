@@ -14,6 +14,7 @@ require __DIR__.'/agents.php';
 require __DIR__.'/carriers.php';
 require __DIR__.'/clients.php';
 require __DIR__.'/documents.php';
+require __DIR__.'/members.php';
 require __DIR__.'/notes.php';
 require __DIR__.'/notifications.php';
 require __DIR__.'/organization-invitations.php';
