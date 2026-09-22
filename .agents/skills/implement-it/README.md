@@ -11,6 +11,58 @@ Take an approved GitHub issue from implementation through verified commits and c
 It is the implementation stage of `Lab -> Plan -> Implement -> Review -> Ship` and handles one approved
 issue at a time.
 
+When the human has explicitly authorized concurrent execution of more than one dependency-ready issue
+in the same milestone, each concurrent worker still owns exactly one issue's lifecycle above — its own
+temporary branch, its own verification and `review-it`. The only change from the single-issue case: the
+human's regression-verification decision is coordinated once for the whole wave instead of once per
+issue, and approved issues converge back onto the shared milestone branch afterward, without ever
+skipping push readiness or issue closure. This coordination does not turn `implement-it` into an
+orchestrator — every issue's lifecycle and every approval stay exactly as they are for a single issue.
+
+### Single issue vs. authorized parallel wave
+
+```text
+Single issue
+
+Implement
+  → targeted verification
+  → human full-suite run/skip decision
+  → review-it
+  → Review implementation
+  → Commit plan
+  → commits
+  → push
+  → close
+```
+
+```text
+Authorized parallel wave
+
+Worker A ─┐
+Worker B ─┼→ implement + focused verification + review-it
+Worker C ─┘
+               ↓
+          candidate-ready
+               ↓
+      one combined run/skip decision
+               ↓
+        Review implementation
+               ↓
+          Commit plans
+               ↓
+        approved commits
+               ↓
+     sequential convergence
+               ↓
+       normal push + closure
+```
+
+Each worker still owns one issue, still runs its own focused verification and `review-it`, and never
+asks its own full-suite question. Review implementation and Commit-plan approvals stay explicit and
+per-worker; commits stay per-issue. Only the regression-verification decision and the final convergence
+step are shared across the wave — everything else is the same single-issue lifecycle shown on the left,
+run once per worker.
+
 ## Boring prompts
 
 ```shell
