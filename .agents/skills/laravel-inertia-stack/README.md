@@ -13,15 +13,17 @@ stage.
 
 This is an optional stack companion, not a pipeline stage — and not a replacement for
 Laravel Boost. It loads **alongside** Boost's `laravel-best-practices`,
-`testing-best-practices`, and `inertia-vue-development`, carrying only the delta genuinely
-additive to them.
+`testing-best-practices`, and `inertia-vue-development`, stating this stack's own durable,
+opinionated conventions on top of that baseline. A rule here may restate or refine a Boost
+topic when the stack has a stable position on it — Boost covering a topic is not, by
+itself, a reason to drop the rule; only pointless mechanical duplication is trimmed.
 
 ## Boring prompts
 
 ```shell
 "Add an is_active field with its migration, factory state, and tests."
 "Build a filterable resource index."
-"Implement issue #42 using this project's Laravel conventions."
+"Implement the approved issue using this project's Laravel conventions."
 ```
 
 ## What normally happens
@@ -40,10 +42,12 @@ skill at once. Three kinds of content back that up:
 
 ## Ownership
 
-The consuming project remains authoritative over its own conventions. This skill fills
-the gap between Laravel Boost's general baseline and this specific stack's delta — it
-isn't a generic Laravel manual, a complete Vue guide, or documentation for any one
-project.
+Laravel Boost is the first-party baseline and reference. `laravel-inertia-stack` states
+the durable, opinionated conventions for this Laravel + Inertia + Vue 3 + Pest stack — it
+may restate or refine a Boost topic when the stack has a stable position on it, trimming
+only mechanical explanation Boost already covers well. The consuming project remains
+authoritative over its own conventions; this skill isn't a generic Laravel manual, a
+complete Vue guide, or documentation for any one project.
 
 ## Install
 

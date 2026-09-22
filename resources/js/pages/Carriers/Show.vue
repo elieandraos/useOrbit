@@ -8,9 +8,8 @@ import QuickStatsCard from './partials/QuickStatsCard.vue';
 defineProps<{
     carrier: CarrierResource;
     countries: { id: number; name: string }[];
+    policiesCount: number;
 }>();
-
-const policiesCount = 0;
 </script>
 
 <template>

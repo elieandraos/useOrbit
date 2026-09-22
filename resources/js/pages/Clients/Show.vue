@@ -13,9 +13,8 @@ import RecentActivitiesCard from './partials/RecentActivitiesCard.vue';
 
 defineProps<{
     client: ClientResource;
+    policiesCount: number;
 }>();
-
-const policiesCount = 0;
 </script>
 
 <template>
@@ -41,7 +40,7 @@ const policiesCount = 0;
 
             <!-- Right column -->
             <div class="flex flex-col gap-4">
-                <ClientPoliciesCard />
+                <ClientPoliciesCard :client="client" />
 
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <QuickStatsCard />

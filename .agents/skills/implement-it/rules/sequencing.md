@@ -34,12 +34,42 @@ what that means for the release phase).
 **Delivery/phase milestone issue.** All issues in that milestone share one working branch —
 implementation does not get a fresh branch per issue.
 
+This is the default, single-worker path. When the human has explicitly authorized running more than
+one dependency-ready issue in this milestone concurrently, see "Parallel workers in a delivery/phase
+milestone" below instead — Git cannot check the same branch out for two concurrent workers at once, so
+this default path does not apply to that case.
+
 1. Inspect the currently checked-out branch.
 2. If it already is that milestone's working branch, proceed directly to implementation.
 3. If not, recommend a branch name derived from the milestone's actual nature and scope, and ask the
    human before creating or switching to it. Do not silently create or check out a branch.
 4. Only once the correct branch is confirmed active does implementation begin — the rest of the
    working lifecycle (`rules/review-gates.md` onward) is unchanged.
+
+### Parallel workers in a delivery/phase milestone
+
+Once the human has explicitly authorized concurrent execution of more than one dependency-ready issue
+in this milestone, each worker gets its own temporary issue branch, cut from the confirmed milestone
+branch, instead of implementing directly on the shared branch. The milestone branch remains the
+eventual convergence target for every worker's approved commits.
+
+This rule does not define how that convergence happens — which context actually carries it out remains
+an open question pending evidence from real parallel execution, not a decision this rule makes on its
+own.
+
+Convergence mechanics being unresolved is not a reason to delay authorizing or launching this wave, and
+is not a decision to ask the human to make before any worker starts — it only becomes relevant once one
+or more workers have durable, approved commits that need to reach the milestone branch.
+
+Once that point is reached, converging approved worker commits onto the milestone branch, sequentially,
+is normal mechanical progression for this workflow — not a fresh permission question every time it
+happens. Converging a worker's commits onto the milestone branch does not shorten or bypass any part of
+that issue's remaining lifecycle: push-readiness, issue-closure, and their validation steps
+(`rules/push-readiness.md`, `rules/issue-closure.md`) still apply exactly as they do outside a
+concurrent wave. Stop and ask only when convergence itself surfaces a genuine unsafe or ambiguous
+condition: a real merge conflict, unexpected drift in the milestone branch's tip, a stale or
+partially-invalidated approval, or ambiguity about which branch is actually the correct convergence
+target.
 
 Do not turn observed branch-name patterns into a rigid taxonomy. A name derived from what the
 milestone actually is — its area, or the kind of change it bundles — is the goal; illustrative shapes

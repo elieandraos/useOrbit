@@ -99,16 +99,16 @@ have the child factory create its parent by calling that same parent state. The 
 again and create another child, causing recursive factory creation and, for a unique 1:1 child
 relationship, a constraint collision.
 
-✅ *(use the base parent factory plus explicit state when the child needs a class-specific parent)*
+✅ *(use the base parent factory plus explicit state when the child needs a type-specific parent)*
 ```php
 return $this->for(
-    Policy::factory()->state(['class' => PolicyClass::Medical->value])
+    Order::factory()->state(['type' => OrderType::Wholesale->value])
 )->create();
 ```
 
 ❌
 ```php
-return $this->for(Policy::factory()->medical())->create();
+return $this->for(Order::factory()->wholesale())->create();
 ```
 
 Use the base parent factory plus `state(...)` (or another non-side-effecting parent configuration) when

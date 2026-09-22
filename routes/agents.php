@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Agents\AgentPoliciesController;
 use App\Http\Controllers\Agents\AgentsArchiveController;
 use App\Http\Controllers\Agents\AgentsController;
 use App\Http\Controllers\Agents\AgentsExcelExportController;
@@ -16,6 +17,7 @@ Route::middleware(['auth', 'organization'])->group(function () {
     Route::post('agents', [AgentsController::class, 'store'])->name('agents.store');
     Route::get('agents/export', AgentsExcelExportController::class)->name('agents.export');
     Route::get('agents/{agent:slug}', [AgentsController::class, 'show'])->name('agents.show');
+    Route::get('agents/{agent:slug}/policies', [AgentPoliciesController::class, 'index'])->name('agents.policies.index');
     Route::get('agents/{agent:slug}/edit', [AgentsController::class, 'edit'])->name('agents.edit');
     Route::patch('agents/{agent:slug}', [AgentsController::class, 'update'])->name('agents.update');
     Route::patch('agents/{agent:slug}/archive', AgentsArchiveController::class)->name('agents.archive');

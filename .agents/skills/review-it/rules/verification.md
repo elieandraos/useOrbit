@@ -74,8 +74,8 @@ moved: an edit made to an already-reviewed file with no new commit is a material
 change to the resolved base or the comparison method — a different declared base, a rebase, or a
 switch from one comparison to another — even when the head commit is unchanged. Never carry forward
 a clean result across a changed base or comparison merely because the head SHA looks the same;
-reassess before relying on it again. The caller — a human, or `implement-it` before Gate 1 —
-requests a fresh pass, full or scoped to the correction, before relying on this result again.
+reassess before relying on it again. The caller — a human, or `implement-it` before its
+**Review implementation** stop — requests a fresh pass, full or scoped to the correction, before relying on this result again.
 `review-it` does not track or store a review's history itself; each invocation is stateless with
 respect to any prior pass, and relies entirely on the caller supplying the current state and
 comparison to check.
@@ -92,40 +92,42 @@ as if every category had run again.
 
 Every `review-it` result states:
 
-- **Reviewed target and state** — the worktree, branch, or PR reviewed, and its precise identity per
-  "Staleness and review identity" above: for a branch or PR, the head SHA, the resolved base, the
-  comparison-start SHA where one applies, and the comparison method; for an isolated commit with no
-  comparison, its commit SHA alone; for a dirty worktree, `HEAD` plus the actual diff/
-  untracked-content identity. A scoped re-review states the scoped surface it actually checked
-  alongside that same identity, not the whole target's full-coverage identity as if every category
-  had run again.
-- **Confirmed findings** — ordered by consequence, each with its file or location, the evidence or
-  reasoning that verified it, its concrete consequence if left unaddressed, and — when the finding
-  depends on a requirement or project convention (`rules/checklist.md`'s "Philosophy") — the
-  specific source that requirement or convention actually comes from, stated concisely rather than
-  as a requirement-by-requirement table.
-- **Verification performed** — which checks `review-it` actually ran or traced itself, distinguished
-  from evidence supplied by others and not independently verified (see "Verify before reporting,"
-  above).
-- **Material limitations and unresolved questions** — missing scope evidence, unreachable
-  diagnostics, or an ambiguity that was proceeded past rather than resolved (`rules/scope.md`).
-- **A scoped clean result**, when warranted — state plainly which categories applied and passed, and
-  which were skipped as inapplicable, rather than a bare "looks good."
+- **Outcome first** — begin with a one-line decision-oriented summary: `Clean`, `Clean after resolution`,
+  or `Findings remain`, followed by the number/severity of any remaining findings when relevant.
+- **Confirmed findings** — include only findings that materially affect the implementation or require a
+  human decision. Order them by consequence. For each, give the file/location, the verified evidence,
+  the concrete consequence if left unaddressed, and — when the finding depends on a requirement or
+  project convention (`rules/checklist.md`'s "Philosophy") — name the source concisely rather than
+  reproducing the full requirement.
+- **Verification performed** — state the meaningful checks `review-it` actually ran or traced itself;
+  distinguish these from evidence supplied by others and not independently verified.
+- **Material limitations and unresolved questions** — include only limitations that could affect the
+  review decision. Omit routine investigation detail and telemetry from the default report.
+- **Clean result** — when warranted, state which applicable categories passed and which were skipped
+  as inapplicable, without reproducing the checklist.
 
-Do not report a finding as resolved, or a review as clean, merely because no evidence of a problem
-was found where evidence was never actually available to check. An unchecked category is a
-limitation to state, not a pass to imply.
+The report is a decision aid, not an execution transcript. Keep it compact enough to read at a human
+approval stop. Do not dump the investigation timeline, tool-call counts, token telemetry, repeated
+source excerpts, or other process detail unless the caller explicitly asks for diagnostics.
+
+A non-blocking refactor, cleanup, or architectural improvement that is outside the approved scope
+should be presented briefly as a **scope note** or optional observation, not expanded into a long
+finding unless it materially affects the implementation under review.
+
+Do not report a finding as resolved, or a review as clean, merely because no evidence of a problem was
+found where evidence was never actually available to check. An unchecked category is a limitation to
+state, not a pass to imply.
 
 ## A review does not grant authorization
 
-A clean `review-it` result, or a set of findings marked resolved and re-verified, is input to Gate
-1's stop condition — it is not itself an approval, and it never substitutes for the human's
-decision at Gate 1, Gate 2, or any other approval boundary a calling skill owns. `review-it` never
-implies that a clean result authorizes anything to proceed on its own.
+A clean `review-it` result, or a set of findings marked resolved and re-verified, is input to the
+**Review implementation** stop condition — it is not itself an approval, and it never substitutes for
+the human's decision at that stop, **Commit plan**, or any other approval boundary a calling skill
+owns. `review-it` never implies that a clean result authorizes anything to proceed on its own.
 
 ## What review-it never does
 
 Reports only. It does not edit application code, apply formatting fixes, commit, push, approve a
-gate, merge, or mutate GitHub or any other live or production state — regardless of how minor or
-obviously correct a fix would be. A finding this skill could trivially fix by hand is still
+human decision, merge, or mutate GitHub or any other live or production state — regardless of how
+minor or obviously correct a fix would be. A finding this skill could trivially fix by hand is still
 reported, not applied. Every correction returns to `implement-it`.

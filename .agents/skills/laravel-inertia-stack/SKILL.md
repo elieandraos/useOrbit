@@ -5,12 +5,15 @@ description: "Companion conventions for a Laravel + InertiaJS + Vue 3 + Pest sta
 
 # laravel-inertia-stack
 
-Personal companion conventions for Laravel + InertiaJS + Vue 3 + Pest. This skill is additive only:
-Laravel Boost's `laravel-best-practices` and `testing-best-practices` own the general Laravel and Pest
-baseline, and `inertia-vue-development` owns Inertia/Vue client-side patterns. This skill contains only
-the delta genuinely additive to those skills — load it alongside the matching Boost skill(s), never as a
-substitute for them, and never as a generic Laravel manual, a complete Vue guide, or documentation for
-any one consuming project.
+Personal companion conventions for Laravel + InertiaJS + Vue 3 + Pest. Laravel Boost's
+`laravel-best-practices` and `testing-best-practices` are the first-party baseline and reference for
+general Laravel and Pest, and `inertia-vue-development` is the reference for Inertia/Vue client-side
+patterns. This skill states this stack's own durable, opinionated conventions on top of that
+baseline — load it alongside the matching Boost skill(s), never as a substitute for them. A rule here
+may restate or refine a topic Boost also covers when the stack has a stable, deliberate position on
+it; Boost covering a topic is not, by itself, a reason to omit or remove that position — only
+mechanical explanation Boost already covers well is trimmed. This skill is never a generic Laravel
+manual, a complete Vue guide, or documentation for any one consuming project.
 
 If a task needs a Boost skill this installation doesn't have, say so explicitly and treat this skill as
 an incomplete companion for that area rather than silently filling the gap with improvised baseline
@@ -25,9 +28,10 @@ to `inertia-vue-development`.
 - Writing or reviewing a Laravel controller, Form Request, Action, Policy, or Resource in this stack.
 - Adding query filtering or sorting to an Eloquent index query.
 - Writing or organizing a Pest test.
-- Defining an Eloquent local scope, a migration column, or a backed enum used as select options.
+- Defining an Eloquent local scope or computed model attribute, a migration column, or a backed enum used as select options.
 - Generating factory or seeder data.
 - Building or reviewing an Inertia form that uses the Laravel/Inertia request serialization boundary.
+- Adding or reviewing a backend endpoint that renders a new Inertia page component.
 
 ## Routing
 
@@ -41,12 +45,13 @@ than repeating them. See `README.md` for what `rules/`, `blueprints/`, and `temp
 | Writing or organizing a Pest test | `blueprints/pest-testing.md`, then `rules/test-ownership.md` for the concrete class-ownership mapping |
 | Wiring Form Request -> Action -> Controller | `rules/actions.md` |
 | Authorizing a controller method | `rules/authorization.md` |
-| Defining an Eloquent local scope | `rules/eloquent-attributes.md` |
+| Defining an Eloquent local scope or computed model attribute | `rules/eloquent-attributes.md` |
 | Adding index filtering and/or sorting | `blueprints/filters-and-sorting.md` + `rules/request-normalization.md` (a sort `direction` must be defaulted, not left nullable) + `templates/app/Filters/QueryFilter.php`, `templates/app/Sorts/QuerySorter.php`, `templates/app/Models/Concerns/Filterable.php`, `templates/app/Models/Concerns/Sortable.php` |
 | Exposing a backed enum as select options | `rules/enum-options.md` |
 | Coercing or defaulting request input | `rules/request-normalization.md` |
 | Building a JsonResource for Inertia | `rules/resources.md` |
 | Building an Inertia form or adapting custom controls to `<Form>` serialization | `rules/inertia-forms.md` |
+| Rendering a new Inertia page from a Laravel endpoint | `rules/inertia-pages.md` |
 | Writing a factory or a dev-only seeder | `rules/factories-and-seeders.md` |
 | Adding a mid-chain conditional query clause | `rules/query-conditionals.md` |
 | Declaring a new concrete application class | `rules/php-conventions.md` |
@@ -63,5 +68,8 @@ This skill is not:
 - an architecture every project must adopt — the controller and Pest blueprints stay conditional
   (tenancy, non-CRUD shapes, filters/sorters) rather than mandatory for every feature.
 
-Code examples throughout this skill use neutral, invented domain concepts. They are not drawn from, and
-do not document, any specific consuming project.
+Overlapping a Boost topic is not itself a defect. A rule stays when it states this stack's own
+durable position on that topic; it is trimmed only when it merely re-teaches mechanics Boost already
+covers well, without adding one.
+
+Code examples throughout this skill use neutral, invented domain concepts. They are not drawn from, and do not document, any specific consuming project.

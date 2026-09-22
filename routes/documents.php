@@ -7,11 +7,17 @@ use App\Http\Controllers\Documents\DocumentsDestroyController;
 use App\Http\Controllers\Documents\DocumentsDownloadController;
 use App\Http\Controllers\Documents\DocumentsUploadBatchController;
 use App\Http\Controllers\Notifications\NotifyDocumentController;
+use App\Http\Controllers\Policies\PolicyDocumentsController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'organization'])->group(function () {
     Route::get('clients/{client:slug}/documents', [ClientDocumentsController::class, 'index'])->name('clients.documents.index');
     Route::post('clients/{client:slug}/documents', [ClientDocumentsController::class, 'store'])->name('clients.documents.store');
+});
+
+Route::middleware(['auth', 'organization'])->group(function () {
+    Route::get('policies/{policy:slug}/documents', [PolicyDocumentsController::class, 'index'])->name('policies.documents.index');
+    Route::post('policies/{policy:slug}/documents', [PolicyDocumentsController::class, 'store'])->name('policies.documents.store');
 });
 
 Route::middleware(['auth', 'organization'])->prefix('documents')->name('documents.')->group(function () {
