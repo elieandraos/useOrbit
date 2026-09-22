@@ -20,6 +20,7 @@ final class PolicyInsuredResource extends JsonResource
             'relationship' => $this->relationship,
             'date_of_birth' => $this->date_of_birth->format('Y-m-d'),
             'date_of_birth_formatted' => $this->date_of_birth->format('M j, Y'),
+            'age' => $this->date_of_birth->age,
             'gender' => $this->gender,
             'gender_label' => $this->gender?->label(),
             'medical_notes' => $this->medical_notes,
