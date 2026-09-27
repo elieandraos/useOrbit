@@ -6,6 +6,7 @@ import {
     show as policiesMedicalShow,
     update as policiesMedicalUpdate,
 } from '@/routes/policies/medical';
+import type { PolicyMedicalResource } from './partials/policy';
 import PolicyMedicalForm from './partials/PolicyMedicalForm.vue';
 
 interface Option {
@@ -17,44 +18,6 @@ interface EntityOption {
     id: number;
     full_name?: string;
     name?: string;
-}
-
-interface InsuredValues {
-    id?: number;
-    full_name: string;
-    relationship: string;
-    date_of_birth: string;
-    gender: string | null;
-    medical_notes: string | null;
-}
-
-interface PolicyMedicalResource {
-    slug: string;
-    policy_number: string;
-    subclass: string;
-    type: string;
-    client_id: number;
-    carrier_id: number;
-    agent_id: number | null;
-    effective_date: string;
-    expiry_date: string;
-    premium_amount: string;
-    discount_amount: string;
-    status: string;
-    source: string;
-    details: {
-        coverage_scope: string;
-        class_tier: string;
-        co_insurance: boolean;
-        co_insurance_share: string | null;
-        guaranteed_renewable: boolean;
-        insured_full_name: string | null;
-        insured_date_of_birth: string | null;
-        insured_gender: string | null;
-        insured_smoker: boolean | null;
-        insured_medical_history: string | null;
-    };
-    insureds: InsuredValues[];
 }
 
 const props = defineProps<{

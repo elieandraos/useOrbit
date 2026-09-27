@@ -54,7 +54,7 @@ const coInsuranceValue = props.policy.details.co_insurance
                 <template v-else>
                     <DetailField
                         label="Covered members"
-                        :value="`${policy.insureds.length}`"
+                        :value="`${policy.insureds?.length ?? 0}`"
                     />
                 </template>
             </div>

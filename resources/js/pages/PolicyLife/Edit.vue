@@ -6,6 +6,7 @@ import {
     show as policiesLifeShow,
     update as policiesLifeUpdate,
 } from '@/routes/policies/life';
+import type { PolicyLifeResource } from './partials/policy';
 import PolicyLifeForm from './partials/PolicyLifeForm.vue';
 
 interface Option {
@@ -17,28 +18,6 @@ interface EntityOption {
     id: number;
     full_name?: string;
     name?: string;
-}
-
-interface PolicyLifeResource {
-    slug: string;
-    policy_number: string;
-    subclass: string;
-    type: string;
-    client_id: number;
-    carrier_id: number;
-    agent_id: number | null;
-    effective_date: string;
-    expiry_date: string;
-    premium_amount: string;
-    discount_amount: string;
-    status: string;
-    source: string;
-    details: {
-        sum_assured: string;
-        term_years: number;
-        smoker: boolean;
-        beneficiaries: string;
-    };
 }
 
 const props = defineProps<{

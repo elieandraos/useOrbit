@@ -66,5 +66,5 @@ export interface PolicyMedicalResource {
     source: string;
     source_label: string;
     details: PolicyMedicalDetails;
-    insureds: PolicyInsured[];
+    insureds?: PolicyInsured[];
 }

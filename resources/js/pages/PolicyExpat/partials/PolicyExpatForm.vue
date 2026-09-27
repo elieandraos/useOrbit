@@ -10,7 +10,9 @@ import RadioChips from '@/components/ui/radio-chips/RadioChips.vue';
 import Select from '@/components/ui/select/Select.vue';
 import { Typeahead } from '@/components/ui/typeahead';
 import type { TypeaheadOption } from '@/components/ui/typeahead';
+import PolicyPartiesSection from '@/pages/Policies/partials/PolicyPartiesSection.vue';
 import { index as policiesIndex } from '@/routes/policies';
+import type { PolicyParties } from '@/types/policy';
 import type { RouteFormDefinition } from '@/wayfinder';
 
 interface Option {
@@ -29,13 +31,10 @@ interface CountryOption {
     name: string;
 }
 
-interface PolicyExpatFormValues {
+interface PolicyExpatFormValues extends PolicyParties {
     policy_number: string | null;
     subclass: string;
     type: string;
-    client_id: number;
-    carrier_id: number;
-    agent_id: number | null;
     effective_date: string;
     expiry_date: string;
     premium_amount: string;
@@ -81,18 +80,6 @@ const type = ref(
         props.types[0]?.value ??
         'single',
 );
-const clientId = ref<number | null>(
-    props.policy?.client_id ??
-        (props.defaults?.client_id ? Number(props.defaults.client_id) : null),
-);
-const carrierId = ref<number | null>(
-    props.policy?.carrier_id ??
-        (props.defaults?.carrier_id ? Number(props.defaults.carrier_id) : null),
-);
-const agentId = ref<number | null>(
-    props.policy?.agent_id ??
-        (props.defaults?.agent_id ? Number(props.defaults.agent_id) : null),
-);
 const effectiveDate = ref(props.policy?.effective_date ?? '');
 const expiryDate = ref(props.policy?.expiry_date ?? '');
 const premiumAmount = ref(props.policy?.premium_amount ?? '');
@@ -125,24 +112,6 @@ const coverageZone = computed(
 );
 const isInOut = computed(() => coverageZone.value === 'in_out');
 
-const clientOptions = computed<TypeaheadOption[]>(() =>
-    props.clients.map((client) => ({
-        value: client.id,
-        label: client.full_name ?? '',
-    })),
-);
-const carrierOptions = computed<TypeaheadOption[]>(() =>
-    props.carriers.map((carrier) => ({
-        value: carrier.id,
-        label: carrier.name ?? '',
-    })),
-);
-const agentOptions = computed<TypeaheadOption[]>(() =>
-    props.agents.map((agent) => ({
-        value: agent.id,
-        label: agent.full_name ?? '',
-    })),
-);
 const countryOptions = computed<TypeaheadOption[]>(() =>
     props.countries.map((country) => ({
         value: country.id,
@@ -300,39 +269,14 @@ const countryOptions = computed<TypeaheadOption[]>(() =>
         </FormSection>
 
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <FormSection
-                title="Parties"
-                subtitle="Who the policy belongs to and who's underwriting it."
-            >
-                <FormField label="Client" required :error="errors.client_id">
-                    <Typeahead
-                        v-model="clientId"
-                        name="client_id"
-                        :options="clientOptions"
-                        placeholder="Select client"
-                    />
-                </FormField>
-                <FormField
-                    label="Insurance company"
-                    required
-                    :error="errors.carrier_id"
-                >
-                    <Typeahead
-                        v-model="carrierId"
-                        name="carrier_id"
-                        :options="carrierOptions"
-                        placeholder="Select carrier"
-                    />
-                </FormField>
-                <FormField label="Agent" optional :error="errors.agent_id">
-                    <Typeahead
-                        v-model="agentId"
-                        name="agent_id"
-                        :options="agentOptions"
-                        placeholder="Select agent"
-                    />
-                </FormField>
-            </FormSection>
+            <PolicyPartiesSection
+                :clients="clients"
+                :carriers="carriers"
+                :agents="agents"
+                :policy="policy"
+                :defaults="defaults"
+                :errors="errors"
+            />
 
             <FormSection
                 title="Coverage period & status"

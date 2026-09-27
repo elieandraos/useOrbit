@@ -34,3 +34,14 @@ export interface PolicyResource {
     source: string;
     source_label: string;
 }
+
+export interface PolicyPartyOption {
+    id: number;
+    full_name?: string;
+    name?: string;
+}
+
+export type PolicyParties = Pick<
+    PolicyResource,
+    'client' | 'carrier' | 'agent'
+>;

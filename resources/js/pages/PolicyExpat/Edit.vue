@@ -6,6 +6,7 @@ import {
     show as policiesExpatShow,
     update as policiesExpatUpdate,
 } from '@/routes/policies/expat';
+import type { PolicyExpatResource } from './partials/policy';
 import PolicyExpatForm from './partials/PolicyExpatForm.vue';
 
 interface Option {
@@ -22,33 +23,6 @@ interface EntityOption {
 interface CountryOption {
     id: number;
     name: string;
-}
-
-interface PolicyExpatResource {
-    slug: string;
-    policy_number: string;
-    subclass: string;
-    type: string;
-    client_id: number;
-    carrier_id: number;
-    agent_id: number | null;
-    effective_date: string;
-    expiry_date: string;
-    premium_amount: string;
-    discount_amount: string;
-    status: string;
-    source: string;
-    details: {
-        coverage_zone: string;
-        travel_scope: string | null;
-        full_name: string;
-        gender: string;
-        nationality: string;
-        date_of_birth: string;
-        phone: string;
-        country_id: number | null;
-        visa_expiry_date: string | null;
-    };
 }
 
 const props = defineProps<{

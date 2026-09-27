@@ -6,6 +6,7 @@ import {
     show as policiesTravelShow,
     update as policiesTravelUpdate,
 } from '@/routes/policies/travel';
+import type { PolicyTravelResource } from './partials/policy';
 import PolicyTravelForm from './partials/PolicyTravelForm.vue';
 
 interface Option {
@@ -17,29 +18,6 @@ interface EntityOption {
     id: number;
     full_name?: string;
     name?: string;
-}
-
-interface PolicyTravelResource {
-    slug: string;
-    policy_number: string;
-    subclass: string;
-    type: string;
-    client_id: number;
-    carrier_id: number;
-    agent_id: number | null;
-    effective_date: string;
-    expiry_date: string;
-    premium_amount: string;
-    discount_amount: string;
-    status: string;
-    source: string;
-    details: {
-        destination: string;
-        trip_start_date: string;
-        trip_end_date: string;
-        travelers: string;
-        coverage_tier: string;
-    };
 }
 
 const props = defineProps<{

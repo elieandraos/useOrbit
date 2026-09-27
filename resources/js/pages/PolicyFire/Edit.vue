@@ -6,6 +6,7 @@ import {
     show as policiesFireShow,
     update as policiesFireUpdate,
 } from '@/routes/policies/fire';
+import type { PolicyFireResource } from './partials/policy';
 import PolicyFireForm from './partials/PolicyFireForm.vue';
 
 interface Option {
@@ -22,34 +23,6 @@ interface EntityOption {
 interface CountryOption {
     id: number;
     name: string;
-}
-
-interface PolicyFireResource {
-    slug: string;
-    policy_number: string;
-    subclass: string;
-    type: string;
-    client_id: number;
-    carrier_id: number;
-    agent_id: number | null;
-    effective_date: string;
-    expiry_date: string;
-    premium_amount: string;
-    discount_amount: string;
-    status: string;
-    source: string;
-    details: {
-        property_type: string;
-        floor_area: number;
-        year_built: number | null;
-        street: string;
-        building_floor: string | null;
-        city: string;
-        state_id: number | null;
-        state_name: string | null;
-        country_id: number | null;
-        sum_insured: string;
-    };
 }
 
 const props = defineProps<{

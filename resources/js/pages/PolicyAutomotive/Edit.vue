@@ -6,6 +6,7 @@ import {
     show as policiesAutomotiveShow,
     update as policiesAutomotiveUpdate,
 } from '@/routes/policies/automotive';
+import type { PolicyAutomotiveResource } from './partials/policy';
 import PolicyAutomotiveForm from './partials/PolicyAutomotiveForm.vue';
 
 interface Option {
@@ -17,32 +18,6 @@ interface EntityOption {
     id: number;
     full_name?: string;
     name?: string;
-}
-
-interface PolicyAutomotiveResource {
-    slug: string;
-    policy_number: string;
-    subclass: string;
-    type: string;
-    client_id: number;
-    carrier_id: number;
-    agent_id: number | null;
-    effective_date: string;
-    expiry_date: string;
-    premium_amount: string;
-    discount_amount: string;
-    status: string;
-    source: string;
-    details: {
-        plate_number: string;
-        make: string;
-        model: string;
-        year: number;
-        vin: string | null;
-        color: string | null;
-        valuation_amount: string | null;
-        valuation_source: string | null;
-    };
 }
 
 const props = defineProps<{
