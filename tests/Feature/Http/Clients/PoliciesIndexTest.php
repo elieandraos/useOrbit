@@ -8,6 +8,7 @@ use App\Models\Client;
 use App\Models\Organization;
 use App\Models\Policy;
 use App\Models\User;
+use Illuminate\Support\Facades\Gate;
 
 test('guests are redirected to the login page', function () {
     $client = Client::factory()->create();
@@ -25,6 +26,23 @@ test('authenticated user gets 404 for a client from another organization', funct
     $this->actingAs($user)
         ->get(route('clients.policies.index', $client))
         ->assertNotFound();
+});
+
+test('the client policies tab is authorized through the client view ability', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    Gate::before(function (User $user, string $ability, array $arguments) use ($client): ?bool {
+        $isViewingBoundClient = $ability === 'view'
+            && ($arguments[0] ?? null) instanceof Client
+            && $arguments[0]->is($client);
+
+        return $isViewingBoundClient ? false : null;
+    });
+
+    $this->actingAs($user)
+        ->get(route('clients.policies.index', $client))
+        ->assertForbidden();
 });
 
 test('authenticated user can list a client policies', function () {
