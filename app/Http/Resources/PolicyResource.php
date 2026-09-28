@@ -14,6 +14,21 @@ final class PolicyResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            ...$this->baseAttributes(),
+            'insureds' => PolicyInsuredResource::collection($this->whenLoaded('insureds')),
+        ];
+    }
+
+    /**
+     * The canonical policy representation shared by every policy class resource.
+     *
+     * Conditional values are returned unresolved so the composing resource still drops unloaded relations.
+     *
+     * @return array<string, mixed>
+     */
+    public function baseAttributes(): array
+    {
+        return [
             'id' => $this->id,
             'slug' => $this->slug,
             'policy_number' => $this->policy_number,
@@ -48,7 +63,6 @@ final class PolicyResource extends JsonResource
             'status_label' => $this->status->label(),
             'source' => $this->source,
             'source_label' => $this->source->label(),
-            'insureds' => PolicyInsuredResource::collection($this->whenLoaded('insureds')),
         ];
     }
 }
