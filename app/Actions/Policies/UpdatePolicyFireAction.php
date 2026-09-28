@@ -15,7 +15,7 @@ final class UpdatePolicyFireAction
     ) {}
 
     /**
-     * @param  array{policy_number?: string|null, class: string, subclass: string, type: string, client_id: int, carrier_id: int, agent_id?: int|null, effective_date: string, expiry_date: string, premium_amount: string, discount_amount?: string|null, status: string, source: string, fire: array{property_type: string, floor_area: int, year_built: int|null, street: string, building_floor: string|null, city: string, state_id: int, country_id: int, sum_insured: string}}  $attributes
+     * @param  array{policy_number?: string|null, class: string, subclass: string, type: string, client_id: string, carrier_id: string, agent_id?: string|null, effective_date: string, expiry_date: string, premium_amount: string, discount_amount?: string|null, status: string, source: string, fire: array{property_type: string, floor_area: string, year_built: string|null, street: string, building_floor: string|null, city: string, state_id: string, country_id: string, sum_insured: string}}  $attributes
      *
      * @throws \Throwable
      */
@@ -24,19 +24,17 @@ final class UpdatePolicyFireAction
         return DB::transaction(function () use ($user, $policy, $attributes): Policy {
             $policy = $this->updatePolicyAction->handle($user, $policy, $attributes);
 
-            $this->updateFireDetails($policy, $attributes);
+            $this->updateFireDetails($policy, $attributes['fire']);
 
             return $policy->fresh();
         });
     }
 
     /**
-     * @param  array{fire: array{property_type: string, floor_area: int, year_built: int|null, street: string, building_floor: string|null, city: string, state_id: int, country_id: int, sum_insured: string}}  $attributes
+     * @param  array{property_type: string, floor_area: string, year_built: string|null, street: string, building_floor: string|null, city: string, state_id: string, country_id: string, sum_insured: string}  $fire
      */
-    private function updateFireDetails(Policy $policy, array $attributes): void
+    private function updateFireDetails(Policy $policy, array $fire): void
     {
-        $fire = $attributes['fire'];
-
         $policy->fireDetails->update([
             'property_type' => $fire['property_type'],
             'floor_area' => $fire['floor_area'],

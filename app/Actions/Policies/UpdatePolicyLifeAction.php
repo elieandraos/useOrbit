@@ -15,7 +15,7 @@ final class UpdatePolicyLifeAction
     ) {}
 
     /**
-     * @param  array{policy_number?: string|null, class: string, subclass: string, type: string, client_id: int, carrier_id: int, agent_id?: int|null, effective_date: string, expiry_date: string, premium_amount: string, discount_amount?: string|null, status: string, source: string, life: array{sum_assured: string, term_years: int, smoker: bool, beneficiaries: string}}  $attributes
+     * @param  array{policy_number?: string|null, class: string, subclass: string, type: string, client_id: string, carrier_id: string, agent_id?: string|null, effective_date: string, expiry_date: string, premium_amount: string, discount_amount?: string|null, status: string, source: string, life: array{sum_assured: string, term_years: string, smoker: bool, beneficiaries: string}}  $attributes
      *
      * @throws \Throwable
      */
@@ -24,19 +24,17 @@ final class UpdatePolicyLifeAction
         return DB::transaction(function () use ($user, $policy, $attributes): Policy {
             $policy = $this->updatePolicyAction->handle($user, $policy, $attributes);
 
-            $this->updateLifeDetails($policy, $attributes);
+            $this->updateLifeDetails($policy, $attributes['life']);
 
             return $policy->fresh();
         });
     }
 
     /**
-     * @param  array{life: array{sum_assured: string, term_years: int, smoker: bool, beneficiaries: string}}  $attributes
+     * @param  array{sum_assured: string, term_years: string, smoker: bool, beneficiaries: string}  $life
      */
-    private function updateLifeDetails(Policy $policy, array $attributes): void
+    private function updateLifeDetails(Policy $policy, array $life): void
     {
-        $life = $attributes['life'];
-
         $policy->lifeDetails->update([
             'sum_assured' => $life['sum_assured'],
             'term_years' => $life['term_years'],

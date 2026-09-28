@@ -16,7 +16,7 @@ final class CreatePolicyLifeAction
     ) {}
 
     /**
-     * @param  array{policy_number?: string|null, class: string, subclass: string, type: string, client_id: int, carrier_id: int, agent_id?: int|null, effective_date: string, expiry_date: string, premium_amount: string, discount_amount?: string|null, status: string, source: string, life: array{sum_assured: string, term_years: int, smoker: bool, beneficiaries: string}}  $attributes
+     * @param  array{policy_number?: string|null, class: string, subclass: string, type: string, client_id: string, carrier_id: string, agent_id?: string|null, effective_date: string, expiry_date: string, premium_amount: string, discount_amount?: string|null, status: string, source: string, life: array{sum_assured: string, term_years: string, smoker: bool, beneficiaries: string}}  $attributes
      *
      * @throws \Throwable
      */
@@ -25,19 +25,17 @@ final class CreatePolicyLifeAction
         return DB::transaction(function () use ($user, $attributes): Policy {
             $policy = $this->createPolicyAction->handle($user, $attributes);
 
-            $this->createLifeDetails($policy, $attributes);
+            $this->createLifeDetails($policy, $attributes['life']);
 
             return $policy;
         });
     }
 
     /**
-     * @param  array{life: array{sum_assured: string, term_years: int, smoker: bool, beneficiaries: string}}  $attributes
+     * @param  array{sum_assured: string, term_years: string, smoker: bool, beneficiaries: string}  $life
      */
-    private function createLifeDetails(Policy $policy, array $attributes): void
+    private function createLifeDetails(Policy $policy, array $life): void
     {
-        $life = $attributes['life'];
-
         PolicyLifeDetails::query()->create([
             'policy_id' => $policy->id,
             'sum_assured' => $life['sum_assured'],
