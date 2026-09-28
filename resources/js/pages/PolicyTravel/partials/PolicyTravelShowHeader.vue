@@ -1,15 +1,34 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { Pencil } from '@lucide/vue';
+import { Download, Pencil } from '@lucide/vue';
+import { computed } from 'vue';
 import Badge from '@/components/ui/badge/Badge.vue';
 import Button from '@/components/ui/button/Button.vue';
+import { Spinner } from '@/components/ui/spinner';
+import { useFileExport } from '@/composables/useFileExport';
 import { policyStatusTone } from '@/lib/policyStatusTone';
-import { edit as policiesTravelEdit } from '@/routes/policies/travel';
+import {
+    edit as policiesTravelEdit,
+    exportPdf as policiesTravelExportPdf,
+} from '@/routes/policies/travel';
 import type { PolicyResource } from '@/types/policy';
 
-defineProps<{
+const props = defineProps<{
     policy: PolicyResource;
 }>();
+
+const { isExporting, exportFile } = useFileExport();
+
+const exportUrl = computed(
+    () => policiesTravelExportPdf(props.policy.slug).url,
+);
+
+function exportPolicy(): Promise<void> {
+    return exportFile(exportUrl.value, `${props.policy.slug}.pdf`, {
+        success: 'Policy exported.',
+        error: 'Failed to export policy. Please try again.',
+    });
+}
 </script>
 
 <template>
@@ -36,6 +55,18 @@ defineProps<{
         </div>
 
         <div class="flex shrink-0 items-center gap-2">
+            <Button
+                variant="secondary"
+                size="md"
+                :disabled="isExporting"
+                @click="exportPolicy"
+            >
+                <template #leading>
+                    <Spinner v-if="isExporting" />
+                    <Download v-else />
+                </template>
+                Export
+            </Button>
             <Link :href="policiesTravelEdit(policy.slug).url">
                 <Button variant="secondary" size="md">
                     <template #leading><Pencil /></template>
