@@ -118,3 +118,31 @@ test('a class field cannot be changed away from expat', function () {
         ->patch(route('policies.expat.update', $policy), $payload)
         ->assertSessionHasErrors(['class']);
 });
+
+test('an in-zone policy prohibits a travel scope', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->expat()->create(['created_by' => $user->id]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = expatUpdatePayload($client, $carrier);
+    $payload['expat']['travel_scope'] = 'Worldwide';
+
+    $this->actingAs($user)
+        ->patch(route('policies.expat.update', $policy), $payload)
+        ->assertSessionHasErrors(['expat.travel_scope']);
+});
+
+test('an in-out zone policy requires a travel scope', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->expat()->create(['created_by' => $user->id]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = expatUpdatePayload($client, $carrier, 'in_out');
+    unset($payload['expat']['travel_scope']);
+
+    $this->actingAs($user)
+        ->patch(route('policies.expat.update', $policy), $payload)
+        ->assertSessionHasErrors(['expat.travel_scope']);
+});

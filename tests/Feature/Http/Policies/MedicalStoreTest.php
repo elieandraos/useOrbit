@@ -188,3 +188,29 @@ test('a co_insurance_share of 15 is accepted when co_insurance is true', functio
         ->assertSessionHasNoErrors()
         ->assertRedirect(route('policies.medical.show', Policy::query()->first()));
 });
+
+test('a group policy prohibits the single insured profile fields', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = groupPayload($client, $carrier);
+    $payload['medical'] = [...$payload['medical'], 'insured_full_name' => 'Amelia Hartwell', 'insured_date_of_birth' => '1986-03-22', 'insured_gender' => 'female', 'insured_smoker' => false];
+
+    $this->actingAs($user)
+        ->post(route('policies.medical.store'), $payload)
+        ->assertSessionHasErrors(['medical.insured_full_name', 'medical.insured_date_of_birth', 'medical.insured_gender', 'medical.insured_smoker']);
+});
+
+test('a co_insurance_share is prohibited when co_insurance is false', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = singlePayload($client, $carrier);
+    $payload['medical']['co_insurance_share'] = 15;
+
+    $this->actingAs($user)
+        ->post(route('policies.medical.store'), $payload)
+        ->assertSessionHasErrors(['medical.co_insurance_share']);
+});

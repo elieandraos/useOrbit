@@ -117,3 +117,32 @@ test('a class field cannot be changed away from automotive', function () {
         ->patch(route('policies.automotive.update', $policy), $payload)
         ->assertSessionHasErrors(['class']);
 });
+
+test('a third party policy prohibits a vehicle valuation', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->automotive()->create(['created_by' => $user->id]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = automotiveUpdatePayload($client, $carrier);
+    $payload['automotive']['valuation_amount'] = '10000.00';
+    $payload['automotive']['valuation_source'] = 'Market value';
+
+    $this->actingAs($user)
+        ->patch(route('policies.automotive.update', $policy), $payload)
+        ->assertSessionHasErrors(['automotive.valuation_amount', 'automotive.valuation_source']);
+});
+
+test('an all risk policy requires a vehicle valuation', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->automotive()->create(['created_by' => $user->id]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = automotiveUpdatePayload($client, $carrier, 'All Risk');
+    unset($payload['automotive']['valuation_amount'], $payload['automotive']['valuation_source']);
+
+    $this->actingAs($user)
+        ->patch(route('policies.automotive.update', $policy), $payload)
+        ->assertSessionHasErrors(['automotive.valuation_amount', 'automotive.valuation_source']);
+});
