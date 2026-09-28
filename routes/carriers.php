@@ -18,7 +18,7 @@ Route::middleware(['auth', 'organization'])->group(function () {
     Route::post('carriers', [CarriersController::class, 'store'])->name('carriers.store');
     Route::get('carriers/export', CarriersExcelExportController::class)->name('carriers.export');
     Route::get('carriers/{carrier:slug}', [CarriersController::class, 'show'])->name('carriers.show');
-    Route::get('carriers/{carrier:slug}/policies', [CarrierPoliciesController::class, 'index'])->name('carriers.policies.index');
+    Route::get('carriers/{carrier:slug}/policies', CarrierPoliciesController::class)->name('carriers.policies.index');
     Route::get('carriers/{carrier:slug}/edit', [CarriersController::class, 'edit'])->name('carriers.edit');
     Route::patch('carriers/{carrier:slug}', [CarriersController::class, 'update'])->name('carriers.update');
     Route::patch('carriers/{carrier:slug}/archive', CarriersArchiveController::class)->name('carriers.archive');

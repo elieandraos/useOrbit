@@ -15,7 +15,7 @@ use Inertia\Response;
 final class ClientPoliciesController extends Controller
 {
     #[Authorize('viewAny', Policy::class)]
-    public function index(Client $client): Response
+    public function __invoke(Client $client): Response
     {
         $policies = $client->policies()
             ->with(['client', 'carrier'])
