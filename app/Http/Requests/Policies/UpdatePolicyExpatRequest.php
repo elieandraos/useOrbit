@@ -10,7 +10,6 @@ use App\Enums\Gender;
 use App\Enums\PolicyClass;
 use App\Enums\PolicyStatus;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 
 final class UpdatePolicyExpatRequest extends FormRequest
@@ -26,13 +25,11 @@ final class UpdatePolicyExpatRequest extends FormRequest
 
     public function rules(): array
     {
-        $isInOut = $this->input('expat.coverage_zone') === ExpatCoverageZone::InOut->value;
-
         return [
             ...$this->policyRules(PolicyClass::Expat),
 
             'expat.coverage_zone' => ['required', new Enum(ExpatCoverageZone::class)],
-            'expat.travel_scope' => [Rule::requiredIf($isInOut), Rule::prohibitedIf(! $isInOut), 'nullable', 'string', 'max:100'],
+            'expat.travel_scope' => ['required_if:expat.coverage_zone,'.ExpatCoverageZone::InOut->value, 'prohibited_unless:expat.coverage_zone,'.ExpatCoverageZone::InOut->value, 'nullable', 'string', 'max:100'],
             'expat.full_name' => ['required', 'string', 'max:255'],
             'expat.gender' => ['required', new Enum(Gender::class)],
             'expat.nationality' => ['required', 'string', 'max:100'],

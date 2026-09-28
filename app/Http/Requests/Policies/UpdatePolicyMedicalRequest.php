@@ -36,9 +36,6 @@ final class UpdatePolicyMedicalRequest extends FormRequest
     {
         /** @var Policy $policy */
         $policy = $this->route('policy');
-        $isSingle = $this->input('type') === PolicyType::Single->value;
-        $isGroup = $this->input('type') === PolicyType::Group->value;
-        $coInsurance = $this->boolean('medical.co_insurance');
 
         return [
             ...$this->policyRules(PolicyClass::Medical),
@@ -46,16 +43,16 @@ final class UpdatePolicyMedicalRequest extends FormRequest
             'medical.coverage_scope' => ['required', new Enum(MedicalCoverageScope::class)],
             'medical.class_tier' => ['required', new Enum(MedicalClassTier::class)],
             'medical.co_insurance' => ['required', 'boolean'],
-            'medical.co_insurance_share' => [Rule::requiredIf($coInsurance), Rule::prohibitedIf(! $coInsurance), 'nullable', 'numeric', 'between:0,100'],
+            'medical.co_insurance_share' => ['required_if_accepted:medical.co_insurance', 'prohibited_if_declined:medical.co_insurance', 'nullable', 'numeric', 'between:0,100'],
             'medical.guaranteed_renewable' => ['required', 'boolean'],
 
-            'medical.insured_full_name' => [Rule::requiredIf($isSingle), Rule::prohibitedIf(! $isSingle), 'nullable', 'string', 'max:255'],
-            'medical.insured_date_of_birth' => [Rule::requiredIf($isSingle), Rule::prohibitedIf(! $isSingle), 'nullable', 'date'],
-            'medical.insured_gender' => [Rule::requiredIf($isSingle), Rule::prohibitedIf(! $isSingle), 'nullable', new Enum(Gender::class)],
-            'medical.insured_smoker' => [Rule::requiredIf($isSingle), Rule::prohibitedIf(! $isSingle), 'nullable', 'boolean'],
+            'medical.insured_full_name' => ['required_if:type,'.PolicyType::Single->value, 'prohibited_unless:type,'.PolicyType::Single->value, 'nullable', 'string', 'max:255'],
+            'medical.insured_date_of_birth' => ['required_if:type,'.PolicyType::Single->value, 'prohibited_unless:type,'.PolicyType::Single->value, 'nullable', 'date'],
+            'medical.insured_gender' => ['required_if:type,'.PolicyType::Single->value, 'prohibited_unless:type,'.PolicyType::Single->value, 'nullable', new Enum(Gender::class)],
+            'medical.insured_smoker' => ['required_if:type,'.PolicyType::Single->value, 'prohibited_unless:type,'.PolicyType::Single->value, 'nullable', 'boolean'],
             'medical.insured_medical_history' => ['nullable', 'string'],
 
-            'insureds' => [Rule::requiredIf($isGroup), Rule::prohibitedIf(! $isGroup), 'array'],
+            'insureds' => ['required_if:type,'.PolicyType::Group->value, 'prohibited_unless:type,'.PolicyType::Group->value, 'array'],
             'insureds.*.id' => ['nullable', 'integer', Rule::exists('policy_insureds', 'id')->where('policy_id', $policy->id)],
             'insureds.*.full_name' => ['required', 'string', 'max:255'],
             'insureds.*.relationship' => ['required', 'string', 'max:20'],

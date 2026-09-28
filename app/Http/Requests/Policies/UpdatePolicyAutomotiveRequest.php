@@ -8,7 +8,6 @@ use App\Concerns\PolicyValidationRules;
 use App\Enums\PolicyClass;
 use App\Enums\PolicyStatus;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 final class UpdatePolicyAutomotiveRequest extends FormRequest
 {
@@ -23,8 +22,6 @@ final class UpdatePolicyAutomotiveRequest extends FormRequest
 
     public function rules(): array
     {
-        $isAllRisk = $this->input('subclass') === 'All Risk';
-
         return [
             ...$this->policyRules(PolicyClass::Automotive),
 
@@ -34,8 +31,8 @@ final class UpdatePolicyAutomotiveRequest extends FormRequest
             'automotive.year' => ['required', 'integer', 'min:1900', 'max:'.(now()->year + 1)],
             'automotive.vin' => ['nullable', 'string', 'max:50'],
             'automotive.color' => ['nullable', 'string', 'max:30'],
-            'automotive.valuation_amount' => [Rule::requiredIf($isAllRisk), Rule::prohibitedIf(! $isAllRisk), 'nullable', 'numeric', 'min:0'],
-            'automotive.valuation_source' => [Rule::requiredIf($isAllRisk), Rule::prohibitedIf(! $isAllRisk), 'nullable', 'string', 'max:50'],
+            'automotive.valuation_amount' => ['required_if:subclass,All Risk', 'prohibited_unless:subclass,All Risk', 'nullable', 'numeric', 'min:0'],
+            'automotive.valuation_source' => ['required_if:subclass,All Risk', 'prohibited_unless:subclass,All Risk', 'nullable', 'string', 'max:50'],
         ];
     }
 }

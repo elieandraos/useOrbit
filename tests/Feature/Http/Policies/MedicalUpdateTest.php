@@ -167,3 +167,61 @@ test('a single policy prohibits an insureds array', function () {
         ->patch(route('policies.medical.update', $policy), $payload)
         ->assertSessionHasErrors(['insureds']);
 });
+
+test('a single policy is rejected when the insured profile fields are missing', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->medical()->create(['created_by' => $user->id, 'type' => 'single']);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = singleUpdatePayload($client, $carrier);
+    unset($payload['medical']['insured_full_name'], $payload['medical']['insured_date_of_birth'], $payload['medical']['insured_gender'], $payload['medical']['insured_smoker']);
+
+    $this->actingAs($user)
+        ->patch(route('policies.medical.update', $policy), $payload)
+        ->assertSessionHasErrors(['medical.insured_full_name', 'medical.insured_date_of_birth', 'medical.insured_gender', 'medical.insured_smoker']);
+});
+
+test('a group policy prohibits the single insured profile fields', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->medical()->create(['created_by' => $user->id, 'type' => 'group']);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = groupUpdatePayload($client, $carrier, [
+        ['full_name' => 'Lina Hartwell', 'relationship' => 'Spouse', 'date_of_birth' => '1988-08-08'],
+    ]);
+    $payload['medical'] = [...$payload['medical'], 'insured_full_name' => 'Amelia Hartwell', 'insured_date_of_birth' => '1986-03-22', 'insured_gender' => 'female', 'insured_smoker' => false];
+
+    $this->actingAs($user)
+        ->patch(route('policies.medical.update', $policy), $payload)
+        ->assertSessionHasErrors(['medical.insured_full_name', 'medical.insured_date_of_birth', 'medical.insured_gender', 'medical.insured_smoker']);
+});
+
+test('a co_insurance_share is required when co_insurance is true', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->medical()->create(['created_by' => $user->id, 'type' => 'single']);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = singleUpdatePayload($client, $carrier);
+    $payload['medical']['co_insurance'] = true;
+
+    $this->actingAs($user)
+        ->patch(route('policies.medical.update', $policy), $payload)
+        ->assertSessionHasErrors(['medical.co_insurance_share']);
+});
+
+test('a co_insurance_share is prohibited when co_insurance is false', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->medical()->create(['created_by' => $user->id, 'type' => 'single']);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = singleUpdatePayload($client, $carrier);
+    $payload['medical']['co_insurance_share'] = 15;
+
+    $this->actingAs($user)
+        ->patch(route('policies.medical.update', $policy), $payload)
+        ->assertSessionHasErrors(['medical.co_insurance_share']);
+});
