@@ -6,7 +6,6 @@ namespace App\Actions\Policies;
 
 use App\Enums\PolicyType;
 use App\Models\Policy;
-use App\Models\PolicyInsured;
 use App\Models\PolicyMedicalDetails;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +14,7 @@ final class CreatePolicyMedicalAction
 {
     public function __construct(
         private readonly CreatePolicyAction $createPolicyAction,
+        private readonly SyncPolicyInsuredsAction $syncPolicyInsuredsAction,
     ) {}
 
     /**
@@ -29,12 +29,16 @@ final class CreatePolicyMedicalAction
 
             $this->createMedicalDetails($policy, $attributes);
 
+            if ($policy->type === PolicyType::Group) {
+                $this->syncPolicyInsuredsAction->handle($policy, $attributes['insureds'] ?? []);
+            }
+
             return $policy;
         });
     }
 
     /**
-     * @param  array{medical: array{coverage_scope: string, class_tier: string, co_insurance: bool, co_insurance_share: string|null, guaranteed_renewable: bool, insured_full_name: string|null, insured_date_of_birth: string|null, insured_gender: string|null, insured_smoker: bool|null, insured_medical_history: string|null}, insureds?: array<int, array{full_name: string, relationship: string, date_of_birth: string, gender: string|null, medical_notes: string|null}>}  $attributes
+     * @param  array{medical: array{coverage_scope: string, class_tier: string, co_insurance: bool, co_insurance_share: string|null, guaranteed_renewable: bool, insured_full_name: string|null, insured_date_of_birth: string|null, insured_gender: string|null, insured_smoker: bool|null, insured_medical_history: string|null}}  $attributes
      */
     private function createMedicalDetails(Policy $policy, array $attributes): void
     {
@@ -53,25 +57,5 @@ final class CreatePolicyMedicalAction
             'insured_smoker' => $medical['insured_smoker'] ?? null,
             'insured_medical_history' => $medical['insured_medical_history'] ?? null,
         ]);
-
-        if ($policy->type === PolicyType::Group) {
-            foreach ($attributes['insureds'] ?? [] as $index => $insured) {
-                PolicyInsured::query()->create([
-                    'policy_id' => $policy->id,
-                    'member_code' => $this->generateMemberCode($index + 1),
-                    'full_name' => $insured['full_name'],
-                    'relationship' => $insured['relationship'],
-                    'date_of_birth' => $insured['date_of_birth'],
-                    'gender' => $insured['gender'] ?? null,
-                    'medical_notes' => $insured['medical_notes'] ?? null,
-                    'status' => 'Active',
-                ]);
-            }
-        }
-    }
-
-    private function generateMemberCode(int $sequence): string
-    {
-        return 'MBR-'.str_pad((string) $sequence, 3, '0', STR_PAD_LEFT);
     }
 }
