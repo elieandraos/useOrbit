@@ -83,7 +83,7 @@ empty ready set — see "When the ready set is empty" for what happens next.
 
 ## Recompute the dependency-ready set
 
-This phase starts only after a validated closure (`rules/issue-closure.md`) — never before.
+This phase starts after a validated closure (`rules/issue-closure.md`) or when the human explicitly asks what's next in a milestone. It never starts merely because an implementation worker wants to chain into more work.
 
 1. List the open issues remaining in the current milestone:
 
@@ -104,19 +104,25 @@ This phase starts only after a validated closure (`rules/issue-closure.md`) — 
 
 Summarize compactly, in categories — never a flat ready list:
 
-- which issues just became newly ready because of this closure;
+- which issues just became newly ready because of this closure, when this recompute follows a closure;
 - which were already ready;
 - which are still blocked, and on what.
 
 For example: issue {A} closes, issues {B} and {C} become ready, and issue {D} remains blocked on
 {E}.
 
-Recommend one ready issue, with a concise rationale, when the evidence gives a reasonable basis —
-e.g. it unblocks the most follow-on work, or it continues the same implementation layer/context the
-recent work was in. When several ready issues are genuinely comparable and the choice is a real
-judgment call, present them as options instead of silently picking one — this is a sequencing
-choice, and `rules/review-gates.md`'s "multiple valid sequencing choices" stop applies here
-directly.
+Recommend the next execution shape that the evidence supports. Usually that is one ready issue, with a
+concise rationale — e.g. it unblocks the most follow-on work or continues the same implementation
+layer/context the recent work was in. When several dependency-ready issues in a delivery/phase
+milestone appear sufficiently independent that concurrent execution would materially help, assess
+their expected overlap and may recommend a concurrent subset instead. State why the subset is safe and
+useful; do not recommend concurrency merely because several issues are ready.
+
+A parallel-wave recommendation is not authorization. The parallel path above begins only after the
+human explicitly approves concurrent execution of the proposed issues. When several ready issues or
+execution shapes are genuinely comparable and the choice is a real judgment call, present them as
+options instead of silently picking one — this is a sequencing choice, and
+`rules/review-gates.md`'s "multiple valid sequencing choices" stop applies here directly.
 
 Recommendation is not authorization: investigate enough to recommend when possible, but never
 convert a genuine sequencing judgment into an automatic choice. The human always makes the final
@@ -162,7 +168,7 @@ authorization.
   a milestone branch.
 - Recompute readiness from current issue state after every validated closure.
 - Explain newly ready, already ready, and blocked work — not just a flat ready list.
-- Recommend when the evidence supports one, with a concise rationale.
+- Recommend an evidence-backed execution shape: normally one ready issue, or a safe concurrent subset when independence and expected value justify it.
 - Let the human make the sequencing decision.
 - Hand off to `ship-it/rules/milestone-pr-readiness.md`'s PR-readiness gate only when zero open issues
   remain, rather than treating "no next issue" as nothing to report.
@@ -174,7 +180,7 @@ authorization.
 - Silently proceed on a non-trunk branch for Backlog/hotfix work instead of surfacing the mismatch.
 - Generalize observed branch-name patterns into a rigid, enforced taxonomy.
 - Assume a dependency syntax the project doesn't actually use.
-- Silently pick between genuinely comparable ready issues.
+- Silently pick between genuinely comparable ready issues or execution shapes.
 - Treat a recommendation, or an immediate human answer, as authorization to start implementing.
 - Chain straight into the next issue within the same pass.
 - Check milestone PR-readiness or closure conditions from this rule — that's
