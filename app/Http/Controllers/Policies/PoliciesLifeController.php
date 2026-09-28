@@ -6,7 +6,6 @@ namespace App\Http\Controllers\Policies;
 
 use App\Actions\Policies\CreatePolicyLifeAction;
 use App\Actions\Policies\UpdatePolicyLifeAction;
-use App\Enums\PolicyClass;
 use App\Enums\PolicySource;
 use App\Enums\PolicyStatus;
 use App\Enums\PolicyType;
@@ -53,8 +52,6 @@ final class PoliciesLifeController extends Controller
     #[Authorize('view', 'policy')]
     public function show(Policy $policy): Response
     {
-        abort_unless($policy->class === PolicyClass::Life, 404);
-
         $policy->load(['client', 'carrier', 'agent', 'lifeDetails']);
 
         return inertia('PolicyLife/Show', [
@@ -65,8 +62,6 @@ final class PoliciesLifeController extends Controller
     #[Authorize('update', 'policy')]
     public function edit(Policy $policy): Response
     {
-        abort_unless($policy->class === PolicyClass::Life, 404);
-
         $policy->load(['client', 'carrier', 'agent', 'lifeDetails']);
 
         return inertia('PolicyLife/Edit', [
@@ -81,8 +76,6 @@ final class PoliciesLifeController extends Controller
     #[Authorize('update', 'policy')]
     public function update(UpdatePolicyLifeRequest $request, Policy $policy, UpdatePolicyLifeAction $action): RedirectResponse
     {
-        abort_unless($policy->class === PolicyClass::Life, 404);
-
         /** @var User $user */
         $user = $request->user();
         $policy = $action->handle($user, $policy, $request->validated());

@@ -60,6 +60,15 @@ test('a user gets 404 updating a non-travel policy', function () {
         ->assertNotFound();
 });
 
+test('a user gets 404 rather than validation errors updating a non-travel policy with an invalid payload', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->medical()->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->patch(route('policies.travel.update', $policy))
+        ->assertNotFound();
+});
+
 test('update returns validation errors when required fields are missing', function () {
     $user = User::factory()->withOrganization()->create();
     $policy = Policy::factory()->forOrganization($user)->travel()->create(['created_by' => $user->id]);

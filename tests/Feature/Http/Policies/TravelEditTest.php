@@ -55,3 +55,12 @@ test('authenticated user gets 404 editing a policy from another organization', f
         ->get(route('policies.travel.edit', $policy))
         ->assertNotFound();
 });
+
+test('authenticated user gets 404 editing a non-travel policy', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->medical()->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->get(route('policies.travel.edit', $policy))
+        ->assertNotFound();
+});
