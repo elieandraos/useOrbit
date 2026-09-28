@@ -64,6 +64,15 @@ test('a user gets 404 updating a non-expat policy', function () {
         ->assertNotFound();
 });
 
+test('a user gets 404 rather than validation errors updating a non-expat policy with an invalid payload', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->medical()->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->patch(route('policies.expat.update', $policy))
+        ->assertNotFound();
+});
+
 test('update returns validation errors when required fields are missing', function () {
     $user = User::factory()->withOrganization()->create();
     $policy = Policy::factory()->forOrganization($user)->expat()->create(['created_by' => $user->id]);

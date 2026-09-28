@@ -8,7 +8,6 @@ use App\Actions\Policies\CreatePolicyExpatAction;
 use App\Actions\Policies\UpdatePolicyExpatAction;
 use App\Enums\ExpatCoverageZone;
 use App\Enums\Gender;
-use App\Enums\PolicyClass;
 use App\Enums\PolicySource;
 use App\Enums\PolicyStatus;
 use App\Enums\PolicyType;
@@ -57,8 +56,6 @@ final class PoliciesExpatController extends Controller
     #[Authorize('view', 'policy')]
     public function show(Policy $policy): Response
     {
-        abort_unless($policy->class === PolicyClass::Expat, 404);
-
         $policy->load(['client', 'carrier', 'agent', 'expatDetails.country']);
 
         return inertia('PolicyExpat/Show', [
@@ -69,8 +66,6 @@ final class PoliciesExpatController extends Controller
     #[Authorize('update', 'policy')]
     public function edit(Policy $policy): Response
     {
-        abort_unless($policy->class === PolicyClass::Expat, 404);
-
         $policy->load(['client', 'carrier', 'agent', 'expatDetails.country']);
 
         return inertia('PolicyExpat/Edit', [
@@ -85,8 +80,6 @@ final class PoliciesExpatController extends Controller
     #[Authorize('update', 'policy')]
     public function update(UpdatePolicyExpatRequest $request, Policy $policy, UpdatePolicyExpatAction $action): RedirectResponse
     {
-        abort_unless($policy->class === PolicyClass::Expat, 404);
-
         /** @var User $user */
         $user = $request->user();
         $policy = $action->handle($user, $policy, $request->validated());

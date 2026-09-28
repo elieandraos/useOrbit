@@ -9,7 +9,6 @@ use App\Actions\Policies\UpdatePolicyMedicalAction;
 use App\Enums\Gender;
 use App\Enums\MedicalClassTier;
 use App\Enums\MedicalCoverageScope;
-use App\Enums\PolicyClass;
 use App\Enums\PolicySource;
 use App\Enums\PolicyStatus;
 use App\Enums\PolicyType;
@@ -56,8 +55,6 @@ final class PoliciesMedicalController extends Controller
     #[Authorize('view', 'policy')]
     public function show(Policy $policy): Response
     {
-        abort_unless($policy->class === PolicyClass::Medical, 404);
-
         $policy->load(['client', 'carrier', 'agent', 'medicalDetails']);
 
         if ($policy->type === PolicyType::Group) {
@@ -72,8 +69,6 @@ final class PoliciesMedicalController extends Controller
     #[Authorize('update', 'policy')]
     public function edit(Policy $policy): Response
     {
-        abort_unless($policy->class === PolicyClass::Medical, 404);
-
         $policy->load(['client', 'carrier', 'agent', 'medicalDetails']);
 
         if ($policy->type === PolicyType::Group) {
@@ -92,8 +87,6 @@ final class PoliciesMedicalController extends Controller
     #[Authorize('update', 'policy')]
     public function update(UpdatePolicyMedicalRequest $request, Policy $policy, UpdatePolicyMedicalAction $action): RedirectResponse
     {
-        abort_unless($policy->class === PolicyClass::Medical, 404);
-
         /** @var User $user */
         $user = $request->user();
         $policy = $action->handle($user, $policy, $request->validated());

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Middleware\EnsureOrganizationContext;
+use App\Http\Middleware\EnsurePolicyClass;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RequireTwoFactorAuthentication;
@@ -31,6 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'two-factor-required' => RequireTwoFactorAuthentication::class,
+            'policy-class' => EnsurePolicyClass::class,
         ]);
 
         $middleware->group('organization', [
@@ -41,6 +43,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->prependToPriorityList(
             before: SubstituteBindings::class,
             prepend: EnsureOrganizationContext::class,
+        );
+
+        $middleware->appendToPriorityList(
+            after: SubstituteBindings::class,
+            append: EnsurePolicyClass::class,
         );
     })
     ->withExceptions(function (Exceptions $exceptions): void {

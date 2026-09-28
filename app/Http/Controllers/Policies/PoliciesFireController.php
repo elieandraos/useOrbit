@@ -6,7 +6,6 @@ namespace App\Http\Controllers\Policies;
 
 use App\Actions\Policies\CreatePolicyFireAction;
 use App\Actions\Policies\UpdatePolicyFireAction;
-use App\Enums\PolicyClass;
 use App\Enums\PolicySource;
 use App\Enums\PolicyStatus;
 use App\Enums\PolicyType;
@@ -55,8 +54,6 @@ final class PoliciesFireController extends Controller
     #[Authorize('view', 'policy')]
     public function show(Policy $policy): Response
     {
-        abort_unless($policy->class === PolicyClass::Fire, 404);
-
         $policy->load(['client', 'carrier', 'agent', 'fireDetails.state', 'fireDetails.country']);
 
         return inertia('PolicyFire/Show', [
@@ -67,8 +64,6 @@ final class PoliciesFireController extends Controller
     #[Authorize('update', 'policy')]
     public function edit(Policy $policy): Response
     {
-        abort_unless($policy->class === PolicyClass::Fire, 404);
-
         $policy->load(['client', 'carrier', 'agent', 'fireDetails.state', 'fireDetails.country']);
 
         return inertia('PolicyFire/Edit', [
@@ -83,8 +78,6 @@ final class PoliciesFireController extends Controller
     #[Authorize('update', 'policy')]
     public function update(UpdatePolicyFireRequest $request, Policy $policy, UpdatePolicyFireAction $action): RedirectResponse
     {
-        abort_unless($policy->class === PolicyClass::Fire, 404);
-
         /** @var User $user */
         $user = $request->user();
         $policy = $action->handle($user, $policy, $request->validated());

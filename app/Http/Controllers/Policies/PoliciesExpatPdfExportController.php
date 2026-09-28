@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Policies;
 
 use App\Actions\Policies\ExportPolicyExpatToPdfAction;
-use App\Enums\PolicyClass;
 use App\Http\Controllers\Controller;
 use App\Models\Policy;
 use Illuminate\Http\Response;
@@ -16,8 +15,6 @@ final class PoliciesExpatPdfExportController extends Controller
     #[Authorize('view', 'policy')]
     public function __invoke(Policy $policy, ExportPolicyExpatToPdfAction $action): Response
     {
-        abort_unless($policy->class === PolicyClass::Expat, 404);
-
         $policy->load(['client', 'carrier', 'agent', 'expatDetails.country']);
 
         return $action->handle($policy);

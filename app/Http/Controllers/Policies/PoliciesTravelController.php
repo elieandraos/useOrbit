@@ -6,7 +6,6 @@ namespace App\Http\Controllers\Policies;
 
 use App\Actions\Policies\CreatePolicyTravelAction;
 use App\Actions\Policies\UpdatePolicyTravelAction;
-use App\Enums\PolicyClass;
 use App\Enums\PolicySource;
 use App\Enums\PolicyStatus;
 use App\Enums\PolicyType;
@@ -53,8 +52,6 @@ final class PoliciesTravelController extends Controller
     #[Authorize('view', 'policy')]
     public function show(Policy $policy): Response
     {
-        abort_unless($policy->class === PolicyClass::Travel, 404);
-
         $policy->load(['client', 'carrier', 'agent', 'travelDetails']);
 
         return inertia('PolicyTravel/Show', [
@@ -65,8 +62,6 @@ final class PoliciesTravelController extends Controller
     #[Authorize('update', 'policy')]
     public function edit(Policy $policy): Response
     {
-        abort_unless($policy->class === PolicyClass::Travel, 404);
-
         $policy->load(['client', 'carrier', 'agent', 'travelDetails']);
 
         return inertia('PolicyTravel/Edit', [
@@ -81,8 +76,6 @@ final class PoliciesTravelController extends Controller
     #[Authorize('update', 'policy')]
     public function update(UpdatePolicyTravelRequest $request, Policy $policy, UpdatePolicyTravelAction $action): RedirectResponse
     {
-        abort_unless($policy->class === PolicyClass::Travel, 404);
-
         /** @var User $user */
         $user = $request->user();
         $policy = $action->handle($user, $policy, $request->validated());
