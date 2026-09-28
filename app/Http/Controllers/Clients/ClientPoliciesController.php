@@ -8,14 +8,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ClientResource;
 use App\Http\Resources\PolicyResource;
 use App\Models\Client;
-use App\Models\Policy;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
 use Inertia\Response;
 
 final class ClientPoliciesController extends Controller
 {
-    #[Authorize('viewAny', Policy::class)]
-    public function index(Client $client): Response
+    #[Authorize('view', 'client')]
+    public function __invoke(Client $client): Response
     {
         $policies = $client->policies()
             ->with(['client', 'carrier'])

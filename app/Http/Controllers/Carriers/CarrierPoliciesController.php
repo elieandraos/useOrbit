@@ -14,7 +14,7 @@ use Inertia\Response;
 final class CarrierPoliciesController extends Controller
 {
     #[Authorize('view', 'carrier')]
-    public function index(Carrier $carrier): Response
+    public function __invoke(Carrier $carrier): Response
     {
         $policies = $carrier->policies()
             ->with(['client', 'carrier'])

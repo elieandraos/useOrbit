@@ -15,7 +15,7 @@ use Inertia\Response;
 final class PolicyMembersController extends Controller
 {
     #[Authorize('view', 'policy')]
-    public function index(Policy $policy): Response
+    public function __invoke(Policy $policy): Response
     {
         abort_unless($policy->type === PolicyType::Group, 404);
 

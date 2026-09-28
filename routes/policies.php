@@ -24,7 +24,7 @@ Route::middleware(['auth', 'organization'])->group(function () {
     Route::get('policies/create', [PoliciesController::class, 'create'])->name('policies.create');
     Route::get('policies/export', PoliciesExcelExportController::class)->name('policies.export');
 
-    Route::get('clients/{client:slug}/policies', [ClientPoliciesController::class, 'index'])->name('clients.policies.index');
+    Route::get('clients/{client:slug}/policies', ClientPoliciesController::class)->name('clients.policies.index');
 
     Route::get('policies/medical/create', [PoliciesMedicalController::class, 'create'])->name('policies.medical.create');
     Route::post('policies/medical', [PoliciesMedicalController::class, 'store'])->name('policies.medical.store');
