@@ -24,19 +24,17 @@ final class UpdatePolicyFireAction
         return DB::transaction(function () use ($user, $policy, $attributes): Policy {
             $policy = $this->updatePolicyAction->handle($user, $policy, $attributes);
 
-            $this->updateFireDetails($policy, $attributes);
+            $this->updateFireDetails($policy, $attributes['fire']);
 
             return $policy->fresh();
         });
     }
 
     /**
-     * @param  array{fire: array{property_type: string, floor_area: int, year_built: int|null, street: string, building_floor: string|null, city: string, state_id: int, country_id: int, sum_insured: string}}  $attributes
+     * @param  array{property_type: string, floor_area: int, year_built: int|null, street: string, building_floor: string|null, city: string, state_id: int, country_id: int, sum_insured: string}  $fire
      */
-    private function updateFireDetails(Policy $policy, array $attributes): void
+    private function updateFireDetails(Policy $policy, array $fire): void
     {
-        $fire = $attributes['fire'];
-
         $policy->fireDetails->update([
             'property_type' => $fire['property_type'],
             'floor_area' => $fire['floor_area'],

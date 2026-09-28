@@ -24,19 +24,17 @@ final class UpdatePolicyExpatAction
         return DB::transaction(function () use ($user, $policy, $attributes): Policy {
             $policy = $this->updatePolicyAction->handle($user, $policy, $attributes);
 
-            $this->updateExpatDetails($policy, $attributes);
+            $this->updateExpatDetails($policy, $attributes['expat']);
 
             return $policy->fresh();
         });
     }
 
     /**
-     * @param  array{expat: array{coverage_zone: string, travel_scope: string|null, full_name: string, gender: string, nationality: string, date_of_birth: string, phone: string, country_id: int|null, visa_expiry_date: string|null}}  $attributes
+     * @param  array{coverage_zone: string, travel_scope: string|null, full_name: string, gender: string, nationality: string, date_of_birth: string, phone: string, country_id: int|null, visa_expiry_date: string|null}  $expat
      */
-    private function updateExpatDetails(Policy $policy, array $attributes): void
+    private function updateExpatDetails(Policy $policy, array $expat): void
     {
-        $expat = $attributes['expat'];
-
         $policy->expatDetails->update([
             'coverage_zone' => $expat['coverage_zone'],
             'travel_scope' => $expat['travel_scope'] ?? null,

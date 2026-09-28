@@ -24,19 +24,17 @@ final class UpdatePolicyLifeAction
         return DB::transaction(function () use ($user, $policy, $attributes): Policy {
             $policy = $this->updatePolicyAction->handle($user, $policy, $attributes);
 
-            $this->updateLifeDetails($policy, $attributes);
+            $this->updateLifeDetails($policy, $attributes['life']);
 
             return $policy->fresh();
         });
     }
 
     /**
-     * @param  array{life: array{sum_assured: string, term_years: int, smoker: bool, beneficiaries: string}}  $attributes
+     * @param  array{sum_assured: string, term_years: int, smoker: bool, beneficiaries: string}  $life
      */
-    private function updateLifeDetails(Policy $policy, array $attributes): void
+    private function updateLifeDetails(Policy $policy, array $life): void
     {
-        $life = $attributes['life'];
-
         $policy->lifeDetails->update([
             'sum_assured' => $life['sum_assured'],
             'term_years' => $life['term_years'],

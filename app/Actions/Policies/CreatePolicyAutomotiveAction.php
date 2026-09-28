@@ -25,19 +25,17 @@ final class CreatePolicyAutomotiveAction
         return DB::transaction(function () use ($user, $attributes): Policy {
             $policy = $this->createPolicyAction->handle($user, $attributes);
 
-            $this->createAutomotiveDetails($policy, $attributes);
+            $this->createAutomotiveDetails($policy, $attributes['automotive']);
 
             return $policy;
         });
     }
 
     /**
-     * @param  array{automotive: array{plate_number: string, make: string, model: string, year: int, vin: string|null, color: string|null, valuation_amount: string|null, valuation_source: string|null}}  $attributes
+     * @param  array{plate_number: string, make: string, model: string, year: int, vin: string|null, color: string|null, valuation_amount: string|null, valuation_source: string|null}  $automotive
      */
-    private function createAutomotiveDetails(Policy $policy, array $attributes): void
+    private function createAutomotiveDetails(Policy $policy, array $automotive): void
     {
-        $automotive = $attributes['automotive'];
-
         PolicyAutomotiveDetails::query()->create([
             'policy_id' => $policy->id,
             'plate_number' => $automotive['plate_number'],

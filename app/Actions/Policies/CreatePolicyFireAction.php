@@ -25,19 +25,17 @@ final class CreatePolicyFireAction
         return DB::transaction(function () use ($user, $attributes): Policy {
             $policy = $this->createPolicyAction->handle($user, $attributes);
 
-            $this->createFireDetails($policy, $attributes);
+            $this->createFireDetails($policy, $attributes['fire']);
 
             return $policy;
         });
     }
 
     /**
-     * @param  array{fire: array{property_type: string, floor_area: int, year_built: int|null, street: string, building_floor: string|null, city: string, state_id: int, country_id: int, sum_insured: string}}  $attributes
+     * @param  array{property_type: string, floor_area: int, year_built: int|null, street: string, building_floor: string|null, city: string, state_id: int, country_id: int, sum_insured: string}  $fire
      */
-    private function createFireDetails(Policy $policy, array $attributes): void
+    private function createFireDetails(Policy $policy, array $fire): void
     {
-        $fire = $attributes['fire'];
-
         PolicyFireDetails::query()->create([
             'policy_id' => $policy->id,
             'property_type' => $fire['property_type'],

@@ -26,7 +26,7 @@ final class UpdatePolicyMedicalAction
         return DB::transaction(function () use ($user, $policy, $attributes): Policy {
             $policy = $this->updatePolicyAction->handle($user, $policy, $attributes);
 
-            $this->updateMedicalDetails($policy, $attributes);
+            $this->updateMedicalDetails($policy, $attributes['medical']);
 
             $this->syncPolicyInsuredsAction->handle(
                 $policy,
@@ -38,12 +38,10 @@ final class UpdatePolicyMedicalAction
     }
 
     /**
-     * @param  array{medical: array{coverage_scope: string, class_tier: string, co_insurance: bool, co_insurance_share: string|null, guaranteed_renewable: bool, insured_full_name: string|null, insured_date_of_birth: string|null, insured_gender: string|null, insured_smoker: bool|null, insured_medical_history: string|null}}  $attributes
+     * @param  array{coverage_scope: string, class_tier: string, co_insurance: bool, co_insurance_share: string|null, guaranteed_renewable: bool, insured_full_name: string|null, insured_date_of_birth: string|null, insured_gender: string|null, insured_smoker: bool|null, insured_medical_history: string|null}  $medical
      */
-    private function updateMedicalDetails(Policy $policy, array $attributes): void
+    private function updateMedicalDetails(Policy $policy, array $medical): void
     {
-        $medical = $attributes['medical'];
-
         $policy->medicalDetails->update([
             'coverage_scope' => $medical['coverage_scope'],
             'class_tier' => $medical['class_tier'],

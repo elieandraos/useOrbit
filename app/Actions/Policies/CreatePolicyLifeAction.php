@@ -25,19 +25,17 @@ final class CreatePolicyLifeAction
         return DB::transaction(function () use ($user, $attributes): Policy {
             $policy = $this->createPolicyAction->handle($user, $attributes);
 
-            $this->createLifeDetails($policy, $attributes);
+            $this->createLifeDetails($policy, $attributes['life']);
 
             return $policy;
         });
     }
 
     /**
-     * @param  array{life: array{sum_assured: string, term_years: int, smoker: bool, beneficiaries: string}}  $attributes
+     * @param  array{sum_assured: string, term_years: int, smoker: bool, beneficiaries: string}  $life
      */
-    private function createLifeDetails(Policy $policy, array $attributes): void
+    private function createLifeDetails(Policy $policy, array $life): void
     {
-        $life = $attributes['life'];
-
         PolicyLifeDetails::query()->create([
             'policy_id' => $policy->id,
             'sum_assured' => $life['sum_assured'],

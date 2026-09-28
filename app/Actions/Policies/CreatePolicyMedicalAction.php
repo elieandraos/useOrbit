@@ -27,7 +27,7 @@ final class CreatePolicyMedicalAction
         return DB::transaction(function () use ($user, $attributes): Policy {
             $policy = $this->createPolicyAction->handle($user, $attributes);
 
-            $this->createMedicalDetails($policy, $attributes);
+            $this->createMedicalDetails($policy, $attributes['medical']);
 
             if ($policy->type === PolicyType::Group) {
                 $this->syncPolicyInsuredsAction->handle($policy, $attributes['insureds'] ?? []);
@@ -38,12 +38,10 @@ final class CreatePolicyMedicalAction
     }
 
     /**
-     * @param  array{medical: array{coverage_scope: string, class_tier: string, co_insurance: bool, co_insurance_share: string|null, guaranteed_renewable: bool, insured_full_name: string|null, insured_date_of_birth: string|null, insured_gender: string|null, insured_smoker: bool|null, insured_medical_history: string|null}}  $attributes
+     * @param  array{coverage_scope: string, class_tier: string, co_insurance: bool, co_insurance_share: string|null, guaranteed_renewable: bool, insured_full_name: string|null, insured_date_of_birth: string|null, insured_gender: string|null, insured_smoker: bool|null, insured_medical_history: string|null}  $medical
      */
-    private function createMedicalDetails(Policy $policy, array $attributes): void
+    private function createMedicalDetails(Policy $policy, array $medical): void
     {
-        $medical = $attributes['medical'];
-
         PolicyMedicalDetails::query()->create([
             'policy_id' => $policy->id,
             'coverage_scope' => $medical['coverage_scope'],

@@ -24,19 +24,17 @@ final class UpdatePolicyTravelAction
         return DB::transaction(function () use ($user, $policy, $attributes): Policy {
             $policy = $this->updatePolicyAction->handle($user, $policy, $attributes);
 
-            $this->updateTravelDetails($policy, $attributes);
+            $this->updateTravelDetails($policy, $attributes['travel']);
 
             return $policy->fresh();
         });
     }
 
     /**
-     * @param  array{travel: array{destination: string, trip_start_date: string, trip_end_date: string, travelers: string, coverage_tier: string}}  $attributes
+     * @param  array{destination: string, trip_start_date: string, trip_end_date: string, travelers: string, coverage_tier: string}  $travel
      */
-    private function updateTravelDetails(Policy $policy, array $attributes): void
+    private function updateTravelDetails(Policy $policy, array $travel): void
     {
-        $travel = $attributes['travel'];
-
         $policy->travelDetails->update([
             'destination' => $travel['destination'],
             'trip_start_date' => $travel['trip_start_date'],

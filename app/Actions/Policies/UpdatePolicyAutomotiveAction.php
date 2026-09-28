@@ -24,19 +24,17 @@ final class UpdatePolicyAutomotiveAction
         return DB::transaction(function () use ($user, $policy, $attributes): Policy {
             $policy = $this->updatePolicyAction->handle($user, $policy, $attributes);
 
-            $this->updateAutomotiveDetails($policy, $attributes);
+            $this->updateAutomotiveDetails($policy, $attributes['automotive']);
 
             return $policy->fresh();
         });
     }
 
     /**
-     * @param  array{automotive: array{plate_number: string, make: string, model: string, year: int, vin: string|null, color: string|null, valuation_amount: string|null, valuation_source: string|null}}  $attributes
+     * @param  array{plate_number: string, make: string, model: string, year: int, vin: string|null, color: string|null, valuation_amount: string|null, valuation_source: string|null}  $automotive
      */
-    private function updateAutomotiveDetails(Policy $policy, array $attributes): void
+    private function updateAutomotiveDetails(Policy $policy, array $automotive): void
     {
-        $automotive = $attributes['automotive'];
-
         $policy->automotiveDetails->update([
             'plate_number' => $automotive['plate_number'],
             'make' => $automotive['make'],
