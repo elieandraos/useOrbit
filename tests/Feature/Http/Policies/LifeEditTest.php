@@ -64,3 +64,19 @@ test('authenticated user gets 404 editing a non-life policy', function () {
         ->get(route('policies.life.edit', $policy))
         ->assertNotFound();
 });
+
+test('the edit page offers the canonical subclasses with the stored subclass selected', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->life()->create([
+        'created_by' => $user->id,
+        'subclass' => 'Endowment',
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('policies.life.edit', $policy))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('subclasses', ['Term', 'Whole life', 'Endowment', 'Group life'])
+            ->where('policy.subclass', 'Endowment')
+        );
+});

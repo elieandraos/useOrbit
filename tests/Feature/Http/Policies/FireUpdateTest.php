@@ -26,7 +26,7 @@ function fireUpdatePayload(Client $client, Carrier $carrier, int $stateId, int $
 {
     return [
         'class' => 'fire',
-        'subclass' => 'Standard',
+        'subclass' => 'Building',
         'type' => 'single',
         'client_id' => $client->id,
         'carrier_id' => $carrier->id,
@@ -146,3 +146,33 @@ test('a class field cannot be changed away from fire', function () {
         ->patch(route('policies.fire.update', $policy), $payload)
         ->assertSessionHasErrors(['class']);
 });
+
+test('every canonical fire subclass is accepted', function (string $subclass) {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->fire()->create(['created_by' => $user->id]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    [$stateId, $countryId] = fireUpdateLocationIds();
+
+    $payload = fireUpdatePayload($client, $carrier, $stateId, $countryId);
+    $payload['subclass'] = $subclass;
+
+    $this->actingAs($user)
+        ->patch(route('policies.fire.update', $policy), $payload)
+        ->assertSessionHasNoErrors();
+})->with(['Building', 'Contents', 'Business interruption', 'All risk']);
+
+test('a subclass outside the fire list is rejected', function (string $subclass) {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->fire()->create(['created_by' => $user->id]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    [$stateId, $countryId] = fireUpdateLocationIds();
+
+    $payload = fireUpdatePayload($client, $carrier, $stateId, $countryId);
+    $payload['subclass'] = $subclass;
+
+    $this->actingAs($user)
+        ->patch(route('policies.fire.update', $policy), $payload)
+        ->assertSessionHasErrors(['subclass']);
+})->with(['Standard', 'All Risk']);

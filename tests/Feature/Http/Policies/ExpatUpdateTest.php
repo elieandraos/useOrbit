@@ -14,7 +14,7 @@ function expatUpdatePayload(Client $client, Carrier $carrier, string $coverageZo
 
     return [
         'class' => 'expat',
-        'subclass' => $isInOut ? 'In-Out' : 'In',
+        'subclass' => 'Worldwide',
         'type' => 'single',
         'client_id' => $client->id,
         'carrier_id' => $carrier->id,
@@ -155,3 +155,31 @@ test('an in-out zone policy requires a travel scope', function () {
         ->patch(route('policies.expat.update', $policy), $payload)
         ->assertSessionHasErrors(['expat.travel_scope']);
 });
+
+test('every canonical expat subclass is accepted', function (string $subclass) {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->expat()->create(['created_by' => $user->id]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = expatUpdatePayload($client, $carrier);
+    $payload['subclass'] = $subclass;
+
+    $this->actingAs($user)
+        ->patch(route('policies.expat.update', $policy), $payload)
+        ->assertSessionHasNoErrors();
+})->with(['Worldwide', 'Schengen', 'GCC', 'Student']);
+
+test('a subclass outside the expat list is rejected', function (string $subclass) {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->expat()->create(['created_by' => $user->id]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = expatUpdatePayload($client, $carrier);
+    $payload['subclass'] = $subclass;
+
+    $this->actingAs($user)
+        ->patch(route('policies.expat.update', $policy), $payload)
+        ->assertSessionHasErrors(['subclass']);
+})->with(['In', 'Pilgrim']);

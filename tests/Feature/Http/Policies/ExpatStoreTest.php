@@ -13,7 +13,7 @@ function expatPayload(Client $client, Carrier $carrier, string $coverageZone = '
 
     return [
         'class' => 'expat',
-        'subclass' => $isInOut ? 'In-Out' : 'In',
+        'subclass' => 'Worldwide',
         'type' => 'single',
         'client_id' => $client->id,
         'carrier_id' => $carrier->id,
@@ -128,3 +128,50 @@ test('a carrier belonging to a different organization is rejected', function () 
         ->post(route('policies.expat.store'), expatPayload($client, $otherCarrier))
         ->assertSessionHasErrors(['carrier_id']);
 });
+
+test('every canonical expat subclass is accepted', function (string $subclass) {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = expatPayload($client, $carrier);
+    $payload['subclass'] = $subclass;
+
+    $this->actingAs($user)
+        ->post(route('policies.expat.store'), $payload)
+        ->assertSessionHasNoErrors();
+})->with(['Worldwide', 'Schengen', 'GCC', 'Student']);
+
+test('a subclass outside the expat list is rejected', function (string $subclass) {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = expatPayload($client, $carrier);
+    $payload['subclass'] = $subclass;
+
+    $this->actingAs($user)
+        ->post(route('policies.expat.store'), $payload)
+        ->assertSessionHasErrors(['subclass']);
+})->with(['In', 'Pilgrim']);
+
+test('the subclass and coverage zone are stored independently', function (string $subclass, string $coverageZone) {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = expatPayload($client, $carrier, $coverageZone);
+    $payload['subclass'] = $subclass;
+
+    $this->actingAs($user)
+        ->post(route('policies.expat.store'), $payload)
+        ->assertSessionHasNoErrors();
+
+    $this->assertDatabaseHas('policies', ['subclass' => $subclass]);
+    $this->assertDatabaseHas('policy_expat_details', ['coverage_zone' => $coverageZone]);
+})->with([
+    ['Schengen', 'in'],
+    ['Schengen', 'in_out'],
+    ['Student', 'in'],
+    ['Student', 'in_out'],
+]);

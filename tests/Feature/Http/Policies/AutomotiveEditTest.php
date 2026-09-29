@@ -64,3 +64,19 @@ test('authenticated user gets 404 editing a non-automotive policy', function () 
         ->get(route('policies.automotive.edit', $policy))
         ->assertNotFound();
 });
+
+test('the edit page offers the canonical subclasses with the stored subclass selected', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->automotive()->create([
+        'created_by' => $user->id,
+        'subclass' => 'Compulsory',
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('policies.automotive.edit', $policy))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('subclasses', ['Third Party Liability', 'All Risk', 'Compulsory'])
+            ->where('policy.subclass', 'Compulsory')
+        );
+});

@@ -36,6 +36,23 @@ enum PolicyClass: string
         };
     }
 
+    /**
+     * Get the canonical subclasses this class accepts, spelled exactly as they are stored.
+     *
+     * @return list<string>
+     */
+    public function subclasses(): array
+    {
+        return match ($this) {
+            self::Medical => ['Hospitalization', 'Outpatient', 'Dental', 'Vision', 'Major medical'],
+            self::Automotive => ['Third Party Liability', 'All Risk', 'Compulsory'],
+            self::Expat => ['Worldwide', 'Schengen', 'GCC', 'Student'],
+            self::Life => ['Term', 'Whole life', 'Endowment', 'Group life'],
+            self::Fire => ['Building', 'Contents', 'Business interruption', 'All risk'],
+            self::Travel => ['Schengen', 'Worldwide', 'Student', 'Pilgrim'],
+        };
+    }
+
     public function detailsRelation(): string
     {
         return match ($this) {

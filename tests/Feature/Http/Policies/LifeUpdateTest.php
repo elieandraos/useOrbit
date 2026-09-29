@@ -122,3 +122,31 @@ test('a class field cannot be changed away from life', function () {
         ->patch(route('policies.life.update', $policy), $payload)
         ->assertSessionHasErrors(['class']);
 });
+
+test('every canonical life subclass is accepted', function (string $subclass) {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->life()->create(['created_by' => $user->id]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = lifeUpdatePayload($client, $carrier);
+    $payload['subclass'] = $subclass;
+
+    $this->actingAs($user)
+        ->patch(route('policies.life.update', $policy), $payload)
+        ->assertSessionHasNoErrors();
+})->with(['Term', 'Whole life', 'Endowment', 'Group life']);
+
+test('a subclass outside the life list is rejected', function (string $subclass) {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->life()->create(['created_by' => $user->id]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = lifeUpdatePayload($client, $carrier);
+    $payload['subclass'] = $subclass;
+
+    $this->actingAs($user)
+        ->patch(route('policies.life.update', $policy), $payload)
+        ->assertSessionHasErrors(['subclass']);
+})->with(['Standard', 'Universal life']);

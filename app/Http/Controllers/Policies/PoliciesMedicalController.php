@@ -9,6 +9,7 @@ use App\Actions\Policies\UpdatePolicyMedicalAction;
 use App\Enums\Gender;
 use App\Enums\MedicalClassTier;
 use App\Enums\MedicalCoverageScope;
+use App\Enums\PolicyClass;
 use App\Enums\PolicySource;
 use App\Enums\PolicyStatus;
 use App\Enums\PolicyType;
@@ -105,6 +106,7 @@ final class PoliciesMedicalController extends Controller
             'clients' => ClientResource::collection(Client::query()->orderBy('id')->get()),
             'carriers' => CarrierResource::collection(Carrier::query()->orderBy('name')->get()),
             'agents' => AgentResource::collection(Agent::query()->orderBy('id')->get()),
+            'subclasses' => PolicyClass::Medical->subclasses(),
             'types' => collect(PolicyType::all()),
             'statuses' => collect(PolicyStatus::all()),
             'sources' => collect(PolicySource::all()),

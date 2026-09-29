@@ -14,7 +14,7 @@ function travelAttributes(Client $client, Carrier $carrier): array
     return [
         'policy_number' => null,
         'class' => 'travel',
-        'subclass' => 'Standard',
+        'subclass' => 'Schengen',
         'type' => 'single',
         'client_id' => $client->id,
         'carrier_id' => $carrier->id,

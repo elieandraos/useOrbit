@@ -15,7 +15,7 @@ function singleMedicalAttributes(Client $client, Carrier $carrier): array
     return [
         'policy_number' => null,
         'class' => 'medical',
-        'subclass' => 'In',
+        'subclass' => 'Hospitalization',
         'type' => 'single',
         'client_id' => $client->id,
         'carrier_id' => $carrier->id,
@@ -46,7 +46,7 @@ function groupMedicalAttributes(Client $client, Carrier $carrier): array
     return [
         'policy_number' => null,
         'class' => 'medical',
-        'subclass' => 'In-Out',
+        'subclass' => 'Outpatient',
         'type' => 'group',
         'client_id' => $client->id,
         'carrier_id' => $carrier->id,

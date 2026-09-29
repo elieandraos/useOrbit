@@ -58,6 +58,7 @@ const props = defineProps<{
     clients: EntityOption[];
     carriers: EntityOption[];
     agents: EntityOption[];
+    subclasses: string[];
     types: Option[];
     statuses: Option[];
     sources: Option[];
@@ -71,9 +72,7 @@ const props = defineProps<{
 }>();
 
 const policyNumber = ref(props.policy?.policy_number ?? '');
-const subclass = ref(
-    props.policy?.subclass ?? props.coverageZones[0]?.label ?? '',
-);
+const subclass = ref(props.policy?.subclass ?? props.subclasses[0] ?? '');
 const type = ref(
     props.policy?.type ??
         props.defaults?.type ??
@@ -92,6 +91,9 @@ const status = ref(
 );
 const source = ref(props.policy?.source ?? props.defaults?.source ?? '');
 
+const coverageZone = ref(
+    props.policy?.details.coverage_zone ?? props.coverageZones[0]?.value ?? '',
+);
 const travelScope = ref(props.policy?.details.travel_scope ?? '');
 const fullName = ref(props.policy?.details.full_name ?? '');
 const gender = ref(
@@ -103,13 +105,6 @@ const phone = ref(props.policy?.details.phone ?? '');
 const countryId = ref<number | null>(props.policy?.details.country_id ?? null);
 const visaExpiryDate = ref(props.policy?.details.visa_expiry_date ?? '');
 
-const coverageZone = computed(
-    () =>
-        props.coverageZones.find((zone) => zone.label === subclass.value)
-            ?.value ??
-        props.coverageZones[0]?.value ??
-        '',
-);
 const isInOut = computed(() => coverageZone.value === 'in_out');
 
 const countryOptions = computed<TypeaheadOption[]>(() =>
@@ -127,11 +122,6 @@ const countryOptions = computed<TypeaheadOption[]>(() =>
         class="mx-auto flex w-full max-w-[1100px] flex-col gap-4"
     >
         <input type="hidden" name="class" value="expat" />
-        <input
-            type="hidden"
-            name="expat[coverage_zone]"
-            :value="coverageZone"
-        />
 
         <FormSection
             title="Coverage"
@@ -159,15 +149,41 @@ const countryOptions = computed<TypeaheadOption[]>(() =>
                 <RadioChips
                     v-model="subclass"
                     name="subclass"
-                    :options="coverageZones.map((zone) => zone.label)"
+                    :options="subclasses"
                 />
             </FormField>
         </FormSection>
 
         <FormSection
             title="Expat coverage"
-            subtitle="The person covered by this policy."
+            subtitle="The coverage zone and the person covered by this policy."
         >
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <FormField
+                    label="Coverage zone"
+                    required
+                    :error="errors['expat.coverage_zone']"
+                >
+                    <RadioChips
+                        v-model="coverageZone"
+                        name="expat[coverage_zone]"
+                        :options="coverageZones"
+                    />
+                </FormField>
+                <FormField
+                    v-if="isInOut"
+                    label="Travel scope"
+                    for="expat_travel_scope"
+                    required
+                    :error="errors['expat.travel_scope']"
+                >
+                    <Input
+                        id="expat_travel_scope"
+                        v-model="travelScope"
+                        name="expat[travel_scope]"
+                    />
+                </FormField>
+            </div>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormField
                     label="Full name"
@@ -251,19 +267,6 @@ const countryOptions = computed<TypeaheadOption[]>(() =>
                 <DateInput
                     v-model="visaExpiryDate"
                     name="expat[visa_expiry_date]"
-                />
-            </FormField>
-            <FormField
-                v-if="isInOut"
-                label="Travel scope"
-                for="expat_travel_scope"
-                required
-                :error="errors['expat.travel_scope']"
-            >
-                <Input
-                    id="expat_travel_scope"
-                    v-model="travelScope"
-                    name="expat[travel_scope]"
                 />
             </FormField>
         </FormSection>

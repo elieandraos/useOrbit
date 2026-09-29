@@ -62,8 +62,8 @@ test('search matches policy number', function () {
 
 test('search matches subclass', function () {
     /** @var Policy $match */
-    $match = Policy::factory()->create(['subclass' => 'Whole Life']);
-    Policy::factory()->create(['subclass' => 'Term']);
+    $match = Policy::factory()->create(['class' => 'life', 'subclass' => 'Whole life']);
+    Policy::factory()->create(['class' => 'life', 'subclass' => 'Term']);
 
     /** @noinspection PhpUndefinedMethodInspection */
     $policies = Policy::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new PolicyFilter(['search' => 'Whole']))->get();
@@ -72,7 +72,7 @@ test('search matches subclass', function () {
 });
 
 test('search excludes non-matching policies', function () {
-    Policy::factory()->create(['policy_number' => 'POL-1000', 'subclass' => 'Term']);
+    Policy::factory()->create(['policy_number' => 'POL-1000', 'class' => 'life', 'subclass' => 'Term']);
 
     /** @noinspection PhpUndefinedMethodInspection */
     $policies = Policy::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new PolicyFilter(['search' => 'nonexistent']))->get();

@@ -27,7 +27,6 @@ class PolicyInsuredFactory extends Factory
         return [
             'policy_id' => Policy::factory()->state(fn (): array => [
                 'class' => PolicyClass::Medical->value,
-                'subclass' => 'In',
             ]),
             'member_code' => 'MBR-'.fake()->unique()->numerify('###'),
             'full_name' => fake()->name($gender->value),

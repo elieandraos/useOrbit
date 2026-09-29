@@ -64,3 +64,19 @@ test('authenticated user gets 404 editing a non-medical policy', function () {
         ->get(route('policies.medical.edit', $policy))
         ->assertNotFound();
 });
+
+test('the edit page offers the canonical subclasses with the stored subclass selected', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->medical()->create([
+        'created_by' => $user->id,
+        'subclass' => 'Dental',
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('policies.medical.edit', $policy))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('subclasses', ['Hospitalization', 'Outpatient', 'Dental', 'Vision', 'Major medical'])
+            ->where('policy.subclass', 'Dental')
+        );
+});

@@ -21,7 +21,7 @@ class PolicyAutomotiveDetailsFactory extends Factory
      */
     public function definition(): array
     {
-        $subclass = fake()->randomElement(['Third Party Liability', 'All Risk']);
+        $subclass = fake()->randomElement(PolicyClass::Automotive->subclasses());
         $isAllRisk = $subclass === 'All Risk';
 
         return [

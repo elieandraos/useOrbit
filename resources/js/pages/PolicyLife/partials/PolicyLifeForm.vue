@@ -47,6 +47,7 @@ const props = defineProps<{
     clients: EntityOption[];
     carriers: EntityOption[];
     agents: EntityOption[];
+    subclasses: string[];
     types: Option[];
     statuses: Option[];
     sources: Option[];
@@ -56,15 +57,13 @@ const props = defineProps<{
     submitLabel: string;
 }>();
 
-const SUBCLASSES = ['Term', 'Whole life', 'Universal life', 'Endowment'];
-
 const yesNo: Option[] = [
     { label: 'Yes', value: '1' },
     { label: 'No', value: '0' },
 ];
 
 const policyNumber = ref(props.policy?.policy_number ?? '');
-const subclass = ref(props.policy?.subclass ?? SUBCLASSES[0]);
+const subclass = ref(props.policy?.subclass ?? props.subclasses[0] ?? '');
 const type = ref(
     props.policy?.type ??
         props.defaults?.type ??
@@ -127,7 +126,7 @@ const beneficiaries = ref(props.policy?.details.beneficiaries ?? '');
                 <RadioChips
                     v-model="subclass"
                     name="subclass"
-                    :options="SUBCLASSES"
+                    :options="subclasses"
                 />
             </FormField>
         </FormSection>

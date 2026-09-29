@@ -8,6 +8,7 @@ use App\Actions\Policies\CreatePolicyExpatAction;
 use App\Actions\Policies\UpdatePolicyExpatAction;
 use App\Enums\ExpatCoverageZone;
 use App\Enums\Gender;
+use App\Enums\PolicyClass;
 use App\Enums\PolicySource;
 use App\Enums\PolicyStatus;
 use App\Enums\PolicyType;
@@ -98,6 +99,7 @@ final class PoliciesExpatController extends Controller
             'clients' => ClientResource::collection(Client::query()->orderBy('id')->get()),
             'carriers' => CarrierResource::collection(Carrier::query()->orderBy('name')->get()),
             'agents' => AgentResource::collection(Agent::query()->orderBy('id')->get()),
+            'subclasses' => PolicyClass::Expat->subclasses(),
             'types' => collect(PolicyType::all()),
             'statuses' => collect(PolicyStatus::all()),
             'sources' => collect(PolicySource::all()),

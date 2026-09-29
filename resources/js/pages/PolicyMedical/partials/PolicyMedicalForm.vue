@@ -62,6 +62,7 @@ const props = defineProps<{
     clients: EntityOption[];
     carriers: EntityOption[];
     agents: EntityOption[];
+    subclasses: string[];
     types: Option[];
     statuses: Option[];
     sources: Option[];
@@ -74,16 +75,8 @@ const props = defineProps<{
     submitLabel: string;
 }>();
 
-const SUBCLASSES = [
-    'Hospitalization',
-    'Outpatient',
-    'Dental',
-    'Vision',
-    'Major medical',
-];
-
 const policyNumber = ref(props.policy?.policy_number ?? '');
-const subclass = ref(props.policy?.subclass ?? SUBCLASSES[0]);
+const subclass = ref(props.policy?.subclass ?? props.subclasses[0] ?? '');
 const type = ref(
     props.policy?.type ??
         props.defaults?.type ??
@@ -208,7 +201,7 @@ const yesNo: Option[] = [
                 <RadioChips
                     v-model="subclass"
                     name="subclass"
-                    :options="SUBCLASSES"
+                    :options="subclasses"
                 />
             </FormField>
         </FormSection>
