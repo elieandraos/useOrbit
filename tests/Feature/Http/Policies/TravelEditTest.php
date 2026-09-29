@@ -64,3 +64,19 @@ test('authenticated user gets 404 editing a non-travel policy', function () {
         ->get(route('policies.travel.edit', $policy))
         ->assertNotFound();
 });
+
+test('the edit page offers the canonical subclasses with the stored subclass selected', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->travel()->create([
+        'created_by' => $user->id,
+        'subclass' => 'Pilgrim',
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('policies.travel.edit', $policy))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('subclasses', ['Schengen', 'Worldwide', 'Student', 'Pilgrim'])
+            ->where('policy.subclass', 'Pilgrim')
+        );
+});

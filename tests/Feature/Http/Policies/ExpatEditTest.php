@@ -64,3 +64,19 @@ test('authenticated user gets 404 editing a non-expat policy', function () {
         ->get(route('policies.expat.edit', $policy))
         ->assertNotFound();
 });
+
+test('the edit page offers the canonical subclasses with the stored subclass selected', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->expat()->create([
+        'created_by' => $user->id,
+        'subclass' => 'GCC',
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('policies.expat.edit', $policy))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('subclasses', ['Worldwide', 'Schengen', 'GCC', 'Student'])
+            ->where('policy.subclass', 'GCC')
+        );
+});

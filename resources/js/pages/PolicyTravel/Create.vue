@@ -20,6 +20,7 @@ defineProps<{
     clients: EntityOption[];
     carriers: EntityOption[];
     agents: EntityOption[];
+    subclasses: string[];
     types: Option[];
     statuses: Option[];
     sources: Option[];
@@ -63,6 +64,7 @@ defineOptions({
             :clients="clients"
             :carriers="carriers"
             :agents="agents"
+            :subclasses="subclasses"
             :types="types"
             :statuses="statuses"
             :sources="sources"
