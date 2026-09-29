@@ -15,3 +15,15 @@ test('the create page offers the canonical automotive subclasses', function () {
             ->where('subclasses', ['Third Party Liability', 'All Risk', 'Compulsory'])
         );
 });
+
+test('the create page receives the shared and automotive form options', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('policies.automotive.create'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('PolicyAutomotive/Create')
+            ->hasAll(['clients', 'carriers', 'agents', 'types', 'statuses', 'sources', 'subclasses'])
+        );
+});

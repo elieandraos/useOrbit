@@ -7,23 +7,15 @@ namespace App\Http\Controllers\Policies;
 use App\Actions\Policies\CreatePolicyFireAction;
 use App\Actions\Policies\UpdatePolicyFireAction;
 use App\Enums\PolicyClass;
-use App\Enums\PolicySource;
-use App\Enums\PolicyStatus;
-use App\Enums\PolicyType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Policies\StorePolicyFireRequest;
 use App\Http\Requests\Policies\UpdatePolicyFireRequest;
-use App\Http\Resources\AgentResource;
-use App\Http\Resources\CarrierResource;
-use App\Http\Resources\ClientResource;
 use App\Http\Resources\CountryResource;
 use App\Http\Resources\PolicyFireResource;
-use App\Models\Agent;
-use App\Models\Carrier;
-use App\Models\Client;
 use App\Models\Country;
 use App\Models\Policy;
 use App\Models\User;
+use App\Support\Policies\PolicyFormOptions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
 use Inertia\Inertia;
@@ -31,6 +23,8 @@ use Inertia\Response;
 
 final class PoliciesFireController extends Controller
 {
+    public function __construct(private readonly PolicyFormOptions $policyFormOptions) {}
+
     #[Authorize('create', Policy::class)]
     public function create(): Response
     {
@@ -94,13 +88,8 @@ final class PoliciesFireController extends Controller
     private function formOptions(): array
     {
         return [
-            'clients' => ClientResource::collection(Client::query()->orderBy('id')->get()),
-            'carriers' => CarrierResource::collection(Carrier::query()->orderBy('name')->get()),
-            'agents' => AgentResource::collection(Agent::query()->orderBy('id')->get()),
+            ...$this->policyFormOptions->shared(),
             'subclasses' => PolicyClass::Fire->subclasses(),
-            'types' => collect(PolicyType::all()),
-            'statuses' => collect(PolicyStatus::all()),
-            'sources' => collect(PolicySource::all()),
             'countries' => CountryResource::collection(Country::query()->orderBy('name')->get()),
         ];
     }

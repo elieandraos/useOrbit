@@ -80,3 +80,16 @@ test('the edit page offers the canonical subclasses with the stored subclass sel
             ->where('policy.subclass', 'GCC')
         );
 });
+
+test('the edit page receives the policy and the shared and expat form options', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->expat()->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->get(route('policies.expat.edit', $policy))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('PolicyExpat/Edit')
+            ->hasAll(['policy', 'clients', 'carriers', 'agents', 'types', 'statuses', 'sources', 'subclasses', 'coverageZones', 'genders', 'countries'])
+        );
+});
