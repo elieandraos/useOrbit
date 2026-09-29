@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\PolicyClass;
 use App\Exports\PoliciesExport;
 use App\Models\Organization;
 use App\Models\Policy;
@@ -61,6 +62,24 @@ test('a filter query param narrows the exported rows to matching policies', func
 
     Excel::assertDownloaded('policies.xlsx', function (PoliciesExport $export) use ($match) {
         return $export->query()->pluck('id')->all() === [$match->id];
+    });
+});
+
+test('a class[] filter narrows the exported rows to any of the selected classes', function () {
+    Excel::fake();
+
+    $user = User::factory()->withOrganization()->create();
+
+    /** @var Policy $fire */
+    $fire = Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'class' => PolicyClass::Fire]);
+    Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'class' => PolicyClass::Travel]);
+
+    $this->actingAs($user)
+        ->get(route('policies.export', ['class' => [PolicyClass::Fire->value]]))
+        ->assertOk();
+
+    Excel::assertDownloaded('policies.xlsx', function (PoliciesExport $export) use ($fire) {
+        return $export->query()->pluck('id')->all() === [$fire->id];
     });
 });
 
