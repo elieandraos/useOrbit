@@ -47,7 +47,7 @@ final class StorePolicyMedicalRequest extends FormRequest
             'medical.insured_smoker' => ['required_if:type,'.PolicyType::Single->value, 'prohibited_unless:type,'.PolicyType::Single->value, 'nullable', 'boolean'],
             'medical.insured_medical_history' => ['nullable', 'string'],
 
-            'insureds' => ['required_if:type,'.PolicyType::Group->value, 'prohibited_unless:type,'.PolicyType::Group->value, 'array'],
+            'insureds' => ['required_if:type,'.PolicyType::Group->value, 'prohibited_unless:type,'.PolicyType::Group->value, 'array', 'min:1'],
             'insureds.*.full_name' => ['required', 'string', 'max:255'],
             'insureds.*.relationship' => ['required', 'string', 'max:20'],
             'insureds.*.date_of_birth' => ['required', 'date'],

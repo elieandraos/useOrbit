@@ -434,6 +434,10 @@ const yesNo: Option[] = [
                 </FormField>
             </div>
 
+            <p v-if="errors.insureds" class="text-xs text-danger">
+                {{ errors.insureds }}
+            </p>
+
             <Button type="button" variant="secondary" @click="addRow"
                 >Add covered member</Button
             >
