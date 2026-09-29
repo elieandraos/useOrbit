@@ -30,7 +30,6 @@ class PolicyMedicalDetailsFactory extends Factory
         return [
             'policy_id' => Policy::factory()->state(fn (): array => [
                 'class' => PolicyClass::Medical->value,
-                'subclass' => fake()->randomElement(['In', 'In-Out']),
             ]),
             'coverage_scope' => fake()->randomElement(MedicalCoverageScope::cases())->value,
             'class_tier' => fake()->randomElement(MedicalClassTier::cases())->value,

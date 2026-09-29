@@ -6,6 +6,7 @@ use App\Actions\Policies\UpdatePolicyExpatAction;
 use App\Models\Carrier;
 use App\Models\Client;
 use App\Models\Policy;
+use App\Models\PolicyExpatDetails;
 use App\Models\User;
 use Illuminate\Database\QueryException;
 
@@ -16,7 +17,7 @@ function expatUpdateAttributes(Client $client, Carrier $carrier, string $coverag
     return [
         'policy_number' => null,
         'class' => 'expat',
-        'subclass' => $isInOut ? 'In-Out' : 'In',
+        'subclass' => 'Worldwide',
         'type' => 'single',
         'client_id' => $client->id,
         'carrier_id' => $carrier->id,
@@ -63,9 +64,15 @@ test('switching to the in-out zone populates the travel scope and visa expiry', 
     setOrganizationContext($user);
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
-    $policy = Policy::factory()->forOrganization($user)->expat()->create([
+    $policy = Policy::factory()->forOrganization($user)->create([
         'created_by' => $user->id,
-        'subclass' => 'In',
+        'class' => 'expat',
+        'subclass' => 'Worldwide',
+    ]);
+    PolicyExpatDetails::factory()->for($policy)->create([
+        'coverage_zone' => 'in',
+        'travel_scope' => null,
+        'visa_expiry_date' => null,
     ]);
 
     /** @noinspection PhpUnhandledExceptionInspection */

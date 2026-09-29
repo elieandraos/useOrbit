@@ -27,7 +27,6 @@ class PolicyTravelDetailsFactory extends Factory
         return [
             'policy_id' => Policy::factory()->state(fn (): array => [
                 'class' => PolicyClass::Travel->value,
-                'subclass' => 'Standard',
             ]),
             'destination' => fake()->country(),
             'trip_start_date' => $tripStartDate->format('Y-m-d'),

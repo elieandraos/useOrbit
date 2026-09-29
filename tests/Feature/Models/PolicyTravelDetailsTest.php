@@ -14,7 +14,7 @@ test('travel creates a policy with a correctly linked travel detail row', functi
 
     expect($policy->travelDetails)->toBeInstanceOf(PolicyTravelDetails::class)
         ->and($policy->travelDetails->policy_id)->toBe($policy->id)
-        ->and($policy->travelDetails->coverage_tier)->toBe($policy->subclass)
+        ->and($policy->travelDetails->coverage_tier)->toBeIn(['Basic', 'Standard', 'Premium'])
         ->and($policy->travelDetails->travelers)->toBeString();
 });
 

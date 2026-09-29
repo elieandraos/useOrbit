@@ -35,7 +35,6 @@ class PolicyFireDetailsFactory extends Factory
         return [
             'policy_id' => Policy::factory()->state(fn (): array => [
                 'class' => PolicyClass::Fire->value,
-                'subclass' => 'Standard',
             ]),
             'property_type' => fake()->randomElement(['Residential apartment', 'Commercial building', 'Warehouse', 'Industrial facility']),
             'floor_area' => fake()->numberBetween(60, 500),
