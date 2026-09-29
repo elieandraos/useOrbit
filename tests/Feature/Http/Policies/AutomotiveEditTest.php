@@ -80,3 +80,16 @@ test('the edit page offers the canonical subclasses with the stored subclass sel
             ->where('policy.subclass', 'Compulsory')
         );
 });
+
+test('the edit page receives the policy and the shared and automotive form options', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->automotive()->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->get(route('policies.automotive.edit', $policy))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('PolicyAutomotive/Edit')
+            ->hasAll(['policy', 'clients', 'carriers', 'agents', 'types', 'statuses', 'sources', 'subclasses'])
+        );
+});

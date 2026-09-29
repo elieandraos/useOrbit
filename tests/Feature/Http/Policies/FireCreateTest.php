@@ -15,3 +15,15 @@ test('the create page offers the canonical fire subclasses', function () {
             ->where('subclasses', ['Building', 'Contents', 'Business interruption', 'All risk'])
         );
 });
+
+test('the create page receives the shared and fire form options', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('policies.fire.create'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('PolicyFire/Create')
+            ->hasAll(['clients', 'carriers', 'agents', 'types', 'statuses', 'sources', 'subclasses', 'countries'])
+        );
+});

@@ -80,3 +80,16 @@ test('the edit page offers the canonical subclasses with the stored subclass sel
             ->where('policy.subclass', 'Endowment')
         );
 });
+
+test('the edit page receives the policy and the shared and life form options', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->life()->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->get(route('policies.life.edit', $policy))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('PolicyLife/Edit')
+            ->hasAll(['policy', 'clients', 'carriers', 'agents', 'types', 'statuses', 'sources', 'subclasses'])
+        );
+});

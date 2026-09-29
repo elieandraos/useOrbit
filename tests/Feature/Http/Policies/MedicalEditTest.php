@@ -80,3 +80,16 @@ test('the edit page offers the canonical subclasses with the stored subclass sel
             ->where('policy.subclass', 'Dental')
         );
 });
+
+test('the edit page receives the policy and the shared and medical form options', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->medical()->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->get(route('policies.medical.edit', $policy))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('PolicyMedical/Edit')
+            ->hasAll(['policy', 'clients', 'carriers', 'agents', 'types', 'statuses', 'sources', 'subclasses', 'coverageScopes', 'classTiers', 'genders'])
+        );
+});
