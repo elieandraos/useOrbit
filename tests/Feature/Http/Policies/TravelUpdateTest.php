@@ -12,7 +12,7 @@ function travelUpdatePayload(Client $client, Carrier $carrier): array
 {
     return [
         'class' => 'travel',
-        'subclass' => 'Premium',
+        'subclass' => 'Worldwide',
         'type' => 'single',
         'client_id' => $client->id,
         'carrier_id' => $carrier->id,
@@ -123,3 +123,31 @@ test('a class field cannot be changed away from travel', function () {
         ->patch(route('policies.travel.update', $policy), $payload)
         ->assertSessionHasErrors(['class']);
 });
+
+test('every canonical travel subclass is accepted', function (string $subclass) {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->travel()->create(['created_by' => $user->id]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = travelUpdatePayload($client, $carrier);
+    $payload['subclass'] = $subclass;
+
+    $this->actingAs($user)
+        ->patch(route('policies.travel.update', $policy), $payload)
+        ->assertSessionHasNoErrors();
+})->with(['Schengen', 'Worldwide', 'Student', 'Pilgrim']);
+
+test('a subclass outside the travel list is rejected', function (string $subclass) {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->travel()->create(['created_by' => $user->id]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = travelUpdatePayload($client, $carrier);
+    $payload['subclass'] = $subclass;
+
+    $this->actingAs($user)
+        ->patch(route('policies.travel.update', $policy), $payload)
+        ->assertSessionHasErrors(['subclass']);
+})->with(['Premium', 'GCC']);

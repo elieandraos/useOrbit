@@ -155,3 +155,44 @@ test('an all risk policy requires a vehicle valuation', function () {
         ->patch(route('policies.automotive.update', $policy), $payload)
         ->assertSessionHasErrors(['automotive.valuation_amount', 'automotive.valuation_source']);
 });
+
+test('every canonical automotive subclass is accepted', function (string $subclass) {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->automotive()->create(['created_by' => $user->id]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = automotiveUpdatePayload($client, $carrier, $subclass);
+
+    $this->actingAs($user)
+        ->patch(route('policies.automotive.update', $policy), $payload)
+        ->assertSessionHasNoErrors();
+})->with(['Third Party Liability', 'All Risk', 'Compulsory']);
+
+test('a subclass outside the automotive list is rejected', function (string $subclass) {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->automotive()->create(['created_by' => $user->id]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = automotiveUpdatePayload($client, $carrier, $subclass);
+
+    $this->actingAs($user)
+        ->patch(route('policies.automotive.update', $policy), $payload)
+        ->assertSessionHasErrors(['subclass']);
+})->with(['Third party liability', 'Dental']);
+
+test('a compulsory policy prohibits a vehicle valuation', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->automotive()->create(['created_by' => $user->id]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = automotiveUpdatePayload($client, $carrier, 'Compulsory');
+    $payload['automotive']['valuation_amount'] = '10000.00';
+    $payload['automotive']['valuation_source'] = 'Market value';
+
+    $this->actingAs($user)
+        ->patch(route('policies.automotive.update', $policy), $payload)
+        ->assertSessionHasErrors(['automotive.valuation_amount', 'automotive.valuation_source']);
+});

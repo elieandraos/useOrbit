@@ -13,7 +13,7 @@ function singleUpdatePayload(Client $client, Carrier $carrier): array
 {
     return [
         'class' => 'medical',
-        'subclass' => 'In',
+        'subclass' => 'Hospitalization',
         'type' => 'single',
         'client_id' => $client->id,
         'carrier_id' => $carrier->id,
@@ -38,7 +38,7 @@ function groupUpdatePayload(Client $client, Carrier $carrier, array $insureds = 
 {
     return [
         'class' => 'medical',
-        'subclass' => 'In-Out',
+        'subclass' => 'Outpatient',
         'type' => 'group',
         'client_id' => $client->id,
         'carrier_id' => $carrier->id,
@@ -234,3 +234,31 @@ test('a co_insurance_share is prohibited when co_insurance is false', function (
         ->patch(route('policies.medical.update', $policy), $payload)
         ->assertSessionHasErrors(['medical.co_insurance_share']);
 });
+
+test('every canonical medical subclass is accepted', function (string $subclass) {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->medical()->create(['created_by' => $user->id, 'type' => 'single']);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = singleUpdatePayload($client, $carrier);
+    $payload['subclass'] = $subclass;
+
+    $this->actingAs($user)
+        ->patch(route('policies.medical.update', $policy), $payload)
+        ->assertSessionHasNoErrors();
+})->with(['Hospitalization', 'Outpatient', 'Dental', 'Vision', 'Major medical']);
+
+test('a subclass outside the medical list is rejected', function (string $subclass) {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->medical()->create(['created_by' => $user->id, 'type' => 'single']);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = singleUpdatePayload($client, $carrier);
+    $payload['subclass'] = $subclass;
+
+    $this->actingAs($user)
+        ->patch(route('policies.medical.update', $policy), $payload)
+        ->assertSessionHasErrors(['subclass']);
+})->with(['In-Out', 'Term']);

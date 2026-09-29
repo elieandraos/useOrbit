@@ -30,7 +30,7 @@ trait PolicyValidationRules
         return [
             'policy_number' => ['nullable', 'string', 'max:50'],
             'class' => ['required', Rule::in([$policyClass->value])],
-            'subclass' => ['required', 'string', 'max:50'],
+            'subclass' => ['required', 'string', Rule::in($policyClass->subclasses())],
             'type' => ['required', new Enum(PolicyType::class)],
             'client_id' => ['required', 'integer', Rule::exists('clients', 'id')->where('organization_id', $organizationId)],
             'carrier_id' => ['required', 'integer', Rule::exists('carriers', 'id')->where('organization_id', $organizationId)],

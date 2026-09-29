@@ -15,7 +15,7 @@ function inZoneExpatAttributes(Client $client, Carrier $carrier, ?int $countryId
     return [
         'policy_number' => null,
         'class' => 'expat',
-        'subclass' => 'In',
+        'subclass' => 'Worldwide',
         'type' => 'single',
         'client_id' => $client->id,
         'carrier_id' => $carrier->id,
@@ -45,7 +45,7 @@ function inOutZoneExpatAttributes(Client $client, Carrier $carrier, ?int $countr
     return [
         'policy_number' => null,
         'class' => 'expat',
-        'subclass' => 'In-Out',
+        'subclass' => 'Student',
         'type' => 'single',
         'client_id' => $client->id,
         'carrier_id' => $carrier->id,

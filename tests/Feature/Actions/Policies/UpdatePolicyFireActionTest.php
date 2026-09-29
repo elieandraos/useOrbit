@@ -16,7 +16,7 @@ function fireUpdateAttributes(Client $client, Carrier $carrier, int $stateId, in
     return [
         'policy_number' => null,
         'class' => 'fire',
-        'subclass' => 'Standard',
+        'subclass' => 'Building',
         'type' => 'single',
         'client_id' => $client->id,
         'carrier_id' => $carrier->id,

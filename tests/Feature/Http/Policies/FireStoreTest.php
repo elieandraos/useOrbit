@@ -25,7 +25,7 @@ function firePayload(Client $client, Carrier $carrier, int $stateId, int $countr
 {
     return [
         'class' => 'fire',
-        'subclass' => 'Standard',
+        'subclass' => 'Building',
         'type' => 'single',
         'client_id' => $client->id,
         'carrier_id' => $carrier->id,
@@ -164,3 +164,31 @@ test('no insureds are created for a fire policy', function () {
 
     $this->assertDatabaseCount('policy_insureds', 0);
 });
+
+test('every canonical fire subclass is accepted', function (string $subclass) {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    [$stateId, $countryId] = fireLocationIds();
+
+    $payload = firePayload($client, $carrier, $stateId, $countryId);
+    $payload['subclass'] = $subclass;
+
+    $this->actingAs($user)
+        ->post(route('policies.fire.store'), $payload)
+        ->assertSessionHasNoErrors();
+})->with(['Building', 'Contents', 'Business interruption', 'All risk']);
+
+test('a subclass outside the fire list is rejected', function (string $subclass) {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    [$stateId, $countryId] = fireLocationIds();
+
+    $payload = firePayload($client, $carrier, $stateId, $countryId);
+    $payload['subclass'] = $subclass;
+
+    $this->actingAs($user)
+        ->post(route('policies.fire.store'), $payload)
+        ->assertSessionHasErrors(['subclass']);
+})->with(['Standard', 'All Risk']);

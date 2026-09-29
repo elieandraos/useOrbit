@@ -128,3 +128,41 @@ test('a carrier belonging to a different organization is rejected', function () 
         ->post(route('policies.automotive.store'), automotivePayload($client, $otherCarrier))
         ->assertSessionHasErrors(['carrier_id']);
 });
+
+test('every canonical automotive subclass is accepted', function (string $subclass) {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = automotivePayload($client, $carrier, $subclass);
+
+    $this->actingAs($user)
+        ->post(route('policies.automotive.store'), $payload)
+        ->assertSessionHasNoErrors();
+})->with(['Third Party Liability', 'All Risk', 'Compulsory']);
+
+test('a subclass outside the automotive list is rejected', function (string $subclass) {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = automotivePayload($client, $carrier, $subclass);
+
+    $this->actingAs($user)
+        ->post(route('policies.automotive.store'), $payload)
+        ->assertSessionHasErrors(['subclass']);
+})->with(['Third party liability', 'Dental']);
+
+test('a compulsory policy prohibits a vehicle valuation', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = automotivePayload($client, $carrier, 'Compulsory');
+    $payload['automotive']['valuation_amount'] = '10000.00';
+    $payload['automotive']['valuation_source'] = 'Market value';
+
+    $this->actingAs($user)
+        ->post(route('policies.automotive.store'), $payload)
+        ->assertSessionHasErrors(['automotive.valuation_amount', 'automotive.valuation_source']);
+});

@@ -86,3 +86,29 @@ test('a carrier belonging to a different organization is rejected', function () 
         ->post(route('policies.life.store'), lifePayload($client, $otherCarrier))
         ->assertSessionHasErrors(['carrier_id']);
 });
+
+test('every canonical life subclass is accepted', function (string $subclass) {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = lifePayload($client, $carrier);
+    $payload['subclass'] = $subclass;
+
+    $this->actingAs($user)
+        ->post(route('policies.life.store'), $payload)
+        ->assertSessionHasNoErrors();
+})->with(['Term', 'Whole life', 'Endowment', 'Group life']);
+
+test('a subclass outside the life list is rejected', function (string $subclass) {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = lifePayload($client, $carrier);
+    $payload['subclass'] = $subclass;
+
+    $this->actingAs($user)
+        ->post(route('policies.life.store'), $payload)
+        ->assertSessionHasErrors(['subclass']);
+})->with(['Standard', 'Universal life']);
