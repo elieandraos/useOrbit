@@ -7,27 +7,7 @@ use App\Models\Client;
 use App\Models\Organization;
 use App\Models\Policy;
 use App\Models\User;
-
-function lifeUpdatePayload(Client $client, Carrier $carrier): array
-{
-    return [
-        'class' => 'life',
-        'subclass' => 'Term',
-        'type' => 'single',
-        'client_id' => $client->id,
-        'carrier_id' => $carrier->id,
-        'effective_date' => '2026-01-01',
-        'expiry_date' => '2027-01-01',
-        'premium_amount' => '700.00',
-        'source' => 'client',
-        'life' => [
-            'sum_assured' => '200000.00',
-            'term_years' => 15,
-            'smoker' => true,
-            'beneficiaries' => 'John Smith (100%)',
-        ],
-    ];
-}
+use Tests\Support\PolicyPayload;
 
 test('guests are redirected to the login page', function () {
     $policy = Policy::factory()->life()->create();
@@ -44,7 +24,7 @@ test('a user gets 404 updating a policy from another organization', function () 
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
     $this->actingAs($user)
-        ->patch(route('policies.life.update', $policy), lifeUpdatePayload($client, $carrier))
+        ->patch(route('policies.life.update', $policy), PolicyPayload::life($client, $carrier))
         ->assertNotFound();
 });
 
@@ -55,7 +35,7 @@ test('a user gets 404 updating a non-life policy', function () {
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
     $this->actingAs($user)
-        ->patch(route('policies.life.update', $policy), lifeUpdatePayload($client, $carrier))
+        ->patch(route('policies.life.update', $policy), PolicyPayload::life($client, $carrier))
         ->assertNotFound();
 });
 
@@ -84,7 +64,7 @@ test('update redirects to policies.life.show with a toast on success', function 
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
     $this->actingAs($user)
-        ->patch(route('policies.life.update', $policy), lifeUpdatePayload($client, $carrier))
+        ->patch(route('policies.life.update', $policy), PolicyPayload::life($client, $carrier))
         ->assertRedirect(route('policies.life.show', $policy->fresh()))
         ->assertHasInertiaFlash('success', 'Policy updated.');
 });
@@ -96,7 +76,9 @@ test('update wires the submitted client and carrier onto the policy', function (
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
     $this->actingAs($user)
-        ->patch(route('policies.life.update', $policy), lifeUpdatePayload($client, $carrier));
+        ->patch(route('policies.life.update', $policy), PolicyPayload::life($client, $carrier, [
+            'life' => ['sum_assured' => '200000.00'],
+        ]));
 
     $this->assertDatabaseHas('policies', [
         'id' => $policy->id,
@@ -115,8 +97,7 @@ test('a class field cannot be changed away from life', function () {
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = lifeUpdatePayload($client, $carrier);
-    $payload['class'] = 'medical';
+    $payload = PolicyPayload::life($client, $carrier, ['class' => 'medical']);
 
     $this->actingAs($user)
         ->patch(route('policies.life.update', $policy), $payload)
@@ -129,8 +110,7 @@ test('every canonical life subclass is accepted', function (string $subclass) {
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = lifeUpdatePayload($client, $carrier);
-    $payload['subclass'] = $subclass;
+    $payload = PolicyPayload::life($client, $carrier, ['subclass' => $subclass]);
 
     $this->actingAs($user)
         ->patch(route('policies.life.update', $policy), $payload)
@@ -143,8 +123,7 @@ test('a subclass outside the life list is rejected', function (string $subclass)
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = lifeUpdatePayload($client, $carrier);
-    $payload['subclass'] = $subclass;
+    $payload = PolicyPayload::life($client, $carrier, ['subclass' => $subclass]);
 
     $this->actingAs($user)
         ->patch(route('policies.life.update', $policy), $payload)

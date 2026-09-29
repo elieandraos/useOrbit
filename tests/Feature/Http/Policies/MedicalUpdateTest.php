@@ -8,53 +8,8 @@ use App\Models\Organization;
 use App\Models\Policy;
 use App\Models\PolicyInsured;
 use App\Models\User;
-
-function singleUpdatePayload(Client $client, Carrier $carrier): array
-{
-    return [
-        'class' => 'medical',
-        'subclass' => 'Hospitalization',
-        'type' => 'single',
-        'client_id' => $client->id,
-        'carrier_id' => $carrier->id,
-        'effective_date' => '2026-01-01',
-        'expiry_date' => '2027-01-01',
-        'premium_amount' => '1500.00',
-        'source' => 'client',
-        'medical' => [
-            'coverage_scope' => 'in',
-            'class_tier' => 'class_a',
-            'co_insurance' => false,
-            'guaranteed_renewable' => true,
-            'insured_full_name' => 'Amelia Hartwell',
-            'insured_date_of_birth' => '1986-03-22',
-            'insured_gender' => 'female',
-            'insured_smoker' => false,
-        ],
-    ];
-}
-
-function groupUpdatePayload(Client $client, Carrier $carrier, array $insureds = []): array
-{
-    return [
-        'class' => 'medical',
-        'subclass' => 'Outpatient',
-        'type' => 'group',
-        'client_id' => $client->id,
-        'carrier_id' => $carrier->id,
-        'effective_date' => '2026-01-01',
-        'expiry_date' => '2027-01-01',
-        'premium_amount' => '28400.00',
-        'source' => 'owner',
-        'medical' => [
-            'coverage_scope' => 'in_out',
-            'class_tier' => 'class_b',
-            'co_insurance' => false,
-            'guaranteed_renewable' => true,
-        ],
-        'insureds' => $insureds,
-    ];
-}
+use Illuminate\Support\Arr;
+use Tests\Support\PolicyPayload;
 
 test('guests are redirected to the login page', function () {
     $policy = Policy::factory()->medical()->create(['type' => 'single']);
@@ -71,7 +26,7 @@ test('a user gets 404 updating a policy from another organization', function () 
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
     $this->actingAs($user)
-        ->patch(route('policies.medical.update', $policy), singleUpdatePayload($client, $carrier))
+        ->patch(route('policies.medical.update', $policy), PolicyPayload::medicalSingle($client, $carrier))
         ->assertNotFound();
 });
 
@@ -82,7 +37,7 @@ test('a user gets 404 updating a non-medical policy', function () {
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
     $this->actingAs($user)
-        ->patch(route('policies.medical.update', $policy), singleUpdatePayload($client, $carrier))
+        ->patch(route('policies.medical.update', $policy), PolicyPayload::medicalSingle($client, $carrier))
         ->assertNotFound();
 });
 
@@ -111,7 +66,7 @@ test('update redirects to policies.medical.show with a toast on success', functi
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
     $this->actingAs($user)
-        ->patch(route('policies.medical.update', $policy), singleUpdatePayload($client, $carrier))
+        ->patch(route('policies.medical.update', $policy), PolicyPayload::medicalSingle($client, $carrier))
         ->assertRedirect(route('policies.medical.show', $policy->fresh()))
         ->assertHasInertiaFlash('success', 'Policy updated.');
 });
@@ -123,7 +78,7 @@ test('update wires the submitted client and carrier onto the policy', function (
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
     $this->actingAs($user)
-        ->patch(route('policies.medical.update', $policy), singleUpdatePayload($client, $carrier));
+        ->patch(route('policies.medical.update', $policy), PolicyPayload::medicalSingle($client, $carrier));
 
     $this->assertDatabaseHas('policies', [
         'id' => $policy->id,
@@ -140,8 +95,8 @@ test('an insureds.*.id belonging to another policy is rejected', function () {
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = groupUpdatePayload($client, $carrier, [
-        ['id' => $otherMember->id, 'full_name' => 'Someone', 'relationship' => 'Spouse', 'date_of_birth' => '1988-08-08'],
+    $payload = PolicyPayload::medicalGroup($client, $carrier, [
+        'insureds' => [PolicyPayload::insured(['id' => $otherMember->id])],
     ]);
 
     $this->actingAs($user)
@@ -155,8 +110,7 @@ test('a group policy requires an insureds array', function () {
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = groupUpdatePayload($client, $carrier);
-    unset($payload['insureds']);
+    $payload = Arr::except(PolicyPayload::medicalGroup($client, $carrier), ['insureds']);
 
     $this->actingAs($user)
         ->patch(route('policies.medical.update', $policy), $payload)
@@ -171,7 +125,7 @@ test('a group policy rejects an empty insureds list', function () {
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
     $this->actingAs($user)
-        ->patch(route('policies.medical.update', $policy), groupUpdatePayload($client, $carrier, []))
+        ->patch(route('policies.medical.update', $policy), PolicyPayload::medicalGroup($client, $carrier, ['insureds' => []]))
         ->assertSessionHasErrors(['insureds']);
 
     $this->assertModelExists($member);
@@ -183,8 +137,9 @@ test('a single policy prohibits an insureds array', function () {
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = singleUpdatePayload($client, $carrier);
-    $payload['insureds'] = [['full_name' => 'Extra', 'relationship' => 'Child', 'date_of_birth' => '2020-01-01']];
+    $payload = PolicyPayload::medicalSingle($client, $carrier, [
+        'insureds' => [['full_name' => 'Extra', 'relationship' => 'Child', 'date_of_birth' => '2020-01-01']],
+    ]);
 
     $this->actingAs($user)
         ->patch(route('policies.medical.update', $policy), $payload)
@@ -197,8 +152,8 @@ test('a single policy is rejected when the insured profile fields are missing', 
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = singleUpdatePayload($client, $carrier);
-    unset($payload['medical']['insured_full_name'], $payload['medical']['insured_date_of_birth'], $payload['medical']['insured_gender'], $payload['medical']['insured_smoker']);
+    $payload = PolicyPayload::medicalSingle($client, $carrier);
+    Arr::forget($payload, ['medical.insured_full_name', 'medical.insured_date_of_birth', 'medical.insured_gender', 'medical.insured_smoker']);
 
     $this->actingAs($user)
         ->patch(route('policies.medical.update', $policy), $payload)
@@ -211,10 +166,14 @@ test('a group policy prohibits the single insured profile fields', function () {
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = groupUpdatePayload($client, $carrier, [
-        ['full_name' => 'Lina Hartwell', 'relationship' => 'Spouse', 'date_of_birth' => '1988-08-08'],
+    $payload = PolicyPayload::medicalGroup($client, $carrier, [
+        'medical' => [
+            'insured_full_name' => 'Amelia Hartwell',
+            'insured_date_of_birth' => '1986-03-22',
+            'insured_gender' => 'female',
+            'insured_smoker' => false,
+        ],
     ]);
-    $payload['medical'] = [...$payload['medical'], 'insured_full_name' => 'Amelia Hartwell', 'insured_date_of_birth' => '1986-03-22', 'insured_gender' => 'female', 'insured_smoker' => false];
 
     $this->actingAs($user)
         ->patch(route('policies.medical.update', $policy), $payload)
@@ -227,8 +186,7 @@ test('a co_insurance_share is required when co_insurance is true', function () {
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = singleUpdatePayload($client, $carrier);
-    $payload['medical']['co_insurance'] = true;
+    $payload = PolicyPayload::medicalSingle($client, $carrier, ['medical' => ['co_insurance' => true]]);
 
     $this->actingAs($user)
         ->patch(route('policies.medical.update', $policy), $payload)
@@ -241,8 +199,9 @@ test('a co_insurance_share is prohibited when co_insurance is false', function (
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = singleUpdatePayload($client, $carrier);
-    $payload['medical']['co_insurance_share'] = 15;
+    $payload = PolicyPayload::medicalSingle($client, $carrier, [
+        'medical' => ['co_insurance' => false, 'co_insurance_share' => 15],
+    ]);
 
     $this->actingAs($user)
         ->patch(route('policies.medical.update', $policy), $payload)
@@ -255,8 +214,7 @@ test('every canonical medical subclass is accepted', function (string $subclass)
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = singleUpdatePayload($client, $carrier);
-    $payload['subclass'] = $subclass;
+    $payload = PolicyPayload::medicalSingle($client, $carrier, ['subclass' => $subclass]);
 
     $this->actingAs($user)
         ->patch(route('policies.medical.update', $policy), $payload)
@@ -269,8 +227,7 @@ test('a subclass outside the medical list is rejected', function (string $subcla
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = singleUpdatePayload($client, $carrier);
-    $payload['subclass'] = $subclass;
+    $payload = PolicyPayload::medicalSingle($client, $carrier, ['subclass' => $subclass]);
 
     $this->actingAs($user)
         ->patch(route('policies.medical.update', $policy), $payload)

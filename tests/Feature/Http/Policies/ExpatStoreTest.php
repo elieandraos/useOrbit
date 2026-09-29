@@ -6,32 +6,8 @@ use App\Models\Carrier;
 use App\Models\Client;
 use App\Models\Policy;
 use App\Models\User;
-
-function expatPayload(Client $client, Carrier $carrier, string $coverageZone = 'in'): array
-{
-    $isInOut = $coverageZone === 'in_out';
-
-    return [
-        'class' => 'expat',
-        'subclass' => 'Worldwide',
-        'type' => 'single',
-        'client_id' => $client->id,
-        'carrier_id' => $carrier->id,
-        'effective_date' => '2026-01-01',
-        'expiry_date' => '2027-01-01',
-        'premium_amount' => '1200.00',
-        'source' => 'client',
-        'expat' => [
-            'coverage_zone' => $coverageZone,
-            'travel_scope' => $isInOut ? 'Worldwide' : null,
-            'full_name' => 'Karim Saad',
-            'gender' => 'male',
-            'nationality' => 'Lebanese',
-            'date_of_birth' => '1985-04-12',
-            'phone' => '+96170123456',
-        ],
-    ];
-}
+use Illuminate\Support\Arr;
+use Tests\Support\PolicyPayload;
 
 test('guests are redirected to the login page', function () {
     $this->post(route('policies.expat.store'))
@@ -51,8 +27,7 @@ test('store returns validation errors when expat fields are missing', function (
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = expatPayload($client, $carrier);
-    unset($payload['expat']);
+    $payload = Arr::except(PolicyPayload::expat($client, $carrier), ['expat']);
 
     $this->actingAs($user)
         ->post(route('policies.expat.store'), $payload)
@@ -65,7 +40,7 @@ test('store redirects to policies.expat.show with a toast on success', function 
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
     $this->actingAs($user)
-        ->post(route('policies.expat.store'), expatPayload($client, $carrier))
+        ->post(route('policies.expat.store'), PolicyPayload::expat($client, $carrier))
         ->assertRedirect(route('policies.expat.show', Policy::query()->first()))
         ->assertHasInertiaFlash('success', 'Policy created.');
 
@@ -77,8 +52,9 @@ test('an in-zone policy prohibits a travel scope', function () {
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = expatPayload($client, $carrier);
-    $payload['expat']['travel_scope'] = 'Worldwide';
+    $payload = PolicyPayload::expat($client, $carrier, [
+        'expat' => ['coverage_zone' => 'in', 'travel_scope' => 'Worldwide'],
+    ]);
 
     $this->actingAs($user)
         ->post(route('policies.expat.store'), $payload)
@@ -90,8 +66,8 @@ test('an in-out zone policy requires a travel scope', function () {
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = expatPayload($client, $carrier, 'in_out');
-    unset($payload['expat']['travel_scope']);
+    $payload = PolicyPayload::expatInOut($client, $carrier);
+    Arr::forget($payload, 'expat.travel_scope');
 
     $this->actingAs($user)
         ->post(route('policies.expat.store'), $payload)
@@ -104,7 +80,7 @@ test('an in-out zone policy with a travel scope is accepted', function () {
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
     $this->actingAs($user)
-        ->post(route('policies.expat.store'), expatPayload($client, $carrier, 'in_out'))
+        ->post(route('policies.expat.store'), PolicyPayload::expatInOut($client, $carrier))
         ->assertSessionHasNoErrors()
         ->assertRedirect(route('policies.expat.show', Policy::query()->first()));
 });
@@ -115,7 +91,7 @@ test('a client belonging to a different organization is rejected', function () {
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
     $this->actingAs($user)
-        ->post(route('policies.expat.store'), expatPayload($otherClient, $carrier))
+        ->post(route('policies.expat.store'), PolicyPayload::expat($otherClient, $carrier))
         ->assertSessionHasErrors(['client_id']);
 });
 
@@ -125,7 +101,7 @@ test('a carrier belonging to a different organization is rejected', function () 
     $otherCarrier = Carrier::factory()->create();
 
     $this->actingAs($user)
-        ->post(route('policies.expat.store'), expatPayload($client, $otherCarrier))
+        ->post(route('policies.expat.store'), PolicyPayload::expat($client, $otherCarrier))
         ->assertSessionHasErrors(['carrier_id']);
 });
 
@@ -134,8 +110,7 @@ test('every canonical expat subclass is accepted', function (string $subclass) {
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = expatPayload($client, $carrier);
-    $payload['subclass'] = $subclass;
+    $payload = PolicyPayload::expat($client, $carrier, ['subclass' => $subclass]);
 
     $this->actingAs($user)
         ->post(route('policies.expat.store'), $payload)
@@ -147,8 +122,7 @@ test('a subclass outside the expat list is rejected', function (string $subclass
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = expatPayload($client, $carrier);
-    $payload['subclass'] = $subclass;
+    $payload = PolicyPayload::expat($client, $carrier, ['subclass' => $subclass]);
 
     $this->actingAs($user)
         ->post(route('policies.expat.store'), $payload)
@@ -160,8 +134,9 @@ test('the subclass and coverage zone are stored independently', function (string
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = expatPayload($client, $carrier, $coverageZone);
-    $payload['subclass'] = $subclass;
+    $payload = $coverageZone === 'in_out'
+        ? PolicyPayload::expatInOut($client, $carrier, ['subclass' => $subclass])
+        : PolicyPayload::expat($client, $carrier, ['subclass' => $subclass]);
 
     $this->actingAs($user)
         ->post(route('policies.expat.store'), $payload)

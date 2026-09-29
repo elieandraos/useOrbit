@@ -6,28 +6,8 @@ use App\Models\Carrier;
 use App\Models\Client;
 use App\Models\Policy;
 use App\Models\User;
-
-function travelPayload(Client $client, Carrier $carrier): array
-{
-    return [
-        'class' => 'travel',
-        'subclass' => 'Schengen',
-        'type' => 'single',
-        'client_id' => $client->id,
-        'carrier_id' => $carrier->id,
-        'effective_date' => '2026-01-01',
-        'expiry_date' => '2027-01-01',
-        'premium_amount' => '150.00',
-        'source' => 'client',
-        'travel' => [
-            'destination' => 'Portugal',
-            'trip_start_date' => '2026-06-01',
-            'trip_end_date' => '2026-06-15',
-            'travelers' => 'Jane Doe, John Doe',
-            'coverage_tier' => 'Standard',
-        ],
-    ];
-}
+use Illuminate\Support\Arr;
+use Tests\Support\PolicyPayload;
 
 test('guests are redirected to the login page', function () {
     $this->post(route('policies.travel.store'))
@@ -47,8 +27,7 @@ test('store returns validation errors when trip fields are missing', function ()
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = travelPayload($client, $carrier);
-    unset($payload['travel']);
+    $payload = Arr::except(PolicyPayload::travel($client, $carrier), ['travel']);
 
     $this->actingAs($user)
         ->post(route('policies.travel.store'), $payload)
@@ -60,8 +39,9 @@ test('store returns a validation error when the trip end date precedes the start
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = travelPayload($client, $carrier);
-    $payload['travel']['trip_end_date'] = '2026-05-01';
+    $payload = PolicyPayload::travel($client, $carrier, [
+        'travel' => ['trip_start_date' => '2026-06-01', 'trip_end_date' => '2026-05-01'],
+    ]);
 
     $this->actingAs($user)
         ->post(route('policies.travel.store'), $payload)
@@ -74,7 +54,7 @@ test('store redirects to policies.travel.show with a toast on success', function
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
     $this->actingAs($user)
-        ->post(route('policies.travel.store'), travelPayload($client, $carrier))
+        ->post(route('policies.travel.store'), PolicyPayload::travel($client, $carrier))
         ->assertRedirect(route('policies.travel.show', Policy::query()->first()))
         ->assertHasInertiaFlash('success', 'Policy created.');
 
@@ -87,7 +67,7 @@ test('a client belonging to a different organization is rejected', function () {
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
     $this->actingAs($user)
-        ->post(route('policies.travel.store'), travelPayload($otherClient, $carrier))
+        ->post(route('policies.travel.store'), PolicyPayload::travel($otherClient, $carrier))
         ->assertSessionHasErrors(['client_id']);
 });
 
@@ -97,7 +77,7 @@ test('a carrier belonging to a different organization is rejected', function () 
     $otherCarrier = Carrier::factory()->create();
 
     $this->actingAs($user)
-        ->post(route('policies.travel.store'), travelPayload($client, $otherCarrier))
+        ->post(route('policies.travel.store'), PolicyPayload::travel($client, $otherCarrier))
         ->assertSessionHasErrors(['carrier_id']);
 });
 
@@ -106,8 +86,7 @@ test('every canonical travel subclass is accepted', function (string $subclass) 
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = travelPayload($client, $carrier);
-    $payload['subclass'] = $subclass;
+    $payload = PolicyPayload::travel($client, $carrier, ['subclass' => $subclass]);
 
     $this->actingAs($user)
         ->post(route('policies.travel.store'), $payload)
@@ -119,8 +98,7 @@ test('a subclass outside the travel list is rejected', function (string $subclas
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = travelPayload($client, $carrier);
-    $payload['subclass'] = $subclass;
+    $payload = PolicyPayload::travel($client, $carrier, ['subclass' => $subclass]);
 
     $this->actingAs($user)
         ->post(route('policies.travel.store'), $payload)

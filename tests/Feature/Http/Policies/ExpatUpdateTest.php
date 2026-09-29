@@ -7,32 +7,8 @@ use App\Models\Client;
 use App\Models\Organization;
 use App\Models\Policy;
 use App\Models\User;
-
-function expatUpdatePayload(Client $client, Carrier $carrier, string $coverageZone = 'in'): array
-{
-    $isInOut = $coverageZone === 'in_out';
-
-    return [
-        'class' => 'expat',
-        'subclass' => 'Worldwide',
-        'type' => 'single',
-        'client_id' => $client->id,
-        'carrier_id' => $carrier->id,
-        'effective_date' => '2026-01-01',
-        'expiry_date' => '2027-01-01',
-        'premium_amount' => '1500.00',
-        'source' => 'client',
-        'expat' => [
-            'coverage_zone' => $coverageZone,
-            'travel_scope' => $isInOut ? 'Regional' : null,
-            'full_name' => 'Rami Haddad',
-            'gender' => 'male',
-            'nationality' => 'Lebanese',
-            'date_of_birth' => '1988-02-20',
-            'phone' => '+96170999888',
-        ],
-    ];
-}
+use Illuminate\Support\Arr;
+use Tests\Support\PolicyPayload;
 
 test('guests are redirected to the login page', function () {
     $policy = Policy::factory()->expat()->create();
@@ -49,7 +25,7 @@ test('a user gets 404 updating a policy from another organization', function () 
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
     $this->actingAs($user)
-        ->patch(route('policies.expat.update', $policy), expatUpdatePayload($client, $carrier))
+        ->patch(route('policies.expat.update', $policy), PolicyPayload::expat($client, $carrier))
         ->assertNotFound();
 });
 
@@ -60,7 +36,7 @@ test('a user gets 404 updating a non-expat policy', function () {
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
     $this->actingAs($user)
-        ->patch(route('policies.expat.update', $policy), expatUpdatePayload($client, $carrier))
+        ->patch(route('policies.expat.update', $policy), PolicyPayload::expat($client, $carrier))
         ->assertNotFound();
 });
 
@@ -89,7 +65,7 @@ test('update redirects to policies.expat.show with a toast on success', function
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
     $this->actingAs($user)
-        ->patch(route('policies.expat.update', $policy), expatUpdatePayload($client, $carrier))
+        ->patch(route('policies.expat.update', $policy), PolicyPayload::expat($client, $carrier))
         ->assertRedirect(route('policies.expat.show', $policy->fresh()))
         ->assertHasInertiaFlash('success', 'Policy updated.');
 });
@@ -101,7 +77,9 @@ test('update wires the submitted client and carrier onto the policy', function (
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
     $this->actingAs($user)
-        ->patch(route('policies.expat.update', $policy), expatUpdatePayload($client, $carrier));
+        ->patch(route('policies.expat.update', $policy), PolicyPayload::expat($client, $carrier, [
+            'expat' => ['full_name' => 'Rami Haddad'],
+        ]));
 
     $this->assertDatabaseHas('policies', [
         'id' => $policy->id,
@@ -120,8 +98,7 @@ test('a class field cannot be changed away from expat', function () {
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = expatUpdatePayload($client, $carrier);
-    $payload['class'] = 'medical';
+    $payload = PolicyPayload::expat($client, $carrier, ['class' => 'medical']);
 
     $this->actingAs($user)
         ->patch(route('policies.expat.update', $policy), $payload)
@@ -134,8 +111,9 @@ test('an in-zone policy prohibits a travel scope', function () {
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = expatUpdatePayload($client, $carrier);
-    $payload['expat']['travel_scope'] = 'Worldwide';
+    $payload = PolicyPayload::expat($client, $carrier, [
+        'expat' => ['coverage_zone' => 'in', 'travel_scope' => 'Worldwide'],
+    ]);
 
     $this->actingAs($user)
         ->patch(route('policies.expat.update', $policy), $payload)
@@ -148,8 +126,8 @@ test('an in-out zone policy requires a travel scope', function () {
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = expatUpdatePayload($client, $carrier, 'in_out');
-    unset($payload['expat']['travel_scope']);
+    $payload = PolicyPayload::expatInOut($client, $carrier);
+    Arr::forget($payload, 'expat.travel_scope');
 
     $this->actingAs($user)
         ->patch(route('policies.expat.update', $policy), $payload)
@@ -162,8 +140,7 @@ test('every canonical expat subclass is accepted', function (string $subclass) {
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = expatUpdatePayload($client, $carrier);
-    $payload['subclass'] = $subclass;
+    $payload = PolicyPayload::expat($client, $carrier, ['subclass' => $subclass]);
 
     $this->actingAs($user)
         ->patch(route('policies.expat.update', $policy), $payload)
@@ -176,8 +153,7 @@ test('a subclass outside the expat list is rejected', function (string $subclass
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = expatUpdatePayload($client, $carrier);
-    $payload['subclass'] = $subclass;
+    $payload = PolicyPayload::expat($client, $carrier, ['subclass' => $subclass]);
 
     $this->actingAs($user)
         ->patch(route('policies.expat.update', $policy), $payload)

@@ -6,55 +6,8 @@ use App\Models\Carrier;
 use App\Models\Client;
 use App\Models\Policy;
 use App\Models\User;
-
-function singlePayload(Client $client, Carrier $carrier): array
-{
-    return [
-        'class' => 'medical',
-        'subclass' => 'Hospitalization',
-        'type' => 'single',
-        'client_id' => $client->id,
-        'carrier_id' => $carrier->id,
-        'effective_date' => '2026-01-01',
-        'expiry_date' => '2027-01-01',
-        'premium_amount' => '1200.00',
-        'source' => 'client',
-        'medical' => [
-            'coverage_scope' => 'in',
-            'class_tier' => 'class_a',
-            'co_insurance' => false,
-            'guaranteed_renewable' => true,
-            'insured_full_name' => 'Amelia Hartwell',
-            'insured_date_of_birth' => '1986-03-22',
-            'insured_gender' => 'female',
-            'insured_smoker' => false,
-        ],
-    ];
-}
-
-function groupPayload(Client $client, Carrier $carrier): array
-{
-    return [
-        'class' => 'medical',
-        'subclass' => 'Outpatient',
-        'type' => 'group',
-        'client_id' => $client->id,
-        'carrier_id' => $carrier->id,
-        'effective_date' => '2026-01-01',
-        'expiry_date' => '2027-01-01',
-        'premium_amount' => '28400.00',
-        'source' => 'owner',
-        'medical' => [
-            'coverage_scope' => 'in_out',
-            'class_tier' => 'class_b',
-            'co_insurance' => false,
-            'guaranteed_renewable' => true,
-        ],
-        'insureds' => [
-            ['full_name' => 'Lina Hartwell', 'relationship' => 'Spouse', 'date_of_birth' => '1988-08-08', 'gender' => 'female'],
-        ],
-    ];
-}
+use Illuminate\Support\Arr;
+use Tests\Support\PolicyPayload;
 
 test('guests are redirected to the login page', function () {
     $this->post(route('policies.medical.store'))
@@ -75,7 +28,7 @@ test('store redirects to policies.medical.show with a toast on success', functio
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
     $this->actingAs($user)
-        ->post(route('policies.medical.store'), singlePayload($client, $carrier))
+        ->post(route('policies.medical.store'), PolicyPayload::medicalSingle($client, $carrier))
         ->assertRedirect(route('policies.medical.show', Policy::query()->first()))
         ->assertHasInertiaFlash('success', 'Policy created.');
 
@@ -88,7 +41,7 @@ test('store wires the submitted client and carrier onto the created policy', fun
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
     $this->actingAs($user)
-        ->post(route('policies.medical.store'), singlePayload($client, $carrier))
+        ->post(route('policies.medical.store'), PolicyPayload::medicalSingle($client, $carrier))
         ->assertRedirect(route('policies.medical.show', Policy::query()->first()));
 
     $this->assertDatabaseHas('policies', [
@@ -102,8 +55,7 @@ test('a group policy requires an insureds array', function () {
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = groupPayload($client, $carrier);
-    unset($payload['insureds']);
+    $payload = Arr::except(PolicyPayload::medicalGroup($client, $carrier), ['insureds']);
 
     $this->actingAs($user)
         ->post(route('policies.medical.store'), $payload)
@@ -115,8 +67,7 @@ test('a group policy rejects an empty insureds list', function () {
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = groupPayload($client, $carrier);
-    $payload['insureds'] = [];
+    $payload = PolicyPayload::medicalGroup($client, $carrier, ['insureds' => []]);
 
     $this->actingAs($user)
         ->post(route('policies.medical.store'), $payload)
@@ -130,8 +81,9 @@ test('a single policy prohibits an insureds array', function () {
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = singlePayload($client, $carrier);
-    $payload['insureds'] = [['full_name' => 'Extra', 'relationship' => 'Child', 'date_of_birth' => '2020-01-01']];
+    $payload = PolicyPayload::medicalSingle($client, $carrier, [
+        'insureds' => [['full_name' => 'Extra', 'relationship' => 'Child', 'date_of_birth' => '2020-01-01']],
+    ]);
 
     $this->actingAs($user)
         ->post(route('policies.medical.store'), $payload)
@@ -143,7 +95,7 @@ test('a client belonging to a different organization is rejected', function () {
     $otherClient = Client::factory()->create();
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = singlePayload($otherClient, $carrier);
+    $payload = PolicyPayload::medicalSingle($otherClient, $carrier);
 
     $this->actingAs($user)
         ->post(route('policies.medical.store'), $payload)
@@ -155,7 +107,7 @@ test('a carrier belonging to a different organization is rejected', function () 
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $otherCarrier = Carrier::factory()->create();
 
-    $payload = singlePayload($client, $otherCarrier);
+    $payload = PolicyPayload::medicalSingle($client, $otherCarrier);
 
     $this->actingAs($user)
         ->post(route('policies.medical.store'), $payload)
@@ -167,8 +119,8 @@ test('a single policy is rejected when the insured profile fields are missing', 
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = singlePayload($client, $carrier);
-    unset($payload['medical']['insured_full_name'], $payload['medical']['insured_date_of_birth'], $payload['medical']['insured_gender'], $payload['medical']['insured_smoker']);
+    $payload = PolicyPayload::medicalSingle($client, $carrier);
+    Arr::forget($payload, ['medical.insured_full_name', 'medical.insured_date_of_birth', 'medical.insured_gender', 'medical.insured_smoker']);
 
     $this->actingAs($user)
         ->post(route('policies.medical.store'), $payload)
@@ -180,8 +132,7 @@ test('a co_insurance_share is required when co_insurance is true', function () {
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = singlePayload($client, $carrier);
-    $payload['medical']['co_insurance'] = true;
+    $payload = PolicyPayload::medicalSingle($client, $carrier, ['medical' => ['co_insurance' => true]]);
 
     $this->actingAs($user)
         ->post(route('policies.medical.store'), $payload)
@@ -193,9 +144,9 @@ test('a co_insurance_share of 15 is accepted when co_insurance is true', functio
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = singlePayload($client, $carrier);
-    $payload['medical']['co_insurance'] = true;
-    $payload['medical']['co_insurance_share'] = 15;
+    $payload = PolicyPayload::medicalSingle($client, $carrier, [
+        'medical' => ['co_insurance' => true, 'co_insurance_share' => 15],
+    ]);
 
     /** @noinspection PhpUnhandledExceptionInspection */
     $this->actingAs($user)
@@ -209,8 +160,14 @@ test('a group policy prohibits the single insured profile fields', function () {
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = groupPayload($client, $carrier);
-    $payload['medical'] = [...$payload['medical'], 'insured_full_name' => 'Amelia Hartwell', 'insured_date_of_birth' => '1986-03-22', 'insured_gender' => 'female', 'insured_smoker' => false];
+    $payload = PolicyPayload::medicalGroup($client, $carrier, [
+        'medical' => [
+            'insured_full_name' => 'Amelia Hartwell',
+            'insured_date_of_birth' => '1986-03-22',
+            'insured_gender' => 'female',
+            'insured_smoker' => false,
+        ],
+    ]);
 
     $this->actingAs($user)
         ->post(route('policies.medical.store'), $payload)
@@ -222,8 +179,9 @@ test('a co_insurance_share is prohibited when co_insurance is false', function (
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = singlePayload($client, $carrier);
-    $payload['medical']['co_insurance_share'] = 15;
+    $payload = PolicyPayload::medicalSingle($client, $carrier, [
+        'medical' => ['co_insurance' => false, 'co_insurance_share' => 15],
+    ]);
 
     $this->actingAs($user)
         ->post(route('policies.medical.store'), $payload)
@@ -235,8 +193,7 @@ test('every canonical medical subclass is accepted', function (string $subclass)
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = singlePayload($client, $carrier);
-    $payload['subclass'] = $subclass;
+    $payload = PolicyPayload::medicalSingle($client, $carrier, ['subclass' => $subclass]);
 
     $this->actingAs($user)
         ->post(route('policies.medical.store'), $payload)
@@ -248,8 +205,7 @@ test('a subclass outside the medical list is rejected', function (string $subcla
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = singlePayload($client, $carrier);
-    $payload['subclass'] = $subclass;
+    $payload = PolicyPayload::medicalSingle($client, $carrier, ['subclass' => $subclass]);
 
     $this->actingAs($user)
         ->post(route('policies.medical.store'), $payload)

@@ -6,27 +6,8 @@ use App\Models\Carrier;
 use App\Models\Client;
 use App\Models\Policy;
 use App\Models\User;
-
-function lifePayload(Client $client, Carrier $carrier): array
-{
-    return [
-        'class' => 'life',
-        'subclass' => 'Term',
-        'type' => 'single',
-        'client_id' => $client->id,
-        'carrier_id' => $carrier->id,
-        'effective_date' => '2026-01-01',
-        'expiry_date' => '2027-01-01',
-        'premium_amount' => '600.00',
-        'source' => 'client',
-        'life' => [
-            'sum_assured' => '150000.00',
-            'term_years' => 20,
-            'smoker' => false,
-            'beneficiaries' => 'Jane Doe (100%)',
-        ],
-    ];
-}
+use Illuminate\Support\Arr;
+use Tests\Support\PolicyPayload;
 
 test('guests are redirected to the login page', function () {
     $this->post(route('policies.life.store'))
@@ -46,8 +27,7 @@ test('store returns validation errors when life fields are missing', function ()
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = lifePayload($client, $carrier);
-    unset($payload['life']);
+    $payload = Arr::except(PolicyPayload::life($client, $carrier), ['life']);
 
     $this->actingAs($user)
         ->post(route('policies.life.store'), $payload)
@@ -60,7 +40,7 @@ test('store redirects to policies.life.show with a toast on success', function (
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
     $this->actingAs($user)
-        ->post(route('policies.life.store'), lifePayload($client, $carrier))
+        ->post(route('policies.life.store'), PolicyPayload::life($client, $carrier))
         ->assertRedirect(route('policies.life.show', Policy::query()->first()))
         ->assertHasInertiaFlash('success', 'Policy created.');
 
@@ -73,7 +53,7 @@ test('a client belonging to a different organization is rejected', function () {
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
     $this->actingAs($user)
-        ->post(route('policies.life.store'), lifePayload($otherClient, $carrier))
+        ->post(route('policies.life.store'), PolicyPayload::life($otherClient, $carrier))
         ->assertSessionHasErrors(['client_id']);
 });
 
@@ -83,7 +63,7 @@ test('a carrier belonging to a different organization is rejected', function () 
     $otherCarrier = Carrier::factory()->create();
 
     $this->actingAs($user)
-        ->post(route('policies.life.store'), lifePayload($client, $otherCarrier))
+        ->post(route('policies.life.store'), PolicyPayload::life($client, $otherCarrier))
         ->assertSessionHasErrors(['carrier_id']);
 });
 
@@ -92,8 +72,7 @@ test('every canonical life subclass is accepted', function (string $subclass) {
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = lifePayload($client, $carrier);
-    $payload['subclass'] = $subclass;
+    $payload = PolicyPayload::life($client, $carrier, ['subclass' => $subclass]);
 
     $this->actingAs($user)
         ->post(route('policies.life.store'), $payload)
@@ -105,8 +84,7 @@ test('a subclass outside the life list is rejected', function (string $subclass)
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $payload = lifePayload($client, $carrier);
-    $payload['subclass'] = $subclass;
+    $payload = PolicyPayload::life($client, $carrier, ['subclass' => $subclass]);
 
     $this->actingAs($user)
         ->post(route('policies.life.store'), $payload)
