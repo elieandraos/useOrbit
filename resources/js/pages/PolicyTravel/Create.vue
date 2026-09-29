@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import PageHeader from '@/components/shell/PageHeader.vue';
+import BackToPolicyEntryButton from '@/pages/Policies/partials/BackToPolicyEntryButton.vue';
 import { index as policiesIndex } from '@/routes/policies';
 import { store as policiesTravelStore } from '@/routes/policies/travel';
 import PolicyTravelForm from './partials/PolicyTravelForm.vue';
@@ -58,7 +59,11 @@ defineOptions({
             title="New Travel policy"
             subtitle="Coverage, parties, and the Travel-specific details for this policy."
             :divider="false"
-        />
+        >
+            <template #actions>
+                <BackToPolicyEntryButton policy-class="travel" />
+            </template>
+        </PageHeader>
 
         <PolicyTravelForm
             :clients="clients"

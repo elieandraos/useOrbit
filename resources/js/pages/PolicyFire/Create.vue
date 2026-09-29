@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import PageHeader from '@/components/shell/PageHeader.vue';
+import BackToPolicyEntryButton from '@/pages/Policies/partials/BackToPolicyEntryButton.vue';
 import { index as policiesIndex } from '@/routes/policies';
 import { store as policiesFireStore } from '@/routes/policies/fire';
 import PolicyFireForm from './partials/PolicyFireForm.vue';
@@ -64,7 +65,11 @@ defineOptions({
             title="New Fire policy"
             subtitle="Coverage, parties, and the Fire-specific details for this policy."
             :divider="false"
-        />
+        >
+            <template #actions>
+                <BackToPolicyEntryButton policy-class="fire" />
+            </template>
+        </PageHeader>
 
         <PolicyFireForm
             :clients="clients"

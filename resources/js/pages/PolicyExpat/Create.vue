@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import PageHeader from '@/components/shell/PageHeader.vue';
+import BackToPolicyEntryButton from '@/pages/Policies/partials/BackToPolicyEntryButton.vue';
 import { index as policiesIndex } from '@/routes/policies';
 import { store as policiesExpatStore } from '@/routes/policies/expat';
 import PolicyExpatForm from './partials/PolicyExpatForm.vue';
@@ -66,7 +67,11 @@ defineOptions({
             title="New Expat policy"
             subtitle="Coverage, parties, and the Expat-specific details for this policy."
             :divider="false"
-        />
+        >
+            <template #actions>
+                <BackToPolicyEntryButton policy-class="expat" />
+            </template>
+        </PageHeader>
 
         <PolicyExpatForm
             :clients="clients"

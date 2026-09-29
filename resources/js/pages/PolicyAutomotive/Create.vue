@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import PageHeader from '@/components/shell/PageHeader.vue';
+import BackToPolicyEntryButton from '@/pages/Policies/partials/BackToPolicyEntryButton.vue';
 import { index as policiesIndex } from '@/routes/policies';
 import { store as policiesAutomotiveStore } from '@/routes/policies/automotive';
 import PolicyAutomotiveForm from './partials/PolicyAutomotiveForm.vue';
@@ -58,7 +59,11 @@ defineOptions({
             title="New Automotive policy"
             subtitle="Coverage, parties, and the Automotive-specific details for this policy."
             :divider="false"
-        />
+        >
+            <template #actions>
+                <BackToPolicyEntryButton policy-class="automotive" />
+            </template>
+        </PageHeader>
 
         <PolicyAutomotiveForm
             :clients="clients"

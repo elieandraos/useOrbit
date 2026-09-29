@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import PageHeader from '@/components/shell/PageHeader.vue';
+import BackToPolicyEntryButton from '@/pages/Policies/partials/BackToPolicyEntryButton.vue';
 import { index as policiesIndex } from '@/routes/policies';
 import { store as policiesLifeStore } from '@/routes/policies/life';
 import PolicyLifeForm from './partials/PolicyLifeForm.vue';
@@ -58,7 +59,11 @@ defineOptions({
             title="New Life policy"
             subtitle="Coverage, parties, and the Life-specific details for this policy."
             :divider="false"
-        />
+        >
+            <template #actions>
+                <BackToPolicyEntryButton policy-class="life" />
+            </template>
+        </PageHeader>
 
         <PolicyLifeForm
             :clients="clients"
