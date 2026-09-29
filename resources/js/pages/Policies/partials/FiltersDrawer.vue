@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
 import { SearchIcon } from '@lucide/vue';
-import { computed, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 import Button from '@/components/ui/button/Button.vue';
 import Checkbox from '@/components/ui/checkbox/Checkbox.vue';
 import DateInput from '@/components/ui/date-input/DateInput.vue';
@@ -9,9 +9,8 @@ import Drawer from '@/components/ui/drawer/Drawer.vue';
 import FormField from '@/components/ui/form-field/FormField.vue';
 import Input from '@/components/ui/input/Input.vue';
 import Label from '@/components/ui/label/Label.vue';
-import RadioChips from '@/components/ui/radio-chips/RadioChips.vue';
-import { Typeahead } from '@/components/ui/typeahead';
-import type { TypeaheadOption } from '@/components/ui/typeahead';
+import RadioPills from '@/components/ui/radio-pills/RadioPills.vue';
+import Select from '@/components/ui/select/Select.vue';
 import { index as policiesIndex } from '@/routes/policies';
 
 interface Option {
@@ -48,19 +47,12 @@ const props = defineProps<{
 
 const open = defineModel<boolean>('open', { default: false });
 
-const carrierOptions = computed<TypeaheadOption[]>(() =>
-    props.carriers.map((carrier) => ({
-        value: carrier.id,
-        label: carrier.name,
-    })),
-);
-
 const search = ref(props.filters.search ?? '');
 const status = ref(props.filters.status ?? '');
 const type = ref(props.filters.type ?? '');
 const selectedClasses = ref<string[]>([...(props.filters.class ?? [])]);
-const carrierId = ref<number | null>(
-    props.filters.carrier_id ? Number(props.filters.carrier_id) : null,
+const carrierId = ref(
+    props.filters.carrier_id ? String(props.filters.carrier_id) : '',
 );
 const source = ref(props.filters.source ?? '');
 const effectiveFrom = ref(props.filters.effective_from ?? '');
@@ -81,8 +73,8 @@ watch(open, (isOpen) => {
     type.value = props.filters.type ?? '';
     selectedClasses.value = [...(props.filters.class ?? [])];
     carrierId.value = props.filters.carrier_id
-        ? Number(props.filters.carrier_id)
-        : null;
+        ? String(props.filters.carrier_id)
+        : '';
     source.value = props.filters.source ?? '';
     effectiveFrom.value = props.filters.effective_from ?? '';
     effectiveTo.value = props.filters.effective_to ?? '';
@@ -127,7 +119,7 @@ function applyFilters() {
         query.class = selectedClasses.value;
     }
 
-    if (carrierId.value !== null) {
+    if (carrierId.value) {
         query.carrier_id = carrierId.value;
     }
 
@@ -194,11 +186,11 @@ function clearFilters() {
             </FormField>
 
             <FormField label="Status" :error="formErrors.status">
-                <RadioChips v-model="status" :options="statuses" />
+                <RadioPills v-model="status" :options="statuses" size="sm" />
             </FormField>
 
             <FormField label="Type" :error="formErrors.type">
-                <RadioChips v-model="type" :options="types" />
+                <RadioPills v-model="type" :options="types" size="sm" />
             </FormField>
 
             <FormField
@@ -206,10 +198,10 @@ function clearFilters() {
                 :error="formErrors['class.0'] ?? formErrors.class"
             >
                 <div class="flex flex-col gap-2.5">
-                    <label
+                    <Label
                         v-for="option in classes"
                         :key="option.value"
-                        class="flex items-center gap-2.5"
+                        class="gap-2.5 font-normal"
                     >
                         <Checkbox
                             :model-value="isClassSelected(option.value)"
@@ -217,21 +209,30 @@ function clearFilters() {
                                 (checked) => toggleClass(option.value, checked)
                             "
                         />
-                        <Label class="font-normal">{{ option.label }}</Label>
-                    </label>
+                        <span>{{ option.label }}</span>
+                    </Label>
                 </div>
             </FormField>
 
-            <FormField label="Company" :error="formErrors.carrier_id">
-                <Typeahead
-                    v-model="carrierId"
-                    :options="carrierOptions"
-                    placeholder="Select carrier"
-                />
+            <FormField
+                label="Company"
+                for="filter_carrier_id"
+                :error="formErrors.carrier_id"
+            >
+                <Select id="filter_carrier_id" v-model="carrierId" size="sm">
+                    <option value="">All companies</option>
+                    <option
+                        v-for="carrier in carriers"
+                        :key="carrier.id"
+                        :value="`${carrier.id}`"
+                    >
+                        {{ carrier.name }}
+                    </option>
+                </Select>
             </FormField>
 
             <FormField label="Source" :error="formErrors.source">
-                <RadioChips v-model="source" :options="sources" />
+                <RadioPills v-model="source" :options="sources" size="sm" />
             </FormField>
 
             <FormField
@@ -259,6 +260,7 @@ function clearFilters() {
                         v-model="amountMin"
                         type="number"
                         min="0"
+                        size="sm"
                         placeholder="Min"
                     />
                     <span class="text-xs text-tertiary">to</span>
@@ -266,6 +268,7 @@ function clearFilters() {
                         v-model="amountMax"
                         type="number"
                         min="0"
+                        size="sm"
                         placeholder="Max"
                     />
                 </div>
