@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Form, Link } from '@inertiajs/vue3';
+import { Plus } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import Button from '@/components/ui/button/Button.vue';
 import DateInput from '@/components/ui/date-input/DateInput.vue';
@@ -353,90 +354,105 @@ const yesNo: Option[] = [
             </div>
 
             <div
-                v-for="(row, index) in insuredRows"
-                :key="row.key"
-                class="flex flex-col gap-4 rounded-[10px] border border-border p-4"
+                v-if="insuredRows.length > 0"
+                class="flex flex-col divide-y divide-border-subtle"
             >
-                <input
-                    v-if="row.id"
-                    type="hidden"
-                    :name="`insureds[${index}][id]`"
-                    :value="row.id"
-                />
-
-                <div class="flex items-center justify-between">
-                    <span class="text-sm font-medium text-primary"
-                        >Member {{ index + 1 }}</span
-                    >
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        @click="removeRow(index)"
-                        >Remove</Button
-                    >
-                </div>
-
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <FormField
-                        label="Full name"
-                        required
-                        :error="errors[`insureds.${index}.full_name`]"
-                    >
-                        <Input
-                            v-model="row.full_name"
-                            :name="`insureds[${index}][full_name]`"
-                        />
-                    </FormField>
-                    <FormField
-                        label="Relationship"
-                        required
-                        :error="errors[`insureds.${index}.relationship`]"
-                    >
-                        <Input
-                            v-model="row.relationship"
-                            :name="`insureds[${index}][relationship]`"
-                        />
-                    </FormField>
-                </div>
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <FormField
-                        label="Date of birth"
-                        required
-                        :error="errors[`insureds.${index}.date_of_birth`]"
-                    >
-                        <DateInput
-                            v-model="row.date_of_birth"
-                            :name="`insureds[${index}][date_of_birth]`"
-                        />
-                    </FormField>
-                    <FormField
-                        label="Gender"
-                        optional
-                        :error="errors[`insureds.${index}.gender`]"
-                    >
-                        <RadioChips
-                            v-model="row.gender"
-                            :name="`insureds[${index}][gender]`"
-                            :options="genders"
-                        />
-                    </FormField>
-                </div>
-                <FormField
-                    label="Medical notes"
-                    optional
-                    :error="errors[`insureds.${index}.medical_notes`]"
+                <div
+                    v-for="(row, index) in insuredRows"
+                    :key="row.key"
+                    class="flex flex-col gap-4 py-5 first:pt-0 last:pb-0"
                 >
-                    <Input
-                        v-model="row.medical_notes"
-                        :name="`insureds[${index}][medical_notes]`"
+                    <input
+                        v-if="row.id"
+                        type="hidden"
+                        :name="`insureds[${index}][id]`"
+                        :value="row.id"
                     />
-                </FormField>
+
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium text-primary"
+                            >Member {{ index + 1 }}</span
+                        >
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            @click="removeRow(index)"
+                            >Remove</Button
+                        >
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <FormField
+                            label="Full name"
+                            required
+                            :error="errors[`insureds.${index}.full_name`]"
+                        >
+                            <Input
+                                v-model="row.full_name"
+                                :name="`insureds[${index}][full_name]`"
+                            />
+                        </FormField>
+                        <FormField
+                            label="Relationship"
+                            required
+                            :error="errors[`insureds.${index}.relationship`]"
+                        >
+                            <Input
+                                v-model="row.relationship"
+                                :name="`insureds[${index}][relationship]`"
+                            />
+                        </FormField>
+                    </div>
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <FormField
+                            label="Date of birth"
+                            required
+                            :error="errors[`insureds.${index}.date_of_birth`]"
+                        >
+                            <DateInput
+                                v-model="row.date_of_birth"
+                                :name="`insureds[${index}][date_of_birth]`"
+                            />
+                        </FormField>
+                        <FormField
+                            label="Gender"
+                            optional
+                            :error="errors[`insureds.${index}.gender`]"
+                        >
+                            <RadioChips
+                                v-model="row.gender"
+                                :name="`insureds[${index}][gender]`"
+                                :options="genders"
+                            />
+                        </FormField>
+                    </div>
+                    <FormField
+                        label="Medical notes"
+                        optional
+                        :error="errors[`insureds.${index}.medical_notes`]"
+                    >
+                        <Input
+                            v-model="row.medical_notes"
+                            :name="`insureds[${index}][medical_notes]`"
+                        />
+                    </FormField>
+                </div>
             </div>
 
-            <Button type="button" variant="secondary" @click="addRow"
-                >Add covered member</Button
+            <p v-if="errors.insureds" class="text-xs text-danger">
+                {{ errors.insureds }}
+            </p>
+
+            <Button
+                type="button"
+                variant="primary"
+                class="self-start"
+                @click="addRow"
             >
+                <template #leading><Plus /></template>
+                Add covered member
+            </Button>
         </FormSection>
 
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">

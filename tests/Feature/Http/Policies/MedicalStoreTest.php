@@ -110,6 +110,21 @@ test('a group policy requires an insureds array', function () {
         ->assertSessionHasErrors(['insureds']);
 });
 
+test('a group policy rejects an empty insureds list', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = groupPayload($client, $carrier);
+    $payload['insureds'] = [];
+
+    $this->actingAs($user)
+        ->post(route('policies.medical.store'), $payload)
+        ->assertSessionHasErrors(['insureds']);
+
+    expect(Policy::query()->count())->toBe(0);
+});
+
 test('a single policy prohibits an insureds array', function () {
     $user = User::factory()->withOrganization()->create();
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);

@@ -52,7 +52,7 @@ final class UpdatePolicyMedicalRequest extends FormRequest
             'medical.insured_smoker' => ['required_if:type,'.PolicyType::Single->value, 'prohibited_unless:type,'.PolicyType::Single->value, 'nullable', 'boolean'],
             'medical.insured_medical_history' => ['nullable', 'string'],
 
-            'insureds' => ['required_if:type,'.PolicyType::Group->value, 'prohibited_unless:type,'.PolicyType::Group->value, 'array'],
+            'insureds' => ['required_if:type,'.PolicyType::Group->value, 'prohibited_unless:type,'.PolicyType::Group->value, 'array', 'min:1'],
             'insureds.*.id' => ['nullable', 'integer', Rule::exists('policy_insureds', 'id')->where('policy_id', $policy->id)],
             'insureds.*.full_name' => ['required', 'string', 'max:255'],
             'insureds.*.relationship' => ['required', 'string', 'max:20'],
