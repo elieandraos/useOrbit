@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import { Filter } from '@lucide/vue';
 import { computed, ref } from 'vue';
-import PageHeader from '@/components/shell/PageHeader.vue';
-import Badge from '@/components/ui/badge/Badge.vue';
-import Button from '@/components/ui/button/Button.vue';
+import { useFileExport } from '@/composables/useFileExport';
+import { exportMethod as policiesExport } from '@/routes/policies';
 import type { Paginated } from '@/types';
 import type { PolicyResource } from '@/types/policy';
 import EmptyState from './partials/EmptyState.vue';
 import FiltersDrawer from './partials/FiltersDrawer.vue';
+import PoliciesIndexHeader from './partials/PoliciesIndexHeader.vue';
 import PoliciesTable from './partials/PoliciesTable.vue';
 
 interface Option {
@@ -46,40 +45,51 @@ const hasPolicies = computed(() => props.policies.data.length > 0);
 
 const filtersOpen = ref(false);
 
+function isActiveFilter(value: unknown): boolean {
+    return (
+        value !== null &&
+        value !== '' &&
+        !(Array.isArray(value) && value.length === 0)
+    );
+}
+
 const activeFilterCount = computed(
-    () =>
-        Object.values(props.filters).filter(
-            (value) =>
-                value !== null &&
-                value !== '' &&
-                !(Array.isArray(value) && value.length === 0),
-        ).length,
+    () => Object.values(props.filters).filter(isActiveFilter).length,
 );
+
+// Mirrors the currently applied filters so the download matches what's on screen.
+// The index has no sort param, so the export falls back to the same default order.
+const exportUrl = computed(() =>
+    policiesExport.url({
+        query: Object.fromEntries(
+            Object.entries(props.filters).filter(([, value]) =>
+                isActiveFilter(value),
+            ),
+        ),
+    }),
+);
+
+const { isExporting, exportFile } = useFileExport();
+
+function exportPolicies(): Promise<void> {
+    return exportFile(exportUrl.value, 'policies.xlsx', {
+        success: 'Policies exported.',
+        error: 'Failed to export policies. Please try again.',
+    });
+}
 </script>
 
 <template>
     <Head title="Policies" />
 
     <div class="flex flex-1 flex-col">
-        <PageHeader
-            title="Policies"
-            subtitle="All policies across Medical, Automotive, Fire, Life, Expat, and Travel"
-        >
-            <template #actions>
-                <Button
-                    v-if="hasPolicies || activeFilterCount > 0"
-                    variant="secondary"
-                    size="md"
-                    @click="filtersOpen = true"
-                >
-                    <template #leading><Filter /></template>
-                    Filters
-                    <Badge v-if="activeFilterCount > 0" tone="accent">{{
-                        activeFilterCount
-                    }}</Badge>
-                </Button>
-            </template>
-        </PageHeader>
+        <PoliciesIndexHeader
+            v-model:open="filtersOpen"
+            :has-policies="hasPolicies"
+            :active-filter-count="activeFilterCount"
+            :is-exporting="isExporting"
+            @export="exportPolicies"
+        />
 
         <div v-if="hasPolicies" class="mt-5 flex-1">
             <PoliciesTable :policies="policies" />
