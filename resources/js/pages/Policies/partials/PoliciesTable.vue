@@ -97,10 +97,11 @@ function goToPolicy(policy: PolicyResource) {
             <div class="min-h-[488px]">
                 <table class="w-full table-fixed border-collapse">
                     <colgroup>
-                        <col style="width: 28%" />
-                        <col style="width: 14%" />
-                        <col style="width: 18%" />
-                        <col style="width: 16%" />
+                        <col style="width: 25%" />
+                        <col style="width: 9%" />
+                        <col style="width: 10%" />
+                        <col style="width: 17%" />
+                        <col style="width: 15%" />
                         <col style="width: 11%" />
                         <col style="width: 9%" />
                         <col class="w-[60px]" />
@@ -115,7 +116,12 @@ function goToPolicy(policy: PolicyResource) {
                             <th
                                 class="px-4 py-2.5 text-left font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase"
                             >
-                                Type · Class
+                                Type
+                            </th>
+                            <th
+                                class="px-4 py-2.5 text-left font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase"
+                            >
+                                Class
                             </th>
                             <th
                                 class="px-4 py-2.5 text-left font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase"
@@ -188,11 +194,11 @@ function goToPolicy(policy: PolicyResource) {
                                 >
                                     {{ policy.type_label }}
                                 </Badge>
-                                <div
-                                    class="mt-1 font-mono text-[11.5px] text-secondary"
-                                >
-                                    {{ policy.class_label }}
-                                </div>
+                            </td>
+                            <td
+                                class="truncate px-4 py-3 text-[13px] text-secondary"
+                            >
+                                {{ policy.class_label }}
                             </td>
                             <td class="px-4 py-3">
                                 <div class="flex min-w-0 items-center gap-2">
