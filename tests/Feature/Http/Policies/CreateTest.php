@@ -13,38 +13,112 @@ test('guests are redirected to the login page', function () {
         ->assertRedirect(route('login'));
 });
 
-test('the endpoint returns no selected client by default', function () {
+test('nothing is preselected by default', function () {
     $user = User::factory()->withOrganization()->create();
 
     $this->actingAs($user)
         ->get(route('policies.create'))
         ->assertOk()
-        ->assertInertia(fn ($page) => $page->where('selectedClientId', null));
+        ->assertInertia(fn ($page) => $page->where('selected', [
+            'class' => null,
+            'type' => null,
+            'client_id' => null,
+            'carrier_id' => null,
+            'agent_id' => null,
+            'status' => null,
+            'source' => null,
+        ]));
 });
 
-test('a client_id query param pre-selects that client', function () {
+test('the carried-over first-step values are restored', function () {
     $user = User::factory()->withOrganization()->create();
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $agent = Agent::factory()->forOrganization($user)->create();
 
     $this->actingAs($user)
-        ->get(route('policies.create', ['client_id' => $client->id]))
+        ->get(route('policies.create', [
+            'class' => 'life',
+            'type' => 'group',
+            'client_id' => $client->id,
+            'carrier_id' => $carrier->id,
+            'agent_id' => $agent->id,
+            'status' => 'frozen',
+            'source' => 'friend',
+        ]))
         ->assertOk()
-        ->assertInertia(fn ($page) => $page->where('selectedClientId', $client->id));
+        ->assertInertia(fn ($page) => $page->where('selected', [
+            'class' => 'life',
+            'type' => 'group',
+            'client_id' => $client->id,
+            'carrier_id' => $carrier->id,
+            'agent_id' => $agent->id,
+            'status' => 'frozen',
+            'source' => 'friend',
+        ]));
 });
 
-test('a client_id from another organization is ignored', function () {
+test('parties from another organization are not preselected', function () {
     $user = User::factory()->withOrganization()->create();
 
     $otherOrganization = Organization::factory()->create();
     $otherClient = Client::factory()->for($otherOrganization)->create();
+    $otherCarrier = Carrier::factory()->for($otherOrganization)->create();
+    $otherAgent = Agent::factory()->for($otherOrganization)->create();
 
     $this->actingAs($user)
-        ->get(route('policies.create', ['client_id' => $otherClient->id]))
+        ->get(route('policies.create', [
+            'client_id' => $otherClient->id,
+            'carrier_id' => $otherCarrier->id,
+            'agent_id' => $otherAgent->id,
+        ]))
         ->assertOk()
-        ->assertInertia(fn ($page) => $page->where('selectedClientId', null));
+        ->assertInertia(fn ($page) => $page
+            ->where('selected.client_id', null)
+            ->where('selected.carrier_id', null)
+            ->where('selected.agent_id', null)
+        );
 });
 
-test('the create page receives the shared form options with the policy classes', function () {
+test('unknown class, type, status, and source values are not preselected', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('policies.create', [
+            'class' => 'marine',
+            'type' => 'family',
+            'status' => 'expired',
+            'source' => 'billboard',
+        ]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('selected.class', null)
+            ->where('selected.type', null)
+            ->where('selected.status', null)
+            ->where('selected.source', null)
+        );
+});
+
+test('array class, type, status, and source values are not preselected', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('policies.create', [
+            'class' => ['life'],
+            'type' => ['group'],
+            'status' => ['frozen'],
+            'source' => ['friend'],
+        ]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('selected.class', null)
+            ->where('selected.type', null)
+            ->where('selected.status', null)
+            ->where('selected.source', null)
+        );
+});
+
+test('the create page receives the shared form options with the policy classes and the selections', function () {
     $user = User::factory()->withOrganization()->create();
 
     $this->actingAs($user)
@@ -52,7 +126,7 @@ test('the create page receives the shared form options with the policy classes',
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('Policies/Create')
-            ->hasAll(['clients', 'carriers', 'agents', 'types', 'statuses', 'sources', 'classes', 'selectedClientId'])
+            ->hasAll(['clients', 'carriers', 'agents', 'types', 'statuses', 'sources', 'classes', 'selected'])
         );
 });
 

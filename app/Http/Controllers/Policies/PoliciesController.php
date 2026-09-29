@@ -13,6 +13,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Policies\IndexPolicyRequest;
 use App\Http\Resources\CarrierResource;
 use App\Http\Resources\PolicyResource;
+use App\Models\Agent;
 use App\Models\Carrier;
 use App\Models\Client;
 use App\Models\Policy;
@@ -60,12 +61,30 @@ final class PoliciesController extends Controller
     #[Authorize('create', Policy::class)]
     public function create(Request $request, PolicyFormOptions $policyFormOptions): Response
     {
-        $selectedClient = Client::query()->find($request->integer('client_id'));
-
         return inertia('Policies/Create', [
             ...$policyFormOptions->shared(),
             'classes' => collect(PolicyClass::all()),
-            'selectedClientId' => $selectedClient?->id,
+            'selected' => [
+                'class' => $this->selectedEnumValue($request, 'class', PolicyClass::class),
+                'type' => $this->selectedEnumValue($request, 'type', PolicyType::class),
+                'client_id' => Client::query()->find($request->integer('client_id'))?->id,
+                'carrier_id' => Carrier::query()->find($request->integer('carrier_id'))?->id,
+                'agent_id' => Agent::query()->find($request->integer('agent_id'))?->id,
+                'status' => $this->selectedEnumValue($request, 'status', PolicyStatus::class),
+                'source' => $this->selectedEnumValue($request, 'source', PolicySource::class),
+            ],
         ]);
+    }
+
+    /**
+     * Resolve a carried-over query value to its enum value, ignoring anything that isn't one of the enum's cases.
+     *
+     * @param  class-string<\BackedEnum>  $enumClass
+     */
+    private function selectedEnumValue(Request $request, string $key, string $enumClass): ?string
+    {
+        $value = $request->query($key);
+
+        return is_string($value) ? $enumClass::tryFrom($value)?->value : null;
     }
 }
