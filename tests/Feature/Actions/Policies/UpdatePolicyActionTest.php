@@ -7,25 +7,7 @@ use App\Models\Carrier;
 use App\Models\Client;
 use App\Models\Policy;
 use App\Models\User;
-
-function baseUpdatePolicyAttributes(Client $client, Carrier $carrier): array
-{
-    return [
-        'policy_number' => null,
-        'class' => 'medical',
-        'subclass' => 'Hospitalization',
-        'type' => 'single',
-        'client_id' => $client->id,
-        'carrier_id' => $carrier->id,
-        'agent_id' => null,
-        'effective_date' => '2026-01-01',
-        'expiry_date' => '2027-01-01',
-        'premium_amount' => '1500.00',
-        'discount_amount' => null,
-        'status' => 'active',
-        'source' => 'client',
-    ];
-}
+use Tests\Support\PolicyPayload;
 
 test('updates the policy fields in the database', function () {
     $user = User::factory()->withOrganization()->create();
@@ -39,7 +21,7 @@ test('updates the policy fields in the database', function () {
     ]);
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    app(UpdatePolicyAction::class)->handle($user, $policy, baseUpdatePolicyAttributes($client, $carrier));
+    app(UpdatePolicyAction::class)->handle($user, $policy, PolicyPayload::base($client, $carrier, ['premium_amount' => '1500.00']));
 
     $fresh = $policy->fresh();
     expect($fresh->premium_amount)->toBe('1500.00')
@@ -58,7 +40,7 @@ test('sets updated_by to the user id', function () {
     ]);
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    app(UpdatePolicyAction::class)->handle($user, $policy, baseUpdatePolicyAttributes($client, $carrier));
+    app(UpdatePolicyAction::class)->handle($user, $policy, PolicyPayload::base($client, $carrier));
 
     expect($policy->fresh()->updated_by)->toBe($user->id);
 });
@@ -75,8 +57,7 @@ test('regenerates the slug when policy_number changes', function () {
         'slug' => 'pol-0001',
     ]);
 
-    $attributes = baseUpdatePolicyAttributes($client, $carrier);
-    $attributes['policy_number'] = 'POL-9999';
+    $attributes = PolicyPayload::base($client, $carrier, ['policy_number' => 'POL-9999']);
 
     /** @noinspection PhpUnhandledExceptionInspection */
     app(UpdatePolicyAction::class)->handle($user, $policy, $attributes);
@@ -96,8 +77,7 @@ test('keeps the existing slug when policy_number does not change', function () {
         'slug' => 'pol-0001',
     ]);
 
-    $attributes = baseUpdatePolicyAttributes($client, $carrier);
-    $attributes['policy_number'] = 'POL-0001';
+    $attributes = PolicyPayload::base($client, $carrier, ['policy_number' => 'POL-0001']);
 
     /** @noinspection PhpUnhandledExceptionInspection */
     app(UpdatePolicyAction::class)->handle($user, $policy, $attributes);

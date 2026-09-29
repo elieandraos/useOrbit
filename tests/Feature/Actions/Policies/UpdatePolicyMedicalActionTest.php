@@ -9,69 +9,7 @@ use App\Models\Policy;
 use App\Models\PolicyInsured;
 use App\Models\User;
 use Illuminate\Database\QueryException;
-
-function singleMedicalUpdateAttributes(Client $client, Carrier $carrier): array
-{
-    return [
-        'policy_number' => null,
-        'class' => 'medical',
-        'subclass' => 'Hospitalization',
-        'type' => 'single',
-        'client_id' => $client->id,
-        'carrier_id' => $carrier->id,
-        'agent_id' => null,
-        'effective_date' => '2026-01-01',
-        'expiry_date' => '2027-01-01',
-        'premium_amount' => '1500.00',
-        'discount_amount' => null,
-        'status' => 'active',
-        'source' => 'client',
-        'medical' => [
-            'coverage_scope' => 'in',
-            'class_tier' => 'class_a',
-            'co_insurance' => false,
-            'co_insurance_share' => null,
-            'guaranteed_renewable' => true,
-            'insured_full_name' => 'Updated Name',
-            'insured_date_of_birth' => '1986-03-22',
-            'insured_gender' => 'female',
-            'insured_smoker' => false,
-            'insured_medical_history' => null,
-        ],
-    ];
-}
-
-function groupMedicalUpdateAttributes(Client $client, Carrier $carrier, array $insureds = []): array
-{
-    return [
-        'policy_number' => null,
-        'class' => 'medical',
-        'subclass' => 'Outpatient',
-        'type' => 'group',
-        'client_id' => $client->id,
-        'carrier_id' => $carrier->id,
-        'agent_id' => null,
-        'effective_date' => '2026-01-01',
-        'expiry_date' => '2027-01-01',
-        'premium_amount' => '28400.00',
-        'discount_amount' => '1200.00',
-        'status' => 'active',
-        'source' => 'owner',
-        'medical' => [
-            'coverage_scope' => 'in_out',
-            'class_tier' => 'class_b',
-            'co_insurance' => true,
-            'co_insurance_share' => '15.00',
-            'guaranteed_renewable' => true,
-            'insured_full_name' => null,
-            'insured_date_of_birth' => null,
-            'insured_gender' => null,
-            'insured_smoker' => null,
-            'insured_medical_history' => null,
-        ],
-        'insureds' => $insureds,
-    ];
-}
+use Tests\Support\PolicyPayload;
 
 test('updates the policy_medical_details row in place', function () {
     $user = User::factory()->withOrganization()->create();
@@ -85,7 +23,9 @@ test('updates the policy_medical_details row in place', function () {
     $detailsId = $policy->medicalDetails->id;
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    app(UpdatePolicyMedicalAction::class)->handle($user, $policy, singleMedicalUpdateAttributes($client, $carrier));
+    app(UpdatePolicyMedicalAction::class)->handle($user, $policy, PolicyPayload::medicalSingle($client, $carrier, [
+        'medical' => ['insured_full_name' => 'Updated Name'],
+    ]));
 
     $fresh = $policy->fresh('medicalDetails');
     expect($fresh->medicalDetails->id)->toBe($detailsId)
@@ -106,8 +46,8 @@ test('an existing member id updates that row in place instead of replacing it', 
         'full_name' => 'Original Name',
     ]);
 
-    $attributes = groupMedicalUpdateAttributes($client, $carrier, [
-        ['id' => $member->id, 'full_name' => 'Renamed Member', 'relationship' => 'Spouse', 'date_of_birth' => '1988-08-08', 'gender' => 'female', 'medical_notes' => null],
+    $attributes = PolicyPayload::medicalGroup($client, $carrier, [
+        'insureds' => [PolicyPayload::insured(['id' => $member->id, 'full_name' => 'Renamed Member'])],
     ]);
 
     /** @noinspection PhpUnhandledExceptionInspection */
@@ -131,8 +71,8 @@ test('omitting a previously-existing member removes it', function () {
     $kept = PolicyInsured::factory()->for($policy)->create(['member_code' => 'MBR-001']);
     $removed = PolicyInsured::factory()->for($policy)->create(['member_code' => 'MBR-002']);
 
-    $attributes = groupMedicalUpdateAttributes($client, $carrier, [
-        ['id' => $kept->id, 'full_name' => $kept->full_name, 'relationship' => $kept->relationship, 'date_of_birth' => $kept->date_of_birth->format('Y-m-d'), 'gender' => $kept->gender?->value, 'medical_notes' => null],
+    $attributes = PolicyPayload::medicalGroup($client, $carrier, [
+        'insureds' => [PolicyPayload::insured(['id' => $kept->id])],
     ]);
 
     /** @noinspection PhpUnhandledExceptionInspection */
@@ -154,9 +94,11 @@ test('a newly added member receives the next sequential member_code without reus
     $kept = PolicyInsured::factory()->for($policy)->create(['member_code' => 'MBR-001']);
     PolicyInsured::factory()->for($policy)->create(['member_code' => 'MBR-002']);
 
-    $attributes = groupMedicalUpdateAttributes($client, $carrier, [
-        ['id' => $kept->id, 'full_name' => $kept->full_name, 'relationship' => $kept->relationship, 'date_of_birth' => $kept->date_of_birth->format('Y-m-d'), 'gender' => $kept->gender?->value, 'medical_notes' => null],
-        ['full_name' => 'New Member', 'relationship' => 'Child', 'date_of_birth' => '2018-01-01', 'gender' => 'male', 'medical_notes' => null],
+    $attributes = PolicyPayload::medicalGroup($client, $carrier, [
+        'insureds' => [
+            PolicyPayload::insured(['id' => $kept->id]),
+            PolicyPayload::insured(['full_name' => 'New Member']),
+        ],
     ]);
 
     /** @noinspection PhpUnhandledExceptionInspection */
@@ -179,7 +121,7 @@ test('switching type away from group removes all insureds', function () {
     PolicyInsured::factory()->for($policy)->create();
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    app(UpdatePolicyMedicalAction::class)->handle($user, $policy, singleMedicalUpdateAttributes($client, $carrier));
+    app(UpdatePolicyMedicalAction::class)->handle($user, $policy, PolicyPayload::medicalSingle($client, $carrier));
 
     expect($policy->insureds()->count())->toBe(0);
 });
@@ -196,9 +138,11 @@ test('an invalid member leaves the policy, its details, and its insureds unchang
     ]);
     $kept = PolicyInsured::factory()->for($policy)->create(['member_code' => 'MBR-001']);
 
-    $attributes = groupMedicalUpdateAttributes($client, $carrier, [
-        ['id' => $kept->id, 'full_name' => $kept->full_name, 'relationship' => $kept->relationship, 'date_of_birth' => $kept->date_of_birth->format('Y-m-d'), 'gender' => $kept->gender?->value, 'medical_notes' => null],
-        ['full_name' => 'Invalid Member', 'relationship' => 'Child', 'date_of_birth' => null, 'gender' => null, 'medical_notes' => null],
+    $attributes = PolicyPayload::medicalGroup($client, $carrier, [
+        'insureds' => [
+            PolicyPayload::insured(['id' => $kept->id]),
+            PolicyPayload::insured(['full_name' => 'Invalid Member', 'date_of_birth' => null]),
+        ],
     ]);
 
     $attempt = function () use ($user, $policy, $attributes): Policy {

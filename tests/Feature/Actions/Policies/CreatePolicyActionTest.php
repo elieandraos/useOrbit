@@ -8,25 +8,7 @@ use App\Models\Client;
 use App\Models\Organization;
 use App\Models\User;
 use App\Support\Tenancy\OrganizationContext;
-
-function basePolicyAttributes(Client $client, Carrier $carrier): array
-{
-    return [
-        'policy_number' => null,
-        'class' => 'medical',
-        'subclass' => 'Hospitalization',
-        'type' => 'single',
-        'client_id' => $client->id,
-        'carrier_id' => $carrier->id,
-        'agent_id' => null,
-        'effective_date' => '2026-01-01',
-        'expiry_date' => '2027-01-01',
-        'premium_amount' => '1200.00',
-        'discount_amount' => null,
-        'status' => 'active',
-        'source' => 'client',
-    ];
-}
+use Tests\Support\PolicyPayload;
 
 test('a blank policy_number is auto-generated', function () {
     $user = User::factory()->withOrganization()->create();
@@ -35,7 +17,7 @@ test('a blank policy_number is auto-generated', function () {
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    $policy = app(CreatePolicyAction::class)->handle($user, basePolicyAttributes($client, $carrier));
+    $policy = app(CreatePolicyAction::class)->handle($user, PolicyPayload::base($client, $carrier));
 
     expect($policy->policy_number)->toBe('POL-0001');
 });
@@ -47,9 +29,9 @@ test('auto-generated policy numbers increment per organization', function () {
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    $first = app(CreatePolicyAction::class)->handle($user, basePolicyAttributes($client, $carrier));
+    $first = app(CreatePolicyAction::class)->handle($user, PolicyPayload::base($client, $carrier));
     /** @noinspection PhpUnhandledExceptionInspection */
-    $second = app(CreatePolicyAction::class)->handle($user, basePolicyAttributes($client, $carrier));
+    $second = app(CreatePolicyAction::class)->handle($user, PolicyPayload::base($client, $carrier));
 
     expect($first->policy_number)->toBe('POL-0001')
         ->and($second->policy_number)->toBe('POL-0002');
@@ -61,8 +43,7 @@ test('a submitted policy_number is respected', function () {
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $attributes = basePolicyAttributes($client, $carrier);
-    $attributes['policy_number'] = 'CUSTOM-001';
+    $attributes = PolicyPayload::base($client, $carrier, ['policy_number' => 'CUSTOM-001']);
 
     /** @noinspection PhpUnhandledExceptionInspection */
     $policy = app(CreatePolicyAction::class)->handle($user, $attributes);
@@ -77,7 +58,7 @@ test('sets created_by to the user id', function () {
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    $policy = app(CreatePolicyAction::class)->handle($user, basePolicyAttributes($client, $carrier));
+    $policy = app(CreatePolicyAction::class)->handle($user, PolicyPayload::base($client, $carrier));
 
     expect($policy->created_by)->toBe($user->id);
 });
@@ -92,7 +73,7 @@ test('creates the policy scoped to the organization context', function () {
     app(OrganizationContext::class)->set($otherOrganization->id);
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    $policy = app(CreatePolicyAction::class)->handle($user, basePolicyAttributes($client, $carrier));
+    $policy = app(CreatePolicyAction::class)->handle($user, PolicyPayload::base($client, $carrier));
 
     expect($policy->organization_id)->toBe($otherOrganization->id);
 });

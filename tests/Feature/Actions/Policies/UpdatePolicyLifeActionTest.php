@@ -8,31 +8,7 @@ use App\Models\Client;
 use App\Models\Policy;
 use App\Models\User;
 use Illuminate\Database\QueryException;
-
-function lifeUpdateAttributes(Client $client, Carrier $carrier): array
-{
-    return [
-        'policy_number' => null,
-        'class' => 'life',
-        'subclass' => 'Term',
-        'type' => 'single',
-        'client_id' => $client->id,
-        'carrier_id' => $carrier->id,
-        'agent_id' => null,
-        'effective_date' => '2026-01-01',
-        'expiry_date' => '2027-01-01',
-        'premium_amount' => '700.00',
-        'discount_amount' => null,
-        'status' => 'active',
-        'source' => 'client',
-        'life' => [
-            'sum_assured' => '200000.00',
-            'term_years' => 15,
-            'smoker' => true,
-            'beneficiaries' => 'John Smith (100%)',
-        ],
-    ];
-}
+use Tests\Support\PolicyPayload;
 
 test('updates the policy_life_details row in place', function () {
     $user = User::factory()->withOrganization()->create();
@@ -43,7 +19,14 @@ test('updates the policy_life_details row in place', function () {
     $detailsId = $policy->lifeDetails->id;
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    app(UpdatePolicyLifeAction::class)->handle($user, $policy, lifeUpdateAttributes($client, $carrier));
+    app(UpdatePolicyLifeAction::class)->handle($user, $policy, PolicyPayload::life($client, $carrier, [
+        'life' => [
+            'sum_assured' => '200000.00',
+            'term_years' => 15,
+            'smoker' => true,
+            'beneficiaries' => 'John Smith (100%)',
+        ],
+    ]));
 
     $fresh = $policy->fresh('lifeDetails');
     expect($fresh->lifeDetails->id)->toBe($detailsId)
@@ -63,8 +46,7 @@ test('an invalid life field leaves the policy and its details unchanged', functi
         'premium_amount' => '500.00',
     ]);
 
-    $attributes = lifeUpdateAttributes($client, $carrier);
-    $attributes['life']['sum_assured'] = null;
+    $attributes = PolicyPayload::life($client, $carrier, ['life' => ['sum_assured' => null]]);
 
     $attempt = function () use ($user, $policy, $attributes): Policy {
         /** @noinspection PhpUnhandledExceptionInspection */

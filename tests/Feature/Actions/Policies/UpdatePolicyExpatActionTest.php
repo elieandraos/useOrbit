@@ -9,38 +9,7 @@ use App\Models\Policy;
 use App\Models\PolicyExpatDetails;
 use App\Models\User;
 use Illuminate\Database\QueryException;
-
-function expatUpdateAttributes(Client $client, Carrier $carrier, string $coverageZone = 'in'): array
-{
-    $isInOut = $coverageZone === 'in_out';
-
-    return [
-        'policy_number' => null,
-        'class' => 'expat',
-        'subclass' => 'Worldwide',
-        'type' => 'single',
-        'client_id' => $client->id,
-        'carrier_id' => $carrier->id,
-        'agent_id' => null,
-        'effective_date' => '2026-01-01',
-        'expiry_date' => '2027-01-01',
-        'premium_amount' => '1500.00',
-        'discount_amount' => null,
-        'status' => 'active',
-        'source' => 'client',
-        'expat' => [
-            'coverage_zone' => $coverageZone,
-            'travel_scope' => $isInOut ? 'Regional' : null,
-            'full_name' => 'Rami Haddad',
-            'gender' => 'male',
-            'nationality' => 'Lebanese',
-            'date_of_birth' => '1988-02-20',
-            'phone' => '+96170999888',
-            'country_id' => null,
-            'visa_expiry_date' => $isInOut ? '2027-03-01' : null,
-        ],
-    ];
-}
+use Tests\Support\PolicyPayload;
 
 test('updates the policy_expat_details row in place', function () {
     $user = User::factory()->withOrganization()->create();
@@ -51,7 +20,9 @@ test('updates the policy_expat_details row in place', function () {
     $detailsId = $policy->expatDetails->id;
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    app(UpdatePolicyExpatAction::class)->handle($user, $policy, expatUpdateAttributes($client, $carrier));
+    app(UpdatePolicyExpatAction::class)->handle($user, $policy, PolicyPayload::expat($client, $carrier, [
+        'expat' => ['coverage_zone' => 'in', 'full_name' => 'Rami Haddad'],
+    ]));
 
     $fresh = $policy->fresh('expatDetails');
     expect($fresh->expatDetails->id)->toBe($detailsId)
@@ -76,7 +47,9 @@ test('switching to the in-out zone populates the travel scope and visa expiry', 
     ]);
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    app(UpdatePolicyExpatAction::class)->handle($user, $policy, expatUpdateAttributes($client, $carrier, 'in_out'));
+    app(UpdatePolicyExpatAction::class)->handle($user, $policy, PolicyPayload::expatInOut($client, $carrier, [
+        'expat' => ['travel_scope' => 'Regional', 'visa_expiry_date' => '2027-03-01'],
+    ]));
 
     $fresh = $policy->fresh('expatDetails');
     expect($fresh->expatDetails->travel_scope)->toBe('Regional')
@@ -93,8 +66,7 @@ test('an invalid expat field leaves the policy and its details unchanged', funct
         'premium_amount' => '500.00',
     ]);
 
-    $attributes = expatUpdateAttributes($client, $carrier);
-    $attributes['expat']['full_name'] = null;
+    $attributes = PolicyPayload::expat($client, $carrier, ['expat' => ['full_name' => null]]);
 
     $attempt = function () use ($user, $policy, $attributes): Policy {
         /** @noinspection PhpUnhandledExceptionInspection */

@@ -8,32 +8,7 @@ use App\Models\Client;
 use App\Models\Policy;
 use App\Models\User;
 use Illuminate\Database\QueryException;
-
-function travelUpdateAttributes(Client $client, Carrier $carrier): array
-{
-    return [
-        'policy_number' => null,
-        'class' => 'travel',
-        'subclass' => 'Worldwide',
-        'type' => 'single',
-        'client_id' => $client->id,
-        'carrier_id' => $carrier->id,
-        'agent_id' => null,
-        'effective_date' => '2026-01-01',
-        'expiry_date' => '2027-01-01',
-        'premium_amount' => '220.00',
-        'discount_amount' => null,
-        'status' => 'active',
-        'source' => 'client',
-        'travel' => [
-            'destination' => 'Spain',
-            'trip_start_date' => '2026-07-01',
-            'trip_end_date' => '2026-07-10',
-            'travelers' => 'Amir Haddad',
-            'coverage_tier' => 'Premium',
-        ],
-    ];
-}
+use Tests\Support\PolicyPayload;
 
 test('updates the policy_travel_details row in place', function () {
     $user = User::factory()->withOrganization()->create();
@@ -44,7 +19,9 @@ test('updates the policy_travel_details row in place', function () {
     $detailsId = $policy->travelDetails->id;
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    app(UpdatePolicyTravelAction::class)->handle($user, $policy, travelUpdateAttributes($client, $carrier));
+    app(UpdatePolicyTravelAction::class)->handle($user, $policy, PolicyPayload::travel($client, $carrier, [
+        'travel' => ['destination' => 'Spain', 'travelers' => 'Amir Haddad', 'coverage_tier' => 'Premium'],
+    ]));
 
     $fresh = $policy->fresh('travelDetails');
     expect($fresh->travelDetails->id)->toBe($detailsId)
@@ -63,8 +40,10 @@ test('an invalid trip field leaves the policy and its details unchanged', functi
         'premium_amount' => '150.00',
     ]);
 
-    $attributes = travelUpdateAttributes($client, $carrier);
-    $attributes['travel']['destination'] = null;
+    $attributes = PolicyPayload::travel($client, $carrier, [
+        'premium_amount' => '220.00',
+        'travel' => ['destination' => null],
+    ]);
 
     $attempt = function () use ($user, $policy, $attributes): Policy {
         /** @noinspection PhpUnhandledExceptionInspection */

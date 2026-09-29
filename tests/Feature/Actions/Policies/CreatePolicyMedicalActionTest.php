@@ -9,72 +9,7 @@ use App\Models\Policy;
 use App\Models\PolicyInsured;
 use App\Models\User;
 use Illuminate\Database\QueryException;
-
-function singleMedicalAttributes(Client $client, Carrier $carrier): array
-{
-    return [
-        'policy_number' => null,
-        'class' => 'medical',
-        'subclass' => 'Hospitalization',
-        'type' => 'single',
-        'client_id' => $client->id,
-        'carrier_id' => $carrier->id,
-        'agent_id' => null,
-        'effective_date' => '2026-01-01',
-        'expiry_date' => '2027-01-01',
-        'premium_amount' => '1200.00',
-        'discount_amount' => null,
-        'status' => 'active',
-        'source' => 'client',
-        'medical' => [
-            'coverage_scope' => 'in',
-            'class_tier' => 'class_a',
-            'co_insurance' => false,
-            'co_insurance_share' => null,
-            'guaranteed_renewable' => true,
-            'insured_full_name' => 'Amelia Hartwell',
-            'insured_date_of_birth' => '1986-03-22',
-            'insured_gender' => 'female',
-            'insured_smoker' => false,
-            'insured_medical_history' => null,
-        ],
-    ];
-}
-
-function groupMedicalAttributes(Client $client, Carrier $carrier): array
-{
-    return [
-        'policy_number' => null,
-        'class' => 'medical',
-        'subclass' => 'Outpatient',
-        'type' => 'group',
-        'client_id' => $client->id,
-        'carrier_id' => $carrier->id,
-        'agent_id' => null,
-        'effective_date' => '2026-01-01',
-        'expiry_date' => '2027-01-01',
-        'premium_amount' => '28400.00',
-        'discount_amount' => '1200.00',
-        'status' => 'active',
-        'source' => 'owner',
-        'medical' => [
-            'coverage_scope' => 'in_out',
-            'class_tier' => 'class_b',
-            'co_insurance' => true,
-            'co_insurance_share' => '15.00',
-            'guaranteed_renewable' => true,
-            'insured_full_name' => null,
-            'insured_date_of_birth' => null,
-            'insured_gender' => null,
-            'insured_smoker' => null,
-            'insured_medical_history' => null,
-        ],
-        'insureds' => [
-            ['full_name' => 'Lina Hartwell', 'relationship' => 'Spouse', 'date_of_birth' => '1988-08-08', 'gender' => 'female', 'medical_notes' => null],
-            ['full_name' => 'Noah Hartwell', 'relationship' => 'Child', 'date_of_birth' => '2015-04-14', 'gender' => 'male', 'medical_notes' => 'Mild asthma'],
-        ],
-    ];
-}
+use Tests\Support\PolicyPayload;
 
 test('a single medical policy stores an insured profile on policy_medical_details', function () {
     $user = User::factory()->withOrganization()->create();
@@ -83,7 +18,9 @@ test('a single medical policy stores an insured profile on policy_medical_detail
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    $policy = app(CreatePolicyMedicalAction::class)->handle($user, singleMedicalAttributes($client, $carrier));
+    $policy = app(CreatePolicyMedicalAction::class)->handle($user, PolicyPayload::medicalSingle($client, $carrier, [
+        'medical' => ['coverage_scope' => 'in', 'insured_full_name' => 'Amelia Hartwell'],
+    ]));
 
     expect($policy->medicalDetails->insured_full_name)->toBe('Amelia Hartwell')
         ->and($policy->medicalDetails->coverage_scope->value)->toBe('in')
@@ -97,7 +34,12 @@ test('a group medical policy stores dependents in policy_insureds with sequentia
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    $policy = app(CreatePolicyMedicalAction::class)->handle($user, groupMedicalAttributes($client, $carrier));
+    $policy = app(CreatePolicyMedicalAction::class)->handle($user, PolicyPayload::medicalGroup($client, $carrier, [
+        'insureds' => [
+            PolicyPayload::insured(['full_name' => 'Lina Hartwell']),
+            PolicyPayload::insured(['full_name' => 'Noah Hartwell']),
+        ],
+    ]));
 
     expect($policy->insureds)->toHaveCount(2)
         ->and($policy->insureds[0]->member_code)->toBe('MBR-001')
@@ -111,8 +53,13 @@ test('an invalid dependent leaves no partial policy, detail, or insureds rows', 
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
 
-    $attributes = groupMedicalAttributes($client, $carrier);
-    $attributes['insureds'][] = ['full_name' => 'Iris Hartwell', 'relationship' => 'Child', 'date_of_birth' => null, 'gender' => null, 'medical_notes' => null];
+    $attributes = PolicyPayload::medicalGroup($client, $carrier, [
+        'insureds' => [
+            PolicyPayload::insured(['full_name' => 'Lina Hartwell']),
+            PolicyPayload::insured(['full_name' => 'Noah Hartwell']),
+            PolicyPayload::insured(['full_name' => 'Iris Hartwell', 'date_of_birth' => null]),
+        ],
+    ]);
 
     $attempt = function () use ($user, $attributes): Policy {
         /** @noinspection PhpUnhandledExceptionInspection */

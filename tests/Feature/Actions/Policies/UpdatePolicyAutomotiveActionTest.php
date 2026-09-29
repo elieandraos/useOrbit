@@ -8,37 +8,7 @@ use App\Models\Client;
 use App\Models\Policy;
 use App\Models\User;
 use Illuminate\Database\QueryException;
-
-function automotiveUpdateAttributes(Client $client, Carrier $carrier, string $subclass = 'Third Party Liability'): array
-{
-    $isAllRisk = $subclass === 'All Risk';
-
-    return [
-        'policy_number' => null,
-        'class' => 'automotive',
-        'subclass' => $subclass,
-        'type' => 'single',
-        'client_id' => $client->id,
-        'carrier_id' => $carrier->id,
-        'agent_id' => null,
-        'effective_date' => '2026-01-01',
-        'expiry_date' => '2027-01-01',
-        'premium_amount' => '900.00',
-        'discount_amount' => null,
-        'status' => 'active',
-        'source' => 'client',
-        'automotive' => [
-            'plate_number' => '789 EF',
-            'make' => 'Honda',
-            'model' => 'Civic',
-            'year' => 2021,
-            'vin' => null,
-            'color' => 'White',
-            'valuation_amount' => $isAllRisk ? '40000.00' : null,
-            'valuation_source' => $isAllRisk ? 'Market value' : null,
-        ],
-    ];
-}
+use Tests\Support\PolicyPayload;
 
 test('updates the policy_automotive_details row in place', function () {
     $user = User::factory()->withOrganization()->create();
@@ -49,7 +19,9 @@ test('updates the policy_automotive_details row in place', function () {
     $detailsId = $policy->automotiveDetails->id;
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    app(UpdatePolicyAutomotiveAction::class)->handle($user, $policy, automotiveUpdateAttributes($client, $carrier));
+    app(UpdatePolicyAutomotiveAction::class)->handle($user, $policy, PolicyPayload::automotive($client, $carrier, [
+        'automotive' => ['plate_number' => '789 EF', 'make' => 'Honda'],
+    ]));
 
     $fresh = $policy->fresh('automotiveDetails');
     expect($fresh->automotiveDetails->id)->toBe($detailsId)
@@ -68,7 +40,9 @@ test('switching subclass to all risk populates the vehicle valuation', function 
     ]);
 
     /** @noinspection PhpUnhandledExceptionInspection */
-    app(UpdatePolicyAutomotiveAction::class)->handle($user, $policy, automotiveUpdateAttributes($client, $carrier, 'All Risk'));
+    app(UpdatePolicyAutomotiveAction::class)->handle($user, $policy, PolicyPayload::automotiveAllRisk($client, $carrier, [
+        'automotive' => ['valuation_amount' => '40000.00', 'valuation_source' => 'Market value'],
+    ]));
 
     $fresh = $policy->fresh('automotiveDetails');
     expect($fresh->automotiveDetails->valuation_amount)->toBe('40000.00')
@@ -85,8 +59,7 @@ test('an invalid vehicle field leaves the policy and its details unchanged', fun
         'premium_amount' => '500.00',
     ]);
 
-    $attributes = automotiveUpdateAttributes($client, $carrier);
-    $attributes['automotive']['plate_number'] = null;
+    $attributes = PolicyPayload::automotive($client, $carrier, ['automotive' => ['plate_number' => null]]);
 
     $attempt = function () use ($user, $policy, $attributes): Policy {
         /** @noinspection PhpUnhandledExceptionInspection */
