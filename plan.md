@@ -153,11 +153,9 @@ corrected. No compatibility exceptions are added to rules to accommodate bad fix
   user-entered text, unique within an organization. The same number in another organization is valid.
 - **Locked:** Form Request validation surfaces predictable uniqueness conflicts as a field error; the
   database constraint remains the authoritative guarantee.
-- **Derived** (premises: the column is non-nullable and nothing generates a number any more): the policy
-  number is required on Store and Update.
-- **Derived** (premise: the database constraint counts soft-deleted rows): for the field error to
-  predict the constraint, the uniqueness rule counts soft-deleted policies and ignores the policy being
-  updated.
+- **Locked:** the policy number is required on Store and Update.
+- **Locked:** uniqueness validation includes soft-deleted policies, so it predicts the existing database
+  constraint; Update excludes the current policy.
 - **Derived** (premise: the fixture rule): generation tests, the forms' auto-generation helper text and
   the payload builders' null number no longer apply.
 - **Tests:** HTTP: duplicates rejected on Store and Update, including one held by a soft-deleted
@@ -243,14 +241,23 @@ corrected. No compatibility exceptions are added to rules to accommodate bad fix
   - Fire keeps requiring Governorate/state, so every configured Fire market needs its state reference
     data;
   - markets are never inferred from countries having state rows;
-  - this is a temporary source: future organization-level market provisioning replaces it.
+  - this is a temporary source: future organization-level market provisioning replaces it;
+  - `MARKET_COUNTRIES` holds uppercase ISO2 codes, comma-separated (e.g. `LB,AE,SA`), matching
+    `countries.iso2`. The application config may normalize whitespace and casing; no other code format
+    is supported;
+  - `MARKET_COUNTRIES` is required configuration for any environment using Policies. An empty or
+    unconfigured market set never falls back to exposing all countries;
+  - existing pre-production Policy data outside the configured markets isn't grandfathered: invalid
+    fixtures and local data are corrected or reset instead.
 - **Locked, outside Phase 26:** whether Clients, Agents, Carriers or Users are constrained by markets.
 - **Derived** (premise: the only policy country fields are `fire.country_id` and `expat.country_id`):
   both are limited to configured markets; the Expat country stays optional.
 - **Derived** (premise: the fixture rule): tests exercising Fire or Expat country validation run with the
   fixtures' country configured as a market.
-- **Open:** which ISO code form the config accepts (`iso2` or `iso3`, both unique columns), the config
-  file and key, and how the value is parsed.
+- **Fact:** no existing config file establishes a convention for failing on missing required
+  configuration.
+- **Open:** the config file and key; how the value is parsed; how a missing or empty market set fails or
+  is reported (it must not expose all countries).
 - **Tests:** HTTP: a configured market is accepted and a non-market country is rejected for Fire and
   Expat on Store and Update; option lists contain only configured markets.
 
@@ -306,8 +313,9 @@ corrected. No compatibility exceptions are added to rules to accommodate bad fix
 - **Derived** (premise: the column is removed): Members search matches on the remaining fields.
 - **Open:** how the schema change is made (a new migration, or amending the pre-production migration);
   the modal component.
-- **Tests:** tests that exist only for member codes are removed; tests covering other insured behavior
-  drop their member-code assertions. The confirmation is checked manually.
+- **Locked:** tests whose only responsibility is `member_code` are deleted. Other insured-behavior tests
+  are kept, with only their obsolete member-code assertions removed.
+- **Tests:** the confirmation is checked manually.
 
 ### 10. The New Policy flow keeps the user's choices
 
@@ -423,7 +431,7 @@ Otherwise, outcomes 1, 5, 6 and 10 are independent.
 |---|---|---|
 | 2 | Location and typing of the class route configuration | One shared source for show/edit/export per class; routes and guards unchanged |
 | 6 | Tier enum vs allowed-values rule | Server and UI share exactly Basic/Standard/Premium |
-| 7 | ISO code form, config file/key, parsing | Code reads config, not `env()`; options and validation use the same market set |
+| 7 | Config file/key, parsing, missing/empty failure mechanism | Uppercase ISO2 only; code reads config, not `env()`; options and validation use the same market set; never falls back to all countries |
 | 8 | Sort key for each party's user-visible identity | Alphabetical by what the user sees |
 | 9 | Schema change approach; modal component | `member_code` gone entirely, no replacement identifier |
 | 10 | Mechanism for browser Back | Existing Inertia/browser-state mechanisms only; no bespoke state infrastructure |
