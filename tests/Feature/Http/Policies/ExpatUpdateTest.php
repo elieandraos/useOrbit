@@ -159,3 +159,15 @@ test('a subclass outside the expat list is rejected', function (string $subclass
         ->patch(route('policies.expat.update', $policy), $payload)
         ->assertSessionHasErrors(['subclass']);
 })->with(['In', 'Pilgrim']);
+
+test('an expat insured born in the future is rejected on update', function () {
+    $this->freezeTime();
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->expat()->create(['created_by' => $user->id]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->patch(route('policies.expat.update', $policy), PolicyPayload::expat($client, $carrier, ['expat' => ['date_of_birth' => today()->addDay()->toDateString()]]))
+        ->assertSessionHasErrors(['expat.date_of_birth']);
+});

@@ -33,7 +33,7 @@ final class UpdatePolicyExpatRequest extends FormRequest
             'expat.full_name' => ['required', 'string', 'max:255'],
             'expat.gender' => ['required', new Enum(Gender::class)],
             'expat.nationality' => ['required', 'string', 'max:100'],
-            'expat.date_of_birth' => ['required', 'date'],
+            'expat.date_of_birth' => ['required', 'date', 'before_or_equal:today'],
             'expat.phone' => ['required', 'string', 'max:30'],
             'expat.country_id' => ['nullable', 'integer', 'exists:countries,id'],
             'expat.visa_expiry_date' => ['nullable', 'date'],

@@ -47,7 +47,7 @@ final class UpdatePolicyMedicalRequest extends FormRequest
             'medical.guaranteed_renewable' => ['required', 'boolean'],
 
             'medical.insured_full_name' => ['required_if:type,'.PolicyType::Single->value, 'prohibited_unless:type,'.PolicyType::Single->value, 'nullable', 'string', 'max:255'],
-            'medical.insured_date_of_birth' => ['required_if:type,'.PolicyType::Single->value, 'prohibited_unless:type,'.PolicyType::Single->value, 'nullable', 'date'],
+            'medical.insured_date_of_birth' => ['required_if:type,'.PolicyType::Single->value, 'prohibited_unless:type,'.PolicyType::Single->value, 'nullable', 'date', 'before_or_equal:today'],
             'medical.insured_gender' => ['required_if:type,'.PolicyType::Single->value, 'prohibited_unless:type,'.PolicyType::Single->value, 'nullable', new Enum(Gender::class)],
             'medical.insured_smoker' => ['required_if:type,'.PolicyType::Single->value, 'prohibited_unless:type,'.PolicyType::Single->value, 'nullable', 'boolean'],
             'medical.insured_medical_history' => ['nullable', 'string'],
@@ -56,7 +56,7 @@ final class UpdatePolicyMedicalRequest extends FormRequest
             'insureds.*.id' => ['nullable', 'integer', Rule::exists('policy_insureds', 'id')->where('policy_id', $policy->id)],
             'insureds.*.full_name' => ['required', 'string', 'max:255'],
             'insureds.*.relationship' => ['required', 'string', 'max:20'],
-            'insureds.*.date_of_birth' => ['required', 'date'],
+            'insureds.*.date_of_birth' => ['required', 'date', 'before_or_equal:today'],
             'insureds.*.gender' => ['nullable', new Enum(Gender::class)],
             'insureds.*.medical_notes' => ['nullable', 'string'],
         ];

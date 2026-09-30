@@ -262,3 +262,47 @@ test('a discount greater than the premium is rejected', function () {
         ->post(route('policies.medical.store'), PolicyPayload::medicalSingle($client, $carrier, ['premium_amount' => '1200.00', 'discount_amount' => '1200.01']))
         ->assertSessionHasErrors(['discount_amount']);
 });
+
+test('a single insured born today is accepted', function () {
+    $this->freezeTime();
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->post(route('policies.medical.store'), PolicyPayload::medicalSingle($client, $carrier, ['medical' => ['insured_date_of_birth' => today()->toDateString()]]))
+        ->assertSessionHasNoErrors();
+});
+
+test('a single insured born in the future is rejected', function () {
+    $this->freezeTime();
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->post(route('policies.medical.store'), PolicyPayload::medicalSingle($client, $carrier, ['medical' => ['insured_date_of_birth' => today()->addDay()->toDateString()]]))
+        ->assertSessionHasErrors(['medical.insured_date_of_birth']);
+});
+
+test('a covered member born today is accepted', function () {
+    $this->freezeTime();
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->post(route('policies.medical.store'), PolicyPayload::medicalGroup($client, $carrier, ['insureds' => [PolicyPayload::insured(['date_of_birth' => today()->toDateString()])]]))
+        ->assertSessionHasNoErrors();
+});
+
+test('a covered member born in the future is rejected', function () {
+    $this->freezeTime();
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->post(route('policies.medical.store'), PolicyPayload::medicalGroup($client, $carrier, ['insureds' => [PolicyPayload::insured(['date_of_birth' => today()->addDay()->toDateString()])]]))
+        ->assertSessionHasErrors(['insureds.0.date_of_birth']);
+});

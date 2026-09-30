@@ -150,3 +150,25 @@ test('the subclass and coverage zone are stored independently', function (string
     ['Student', 'in'],
     ['Student', 'in_out'],
 ]);
+
+test('an expat insured born today is accepted', function () {
+    $this->freezeTime();
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->post(route('policies.expat.store'), PolicyPayload::expat($client, $carrier, ['expat' => ['date_of_birth' => today()->toDateString()]]))
+        ->assertSessionHasNoErrors();
+});
+
+test('an expat insured born in the future is rejected', function () {
+    $this->freezeTime();
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->post(route('policies.expat.store'), PolicyPayload::expat($client, $carrier, ['expat' => ['date_of_birth' => today()->addDay()->toDateString()]]))
+        ->assertSessionHasErrors(['expat.date_of_birth']);
+});

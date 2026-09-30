@@ -261,3 +261,27 @@ test('a subclass outside the medical list is rejected', function (string $subcla
         ->patch(route('policies.medical.update', $policy), $payload)
         ->assertSessionHasErrors(['subclass']);
 })->with(['In-Out', 'Term']);
+
+test('a single insured born in the future is rejected on update', function () {
+    $this->freezeTime();
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->medical()->create(['created_by' => $user->id, 'type' => 'single']);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->patch(route('policies.medical.update', $policy), PolicyPayload::medicalSingle($client, $carrier, ['medical' => ['insured_date_of_birth' => today()->addDay()->toDateString()]]))
+        ->assertSessionHasErrors(['medical.insured_date_of_birth']);
+});
+
+test('a covered member born in the future is rejected on update', function () {
+    $this->freezeTime();
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->medical()->create(['created_by' => $user->id, 'type' => 'group']);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->patch(route('policies.medical.update', $policy), PolicyPayload::medicalGroup($client, $carrier, ['insureds' => [PolicyPayload::insured(['date_of_birth' => today()->addDay()->toDateString()])]]))
+        ->assertSessionHasErrors(['insureds.0.date_of_birth']);
+});
