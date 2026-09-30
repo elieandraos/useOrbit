@@ -5,10 +5,13 @@ import { computed } from 'vue';
 import PolicyClassTile from '@/components/policies/PolicyClassTile.vue';
 import Badge from '@/components/ui/badge/Badge.vue';
 import Button from '@/components/ui/button/Button.vue';
+import { IdentityLink } from '@/components/ui/identity-link';
 import { Spinner } from '@/components/ui/spinner';
 import { useFileExport } from '@/composables/useFileExport';
 import { policyClassRoutes } from '@/lib/policyClassRoutes';
 import { policyStatusTone } from '@/lib/policyStatusTone';
+import { show as carriersShow } from '@/routes/carriers';
+import { show as clientsShow } from '@/routes/clients';
 import type { PolicyResource } from '@/types/policy';
 
 const props = defineProps<{
@@ -56,8 +59,12 @@ function exportPolicy(): Promise<void> {
                 class="mt-2 flex max-w-full flex-wrap items-center justify-center gap-x-4 gap-y-1 text-center text-[13px] text-secondary"
             >
                 <span>{{ policy.class_label }} · {{ policy.subclass }}</span>
-                <span>{{ policy.client.full_name }}</span>
-                <span>{{ policy.carrier.name }}</span>
+                <IdentityLink :href="clientsShow(policy.client.slug)">
+                    {{ policy.client.full_name }}
+                </IdentityLink>
+                <IdentityLink :href="carriersShow(policy.carrier.slug)">
+                    {{ policy.carrier.name }}
+                </IdentityLink>
             </div>
 
             <div class="mt-5 flex items-center gap-2">
@@ -107,8 +114,12 @@ function exportPolicy(): Promise<void> {
                             >{{ policy.class_label }} ·
                             {{ policy.subclass }}</span
                         >
-                        <span>{{ policy.client.full_name }}</span>
-                        <span>{{ policy.carrier.name }}</span>
+                        <IdentityLink :href="clientsShow(policy.client.slug)">
+                            {{ policy.client.full_name }}
+                        </IdentityLink>
+                        <IdentityLink :href="carriersShow(policy.carrier.slug)">
+                            {{ policy.carrier.name }}
+                        </IdentityLink>
                     </div>
                 </div>
             </div>
