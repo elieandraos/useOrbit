@@ -104,3 +104,38 @@ test('a subclass outside the travel list is rejected', function (string $subclas
         ->post(route('policies.travel.store'), $payload)
         ->assertSessionHasErrors(['subclass']);
 })->with(['Premium', 'GCC']);
+
+test('a trip exactly on the policy effective and expiry dates is accepted', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = PolicyPayload::travel($client, $carrier, [
+        'effective_date' => '2026-01-01',
+        'expiry_date' => '2027-01-01',
+        'travel' => ['trip_start_date' => '2026-01-01', 'trip_end_date' => '2027-01-01'],
+    ]);
+
+    $this->actingAs($user)
+        ->post(route('policies.travel.store'), $payload)
+        ->assertSessionHasNoErrors();
+});
+
+test('a trip outside the policy coverage is rejected', function (string $tripStartDate, string $tripEndDate, string $errorField) {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = PolicyPayload::travel($client, $carrier, [
+        'effective_date' => '2026-01-01',
+        'expiry_date' => '2027-01-01',
+        'travel' => ['trip_start_date' => $tripStartDate, 'trip_end_date' => $tripEndDate],
+    ]);
+
+    $this->actingAs($user)
+        ->post(route('policies.travel.store'), $payload)
+        ->assertSessionHasErrors([$errorField]);
+})->with([
+    'starting before coverage' => ['2025-12-31', '2026-01-10', 'travel.trip_start_date'],
+    'ending after coverage' => ['2026-12-25', '2027-01-02', 'travel.trip_end_date'],
+]);

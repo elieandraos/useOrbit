@@ -129,3 +129,20 @@ test('a subclass outside the travel list is rejected', function (string $subclas
         ->patch(route('policies.travel.update', $policy), $payload)
         ->assertSessionHasErrors(['subclass']);
 })->with(['Premium', 'GCC']);
+
+test('a trip ending after the policy coverage is rejected on update', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->travel()->create(['created_by' => $user->id]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = PolicyPayload::travel($client, $carrier, [
+        'effective_date' => '2026-01-01',
+        'expiry_date' => '2027-01-01',
+        'travel' => ['trip_start_date' => '2026-12-25', 'trip_end_date' => '2027-01-02'],
+    ]);
+
+    $this->actingAs($user)
+        ->patch(route('policies.travel.update', $policy), $payload)
+        ->assertSessionHasErrors(['travel.trip_end_date']);
+});

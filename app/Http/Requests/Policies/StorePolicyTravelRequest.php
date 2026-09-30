@@ -26,8 +26,8 @@ final class StorePolicyTravelRequest extends FormRequest
             ...$this->policyRules(PolicyClass::Travel),
 
             'travel.destination' => ['required', 'string', 'max:255'],
-            'travel.trip_start_date' => ['required', 'date'],
-            'travel.trip_end_date' => ['required', 'date', 'after_or_equal:travel.trip_start_date'],
+            'travel.trip_start_date' => ['required', 'date', 'after_or_equal:effective_date'],
+            'travel.trip_end_date' => ['required', 'date', 'after_or_equal:travel.trip_start_date', 'before_or_equal:expiry_date'],
             'travel.travelers' => ['required', 'string'],
             'travel.coverage_tier' => ['required', 'string', 'max:20'],
         ];
