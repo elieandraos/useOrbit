@@ -99,3 +99,19 @@ test('map returns a blank agent when the policy has none', function () {
 
     expect($export->map($policy)[5])->toBeNull();
 });
+
+test('query orders policies sharing an effective date the same way the index does', function () {
+    $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
+
+    /** @var Policy $older */
+    $older = Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'effective_date' => '2024-01-01']);
+    /** @var Policy $first */
+    $first = Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'effective_date' => '2024-06-01']);
+    /** @var Policy $second */
+    $second = Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'effective_date' => '2024-06-01']);
+
+    $export = new PoliciesExport([], null, 'asc');
+
+    expect($export->query()->pluck('id')->all())->toBe([$first->id, $second->id, $older->id]);
+});
