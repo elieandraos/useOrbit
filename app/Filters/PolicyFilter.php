@@ -8,6 +8,12 @@ use Illuminate\Database\Eloquent\Builder;
 
 final class PolicyFilter extends QueryFilter
 {
+    /**
+     * Net premium as the index Amount column shows it: premium minus discount, with a
+     * missing discount counted as zero.
+     */
+    private const string NET_PREMIUM = 'premium_amount - COALESCE(discount_amount, 0)';
+
     /** @noinspection PhpUnused */
     public function search(string $value): Builder
     {
@@ -70,12 +76,12 @@ final class PolicyFilter extends QueryFilter
     /** @noinspection PhpUnused */
     public function amountMin(int|string $value): Builder
     {
-        return $this->builder->where('premium_amount', '>=', $value);
+        return $this->builder->whereRaw(self::NET_PREMIUM.' >= CAST(? AS DECIMAL(12, 2))', [$value]);
     }
 
     /** @noinspection PhpUnused */
     public function amountMax(int|string $value): Builder
     {
-        return $this->builder->where('premium_amount', '<=', $value);
+        return $this->builder->whereRaw(self::NET_PREMIUM.' <= CAST(? AS DECIMAL(12, 2))', [$value]);
     }
 }

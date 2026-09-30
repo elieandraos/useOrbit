@@ -115,28 +115,28 @@ test('effectiveDate sorts chronologically', function () {
     expect($policies->pluck('id')->all())->toBe([$oldest->id, $newest->id]);
 });
 
-test('amount sorts by the premium amount', function () {
-    /** @var Policy $expensive */
-    $expensive = Policy::factory()->create(['premium_amount' => 5000]);
-    /** @var Policy $cheap */
-    $cheap = Policy::factory()->create(['premium_amount' => 500]);
+test('amount sorts by the net premium', function () {
+    /** @var Policy $grossHighNetLow */
+    $grossHighNetLow = Policy::factory()->create(['premium_amount' => 1000, 'discount_amount' => 800]);
+    /** @var Policy $grossLowNetHigh */
+    $grossLowNetHigh = Policy::factory()->create(['premium_amount' => 500, 'discount_amount' => 0]);
 
     /** @noinspection PhpUndefinedMethodInspection */
     $policies = Policy::query()->withoutGlobalScope(CurrentOrganizationScope::class)->sort(new PolicySort('amount', 'asc'))->get();
 
-    expect($policies->pluck('id')->all())->toBe([$cheap->id, $expensive->id]);
+    expect($policies->pluck('id')->all())->toBe([$grossHighNetLow->id, $grossLowNetHigh->id]);
 });
 
 test('amount sort direction can be reversed', function () {
-    /** @var Policy $expensive */
-    $expensive = Policy::factory()->create(['premium_amount' => 5000]);
-    /** @var Policy $cheap */
-    $cheap = Policy::factory()->create(['premium_amount' => 500]);
+    /** @var Policy $grossHighNetLow */
+    $grossHighNetLow = Policy::factory()->create(['premium_amount' => 1000, 'discount_amount' => 800]);
+    /** @var Policy $grossLowNetHigh */
+    $grossLowNetHigh = Policy::factory()->create(['premium_amount' => 500, 'discount_amount' => 0]);
 
     /** @noinspection PhpUndefinedMethodInspection */
     $policies = Policy::query()->withoutGlobalScope(CurrentOrganizationScope::class)->sort(new PolicySort('amount', 'desc'))->get();
 
-    expect($policies->pluck('id')->all())->toBe([$expensive->id, $cheap->id]);
+    expect($policies->pluck('id')->all())->toBe([$grossLowNetHigh->id, $grossHighNetLow->id]);
 });
 
 test('status sorts alphabetically', function () {
