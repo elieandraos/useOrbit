@@ -11,6 +11,7 @@ import Input from '@/components/ui/input/Input.vue';
 import Label from '@/components/ui/label/Label.vue';
 import RadioPills from '@/components/ui/radio-pills/RadioPills.vue';
 import Select from '@/components/ui/select/Select.vue';
+import { policyDateEndYear } from '@/lib/policyDateEndYear';
 import { index as policiesIndex } from '@/routes/policies';
 
 interface Option {
@@ -242,11 +243,19 @@ function clearFilters() {
                 <div class="flex flex-col gap-3">
                     <div class="flex flex-col gap-1.5">
                         <span class="text-xs text-tertiary">From</span>
-                        <DateInput v-model="effectiveFrom" size="sm" />
+                        <DateInput
+                            v-model="effectiveFrom"
+                            size="sm"
+                            :end-year="policyDateEndYear"
+                        />
                     </div>
                     <div class="flex flex-col gap-1.5">
                         <span class="text-xs text-tertiary">To</span>
-                        <DateInput v-model="effectiveTo" size="sm" />
+                        <DateInput
+                            v-model="effectiveTo"
+                            size="sm"
+                            :end-year="policyDateEndYear"
+                        />
                     </div>
                 </div>
             </FormField>

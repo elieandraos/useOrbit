@@ -9,6 +9,7 @@ import FormSection from '@/components/ui/form-section/FormSection.vue';
 import Input from '@/components/ui/input/Input.vue';
 import RadioChips from '@/components/ui/radio-chips/RadioChips.vue';
 import Select from '@/components/ui/select/Select.vue';
+import { policyDateEndYear } from '@/lib/policyDateEndYear';
 import PolicyPartiesSection from '@/pages/Policies/partials/PolicyPartiesSection.vue';
 import { index as policiesIndex } from '@/routes/policies';
 import type { PolicyParties } from '@/types/policy';
@@ -478,6 +479,7 @@ const yesNo: Option[] = [
                         <DateInput
                             v-model="effectiveDate"
                             name="effective_date"
+                            :end-year="policyDateEndYear"
                         />
                     </FormField>
                     <FormField
@@ -485,7 +487,11 @@ const yesNo: Option[] = [
                         required
                         :error="errors.expiry_date"
                     >
-                        <DateInput v-model="expiryDate" name="expiry_date" />
+                        <DateInput
+                            v-model="expiryDate"
+                            name="expiry_date"
+                            :end-year="policyDateEndYear"
+                        />
                     </FormField>
                 </div>
                 <FormField label="Status" required :error="errors.status">

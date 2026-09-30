@@ -10,6 +10,7 @@ import RadioChips from '@/components/ui/radio-chips/RadioChips.vue';
 import Select from '@/components/ui/select/Select.vue';
 import { Typeahead } from '@/components/ui/typeahead';
 import type { TypeaheadOption } from '@/components/ui/typeahead';
+import { policyDateEndYear } from '@/lib/policyDateEndYear';
 import PolicyPartiesSection from '@/pages/Policies/partials/PolicyPartiesSection.vue';
 import { index as policiesIndex } from '@/routes/policies';
 import type { PolicyParties } from '@/types/policy';
@@ -267,6 +268,7 @@ const countryOptions = computed<TypeaheadOption[]>(() =>
                 <DateInput
                     v-model="visaExpiryDate"
                     name="expat[visa_expiry_date]"
+                    :end-year="policyDateEndYear"
                 />
             </FormField>
         </FormSection>
@@ -294,6 +296,7 @@ const countryOptions = computed<TypeaheadOption[]>(() =>
                         <DateInput
                             v-model="effectiveDate"
                             name="effective_date"
+                            :end-year="policyDateEndYear"
                         />
                     </FormField>
                     <FormField
@@ -301,7 +304,11 @@ const countryOptions = computed<TypeaheadOption[]>(() =>
                         required
                         :error="errors.expiry_date"
                     >
-                        <DateInput v-model="expiryDate" name="expiry_date" />
+                        <DateInput
+                            v-model="expiryDate"
+                            name="expiry_date"
+                            :end-year="policyDateEndYear"
+                        />
                     </FormField>
                 </div>
                 <FormField label="Status" required :error="errors.status">

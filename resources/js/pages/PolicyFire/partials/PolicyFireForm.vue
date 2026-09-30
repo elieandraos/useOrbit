@@ -11,6 +11,7 @@ import Select from '@/components/ui/select/Select.vue';
 import { Typeahead } from '@/components/ui/typeahead';
 import type { TypeaheadOption } from '@/components/ui/typeahead';
 import { useStateOptions } from '@/composables/useWorldLocations';
+import { policyDateEndYear } from '@/lib/policyDateEndYear';
 import PolicyPartiesSection from '@/pages/Policies/partials/PolicyPartiesSection.vue';
 import { index as policiesIndex } from '@/routes/policies';
 import type { PolicyParties } from '@/types/policy';
@@ -312,6 +313,7 @@ watch(countryId, () => {
                         <DateInput
                             v-model="effectiveDate"
                             name="effective_date"
+                            :end-year="policyDateEndYear"
                         />
                     </FormField>
                     <FormField
@@ -319,7 +321,11 @@ watch(countryId, () => {
                         required
                         :error="errors.expiry_date"
                     >
-                        <DateInput v-model="expiryDate" name="expiry_date" />
+                        <DateInput
+                            v-model="expiryDate"
+                            name="expiry_date"
+                            :end-year="policyDateEndYear"
+                        />
                     </FormField>
                 </div>
                 <FormField label="Status" required :error="errors.status">
