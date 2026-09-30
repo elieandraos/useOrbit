@@ -7,10 +7,7 @@ import CompanyInformationCard from './partials/CompanyInformationCard.vue';
 import ContactCard from './partials/ContactCard.vue';
 import EmergencyContactCard from './partials/EmergencyContactCard.vue';
 import EnrollmentCard from './partials/EnrollmentCard.vue';
-import NextRenewalCard from './partials/NextRenewalCard.vue';
 import PersonalInformationCard from './partials/PersonalInformationCard.vue';
-import QuickStatsCard from './partials/QuickStatsCard.vue';
-import RecentActivitiesCard from './partials/RecentActivitiesCard.vue';
 
 defineProps<{
     client: ClientResource;
@@ -46,13 +43,6 @@ defineProps<{
                     :client="client"
                     :policies="recentPolicies"
                 />
-
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <QuickStatsCard />
-                    <NextRenewalCard />
-                </div>
-
-                <RecentActivitiesCard />
             </div>
         </div>
     </ClientDetailShell>

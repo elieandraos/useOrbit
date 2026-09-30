@@ -17,7 +17,6 @@ import type { AgentResource } from './agent';
 
 const props = defineProps<{
     agent: AgentResource;
-    clientsCount: number;
     policiesCount: number;
 }>();
 
@@ -53,7 +52,6 @@ function exportAgent(): Promise<void> {
                     >Active</Badge
                 >
                 <Badge v-else tone="warning">Archived</Badge>
-                <Badge tone="accent">{{ clientsCount }} clients</Badge>
                 <Badge tone="neutral">{{ policiesCount }} policies</Badge>
             </div>
 
@@ -104,7 +102,6 @@ function exportAgent(): Promise<void> {
                             >Active</Badge
                         >
                         <Badge v-else tone="warning">Archived</Badge>
-                        <Badge tone="accent">{{ clientsCount }} clients</Badge>
                         <Badge tone="neutral"
                             >{{ policiesCount }} policies</Badge
                         >
