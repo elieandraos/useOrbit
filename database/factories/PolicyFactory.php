@@ -88,7 +88,15 @@ class PolicyFactory extends Factory
         return $this->state(fn (array $attributes): array => [
             'class' => PolicyClass::Medical->value,
         ])->afterCreating(function (Policy $policy): void {
-            PolicyMedicalDetails::factory()->for($policy)->create();
+            $isGroup = $policy->type === PolicyType::Group;
+
+            PolicyMedicalDetails::factory()->for($policy)->create($isGroup ? [
+                'insured_full_name' => null,
+                'insured_date_of_birth' => null,
+                'insured_gender' => null,
+                'insured_smoker' => null,
+                'insured_medical_history' => null,
+            ] : []);
         });
     }
 

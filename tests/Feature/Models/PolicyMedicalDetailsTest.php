@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\PolicyType;
 use App\Models\Policy;
 use App\Models\PolicyMedicalDetails;
 use App\Models\User;
@@ -14,6 +15,42 @@ test('medical creates a policy with a correctly linked medical detail row', func
 
     expect($policy->medicalDetails)->toBeInstanceOf(PolicyMedicalDetails::class)
         ->and($policy->medicalDetails->policy_id)->toBe($policy->id);
+});
+
+test('medical leaves the insured profile empty for a group policy', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    /** @var Policy $policy */
+    $policy = Policy::factory()->forOrganization($user)->medical()->create([
+        'created_by' => $user->id,
+        'type' => PolicyType::Group->value,
+    ]);
+
+    expect($policy->medicalDetails->only([
+        'insured_full_name',
+        'insured_date_of_birth',
+        'insured_gender',
+        'insured_smoker',
+        'insured_medical_history',
+    ]))->each->toBeNull();
+});
+
+test('medical fills the insured profile for a single policy without covered members', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    /** @var Policy $policy */
+    $policy = Policy::factory()->forOrganization($user)->medical()->create([
+        'created_by' => $user->id,
+        'type' => PolicyType::Single->value,
+    ]);
+
+    expect($policy->medicalDetails->only([
+        'insured_full_name',
+        'insured_date_of_birth',
+        'insured_gender',
+        'insured_smoker',
+    ]))->each->not->toBeNull()
+        ->and($policy->insureds)->toBeEmpty();
 });
 
 test('medicalDetails returns null for a non-medical policy', function () {
