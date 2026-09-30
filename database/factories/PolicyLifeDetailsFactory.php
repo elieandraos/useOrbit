@@ -24,7 +24,6 @@ class PolicyLifeDetailsFactory extends Factory
         return [
             'policy_id' => Policy::factory()->state(fn (): array => [
                 'class' => PolicyClass::Life->value,
-                'subclass' => 'Standard',
             ]),
             'sum_assured' => fake()->randomFloat(2, 20000, 500000),
             'term_years' => fake()->numberBetween(5, 30),

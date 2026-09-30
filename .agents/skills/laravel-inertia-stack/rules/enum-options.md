@@ -43,3 +43,7 @@ enum Priority: string
   introducing `all()` — don't leave some call sites inlined and others using it.
 - Use the name `all()` consistently across every enum that adopts this pattern, rather than mixing
   `all()`, `options()`, and `toArray()` for what is otherwise the same shape.
+- Validate the field against the same enum whose `all()` feeds the options (`Rule::enum(Priority::class)`),
+  so the server cannot accept a value the UI never offers. A closed choice list that exists only in a
+  Vue page is a signal to introduce the enum — but only when the domain genuinely fixes the set; an open
+  or user-managed list is not an enum.

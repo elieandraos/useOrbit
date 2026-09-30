@@ -27,9 +27,7 @@ class PolicyInsuredFactory extends Factory
         return [
             'policy_id' => Policy::factory()->state(fn (): array => [
                 'class' => PolicyClass::Medical->value,
-                'subclass' => 'In',
             ]),
-            'member_code' => 'MBR-'.fake()->unique()->numerify('###'),
             'full_name' => fake()->name($gender->value),
             'relationship' => fake()->randomElement(['Employee', 'Spouse', 'Child', 'Parent']),
             'date_of_birth' => fake()->dateTimeBetween('-65 years', '-1 year')->format('Y-m-d'),

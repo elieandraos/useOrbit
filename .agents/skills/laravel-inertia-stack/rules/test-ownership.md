@@ -1,11 +1,13 @@
 # Test Ownership
 
-This is the single source of truth for where each class type's test lives, what behavior each test layer
-owns, when to assert existence versus an exact value, and the no-redundancy boundary between HTTP tests
-and the lower-layer tests they must not duplicate — for this stack's
-Action/Controller/Policy/Filter/Sorter/Resource/Model taxonomy. See `blueprints/pest-testing.md` for the
-general `tests/Unit`/`tests/Feature` execution-boundary taxonomy, the self-referential-expected-value
-warning, and Pest capability gating — this file does not restate any of that.
+`testing-best-practices` already states the general no-redundancy principle: an owning unit test's
+complete matrix (a Policy's permission matrix, a validation rule's cases) is not repeated by a
+higher-layer test, which keeps only enough to prove the gate is wired up. This file extends that same
+principle to the first-party test subjects Boost has no equivalent for in this stack — Action, Filter,
+and Sorter classes — with the concrete location-and-ownership mapping and the one exception a
+route-bound or pivot endpoint needs. See `blueprints/pest-testing.md` for the general
+`tests/Unit`/`tests/Feature` execution-boundary taxonomy, the self-referential-expected-value warning,
+and Pest capability gating — this file does not restate any of that.
 
 ## Ownership
 
@@ -27,12 +29,13 @@ transforms a field, where existence alone wouldn't prove the derivation was corr
 prove a specific persisted association required to confirm endpoint wiring (see the wiring exception
 below).
 
-## No-redundancy rule
+## No-redundancy rule, extended to Action/Filter/Sorter
 
-A layer only asserts what it owns. If an Action test already proves a value was persisted correctly, the
-HTTP test for the same endpoint does not repeat that assertion — it proves the HTTP contract (status,
-redirect, flash, prop shape) instead. A Policy violation is confirmed in an HTTP test with one
-`assertForbidden()`, not the full matrix already covered by the Policy test.
+If an Action test already proves a value was persisted correctly, the HTTP test for the same endpoint
+does not repeat that assertion — it proves the HTTP contract (status, redirect, flash, prop shape)
+instead. The same applies to a Filter or Sorter already proven directly against a query: an HTTP test
+for that index endpoint does not re-prove the filter matrix, only that the endpoint passes the request
+through to it.
 
 A lower-layer test that proves correct behavior given correct arguments does not prove the controller
 supplied those arguments. For a nested, route-model-bound, or pivot endpoint, an HTTP test may — and
@@ -46,7 +49,7 @@ proves nothing beyond what the lower layer already proves.
 
 For example, on an endpoint that attaches a member to a team through a pivot table: the Action test owns
 the complete attach mutation behavior, including the transaction outcome, any derived pivot fields, and
-dispatched side effects. The HTTP
-test retains the exact pivot pair — `assertDatabaseHas('team_user', ['team_id' => $team->id, 'user_id' =>
-$user->id])` — to prove the endpoint wired the correct team and user into the Action, but omits any other
-mapped field the Action test already covers.
+dispatched side effects. The HTTP test retains the exact pivot pair —
+`assertDatabaseHas('team_user', ['team_id' => $team->id, 'user_id' => $user->id])` — to prove the
+endpoint wired the correct team and user into the Action, but omits any other mapped field the Action
+test already covers.

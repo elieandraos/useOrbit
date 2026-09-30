@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\TravelCoverageTier;
 use App\Models\Policy;
 use App\Models\PolicyTravelDetails;
 use App\Models\User;
@@ -14,7 +15,7 @@ test('travel creates a policy with a correctly linked travel detail row', functi
 
     expect($policy->travelDetails)->toBeInstanceOf(PolicyTravelDetails::class)
         ->and($policy->travelDetails->policy_id)->toBe($policy->id)
-        ->and($policy->travelDetails->coverage_tier)->toBe($policy->subclass)
+        ->and($policy->travelDetails->coverage_tier)->toBeInstanceOf(TravelCoverageTier::class)
         ->and($policy->travelDetails->travelers)->toBeString();
 });
 

@@ -22,6 +22,7 @@ use App\Policies\DocumentPolicy;
 use App\Policies\NotePolicy;
 use App\Policies\OrganizationMemberPolicy;
 use App\Policies\OrganizationPolicy;
+use App\Policies\PolicyPolicy;
 use App\Policies\TagPolicy;
 use App\Support\Tenancy\OrganizationContext;
 use Carbon\CarbonImmutable;
@@ -66,6 +67,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Note::class, NotePolicy::class);
         Gate::policy(Organization::class, OrganizationPolicy::class);
         Gate::policy(User::class, OrganizationMemberPolicy::class);
+        Gate::policy(Policy::class, PolicyPolicy::class);
         Gate::policy(Tag::class, TagPolicy::class);
     }
 

@@ -51,7 +51,7 @@ function cancel(): void {
                 v-model="body"
                 :disabled="processing"
                 rows="3"
-                placeholder="Add a note about this client — call summary, follow-up, etc."
+                placeholder="Add a note — call summary, follow-up, etc."
                 class="w-full"
             />
             <div class="mt-2 flex items-center gap-2">

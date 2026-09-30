@@ -6,6 +6,7 @@ use App\Http\Resources\CarrierResource;
 use App\Models\Carrier;
 use App\Models\CarrierBranch;
 use App\Models\Organization;
+use App\Models\Policy;
 use App\Models\User;
 
 test('guests are redirected to the login page', function () {
@@ -37,6 +38,17 @@ test('authenticated user gets 404 for a carrier from another organization', func
     $this->actingAs($user)
         ->get(route('carriers.show', $carrier))
         ->assertNotFound();
+});
+
+test('policiesCount reflects the carrier actual policy count', function () {
+    $user = User::factory()->withOrganization()->create();
+    $carrier = Carrier::factory()->forOrganization($user)->create();
+    Policy::factory(3)->forOrganization($user)->create(['created_by' => $user->id, 'carrier_id' => $carrier->id]);
+
+    $this->actingAs($user)
+        ->get(route('carriers.show', $carrier))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('policiesCount', 3));
 });
 
 test('an archived carrier can still be shown', function () {

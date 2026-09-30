@@ -85,6 +85,16 @@ attribute-level rule it doesn't cover:
 > incomplete coverage: a test specifically proving field mapping may intentionally provide the complete
 > relevant payload.
 
+## Shared request/action payload builders
+
+In this stack an Action receives the same validated array its Form Request produces (see
+`rules/actions.md`), so HTTP and Action tests for one domain often repeat the same large valid input.
+When that repetition is real, a plain test helper may return a valid baseline array with per-test
+overrides. It builds input arrays, not models — persisted state stays with model factories — and the
+attribute-level rule above still applies: every value a test asserts on is passed as an explicit
+override, never read back from the builder's default. In an update test, submit a value that differs
+from the record's current value, or the test can pass without proving the update.
+
 ## Reusable Inertia testing macros
 
 `hasResource`, `hasPaginatedResource`, `assertHasResource`, `assertHasPaginatedResource`, and

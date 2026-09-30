@@ -12,6 +12,7 @@ use App\Enums\LeadSource;
 use App\Models\Concerns\BelongsToCurrentOrganization;
 use App\Models\Concerns\Filterable;
 use App\Models\Concerns\HasDocuments;
+use App\Models\Concerns\HasFullAddress;
 use App\Models\Concerns\HasNotes;
 use App\Models\Concerns\HasSlug;
 use App\Models\Concerns\Sortable;
@@ -21,10 +22,12 @@ use App\Models\Contracts\NotificationSubject;
 use Carbon\CarbonImmutable;
 use Database\Factories\ClientFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -63,6 +66,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read Country|null $country
  * @property-read State|null $state
  * @property-read Collection<int, Note> $notes
+ * @property-read Collection<int, Policy> $policies
+ * @property-read string $full_name
+ * @property-read string $full_address
  *
  * When client_type is Company, first_name/last_name/phone/email hold the contact person's info, not the client's own.
  */
@@ -75,7 +81,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 final class Client extends Model implements Documentable, Notable, NotificationSubject
 {
     /** @use HasFactory<ClientFactory> */
-    use BelongsToCurrentOrganization, Filterable, HasDocuments, HasFactory, HasNotes, HasSlug, SoftDeletes, Sortable;
+    use BelongsToCurrentOrganization, Filterable, HasDocuments, HasFactory, HasFullAddress, HasNotes, HasSlug, SoftDeletes, Sortable;
 
     protected function casts(): array
     {
@@ -110,6 +116,20 @@ final class Client extends Model implements Documentable, Notable, NotificationS
         return $this->belongsTo(User::class, 'updated_by');
     }
 
+    public function policies(): HasMany
+    {
+        return $this->hasMany(Policy::class);
+    }
+
+    protected function fullName(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->client_type === ClientType::Company
+                ? (string) $this->company_name
+                : "$this->first_name $this->last_name",
+        );
+    }
+
     public function documentableKind(): string
     {
         return 'client';
@@ -117,9 +137,7 @@ final class Client extends Model implements Documentable, Notable, NotificationS
 
     public function documentableName(): string
     {
-        return $this->client_type === ClientType::Company
-            ? (string) $this->company_name
-            : "$this->first_name $this->last_name";
+        return $this->full_name;
     }
 
     public function notificationSubjectKind(): string
@@ -129,8 +147,6 @@ final class Client extends Model implements Documentable, Notable, NotificationS
 
     public function notificationSubjectName(): string
     {
-        return $this->client_type === ClientType::Company
-            ? (string) $this->company_name
-            : "$this->first_name $this->last_name";
+        return $this->full_name;
     }
 }

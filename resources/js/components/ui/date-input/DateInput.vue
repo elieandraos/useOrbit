@@ -80,7 +80,13 @@ watchEffect(() => {
 const years = computed(() => {
     const end = props.endYear ?? currentYear
     if (end <= props.startYear) return []
-    return Array.from({ length: end - props.startYear + 1 }, (_, i) => String(end - i))
+    const range = Array.from({ length: end - props.startYear + 1 }, (_, i) => String(end - i))
+    const selectedYear = internalYear.value
+    // A stored value outside the range keeps its year so it stays representable when editing.
+    if (selectedYear && !range.includes(selectedYear)) {
+        return [...range, selectedYear].sort((a, b) => Number(b) - Number(a))
+    }
+    return range
 })
 </script>
 

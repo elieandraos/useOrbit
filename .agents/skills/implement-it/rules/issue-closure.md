@@ -59,11 +59,11 @@ only makes sure a contradiction between an issue's own text and this workflow's 
 gets surfaced instead of silently inherited.
 
 - **Surface it, don't silently close past it.** State plainly, before asking to close, that this
-  specific criterion cannot be met at this issue's own closure boundary under this workflow, and why.
+  specific criterion cannot be met at the issue's own closure boundary under this workflow, and why.
 - **Route it, don't resolve it here.** Whether to close anyway with the gap disclosed, defer the
   criterion explicitly to the actual milestone/PR boundary it can be proven at, or send the issue back
-  through `plan-it` for a wording correction is the human's call — this rule reports the
-  contradiction; it doesn't pick among those outcomes.
+  through `plan-it` for a wording correction is the human's call — this rule reports the contradiction;
+  it doesn't pick among those outcomes.
 - **This is not a reason to invent a workflow change.** It doesn't move where or when real CI actually
   runs, and it doesn't change this rule's own closure timing (see "Principle" above) — it only makes a
   pre-existing issue/workflow mismatch visible before an issue closes underneath it.
@@ -119,6 +119,18 @@ from commits and conversation. It should be a concise summary, not a transcript.
   - any other implementation detail a future maintainer genuinely needs and won't get from the
     commit log alone.
 
+### Propagating deferred future context
+
+When the closing comment identifies a deferred decision, follow-up, or implementation note that is
+explicitly relevant to a later issue, identify the affected issue and ask the human whether that
+context is worth adding to the later issue before closing. If the human approves, update only that
+issue with the concise context needed to make the handoff durable, then validate the update. Do not
+update another issue automatically, and do not turn this into a general search of unrelated issue
+comments or milestone issues.
+
+The later issue remains responsible for its own scope and decisions. The propagated note is context
+for reconciliation, not automatic authorization to expand that issue's implementation scope.
+
 Keep it a summary. If it starts reading like a re-narration of the working conversation, cut it back
 down to the outcome.
 
@@ -152,7 +164,7 @@ a link. Don't re-print the full issue body or the closing comment — the reader
 ## What this rule does not do
 
 - **It does not decide whether the issue should be closed.** That's always the human's call, made in
-  "Ask first" above — this rule only carries out and validates a closure once approved.
+  "Ask first" above — this rule only carries out and validates the closure once approved.
 - **It does not create, review, or merge a PR, and does not trigger a release or milestone
   closure.** Making the issue's commits reachable on the remote branch is `rules/push-readiness.md`'s
   job, consulted above as a precondition — those later events stay gated on their own separate
@@ -178,13 +190,17 @@ a link. Don't re-print the full issue body or the closing comment — the reader
 - Validate every GitHub mutation in this procedure by re-fetching and reading the result back.
 - Surface a completion criterion the issue's own text states but this workflow can't yet satisfy,
   before asking to close, rather than closing past it silently.
+- When a closing comment identifies a later issue that may need the deferred context, ask the human
+  whether to propagate that context to the affected issue before closing.
 
 **Don't**
-- Ask to close before `rules/push-readiness.md` confirms the issue's commits are reachable on the
-  correct remote branch.
+- Ask to close before `rules/push-readiness.md` confirms the issue's commits are reachable on the correct
+  remote branch.
 - Close automatically because commits landed or verification passed.
 - Check off deferred or out-of-scope work to make the issue look complete.
 - Treat a successful CLI exit code as proof of the resulting state.
 - Re-print the entire issue body or comment in the final report.
 - Create issues from this rule — that belongs to `plan-it`.
 - Reopen issues from this rule — this rule does not own reopening.
+- Update unrelated issues or search every milestone issue for possible future context merely because a
+  closing comment exists.

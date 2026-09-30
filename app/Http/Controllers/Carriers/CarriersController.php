@@ -81,6 +81,7 @@ final class CarriersController extends Controller
         return inertia('Carriers/Show', [
             'carrier' => CarrierResource::make($carrier),
             'countries' => CountryResource::collection(Country::query()->orderBy('name')->get()),
+            'policiesCount' => $carrier->policies()->count(),
         ]);
     }
 

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
-use App\Enums\ClientType;
 use App\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -16,7 +15,6 @@ final class ClientResource extends JsonResource
     {
         $countryName = $this->relationLoaded('country') ? $this->country?->name : null;
         $stateName = $this->relationLoaded('state') ? $this->state?->name : null;
-        $isCompany = $this->client_type === ClientType::Company;
 
         return [
             'id' => $this->id,
@@ -27,7 +25,7 @@ final class ClientResource extends JsonResource
             'first_name' => $this->first_name,
             'middle_name' => $this->middle_name,
             'last_name' => $this->last_name,
-            'full_name' => $isCompany ? $this->company_name : "$this->first_name $this->last_name",
+            'full_name' => $this->full_name,
             'mothers_name' => $this->mothers_name,
             'date_of_birth' => $this->date_of_birth?->format('Y-m-d'),
             'date_of_birth_formatted' => $this->date_of_birth?->format('M j, Y'),
@@ -44,9 +42,7 @@ final class ClientResource extends JsonResource
             'city' => $this->city,
             'country_name' => $countryName,
             'state_name' => $stateName,
-            'full_address' => collect([$this->street, $this->building_floor, $this->city, $stateName, $countryName])
-                ->filter()
-                ->implode("\n"),
+            'full_address' => $this->full_address,
             'emergency_contact_name' => $this->emergency_contact_name,
             'emergency_contact_relationship' => $this->emergency_contact_relationship,
             'emergency_contact_relationship_label' => $this->emergency_contact_relationship?->label(),

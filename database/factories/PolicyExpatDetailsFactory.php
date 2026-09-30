@@ -35,7 +35,6 @@ class PolicyExpatDetailsFactory extends Factory
         return [
             'policy_id' => Policy::factory()->state(fn (): array => [
                 'class' => PolicyClass::Expat->value,
-                'subclass' => $coverageZone === ExpatCoverageZone::In ? 'In' : 'In-Out',
             ]),
             'coverage_zone' => $coverageZone->value,
             'travel_scope' => $coverageZone === ExpatCoverageZone::InOut

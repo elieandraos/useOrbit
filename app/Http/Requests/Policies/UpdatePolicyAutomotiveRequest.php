@@ -1,0 +1,71 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Requests\Policies;
+
+use App\Concerns\PolicyValidationRules;
+use App\Enums\PolicyClass;
+use App\Enums\PolicyStatus;
+use Illuminate\Foundation\Http\FormRequest;
+
+final class UpdatePolicyAutomotiveRequest extends FormRequest
+{
+    use PolicyValidationRules;
+
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'status' => $this->input('status') ?? PolicyStatus::Active->value,
+        ]);
+    }
+
+    public function rules(): array
+    {
+        return [
+            ...$this->policyRules(PolicyClass::Automotive),
+
+            'automotive.plate_number' => ['required', 'string', 'max:20'],
+            'automotive.make' => ['required', 'string', 'max:50'],
+            'automotive.model' => ['required', 'string', 'max:50'],
+            'automotive.year' => ['required', 'integer', 'min:1900', 'max:'.(now()->year + 1)],
+            'automotive.vin' => ['nullable', 'string', 'max:50'],
+            'automotive.color' => ['nullable', 'string', 'max:30'],
+            'automotive.valuation_amount' => ['required_if:subclass,All Risk', 'prohibited_unless:subclass,All Risk', 'nullable', 'numeric', 'min:0'],
+            'automotive.valuation_source' => ['required_if:subclass,All Risk', 'prohibited_unless:subclass,All Risk', 'nullable', 'string', 'max:50'],
+        ];
+    }
+
+    /**
+     * Get the readable names of the fields, as the Automotive policy form labels them.
+     *
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            ...$this->policyAttributes(),
+
+            'automotive.plate_number' => 'plate number',
+            'automotive.make' => 'make',
+            'automotive.model' => 'model',
+            'automotive.year' => 'year',
+            'automotive.vin' => 'VIN',
+            'automotive.color' => 'color',
+            'automotive.valuation_amount' => 'valuation amount',
+            'automotive.valuation_source' => 'valuation source',
+        ];
+    }
+
+    /**
+     * Get the messages for conditional rules whose default wording would read awkwardly or expose a raw value.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'automotive.valuation_*.prohibited_unless' => 'The :attribute field is only allowed on an All Risk policy.',
+        ];
+    }
+}

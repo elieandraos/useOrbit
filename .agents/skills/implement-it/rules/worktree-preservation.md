@@ -1,5 +1,11 @@
 # Worktree Preservation
 
+> "Worktree" throughout this file means the single active checkout's working tree and index — the
+> uncommitted, staged, and stashed content an ordinary `git status` describes — never an isolated
+> `git worktree` checkout used to run a separate concurrent worker. `rules/sequencing.md`'s parallel-
+> worker branch model uses the latter sense; this file's procedure operates entirely within one
+> worker's own single checkout and never touches another worker's.
+
 Any procedure in this skill that needs to temporarily clear the working tree or index around content
 that is not part of what it's isolating or reconstructing — `rules/isolation-verification.md`'s
 technique, or whatever `rules/commit-reconstruction.md`'s reconstruction of an unpublished commit

@@ -35,6 +35,10 @@ yarn-error.log
 !/.claude/skills/plan-it
 !/.claude/skills/ship-it
 !/.claude/skills/laravel-inertia-stack
+!/.claude/skills/document-it
+!/.claude/skills/implement-it
+!/.claude/skills/review-it
+!/.claude/skills/steward-it
 .editorconfig
 _design/
 _ide_helper_macros.php

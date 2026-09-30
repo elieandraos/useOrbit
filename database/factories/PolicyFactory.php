@@ -36,15 +36,6 @@ class PolicyFactory extends Factory
      */
     public function definition(): array
     {
-        $class = fake()->randomElement(PolicyClass::cases());
-        $subclass = match ($class) {
-            PolicyClass::Medical, PolicyClass::Expat => fake()->randomElement(['In', 'In-Out']),
-            PolicyClass::Automotive => fake()->randomElement(['Third Party Liability', 'All Risk']),
-            PolicyClass::Fire => 'Standard',
-            PolicyClass::Life => fake()->randomElement(['Term', 'Whole Life']),
-            PolicyClass::Travel => fake()->randomElement(['Basic', 'Standard', 'Premium']),
-        };
-
         $effectiveDate = fake()->dateTimeBetween('-1 year');
         $expiryDate = (clone $effectiveDate)->modify('+1 year');
 
@@ -52,8 +43,12 @@ class PolicyFactory extends Factory
             'organization_id' => Organization::factory(),
             'slug' => null,
             'policy_number' => null,
-            'class' => $class->value,
-            'subclass' => $subclass,
+            'class' => fake()->randomElement(PolicyClass::cases())->value,
+            'subclass' => function (array $attributes): string {
+                $class = $attributes['class'] instanceof PolicyClass ? $attributes['class'] : PolicyClass::from($attributes['class']);
+
+                return fake()->randomElement($class->subclasses());
+            },
             'type' => fake()->randomElement(PolicyType::cases())->value,
             'client_id' => Client::factory(),
             'carrier_id' => Carrier::factory(),
@@ -92,9 +87,16 @@ class PolicyFactory extends Factory
     {
         return $this->state(fn (array $attributes): array => [
             'class' => PolicyClass::Medical->value,
-            'subclass' => fake()->randomElement(['In', 'In-Out']),
         ])->afterCreating(function (Policy $policy): void {
-            PolicyMedicalDetails::factory()->for($policy)->create();
+            $isGroup = $policy->type === PolicyType::Group;
+
+            PolicyMedicalDetails::factory()->for($policy)->create($isGroup ? [
+                'insured_full_name' => null,
+                'insured_date_of_birth' => null,
+                'insured_gender' => null,
+                'insured_smoker' => null,
+                'insured_medical_history' => null,
+            ] : []);
         });
     }
 
@@ -102,7 +104,6 @@ class PolicyFactory extends Factory
     {
         return $this->state(fn (array $attributes): array => [
             'class' => PolicyClass::Automotive->value,
-            'subclass' => fake()->randomElement(['Third Party Liability', 'All Risk']),
         ])->afterCreating(function (Policy $policy): void {
             $isAllRisk = $policy->subclass === 'All Risk';
 
@@ -117,14 +118,8 @@ class PolicyFactory extends Factory
     {
         return $this->state(fn (array $attributes): array => [
             'class' => PolicyClass::Expat->value,
-            'subclass' => fake()->randomElement(['In', 'In-Out']),
         ])->afterCreating(function (Policy $policy): void {
-            $isInOut = $policy->subclass === 'In-Out';
-
-            PolicyExpatDetails::factory()->for($policy)->create([
-                'coverage_zone' => $isInOut ? 'in_out' : 'in',
-                'travel_scope' => $isInOut ? fake()->randomElement(['Worldwide', 'Worldwide ex-USA/Canada', 'Regional']) : null,
-            ]);
+            PolicyExpatDetails::factory()->for($policy)->create();
         });
     }
 
@@ -132,7 +127,6 @@ class PolicyFactory extends Factory
     {
         return $this->state(fn (array $attributes): array => [
             'class' => PolicyClass::Fire->value,
-            'subclass' => 'Standard',
         ])->afterCreating(function (Policy $policy): void {
             PolicyFireDetails::factory()->for($policy)->create();
         });
@@ -142,7 +136,6 @@ class PolicyFactory extends Factory
     {
         return $this->state(fn (array $attributes): array => [
             'class' => PolicyClass::Life->value,
-            'subclass' => 'Standard',
         ])->afterCreating(function (Policy $policy): void {
             PolicyLifeDetails::factory()->for($policy)->create();
         });
@@ -152,11 +145,8 @@ class PolicyFactory extends Factory
     {
         return $this->state(fn (array $attributes): array => [
             'class' => PolicyClass::Travel->value,
-            'subclass' => fake()->randomElement(['Basic', 'Standard', 'Premium']),
         ])->afterCreating(function (Policy $policy): void {
-            PolicyTravelDetails::factory()->for($policy)->create([
-                'coverage_tier' => $policy->subclass,
-            ]);
+            PolicyTravelDetails::factory()->for($policy)->create();
         });
     }
 }

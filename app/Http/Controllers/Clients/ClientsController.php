@@ -17,6 +17,7 @@ use App\Http\Requests\Clients\StoreClientRequest;
 use App\Http\Requests\Clients\UpdateClientRequest;
 use App\Http\Resources\ClientResource;
 use App\Http\Resources\CountryResource;
+use App\Http\Resources\PolicyResource;
 use App\Models\Client;
 use App\Models\Country;
 use App\Models\User;
@@ -100,6 +101,15 @@ final class ClientsController extends Controller
 
         return inertia('Clients/Show', [
             'client' => ClientResource::make($client),
+            'policiesCount' => $client->policies()->count(),
+            'recentPolicies' => PolicyResource::collection(
+                $client->policies()
+                    ->with('carrier')
+                    ->latest('effective_date')
+                    ->orderBy('id')
+                    ->limit(5)
+                    ->get()
+            ),
         ]);
     }
 

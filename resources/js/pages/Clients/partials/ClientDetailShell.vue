@@ -4,6 +4,7 @@ import { Tab, Tabs } from '@/components/ui/tabs';
 import { index as clientsIndex, show as clientsShow } from '@/routes/clients';
 import { index as clientsDocumentsIndex } from '@/routes/clients/documents';
 import { index as clientsNotesIndex } from '@/routes/clients/notes';
+import { index as clientsPoliciesIndex } from '@/routes/clients/policies';
 import type { ClientResource } from './client';
 import ClientShowHeader from './ClientShowHeader.vue';
 
@@ -37,7 +38,7 @@ setLayoutProps({
         >
             <Tabs class="min-w-max">
                 <Tab :href="clientsShow(client.slug)">Overview</Tab>
-                <Tab href="#">Policies</Tab>
+                <Tab :href="clientsPoliciesIndex(client.slug)">Policies</Tab>
                 <Tab :href="clientsDocumentsIndex(client.slug)">Documents</Tab>
                 <Tab :href="clientsNotesIndex(client.slug)">Notes</Tab>
             </Tabs>

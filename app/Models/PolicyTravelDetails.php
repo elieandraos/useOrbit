@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\TravelCoverageTier;
 use Carbon\CarbonImmutable;
 use Database\Factories\PolicyTravelDetailsFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -18,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property CarbonImmutable $trip_start_date
  * @property CarbonImmutable $trip_end_date
  * @property string $travelers
- * @property string $coverage_tier
+ * @property TravelCoverageTier $coverage_tier
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read Policy $policy
@@ -36,6 +37,7 @@ final class PolicyTravelDetails extends Model
         return [
             'trip_start_date' => 'date',
             'trip_end_date' => 'date',
+            'coverage_tier' => TravelCoverageTier::class,
         ];
     }
 

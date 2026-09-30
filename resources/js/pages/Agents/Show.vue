@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { PolicyResource } from '@/types/policy';
 import type { AgentResource } from './partials/agent';
 import AgentDetailShell from './partials/AgentDetailShell.vue';
 import ContactCard from './partials/ContactCard.vue';
@@ -9,10 +10,11 @@ import TopClientsCard from './partials/TopClientsCard.vue';
 
 defineProps<{
     agent: AgentResource;
+    policiesCount: number;
+    renewingPolicies: PolicyResource[];
 }>();
 
 const clientsCount = 0;
-const policiesCount = 0;
 </script>
 
 <template>
@@ -33,7 +35,7 @@ const policiesCount = 0;
             <!-- Right column -->
             <div class="flex flex-col gap-4">
                 <QuickStatsCard :agent="agent" />
-                <PoliciesRenewalCard />
+                <PoliciesRenewalCard :policies="renewingPolicies" />
                 <TopClientsCard />
             </div>
         </div>

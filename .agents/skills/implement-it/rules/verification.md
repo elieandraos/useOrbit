@@ -60,7 +60,10 @@ Once the approved implementation is complete, before reporting Gate 1:
    provides a meaningful targeted mode; use the narrowest reliable scope that proves the implementation.
 2. Run the applicable formatter/linter/static-analysis checks at their narrowest reliable scope.
 3. Inspect the results for failures, warnings, or limitations that could affect the claim being made.
-4. Then ask the human whether to run the **full regression suite for this issue** or skip it.
+4. Then ask the human whether to run the **full regression suite for this issue** or skip it — unless
+   this is a worker in a human-authorized concurrent wave (`rules/sequencing.md`'s "Parallel workers in
+   a delivery/phase milestone"), in which case skip this step; see "Concurrent workers in a parallel
+   wave" below.
 
 The targeted check is the required implementation proof. The full suite is a separate regression choice.
 Do not silently decide that a full suite is required merely because the issue is complete.
@@ -91,6 +94,23 @@ complete run, use the project's uncached/full mode. In useOrbit, for example, fu
 If the human chooses to skip it, report that choice explicitly at Gate 1. Do not describe targeted tests
 as full-regression proof.
 
+### Concurrent workers in a parallel wave
+
+A worker executing as part of a human-authorized concurrent wave does not make the full-suite choice
+above. Final regression verification for its candidate implementation belongs to the wave's combined
+candidate state — decided and run once, for the wave, not per worker (`rules/review-gates.md`'s "Review
+implementation — first approval (Gate 1)" states what this worker still needs before presenting that
+approval).
+
+Like the per-issue choice above, the wave-level decision is itself a human-controlled run-or-skip
+choice — made once for the whole wave, after every participating worker has reached this point, never
+asked separately of each worker. A successful combined run and an explicit wave-level skip both satisfy
+it; neither this rule nor `review-gates.md` requires the combined suite to always be run.
+
+This does not change the full-suite choice for a single worker running alone, and does not specify
+how, when, or by whom the combined candidate state is assembled, verified, or evaluated — that stays
+outside this rule.
+
 ## Gate 1 evidence
 
 Gate 1 requires:
@@ -99,7 +119,10 @@ Gate 1 requires:
 - targeted verification complete;
 - applicable code-quality checks complete;
 - `review-it` clean, or findings fixed and re-reviewed;
-- the human's explicit full-suite choice, including the result if run or an explicit skip.
+- the human's explicit full-suite choice, including the result if run or an explicit skip — or, for a
+  concurrent worker, the wave's combined-verification decision in its place: a successful combined-suite
+  result if run, or the wave's recorded explicit skip (see "Concurrent workers in a parallel wave"
+  above).
 
 A full-suite result is evidence of regression coverage, not authorization. Gate 1 remains the human's
 approval of the implementation report.
