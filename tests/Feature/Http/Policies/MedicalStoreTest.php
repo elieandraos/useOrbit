@@ -242,3 +242,23 @@ test('a subclass outside the medical list is rejected', function (string $subcla
         ->post(route('policies.medical.store'), $payload)
         ->assertSessionHasErrors(['subclass']);
 })->with(['In-Out', 'Term']);
+
+test('a discount up to the premium is accepted', function (?string $discount) {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->post(route('policies.medical.store'), PolicyPayload::medicalSingle($client, $carrier, ['premium_amount' => '1200.00', 'discount_amount' => $discount]))
+        ->assertSessionHasNoErrors();
+})->with(['equal to the premium' => '1200.00', 'null' => null]);
+
+test('a discount greater than the premium is rejected', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->post(route('policies.medical.store'), PolicyPayload::medicalSingle($client, $carrier, ['premium_amount' => '1200.00', 'discount_amount' => '1200.01']))
+        ->assertSessionHasErrors(['discount_amount']);
+});

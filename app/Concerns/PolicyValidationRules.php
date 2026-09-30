@@ -49,7 +49,7 @@ trait PolicyValidationRules
             'effective_date' => ['required', 'date'],
             'expiry_date' => ['required', 'date', 'after_or_equal:effective_date'],
             'premium_amount' => ['required', 'numeric', 'min:0'],
-            'discount_amount' => ['nullable', 'numeric', 'min:0'],
+            'discount_amount' => ['nullable', 'numeric', 'min:0', 'lte:premium_amount'],
             'status' => ['required', new Enum(PolicyStatus::class)],
             'source' => ['required', new Enum(PolicySource::class)],
         ];
