@@ -94,7 +94,7 @@ final class PoliciesExpatController extends Controller
             'subclasses' => PolicyClass::Expat->subclasses(),
             'coverageZones' => collect(ExpatCoverageZone::all()),
             'genders' => collect(Gender::all()),
-            'countries' => CountryResource::collection(Country::query()->orderBy('name')->get()),
+            'countries' => CountryResource::collection(Country::query()->inMarkets()->orderBy('name')->get()),
         ];
     }
 }

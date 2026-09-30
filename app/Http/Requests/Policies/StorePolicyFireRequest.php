@@ -33,7 +33,7 @@ final class StorePolicyFireRequest extends FormRequest
             'fire.street' => ['required', 'string', 'max:255'],
             'fire.building_floor' => ['nullable', 'string', 'max:255'],
             'fire.city' => ['required', 'string', 'max:100'],
-            'fire.country_id' => ['required', 'integer', 'exists:countries,id'],
+            'fire.country_id' => ['required', 'integer', Rule::exists('countries', 'id')->whereIn('iso2', config('markets.countries'))],
             'fire.state_id' => ['required', 'integer', Rule::exists('states', 'id')->where(fn (Builder $query) => $query->where('country_id', $this->input('fire.country_id')))],
             'fire.sum_insured' => ['required', 'numeric', 'min:0'],
         ];

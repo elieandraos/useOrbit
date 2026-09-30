@@ -25,4 +25,17 @@ class StateFactory extends Factory
             'name' => fake()->unique()->city(),
         ];
     }
+
+    /**
+     * A state in Lebanon, the operating market the test environment configures.
+     */
+    public function lebanon(): static
+    {
+        return $this->state(fn (): array => [
+            'country_id' => Country::query()->firstOrCreate(
+                ['iso2' => 'LB'],
+                ['name' => 'Lebanon', 'iso3' => 'LBN', 'phone_code' => '961', 'region' => 'Asia', 'subregion' => 'Western Asia'],
+            )->id,
+        ]);
+    }
 }

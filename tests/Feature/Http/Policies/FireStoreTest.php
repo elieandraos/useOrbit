@@ -27,7 +27,7 @@ test('store returns validation errors when property fields are missing', functio
     $user = User::factory()->withOrganization()->create();
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
-    $state = State::factory()->create();
+    $state = State::factory()->lebanon()->create();
 
     $payload = Arr::except(PolicyPayload::fire($client, $carrier, $state), ['fire']);
 
@@ -40,7 +40,7 @@ test('store redirects to policies.fire.show with a toast on success', function (
     $user = User::factory()->withOrganization()->create();
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
-    $state = State::factory()->create();
+    $state = State::factory()->lebanon()->create();
 
     $this->actingAs($user)
         ->post(route('policies.fire.store'), PolicyPayload::fire($client, $carrier, $state))
@@ -54,7 +54,7 @@ test('year built is optional', function () {
     $user = User::factory()->withOrganization()->create();
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
-    $state = State::factory()->create();
+    $state = State::factory()->lebanon()->create();
 
     $payload = PolicyPayload::fire($client, $carrier, $state);
     Arr::forget($payload, 'fire.year_built');
@@ -69,7 +69,7 @@ test('building floor is optional', function () {
     $user = User::factory()->withOrganization()->create();
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
-    $state = State::factory()->create();
+    $state = State::factory()->lebanon()->create();
 
     $payload = PolicyPayload::fire($client, $carrier, $state);
     Arr::forget($payload, 'fire.building_floor');
@@ -83,7 +83,7 @@ test('a floor area exceeding the column range is rejected', function () {
     $user = User::factory()->withOrganization()->create();
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
-    $state = State::factory()->create();
+    $state = State::factory()->lebanon()->create();
 
     $payload = PolicyPayload::fire($client, $carrier, $state, ['fire' => ['floor_area' => 70000]]);
 
@@ -96,7 +96,7 @@ test('a client belonging to a different organization is rejected', function () {
     $user = User::factory()->withOrganization()->create();
     $otherClient = Client::factory()->create();
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
-    $state = State::factory()->create();
+    $state = State::factory()->lebanon()->create();
 
     $this->actingAs($user)
         ->post(route('policies.fire.store'), PolicyPayload::fire($otherClient, $carrier, $state))
@@ -107,7 +107,7 @@ test('a carrier belonging to a different organization is rejected', function () 
     $user = User::factory()->withOrganization()->create();
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $otherCarrier = Carrier::factory()->create();
-    $state = State::factory()->create();
+    $state = State::factory()->lebanon()->create();
 
     $this->actingAs($user)
         ->post(route('policies.fire.store'), PolicyPayload::fire($client, $otherCarrier, $state))
@@ -118,7 +118,7 @@ test('no insureds are created for a fire policy', function () {
     $user = User::factory()->withOrganization()->create();
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
-    $state = State::factory()->create();
+    $state = State::factory()->lebanon()->create();
 
     $this->actingAs($user)
         ->post(route('policies.fire.store'), PolicyPayload::fire($client, $carrier, $state));
@@ -130,7 +130,7 @@ test('every canonical fire subclass is accepted', function (string $subclass) {
     $user = User::factory()->withOrganization()->create();
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
-    $state = State::factory()->create();
+    $state = State::factory()->lebanon()->create();
 
     $payload = PolicyPayload::fire($client, $carrier, $state, ['subclass' => $subclass]);
 
@@ -143,7 +143,7 @@ test('a subclass outside the fire list is rejected', function (string $subclass)
     $user = User::factory()->withOrganization()->create();
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
-    $state = State::factory()->create();
+    $state = State::factory()->lebanon()->create();
 
     $payload = PolicyPayload::fire($client, $carrier, $state, ['subclass' => $subclass]);
 
@@ -151,3 +151,26 @@ test('a subclass outside the fire list is rejected', function (string $subclass)
         ->post(route('policies.fire.store'), $payload)
         ->assertSessionHasErrors(['subclass']);
 })->with(['Standard', 'All Risk']);
+
+test('a fire country outside the configured markets is rejected', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $state = State::factory()->create();
+
+    $this->actingAs($user)
+        ->post(route('policies.fire.store'), PolicyPayload::fire($client, $carrier, $state))
+        ->assertSessionHasErrors(['fire.country_id']);
+});
+
+test('no fire country is accepted when no market is configured', function () {
+    config(['markets.countries' => []]);
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $state = State::factory()->lebanon()->create();
+
+    $this->actingAs($user)
+        ->post(route('policies.fire.store'), PolicyPayload::fire($client, $carrier, $state))
+        ->assertSessionHasErrors(['fire.country_id']);
+});

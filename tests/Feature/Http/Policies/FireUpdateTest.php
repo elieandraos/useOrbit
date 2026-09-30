@@ -23,7 +23,7 @@ test('a user gets 404 updating a policy from another organization', function () 
     $policy = Policy::factory()->fire()->create(['organization_id' => $otherOrganization->id]);
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
-    $state = State::factory()->create();
+    $state = State::factory()->lebanon()->create();
 
     $this->actingAs($user)
         ->patch(route('policies.fire.update', $policy), PolicyPayload::fire($client, $carrier, $state))
@@ -35,7 +35,7 @@ test('a user gets 404 updating a non-fire policy', function () {
     $policy = Policy::factory()->forOrganization($user)->medical()->create(['created_by' => $user->id]);
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
-    $state = State::factory()->create();
+    $state = State::factory()->lebanon()->create();
 
     $this->actingAs($user)
         ->patch(route('policies.fire.update', $policy), PolicyPayload::fire($client, $carrier, $state))
@@ -65,7 +65,7 @@ test('update redirects to policies.fire.show with a toast on success', function 
     $policy = Policy::factory()->forOrganization($user)->fire()->create(['created_by' => $user->id]);
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
-    $state = State::factory()->create();
+    $state = State::factory()->lebanon()->create();
 
     $this->actingAs($user)
         ->patch(route('policies.fire.update', $policy), PolicyPayload::fire($client, $carrier, $state))
@@ -78,7 +78,7 @@ test('update wires the submitted client and carrier onto the policy', function (
     $policy = Policy::factory()->forOrganization($user)->fire()->create(['created_by' => $user->id]);
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
-    $state = State::factory()->create();
+    $state = State::factory()->lebanon()->create();
 
     $this->actingAs($user)
         ->patch(route('policies.fire.update', $policy), PolicyPayload::fire($client, $carrier, $state, [
@@ -101,7 +101,7 @@ test('a class field cannot be changed away from fire', function () {
     $policy = Policy::factory()->forOrganization($user)->fire()->create(['created_by' => $user->id]);
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
-    $state = State::factory()->create();
+    $state = State::factory()->lebanon()->create();
 
     $payload = PolicyPayload::fire($client, $carrier, $state, ['class' => 'medical']);
 
@@ -115,7 +115,7 @@ test('every canonical fire subclass is accepted', function (string $subclass) {
     $policy = Policy::factory()->forOrganization($user)->fire()->create(['created_by' => $user->id]);
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
-    $state = State::factory()->create();
+    $state = State::factory()->lebanon()->create();
 
     $payload = PolicyPayload::fire($client, $carrier, $state, ['subclass' => $subclass]);
 
@@ -129,7 +129,7 @@ test('a subclass outside the fire list is rejected', function (string $subclass)
     $policy = Policy::factory()->forOrganization($user)->fire()->create(['created_by' => $user->id]);
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
-    $state = State::factory()->create();
+    $state = State::factory()->lebanon()->create();
 
     $payload = PolicyPayload::fire($client, $carrier, $state, ['subclass' => $subclass]);
 
@@ -137,3 +137,15 @@ test('a subclass outside the fire list is rejected', function (string $subclass)
         ->patch(route('policies.fire.update', $policy), $payload)
         ->assertSessionHasErrors(['subclass']);
 })->with(['Standard', 'All Risk']);
+
+test('a fire country outside the configured markets is rejected on update', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->fire()->create(['created_by' => $user->id]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $state = State::factory()->create();
+
+    $this->actingAs($user)
+        ->patch(route('policies.fire.update', $policy), PolicyPayload::fire($client, $carrier, $state))
+        ->assertSessionHasErrors(['fire.country_id']);
+});

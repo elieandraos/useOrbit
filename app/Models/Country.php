@@ -6,6 +6,8 @@ namespace App\Models;
 
 use Database\Factories\CountryFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -28,5 +30,14 @@ final class Country extends Model
     public function states(): HasMany
     {
         return $this->hasMany(State::class);
+    }
+
+    /**
+     * Limit the query to the configured operating markets; none are matched when no market is configured.
+     */
+    #[Scope]
+    protected function inMarkets(Builder $query): Builder
+    {
+        return $query->whereIn('iso2', config('markets.countries'));
     }
 }

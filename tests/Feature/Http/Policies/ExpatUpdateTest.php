@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\Carrier;
 use App\Models\Client;
+use App\Models\Country;
 use App\Models\Organization;
 use App\Models\Policy;
 use App\Models\User;
@@ -170,4 +171,28 @@ test('an expat insured born in the future is rejected on update', function () {
     $this->actingAs($user)
         ->patch(route('policies.expat.update', $policy), PolicyPayload::expat($client, $carrier, ['expat' => ['date_of_birth' => today()->addDay()->toDateString()]]))
         ->assertSessionHasErrors(['expat.date_of_birth']);
+});
+
+test('an expat country in the configured markets is accepted on update', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->expat()->create(['created_by' => $user->id]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $lebanon = Country::query()->where('iso2', 'LB')->firstOrFail();
+
+    $this->actingAs($user)
+        ->patch(route('policies.expat.update', $policy), PolicyPayload::expat($client, $carrier, ['expat' => ['country_id' => $lebanon->id]]))
+        ->assertSessionHasNoErrors();
+});
+
+test('an expat country outside the configured markets is rejected on update', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->expat()->create(['created_by' => $user->id]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $country = Country::factory()->create();
+
+    $this->actingAs($user)
+        ->patch(route('policies.expat.update', $policy), PolicyPayload::expat($client, $carrier, ['expat' => ['country_id' => $country->id]]))
+        ->assertSessionHasErrors(['expat.country_id']);
 });
