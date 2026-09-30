@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
 import { MoreHorizontal, Pencil } from '@lucide/vue';
+import PolicyClassTile from '@/components/policies/PolicyClassTile.vue';
 import { Avatar } from '@/components/ui/avatar';
 import Badge from '@/components/ui/badge/Badge.vue';
 import { DropMenu, DropMenuItem } from '@/components/ui/drop-menu';
@@ -9,7 +10,6 @@ import type { PolicyResource } from '@/types/policy';
 
 const props = defineProps<{
     policy: PolicyResource;
-    classColor: string;
     showUrl: string;
     editUrl: string;
 }>();
@@ -26,16 +26,7 @@ function goToPolicy() {
         @click="goToPolicy"
     >
         <div class="flex items-start gap-3">
-            <div
-                class="flex size-9 shrink-0 items-center justify-center rounded-lg border font-mono text-[10.5px] font-bold tracking-wider uppercase"
-                :style="{
-                    backgroundColor: `${classColor}15`,
-                    borderColor: `${classColor}30`,
-                    color: classColor,
-                }"
-            >
-                {{ policy.class_label.slice(0, 3) }}
-            </div>
+            <PolicyClassTile :policy="policy" />
             <div class="min-w-0 flex-1">
                 <div class="truncate text-[14px] font-medium text-primary">
                     {{ policy.policy_number }}
