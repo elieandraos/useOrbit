@@ -193,6 +193,7 @@ watch(countryId, () => {
                         name="fire[floor_area]"
                         type="number"
                         min="1"
+                        max="65535"
                     />
                 </FormField>
             </div>
