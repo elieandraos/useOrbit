@@ -14,6 +14,7 @@ import PolicyPartiesSection from '@/pages/Policies/partials/PolicyPartiesSection
 import { index as policiesIndex } from '@/routes/policies';
 import type { PolicyParties } from '@/types/policy';
 import type { RouteFormDefinition } from '@/wayfinder';
+import DiscardTypeDataModal from './DiscardTypeDataModal.vue';
 
 interface Option {
     label: string;
@@ -163,6 +164,97 @@ function removeRow(index: number) {
 
 const isGroup = computed(() => type.value === 'group');
 
+interface TypeChangeDiscard {
+    title: string;
+    description: string;
+    discardedItems: string[];
+    confirmLabel: string;
+}
+
+/**
+ * Covered members and the insured profile the policy had when the page loaded.
+ * Unsaved form edits don't count: only persisted data is lost on a type change.
+ */
+const persistedMemberNames = computed(() =>
+    props.policy?.type === 'group'
+        ? (props.policy.insureds ?? []).map((insured) => insured.full_name)
+        : [],
+);
+
+const persistedInsuredProfileName = computed(() => {
+    if (props.policy?.type !== 'single') {
+        return null;
+    }
+
+    const details = props.policy.details;
+    const hasInsuredProfile = [
+        details.insured_full_name,
+        details.insured_date_of_birth,
+        details.insured_gender,
+        details.insured_smoker,
+        details.insured_medical_history,
+    ].some((value) => value !== null && value !== undefined && value !== '');
+
+    if (!hasInsuredProfile) {
+        return null;
+    }
+
+    return details.insured_full_name || 'Unnamed insured';
+});
+
+const typeChangeDiscard = computed<TypeChangeDiscard | null>(() => {
+    if (!props.policy || type.value === props.policy.type) {
+        return null;
+    }
+
+    const memberCount = persistedMemberNames.value.length;
+
+    if (type.value === 'single' && memberCount > 0) {
+        return {
+            title: 'Remove covered members?',
+            description: `Saving this policy as Single permanently removes its ${memberCount} covered ${memberCount === 1 ? 'member' : 'members'}. This can't be undone.`,
+            discardedItems: persistedMemberNames.value,
+            confirmLabel: 'Save and remove members',
+        };
+    }
+
+    if (type.value === 'group' && persistedInsuredProfileName.value) {
+        return {
+            title: 'Clear the insured profile?',
+            description:
+                "Saving this policy as Group permanently clears its insured profile: the insured's name, date of birth, gender, smoker status, and medical history. This can't be undone.",
+            discardedItems: [persistedInsuredProfileName.value],
+            confirmLabel: 'Save and clear profile',
+        };
+    }
+
+    return null;
+});
+
+const isDiscardModalOpen = ref(false);
+let isDiscardConfirmed = false;
+
+/**
+ * Hold the save while a type change would discard persisted data, until the user confirms it.
+ */
+function confirmTypeChangeDiscard(): boolean {
+    if (!typeChangeDiscard.value || isDiscardConfirmed) {
+        isDiscardConfirmed = false;
+
+        return true;
+    }
+
+    isDiscardModalOpen.value = true;
+
+    return false;
+}
+
+function saveDiscardingTypeData(submit: () => void) {
+    isDiscardConfirmed = true;
+    isDiscardModalOpen.value = false;
+    submit();
+}
+
 const yesNo: Option[] = [
     { label: 'Yes', value: '1' },
     { label: 'No', value: '0' },
@@ -172,7 +264,8 @@ const yesNo: Option[] = [
 <template>
     <Form
         v-bind="route"
-        v-slot="{ errors, processing }"
+        v-slot="{ errors, processing, submit }"
+        :on-before="confirmTypeChangeDiscard"
         class="mx-auto flex w-full max-w-[1100px] flex-col gap-4"
     >
         <input type="hidden" name="class" value="medical" />
@@ -570,5 +663,15 @@ const yesNo: Option[] = [
                 submitLabel
             }}</Button>
         </div>
+
+        <DiscardTypeDataModal
+            v-if="typeChangeDiscard"
+            v-model:open="isDiscardModalOpen"
+            :title="typeChangeDiscard.title"
+            :description="typeChangeDiscard.description"
+            :discarded-items="typeChangeDiscard.discardedItems"
+            :confirm-label="typeChangeDiscard.confirmLabel"
+            @confirm="saveDiscardingTypeData(submit)"
+        />
     </Form>
 </template>
