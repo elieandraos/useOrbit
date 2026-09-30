@@ -39,3 +39,19 @@ For components with internal derived values, keep the existing reactive state an
 For invisible defaults that need no custom control, use a normal hidden input in the page itself.
 
 Native controls and components that already forward `$attrs` to their native input/select do not need a custom serialization layer.
+
+## Client-side constraints must not hide server-valid values
+
+A reusable control's convenience defaults — a date picker's year range, a `min`/`max`, a trimmed option
+list — must not make values the Form Request accepts impossible to enter, and a persisted value that is
+still valid must remain representable when editing. When one feature's valid range differs from the
+control's default, pass the bound from the page rather than changing the shared default:
+
+```vue
+<!-- this field accepts future dates; the page, not the shared control, says so -->
+<DateInput name="starts_on" v-model="startsOn" :max-year="currentYear + 5" />
+```
+
+This is not a requirement to mirror server rules in the UI or to teach shared controls domain rules:
+the Form Request stays authoritative, and a control only has to avoid excluding what it accepts. For a
+closed choice list, see `enum-options.md`.

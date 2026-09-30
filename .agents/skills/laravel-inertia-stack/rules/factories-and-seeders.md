@@ -10,19 +10,57 @@ drives the relationship first, then derive the other(s) from it.
 
 ✅
 ```php
-$gender = fake()->randomElement(Gender::cases());
-$firstName = fake()->firstName($gender->value); // Faker's firstName() accepts 'male'|'female'
+'gender' => fake()->randomElement(Gender::cases())->value,
+'first_name' => fn (array $attributes) => fake()->firstName($attributes['gender']), // Faker's firstName() accepts 'male'|'female'
 ```
 
 ❌
 ```php
 'first_name' => fake()->firstName(), // gender-agnostic
-'gender' => fake()->randomElement(Gender::cases()), // picked independently — can mismatch
+'gender' => fake()->randomElement(Gender::cases())->value, // picked independently — can mismatch
 ```
 
 The same principle applies to any dependent pair — for example a region field constraining which
 sub-areas are valid: pick the parent value first, then constrain the child's `randomElement()` to the
 set that's valid for it, rather than randomizing both from unrelated pools.
+
+The goal is application validity, not only plausibility: default factory output should satisfy the
+cross-attribute invariants the application enforces on that record (a valid enum combination, a
+type-specific detail record matching its parent's type). Keep invalid combinations for explicit test
+states or overrides. This does not make a factory responsible for every Form Request rule or workflow
+precondition — request-only input and multi-step business states stay with the tests that need them.
+
+A local variable computed at the top of `definition()` goes stale when a `state()` or `create([...])`
+override replaces the driving field. When a dependent value must follow an overridable field, use a
+closure attribute — Laravel evaluates it against the final merged attributes:
+
+✅
+```php
+'region' => fake()->randomElement(Region::cases())->value,
+'sub_area' => fn (array $attributes) => fake()->randomElement(
+    SubArea::validFor(Region::from($attributes['region'])),
+),
+```
+
+❌ *(`Area::factory()->create(['region' => Region::North->value])` keeps a sub-area picked for the old region)*
+```php
+$region = fake()->randomElement(Region::cases());
+
+'region' => $region->value,
+'sub_area' => fake()->randomElement(SubArea::validFor($region)),
+```
+
+The closure receives the raw merged value, not the model-cast one — whatever the definition or override
+supplied. Keep that value in one form (here the backing value, matching the `->value` convention in the
+parent-state example below) so the closure can normalize it reliably.
+
+## Keep random unique values out of fixture-owned identities
+
+When a factory draws a unique attribute from a small, finite pool (ISO codes, fixed slugs) and a
+deterministic seeder or fixture also owns specific values from that pool, exclude those values from the
+factory's default pool. Don't rely on probability or `fake()->unique()` — `unique()` tracks only values
+Faker generated, not rows a seeder inserted. Which values are reserved is the consuming project's
+knowledge, not this skill's.
 
 ## Build emails from the generated name
 
@@ -30,9 +68,10 @@ Prefer an email derived from the same generated name over Faker's random `safeEm
 rotating across a small pool of realistic domains instead of one hardcoded domain:
 
 ```php
-$emailDomain = fake()->randomElement(['gmail.com', 'outlook.com', 'yahoo.com', 'hotmail.com', 'icloud.com']);
-
-'email' => Str::slug($firstName, '_').'_'.Str::slug($lastName, '_').'@'.$emailDomain,
+// declared after first_name/last_name, so it receives their final resolved values
+'email' => fn (array $attributes) => Str::slug($attributes['first_name'], '_').'_'
+    .Str::slug($attributes['last_name'], '_').'@'
+    .fake()->randomElement(['gmail.com', 'outlook.com', 'yahoo.com', 'hotmail.com', 'icloud.com']),
 ```
 
 ## Chain date fields chronologically

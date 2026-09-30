@@ -67,3 +67,26 @@ $search = $request->validated('search');
 Still call `$request->validated()` (no key) when a whole array is needed as-is, e.g. passing it straight
 into a Filter (see `blueprints/filters-and-sorting.md`) — the point is to stop hand-rolling per-field
 defaults the accessor already does.
+
+## Restoring optional query state into a form: check shape, ignore what doesn't fit
+
+A GET page that preselects form values from the query string treats them as untrusted. This is the one
+case where this file does not route input through a Form Request: an invalid preselection is simply
+ignored, not turned into a validation redirect on page load. The submitted form is still validated by
+its Form Request.
+
+A scalar key can arrive as an array (`?status[]=open`), and `$request->enum()` hands it straight to
+`tryFrom()`, which throws a `TypeError`:
+
+```php
+// ❌ ?status[]=open throws before the page renders
+'status' => $request->enum('status', OrderStatus::class)?->value,
+
+// ✅ check the runtime shape first, then the meaning
+$status = $request->query('status');
+
+'status' => is_string($status) ? OrderStatus::tryFrom($status)?->value : null,
+```
+
+Preselect a related record only when it is one of the options the form renders: resolve the ID through
+the same query that builds those options, so it inherits that query's scoping, and ignore it otherwise.
