@@ -27,7 +27,10 @@ defineProps<{
 
             <!-- Right column -->
             <div class="flex flex-col gap-4">
-                <QuickStatsCard :agent="agent" />
+                <QuickStatsCard
+                    :agent="agent"
+                    :policies-count="policiesCount"
+                />
                 <PoliciesRenewalCard :policies="renewingPolicies" />
             </div>
         </div>
