@@ -2,6 +2,7 @@
 import { Head } from '@inertiajs/vue3';
 import { SearchIcon, Users } from '@lucide/vue';
 import { computed, ref } from 'vue';
+import { Avatar } from '@/components/ui/avatar';
 import Badge from '@/components/ui/badge/Badge.vue';
 import {
     Card,
@@ -186,10 +187,19 @@ const isFiltered = computed(
                                 :key="member.id"
                                 class="border-b border-border-subtle last:border-b-0"
                             >
-                                <td
-                                    class="px-6 py-3 text-[13.5px] font-medium text-primary"
-                                >
-                                    {{ member.full_name }}
+                                <td class="px-6 py-3">
+                                    <div
+                                        class="flex min-w-0 items-center gap-2.5"
+                                    >
+                                        <Avatar
+                                            :name="member.full_name"
+                                            :size="30"
+                                        />
+                                        <span
+                                            class="truncate text-[13.5px] font-medium text-primary"
+                                            >{{ member.full_name }}</span
+                                        >
+                                    </div>
                                 </td>
                                 <td
                                     class="px-4 py-3 text-[13px] text-secondary"
