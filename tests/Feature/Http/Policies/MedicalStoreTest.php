@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\Carrier;
 use App\Models\Client;
+use App\Models\Organization;
 use App\Models\Policy;
 use App\Models\User;
 use Illuminate\Support\Arr;
@@ -19,7 +20,7 @@ test('store returns validation errors when required fields are missing', functio
 
     $this->actingAs($user)
         ->post(route('policies.medical.store'))
-        ->assertSessionHasErrors(['class', 'subclass', 'type', 'client_id', 'carrier_id', 'effective_date', 'expiry_date', 'premium_amount', 'source']);
+        ->assertSessionHasErrors(['policy_number', 'class', 'subclass', 'type', 'client_id', 'carrier_id', 'effective_date', 'expiry_date', 'premium_amount', 'source']);
 });
 
 test('store redirects to policies.medical.show with a toast on success', function () {
@@ -88,6 +89,36 @@ test('a single policy prohibits an insureds array', function () {
     $this->actingAs($user)
         ->post(route('policies.medical.store'), $payload)
         ->assertSessionHasErrors(['insureds']);
+});
+
+test('a policy number already used in the organization is rejected', function (bool $isSoftDeleted) {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $existing = Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'policy_number' => 'POL-1000']);
+
+    if ($isSoftDeleted) {
+        $existing->delete();
+    }
+
+    $this->actingAs($user)
+        ->post(route('policies.medical.store'), PolicyPayload::medicalSingle($client, $carrier, ['policy_number' => 'POL-1000']))
+        ->assertSessionHasErrors(['policy_number']);
+
+    expect(Policy::withTrashed()->where('policy_number', 'POL-1000')->count())->toBe(1);
+})->with(['active' => false, 'soft-deleted' => true]);
+
+test('a policy number used in another organization is accepted', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    Policy::factory()->for(Organization::factory())->create(['policy_number' => 'POL-1000']);
+
+    $this->actingAs($user)
+        ->post(route('policies.medical.store'), PolicyPayload::medicalSingle($client, $carrier, ['policy_number' => 'POL-1000']))
+        ->assertSessionHasNoErrors();
+
+    $this->assertDatabaseHas('policies', ['organization_id' => $user->organization_id, 'policy_number' => 'POL-1000']);
 });
 
 test('a client belonging to a different organization is rejected', function () {

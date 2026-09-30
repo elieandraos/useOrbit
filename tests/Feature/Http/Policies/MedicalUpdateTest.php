@@ -56,7 +56,7 @@ test('update returns validation errors when required fields are missing', functi
 
     $this->actingAs($user)
         ->patch(route('policies.medical.update', $policy))
-        ->assertSessionHasErrors(['class', 'subclass', 'type', 'client_id', 'carrier_id', 'effective_date', 'expiry_date', 'premium_amount', 'source']);
+        ->assertSessionHasErrors(['policy_number', 'class', 'subclass', 'type', 'client_id', 'carrier_id', 'effective_date', 'expiry_date', 'premium_amount', 'source']);
 });
 
 test('update redirects to policies.medical.show with a toast on success', function () {
@@ -69,6 +69,34 @@ test('update redirects to policies.medical.show with a toast on success', functi
         ->patch(route('policies.medical.update', $policy), PolicyPayload::medicalSingle($client, $carrier))
         ->assertRedirect(route('policies.medical.show', $policy->fresh()))
         ->assertHasInertiaFlash('success', 'Policy updated.');
+});
+
+test('a policy number held by another policy in the organization is rejected', function (bool $isSoftDeleted) {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->medical()->create(['created_by' => $user->id, 'type' => 'single']);
+    $other = Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'policy_number' => 'POL-1000']);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    if ($isSoftDeleted) {
+        $other->delete();
+    }
+
+    $this->actingAs($user)
+        ->patch(route('policies.medical.update', $policy), PolicyPayload::medicalSingle($client, $carrier, ['policy_number' => 'POL-1000']))
+        ->assertSessionHasErrors(['policy_number']);
+})->with(['active' => false, 'soft-deleted' => true]);
+
+test('keeping the policy\'s own number on update is accepted', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->medical()->create(['created_by' => $user->id, 'type' => 'single', 'policy_number' => 'POL-1000']);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->patch(route('policies.medical.update', $policy), PolicyPayload::medicalSingle($client, $carrier, ['policy_number' => 'POL-1000']))
+        ->assertSessionHasNoErrors()
+        ->assertRedirect(route('policies.medical.show', $policy->fresh()));
 });
 
 test('update wires the submitted client and carrier onto the policy', function () {

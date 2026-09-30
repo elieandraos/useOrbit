@@ -19,7 +19,7 @@ final class CreatePolicyAction
     ) {}
 
     /**
-     * @param  array{policy_number?: string|null, class: string, subclass: string, type: string, client_id: string, carrier_id: string, agent_id?: string|null, effective_date: string, expiry_date: string, premium_amount: string, discount_amount?: string|null, status: string, source: string}  $attributes
+     * @param  array{policy_number: string, class: string, subclass: string, type: string, client_id: string, carrier_id: string, agent_id?: string|null, effective_date: string, expiry_date: string, premium_amount: string, discount_amount?: string|null, status: string, source: string}  $attributes
      *
      * @throws \Throwable
      */
@@ -28,17 +28,13 @@ final class CreatePolicyAction
         return DB::transaction(function () use ($user, $attributes): Policy {
             $organizationId = $this->organizationContext->id();
 
-            $policyNumber = ! empty($attributes['policy_number'])
-                ? $attributes['policy_number']
-                : $this->generatePolicyNumber($organizationId);
-
-            $slug = $this->generateUniqueSlug(Policy::class, $policyNumber, $organizationId);
+            $slug = $this->generateUniqueSlug(Policy::class, $attributes['policy_number'], $organizationId);
 
             /** @var Policy $policy */
             $policy = Policy::query()->create([
                 'organization_id' => $organizationId,
                 'slug' => $slug,
-                'policy_number' => $policyNumber,
+                'policy_number' => $attributes['policy_number'],
                 'class' => $attributes['class'],
                 'subclass' => $attributes['subclass'],
                 'type' => $attributes['type'],
@@ -56,17 +52,5 @@ final class CreatePolicyAction
 
             return $policy;
         });
-    }
-
-    private function generatePolicyNumber(int $organizationId): string
-    {
-        $max = Policy::query()
-            ->where('organization_id', $organizationId)
-            ->where('policy_number', 'like', 'POL-%')
-            ->pluck('policy_number')
-            ->map(fn (string $policyNumber): int => (int) str_replace('POL-', '', $policyNumber))
-            ->max() ?? 0;
-
-        return 'POL-'.str_pad((string) ($max + 1), 4, '0', STR_PAD_LEFT);
     }
 }

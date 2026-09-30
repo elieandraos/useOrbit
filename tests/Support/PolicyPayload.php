@@ -22,7 +22,7 @@ final class PolicyPayload
     public static function base(Client $client, Carrier $carrier, array $overrides = []): array
     {
         return self::merge([
-            'policy_number' => null,
+            'policy_number' => 'POL-'.fake()->unique()->numerify('#####'),
             'class' => 'medical',
             'subclass' => 'Hospitalization',
             'type' => 'single',

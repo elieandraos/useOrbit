@@ -8,6 +8,7 @@ use App\Enums\PolicyClass;
 use App\Enums\PolicySource;
 use App\Enums\PolicyStatus;
 use App\Enums\PolicyType;
+use App\Models\Policy;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -27,8 +28,18 @@ trait PolicyValidationRules
     {
         $organizationId = $this->user()?->organization_id;
 
+        /** @var Policy|null $policy */
+        $policy = $this->route('policy');
+
         return [
-            'policy_number' => ['nullable', 'string', 'max:50'],
+            'policy_number' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('policies', 'policy_number')
+                    ->where('organization_id', $organizationId)
+                    ->ignore($policy?->id),
+            ],
             'class' => ['required', Rule::in([$policyClass->value])],
             'subclass' => ['required', 'string', Rule::in($policyClass->subclasses())],
             'type' => ['required', new Enum(PolicyType::class)],

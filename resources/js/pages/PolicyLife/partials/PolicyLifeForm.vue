@@ -109,8 +109,7 @@ const beneficiaries = ref(props.policy?.details.beneficiaries ?? '');
                 <FormField
                     label="Policy number"
                     for="policy_number"
-                    optional
-                    helper="Auto-generated if left blank."
+                    required
                     :error="errors.policy_number"
                 >
                     <Input

@@ -55,7 +55,7 @@ test('update returns validation errors when required fields are missing', functi
 
     $this->actingAs($user)
         ->patch(route('policies.expat.update', $policy))
-        ->assertSessionHasErrors(['class', 'subclass', 'type', 'client_id', 'carrier_id', 'effective_date', 'expiry_date', 'premium_amount', 'source']);
+        ->assertSessionHasErrors(['policy_number', 'class', 'subclass', 'type', 'client_id', 'carrier_id', 'effective_date', 'expiry_date', 'premium_amount', 'source']);
 });
 
 test('update redirects to policies.expat.show with a toast on success', function () {

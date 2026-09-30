@@ -10,33 +10,6 @@ use App\Models\User;
 use App\Support\Tenancy\OrganizationContext;
 use Tests\Support\PolicyPayload;
 
-test('a blank policy_number is auto-generated', function () {
-    $user = User::factory()->withOrganization()->create();
-    setOrganizationContext($user);
-    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
-    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
-
-    /** @noinspection PhpUnhandledExceptionInspection */
-    $policy = app(CreatePolicyAction::class)->handle($user, PolicyPayload::base($client, $carrier));
-
-    expect($policy->policy_number)->toBe('POL-0001');
-});
-
-test('auto-generated policy numbers increment per organization', function () {
-    $user = User::factory()->withOrganization()->create();
-    setOrganizationContext($user);
-    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
-    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
-
-    /** @noinspection PhpUnhandledExceptionInspection */
-    $first = app(CreatePolicyAction::class)->handle($user, PolicyPayload::base($client, $carrier));
-    /** @noinspection PhpUnhandledExceptionInspection */
-    $second = app(CreatePolicyAction::class)->handle($user, PolicyPayload::base($client, $carrier));
-
-    expect($first->policy_number)->toBe('POL-0001')
-        ->and($second->policy_number)->toBe('POL-0002');
-});
-
 test('a submitted policy_number is respected', function () {
     $user = User::factory()->withOrganization()->create();
     setOrganizationContext($user);
