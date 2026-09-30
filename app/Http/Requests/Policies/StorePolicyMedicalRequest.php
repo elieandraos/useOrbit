@@ -84,4 +84,22 @@ final class StorePolicyMedicalRequest extends FormRequest
             'insureds.*.medical_notes' => 'member :position medical notes',
         ];
     }
+
+    /**
+     * Get the messages for conditional rules whose default wording would read awkwardly or expose a raw value.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'medical.co_insurance_share.required_if_accepted' => 'The :attribute field is required when co-insurance applies.',
+            'medical.co_insurance_share.prohibited_if_declined' => 'The :attribute field is only allowed when co-insurance applies.',
+            'medical.insured_*.required_if' => 'The :attribute field is required on a '.PolicyType::Single->label().' policy.',
+            'medical.insured_*.prohibited_unless' => 'The :attribute field is only allowed on a '.PolicyType::Single->label().' policy.',
+            'insureds.required_if' => 'Add at least one covered member to a '.PolicyType::Group->label().' policy.',
+            'insureds.min' => 'Add at least one covered member to a '.PolicyType::Group->label().' policy.',
+            'insureds.prohibited_unless' => 'Covered members are only allowed on a '.PolicyType::Group->label().' policy.',
+        ];
+    }
 }

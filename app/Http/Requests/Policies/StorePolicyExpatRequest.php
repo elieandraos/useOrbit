@@ -62,4 +62,17 @@ final class StorePolicyExpatRequest extends FormRequest
             'expat.visa_expiry_date' => 'visa expiry date',
         ];
     }
+
+    /**
+     * Get the messages for conditional rules whose default wording would read awkwardly or expose a raw value.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'expat.travel_scope.required_if' => 'The :attribute field is required when the coverage zone is '.ExpatCoverageZone::InOut->label().'.',
+            'expat.travel_scope.prohibited_unless' => 'The :attribute field is only allowed when the coverage zone is '.ExpatCoverageZone::InOut->label().'.',
+        ];
+    }
 }

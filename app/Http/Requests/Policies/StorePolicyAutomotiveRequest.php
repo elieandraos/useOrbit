@@ -56,4 +56,16 @@ final class StorePolicyAutomotiveRequest extends FormRequest
             'automotive.valuation_source' => 'valuation source',
         ];
     }
+
+    /**
+     * Get the messages for conditional rules whose default wording would read awkwardly or expose a raw value.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'automotive.valuation_*.prohibited_unless' => 'The :attribute field is only allowed on an All Risk policy.',
+        ];
+    }
 }
