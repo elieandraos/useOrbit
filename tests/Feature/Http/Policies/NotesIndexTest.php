@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\PolicyClass;
 use App\Http\Resources\NoteResource;
 use App\Http\Resources\PolicyResource;
 use App\Models\Note;
@@ -60,6 +61,20 @@ test('notes are listed pinned-first then newest', function () {
         ->assertInertia(fn ($page) => $page->where('notes.0.id', $pinned->id)
             ->where('notes.1.id', $newer->id)
             ->where('notes.2.id', $older->id)
+        );
+});
+
+test('a non-medical policy is shared with its own class and no medical-only data', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->automotive()->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->get(route('policies.notes.index', $policy))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('policy.class', PolicyClass::Automotive->value)
+            ->missing('policy.details')
+            ->missing('policy.insureds')
         );
 });
 

@@ -10,7 +10,7 @@ export interface PolicyLifeResource {
     id: number;
     slug: string;
     policy_number: string;
-    class: string;
+    class: 'life';
     class_label: string;
     subclass: string;
     type: string;

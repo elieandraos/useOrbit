@@ -20,7 +20,7 @@ export interface PolicyExpatResource {
     id: number;
     slug: string;
     policy_number: string;
-    class: string;
+    class: 'expat';
     class_label: string;
     subclass: string;
     type: string;

@@ -34,7 +34,7 @@ export interface PolicyMedicalResource {
     id: number;
     slug: string;
     policy_number: string;
-    class: string;
+    class: 'medical';
     class_label: string;
     subclass: string;
     type: string;

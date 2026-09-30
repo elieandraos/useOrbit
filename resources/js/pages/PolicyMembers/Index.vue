@@ -12,11 +12,11 @@ import {
 } from '@/components/ui/card';
 import Input from '@/components/ui/input/Input.vue';
 import { cn } from '@/lib/utils';
+import PolicyDetailShell from '../Policies/partials/PolicyDetailShell.vue';
 import type {
     PolicyInsured,
     PolicyMedicalResource,
 } from '../PolicyMedical/partials/policy';
-import PolicyMedicalDetailShell from '../PolicyMedical/partials/PolicyMedicalDetailShell.vue';
 
 const props = defineProps<{
     policy: PolicyMedicalResource;
@@ -75,7 +75,7 @@ const isFiltered = computed(
 </script>
 
 <template>
-    <PolicyMedicalDetailShell :policy="policy">
+    <PolicyDetailShell :policy="policy">
         <Head :title="`${policy.policy_number} · Members`" />
 
         <Card class="mt-6 min-h-[488px]">
@@ -249,5 +249,5 @@ const isFiltered = computed(
                 </div>
             </CardContent>
         </Card>
-    </PolicyMedicalDetailShell>
+    </PolicyDetailShell>
 </template>

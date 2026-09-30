@@ -6,11 +6,8 @@ import Badge from '@/components/ui/badge/Badge.vue';
 import Button from '@/components/ui/button/Button.vue';
 import { Spinner } from '@/components/ui/spinner';
 import { useFileExport } from '@/composables/useFileExport';
+import { policyClassRoutes } from '@/lib/policyClassRoutes';
 import { policyStatusTone } from '@/lib/policyStatusTone';
-import {
-    edit as policiesMedicalEdit,
-    exportPdf as policiesMedicalExportPdf,
-} from '@/routes/policies/medical';
 import type { PolicyResource } from '@/types/policy';
 
 const props = defineProps<{
@@ -19,8 +16,10 @@ const props = defineProps<{
 
 const { isExporting, exportFile } = useFileExport();
 
+const classRoutes = computed(() => policyClassRoutes[props.policy.class]);
+
 const exportUrl = computed(
-    () => policiesMedicalExportPdf(props.policy.slug).url,
+    () => classRoutes.value.exportPdf(props.policy.slug).url,
 );
 
 function exportPolicy(): Promise<void> {
@@ -67,7 +66,7 @@ function exportPolicy(): Promise<void> {
                 </template>
                 Export
             </Button>
-            <Link :href="policiesMedicalEdit(policy.slug).url">
+            <Link :href="classRoutes.edit(policy.slug).url">
                 <Button variant="secondary" size="md">
                     <template #leading><Pencil /></template>
                     Edit

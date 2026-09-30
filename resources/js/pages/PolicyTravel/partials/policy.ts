@@ -13,7 +13,7 @@ export interface PolicyTravelResource {
     id: number;
     slug: string;
     policy_number: string;
-    class: string;
+    class: 'travel';
     class_label: string;
     subclass: string;
     type: string;

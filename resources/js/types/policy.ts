@@ -1,8 +1,11 @@
+export type PolicyClass =
+    'medical' | 'automotive' | 'expat' | 'fire' | 'life' | 'travel';
+
 export interface PolicyResource {
     id: number;
     slug: string;
     policy_number: string;
-    class: string;
+    class: PolicyClass;
     class_label: string;
     subclass: string;
     type: string;

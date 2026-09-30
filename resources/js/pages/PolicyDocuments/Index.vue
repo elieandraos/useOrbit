@@ -31,12 +31,12 @@ import type {
     DocumentUploadConfig,
 } from '@/types/document';
 import type { DocumentsUploadBatchProcessedData } from '@/types/notification';
+import type { PolicyResource } from '@/types/policy';
 import type { TagResource } from '@/types/tag';
-import type { PolicyMedicalResource } from '../PolicyMedical/partials/policy';
-import PolicyMedicalDetailShell from '../PolicyMedical/partials/PolicyMedicalDetailShell.vue';
+import PolicyDetailShell from '../Policies/partials/PolicyDetailShell.vue';
 
 const props = defineProps<{
-    policy: PolicyMedicalResource;
+    policy: PolicyResource;
     documents: DocumentResource[];
     tags: TagResource[];
     uploadConfig: DocumentUploadConfig;
@@ -161,7 +161,7 @@ const manageTagsOpen = ref(false);
 </script>
 
 <template>
-    <PolicyMedicalDetailShell :policy="policy">
+    <PolicyDetailShell :policy="policy">
         <Head :title="`${policy.policy_number} · Documents`" />
 
         <Card class="mt-6 min-h-[488px]">
@@ -241,5 +241,5 @@ const manageTagsOpen = ref(false);
             :subject-label="documentToNotifyAbout.original_filename"
             :form="documentsNotify.form(documentToNotifyAbout.id)"
         />
-    </PolicyMedicalDetailShell>
+    </PolicyDetailShell>
 </template>

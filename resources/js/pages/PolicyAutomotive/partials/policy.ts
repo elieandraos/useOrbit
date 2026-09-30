@@ -14,7 +14,7 @@ export interface PolicyAutomotiveResource {
     id: number;
     slug: string;
     policy_number: string;
-    class: string;
+    class: 'automotive';
     class_label: string;
     subclass: string;
     type: string;

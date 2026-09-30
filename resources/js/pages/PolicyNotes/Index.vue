@@ -12,7 +12,7 @@ import { update as updateNote } from '@/routes/notes';
 import { store as storeNote } from '@/routes/policies/notes';
 import type { NoteConfig, NoteResource } from '@/types/note';
 import type { PolicyResource } from '@/types/policy';
-import PolicyMedicalDetailShell from '../PolicyMedical/partials/PolicyMedicalDetailShell.vue';
+import PolicyDetailShell from '../Policies/partials/PolicyDetailShell.vue';
 
 const props = defineProps<{
     policy: PolicyResource;
@@ -70,7 +70,7 @@ function saveNote(
 </script>
 
 <template>
-    <PolicyMedicalDetailShell :policy="policy">
+    <PolicyDetailShell :policy="policy">
         <Head :title="`${policy.policy_number} · Notes`" />
 
         <Card class="mt-6 min-h-[488px]">
@@ -116,5 +116,5 @@ function saveNote(
         </Card>
 
         <DeleteNoteModal v-model="noteToDelete" />
-    </PolicyMedicalDetailShell>
+    </PolicyDetailShell>
 </template>
