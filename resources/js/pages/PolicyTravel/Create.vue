@@ -62,11 +62,15 @@ defineOptions({
             :divider="false"
         >
             <template #actions>
-                <BackToPolicyEntryButton policy-class="travel" />
+                <BackToPolicyEntryButton
+                    policy-class="travel"
+                    form="policy-form"
+                />
             </template>
         </PageHeader>
 
         <PolicyTravelForm
+            id="policy-form"
             :clients="clients"
             :carriers="carriers"
             :agents="agents"

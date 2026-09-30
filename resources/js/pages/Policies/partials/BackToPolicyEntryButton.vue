@@ -6,6 +6,8 @@ import { create as policiesCreate } from '@/routes/policies';
 
 const props = defineProps<{
     policyClass: string;
+    /** The id of the class form whose current shared values carry back to the entry screen. */
+    form: string;
 }>();
 
 const firstStepKeys = [
@@ -18,13 +20,14 @@ const firstStepKeys = [
 ];
 
 function backToEntry(): void {
-    const query = new URLSearchParams(window.location.search);
+    const form = document.getElementById(props.form);
+    const values = form instanceof HTMLFormElement ? new FormData(form) : null;
     const selection: Record<string, string> = { class: props.policyClass };
 
     for (const key of firstStepKeys) {
-        const value = query.get(key);
+        const value = values?.get(key);
 
-        if (value) {
+        if (typeof value === 'string' && value) {
             selection[key] = value;
         }
     }
