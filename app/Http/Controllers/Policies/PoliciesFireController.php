@@ -63,7 +63,7 @@ final class PoliciesFireController extends Controller
 
         return inertia('PolicyFire/Edit', [
             'policy' => PolicyFireResource::make($policy),
-            ...$this->formOptions(),
+            ...$this->formOptions($policy),
         ]);
     }
 
@@ -85,10 +85,10 @@ final class PoliciesFireController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function formOptions(): array
+    private function formOptions(?Policy $policy = null): array
     {
         return [
-            ...$this->policyFormOptions->shared(),
+            ...$this->policyFormOptions->shared($policy),
             'subclasses' => PolicyClass::Fire->subclasses(),
             'countries' => CountryResource::collection(Country::query()->inMarkets()->orderBy('name')->get()),
         ];

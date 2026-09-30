@@ -73,7 +73,7 @@ final class PoliciesMedicalController extends Controller
 
         return inertia('PolicyMedical/Edit', [
             'policy' => PolicyMedicalResource::make($policy),
-            ...$this->formOptions(),
+            ...$this->formOptions($policy),
         ]);
     }
 
@@ -95,10 +95,10 @@ final class PoliciesMedicalController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function formOptions(): array
+    private function formOptions(?Policy $policy = null): array
     {
         return [
-            ...$this->policyFormOptions->shared(),
+            ...$this->policyFormOptions->shared($policy),
             'subclasses' => PolicyClass::Medical->subclasses(),
             'coverageScopes' => collect(MedicalCoverageScope::all()),
             'classTiers' => collect(MedicalClassTier::all()),

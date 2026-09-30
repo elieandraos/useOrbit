@@ -62,7 +62,7 @@ final class PoliciesTravelController extends Controller
 
         return inertia('PolicyTravel/Edit', [
             'policy' => PolicyTravelResource::make($policy),
-            ...$this->formOptions(),
+            ...$this->formOptions($policy),
         ]);
     }
 
@@ -84,10 +84,10 @@ final class PoliciesTravelController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function formOptions(): array
+    private function formOptions(?Policy $policy = null): array
     {
         return [
-            ...$this->policyFormOptions->shared(),
+            ...$this->policyFormOptions->shared($policy),
             'subclasses' => PolicyClass::Travel->subclasses(),
             'coverageTiers' => collect(TravelCoverageTier::all()),
         ];

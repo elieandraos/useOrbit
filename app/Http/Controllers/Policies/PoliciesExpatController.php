@@ -65,7 +65,7 @@ final class PoliciesExpatController extends Controller
 
         return inertia('PolicyExpat/Edit', [
             'policy' => PolicyExpatResource::make($policy),
-            ...$this->formOptions(),
+            ...$this->formOptions($policy),
         ]);
     }
 
@@ -87,10 +87,10 @@ final class PoliciesExpatController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function formOptions(): array
+    private function formOptions(?Policy $policy = null): array
     {
         return [
-            ...$this->policyFormOptions->shared(),
+            ...$this->policyFormOptions->shared($policy),
             'subclasses' => PolicyClass::Expat->subclasses(),
             'coverageZones' => collect(ExpatCoverageZone::all()),
             'genders' => collect(Gender::all()),

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Policies;
 
+use App\Enums\AgentStatus;
+use App\Enums\CarrierStatus;
+use App\Enums\ClientStatus;
 use App\Enums\PolicyClass;
 use App\Enums\PolicySource;
 use App\Enums\PolicyStatus;
@@ -67,9 +70,9 @@ final class PoliciesController extends Controller
             'selected' => [
                 'class' => $this->selectedEnumValue($request, 'class', PolicyClass::class),
                 'type' => $this->selectedEnumValue($request, 'type', PolicyType::class),
-                'client_id' => Client::query()->find($request->integer('client_id'))?->id,
-                'carrier_id' => Carrier::query()->find($request->integer('carrier_id'))?->id,
-                'agent_id' => Agent::query()->find($request->integer('agent_id'))?->id,
+                'client_id' => Client::query()->where('status', ClientStatus::Active)->find($request->integer('client_id'))?->id,
+                'carrier_id' => Carrier::query()->where('status', CarrierStatus::Active)->find($request->integer('carrier_id'))?->id,
+                'agent_id' => Agent::query()->where('status', AgentStatus::Active)->find($request->integer('agent_id'))?->id,
                 'status' => $this->selectedEnumValue($request, 'status', PolicyStatus::class),
                 'source' => $this->selectedEnumValue($request, 'source', PolicySource::class),
             ],

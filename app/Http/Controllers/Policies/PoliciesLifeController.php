@@ -61,7 +61,7 @@ final class PoliciesLifeController extends Controller
 
         return inertia('PolicyLife/Edit', [
             'policy' => PolicyLifeResource::make($policy),
-            ...$this->formOptions(),
+            ...$this->formOptions($policy),
         ]);
     }
 
@@ -83,10 +83,10 @@ final class PoliciesLifeController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function formOptions(): array
+    private function formOptions(?Policy $policy = null): array
     {
         return [
-            ...$this->policyFormOptions->shared(),
+            ...$this->policyFormOptions->shared($policy),
             'subclasses' => PolicyClass::Life->subclasses(),
         ];
     }

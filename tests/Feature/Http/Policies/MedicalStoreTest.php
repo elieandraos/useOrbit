@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Agent;
 use App\Models\Carrier;
 use App\Models\Client;
 use App\Models\Organization;
@@ -143,6 +144,19 @@ test('a carrier belonging to a different organization is rejected', function () 
     $this->actingAs($user)
         ->post(route('policies.medical.store'), $payload)
         ->assertSessionHasErrors(['carrier_id']);
+});
+
+test('an archived client, carrier and agent are rejected', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->archived()->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->archived()->create(['created_by' => $user->id]);
+    $agent = Agent::factory()->forOrganization($user)->archived()->create();
+
+    $this->actingAs($user)
+        ->post(route('policies.medical.store'), PolicyPayload::medicalSingle($client, $carrier, ['agent_id' => $agent->id]))
+        ->assertSessionHasErrors(['client_id', 'carrier_id', 'agent_id']);
+
+    expect(Policy::query()->count())->toBe(0);
 });
 
 test('a single policy is rejected when the insured profile fields are missing', function () {
