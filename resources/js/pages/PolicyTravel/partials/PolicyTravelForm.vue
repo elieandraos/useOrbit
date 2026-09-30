@@ -49,6 +49,7 @@ const props = defineProps<{
     carriers: EntityOption[];
     agents: EntityOption[];
     subclasses: string[];
+    coverageTiers: Option[];
     types: Option[];
     statuses: Option[];
     sources: Option[];
@@ -57,8 +58,6 @@ const props = defineProps<{
     route: RouteFormDefinition<'post'>;
     submitLabel: string;
 }>();
-
-const COVERAGE_TIERS = ['Basic', 'Standard', 'Premium'];
 
 const policyNumber = ref(props.policy?.policy_number ?? '');
 const subclass = ref(props.policy?.subclass ?? props.subclasses[0] ?? '');
@@ -85,7 +84,7 @@ const tripStartDate = ref(props.policy?.details.trip_start_date ?? '');
 const tripEndDate = ref(props.policy?.details.trip_end_date ?? '');
 const travelers = ref(props.policy?.details.travelers ?? '');
 const coverageTier = ref(
-    props.policy?.details.coverage_tier ?? COVERAGE_TIERS[0],
+    props.policy?.details.coverage_tier ?? props.coverageTiers[0]?.value ?? '',
 );
 </script>
 
@@ -189,7 +188,7 @@ const coverageTier = ref(
                 <RadioChips
                     v-model="coverageTier"
                     name="travel[coverage_tier]"
-                    :options="COVERAGE_TIERS"
+                    :options="coverageTiers"
                 />
             </FormField>
         </FormSection>

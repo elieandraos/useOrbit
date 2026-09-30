@@ -139,3 +139,23 @@ test('a trip outside the policy coverage is rejected', function (string $tripSta
     'starting before coverage' => ['2025-12-31', '2026-01-10', 'travel.trip_start_date'],
     'ending after coverage' => ['2026-12-25', '2027-01-02', 'travel.trip_end_date'],
 ]);
+
+test('every travel coverage tier is accepted', function (string $coverageTier) {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->post(route('policies.travel.store'), PolicyPayload::travel($client, $carrier, ['travel' => ['coverage_tier' => $coverageTier]]))
+        ->assertSessionHasNoErrors();
+})->with(['basic', 'standard', 'premium']);
+
+test('a coverage tier outside the set is rejected', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->post(route('policies.travel.store'), PolicyPayload::travel($client, $carrier, ['travel' => ['coverage_tier' => 'Platinum']]))
+        ->assertSessionHasErrors(['travel.coverage_tier']);
+});

@@ -7,6 +7,7 @@ export interface PolicyTravelDetails {
     trip_end_date_formatted: string;
     travelers: string;
     coverage_tier: string;
+    coverage_tier_label: string;
 }
 
 export interface PolicyTravelResource {

@@ -7,7 +7,9 @@ namespace App\Http\Requests\Policies;
 use App\Concerns\PolicyValidationRules;
 use App\Enums\PolicyClass;
 use App\Enums\PolicyStatus;
+use App\Enums\TravelCoverageTier;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\Enum;
 
 final class UpdatePolicyTravelRequest extends FormRequest
 {
@@ -29,7 +31,7 @@ final class UpdatePolicyTravelRequest extends FormRequest
             'travel.trip_start_date' => ['required', 'date', 'after_or_equal:effective_date'],
             'travel.trip_end_date' => ['required', 'date', 'after_or_equal:travel.trip_start_date', 'before_or_equal:expiry_date'],
             'travel.travelers' => ['required', 'string'],
-            'travel.coverage_tier' => ['required', 'string', 'max:20'],
+            'travel.coverage_tier' => ['required', new Enum(TravelCoverageTier::class)],
         ];
     }
 }

@@ -22,6 +22,7 @@ defineProps<{
     carriers: EntityOption[];
     agents: EntityOption[];
     subclasses: string[];
+    coverageTiers: Option[];
     types: Option[];
     statuses: Option[];
     sources: Option[];
@@ -70,6 +71,7 @@ defineOptions({
             :carriers="carriers"
             :agents="agents"
             :subclasses="subclasses"
+            :coverage-tiers="coverageTiers"
             :types="types"
             :statuses="statuses"
             :sources="sources"

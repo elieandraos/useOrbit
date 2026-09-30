@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Database\Factories;
 
 use App\Enums\PolicyClass;
+use App\Enums\TravelCoverageTier;
 use App\Models\Policy;
 use App\Models\PolicyTravelDetails;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -41,7 +42,7 @@ class PolicyTravelDetailsFactory extends Factory
                     ->format('Y-m-d');
             },
             'travelers' => fake()->name(),
-            'coverage_tier' => fake()->randomElement(['Basic', 'Standard', 'Premium']),
+            'coverage_tier' => fake()->randomElement(TravelCoverageTier::cases())->value,
         ];
     }
 

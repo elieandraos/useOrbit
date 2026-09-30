@@ -21,7 +21,7 @@ defineProps<{
                 />
                 <DetailField
                     label="Coverage tier"
-                    :value="policy.details.coverage_tier"
+                    :value="policy.details.coverage_tier_label"
                 />
                 <DetailField
                     label="Trip start"

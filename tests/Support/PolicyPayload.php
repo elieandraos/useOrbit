@@ -227,7 +227,7 @@ final class PolicyPayload
                 'trip_start_date' => '2026-06-01',
                 'trip_end_date' => '2026-06-15',
                 'travelers' => 'Jane Doe, John Doe',
-                'coverage_tier' => 'Standard',
+                'coverage_tier' => 'standard',
             ],
         ], $overrides));
     }

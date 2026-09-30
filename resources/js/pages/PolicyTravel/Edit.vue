@@ -26,6 +26,7 @@ const props = defineProps<{
     carriers: EntityOption[];
     agents: EntityOption[];
     subclasses: string[];
+    coverageTiers: Option[];
     types: Option[];
     statuses: Option[];
     sources: Option[];
@@ -64,6 +65,7 @@ setLayoutProps({
             :carriers="carriers"
             :agents="agents"
             :subclasses="subclasses"
+            :coverage-tiers="coverageTiers"
             :types="types"
             :statuses="statuses"
             :sources="sources"

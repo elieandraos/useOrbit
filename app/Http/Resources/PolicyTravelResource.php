@@ -24,6 +24,7 @@ final class PolicyTravelResource extends JsonResource
                 'trip_end_date_formatted' => $this->travelDetails->trip_end_date->format('M j, Y'),
                 'travelers' => $this->travelDetails->travelers,
                 'coverage_tier' => $this->travelDetails->coverage_tier,
+                'coverage_tier_label' => $this->travelDetails->coverage_tier->label(),
             ]),
         ];
     }

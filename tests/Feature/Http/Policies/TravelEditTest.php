@@ -90,6 +90,6 @@ test('the edit page receives the policy and the shared and travel form options',
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('PolicyTravel/Edit')
-            ->hasAll(['policy', 'clients', 'carriers', 'agents', 'types', 'statuses', 'sources', 'subclasses'])
+            ->hasAll(['policy', 'clients', 'carriers', 'agents', 'types', 'statuses', 'sources', 'subclasses', 'coverageTiers'])
         );
 });

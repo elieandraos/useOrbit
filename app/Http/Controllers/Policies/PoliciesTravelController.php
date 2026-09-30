@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Policies;
 use App\Actions\Policies\CreatePolicyTravelAction;
 use App\Actions\Policies\UpdatePolicyTravelAction;
 use App\Enums\PolicyClass;
+use App\Enums\TravelCoverageTier;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Policies\StorePolicyTravelRequest;
 use App\Http\Requests\Policies\UpdatePolicyTravelRequest;
@@ -88,6 +89,7 @@ final class PoliciesTravelController extends Controller
         return [
             ...$this->policyFormOptions->shared(),
             'subclasses' => PolicyClass::Travel->subclasses(),
+            'coverageTiers' => collect(TravelCoverageTier::all()),
         ];
     }
 }

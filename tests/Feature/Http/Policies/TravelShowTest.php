@@ -86,7 +86,7 @@ test('a travel policy exposes its trip detail fields', function () {
         'trip_start_date' => '2026-08-01',
         'trip_end_date' => '2026-08-14',
         'travelers' => 'Sami Karam',
-        'coverage_tier' => 'Basic',
+        'coverage_tier' => 'basic',
     ]);
 
     $this->actingAs($user)
@@ -97,7 +97,8 @@ test('a travel policy exposes its trip detail fields', function () {
             ->where('policy.details.trip_start_date', '2026-08-01')
             ->where('policy.details.trip_end_date', '2026-08-14')
             ->where('policy.details.travelers', 'Sami Karam')
-            ->where('policy.details.coverage_tier', 'Basic')
+            ->where('policy.details.coverage_tier', 'basic')
+            ->where('policy.details.coverage_tier_label', 'Basic')
         );
 });
 

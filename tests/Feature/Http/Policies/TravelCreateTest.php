@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\TravelCoverageTier;
 use App\Models\User;
 
 test('the create page offers the canonical travel subclasses', function () {
@@ -24,6 +25,15 @@ test('the create page receives the shared and travel form options', function () 
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('PolicyTravel/Create')
-            ->hasAll(['clients', 'carriers', 'agents', 'types', 'statuses', 'sources', 'subclasses'])
+            ->hasAll(['clients', 'carriers', 'agents', 'types', 'statuses', 'sources', 'subclasses', 'coverageTiers'])
         );
+});
+
+test('the create page offers the travel coverage tiers', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('policies.travel.create'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('coverageTiers', TravelCoverageTier::all()));
 });

@@ -122,7 +122,7 @@
             </td>
             <td>
                 <span class="label">Coverage tier</span>
-                <span class="value">{{ $policy->travelDetails->coverage_tier }}</span>
+                <span class="value">{{ $policy->travelDetails->coverage_tier->label() }}</span>
             </td>
         </tr>
         <tr>
