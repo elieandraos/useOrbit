@@ -20,7 +20,7 @@ defineProps<{
             <!-- Left column -->
             <div class="flex flex-col gap-4">
                 <CarrierInformationCard :carrier="carrier" />
-                <QuickStatsCard :carrier="carrier" />
+                <QuickStatsCard :policies-count="policiesCount" />
             </div>
 
             <!-- Right column -->
