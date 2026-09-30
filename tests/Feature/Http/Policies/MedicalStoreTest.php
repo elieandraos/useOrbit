@@ -200,6 +200,23 @@ test('a co_insurance_share of 15 is accepted when co_insurance is true', functio
         ->assertRedirect(route('policies.medical.show', Policy::query()->first()));
 });
 
+test('a two-decimal co_insurance_share is stored as submitted', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = PolicyPayload::medicalSingle($client, $carrier, [
+        'medical' => ['co_insurance' => true, 'co_insurance_share' => '55.75'],
+    ]);
+
+    /** @noinspection PhpUnhandledExceptionInspection */
+    $this->actingAs($user)
+        ->post(route('policies.medical.store'), $payload)
+        ->assertSessionHasNoErrors();
+
+    expect(Policy::query()->sole()->medicalDetails->co_insurance_share)->toBe('55.75');
+});
+
 test('a group policy prohibits the single insured profile fields', function () {
     $user = User::factory()->withOrganization()->create();
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
