@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { Head, Link, router, useRemember } from '@inertiajs/vue3';
+import { computed, reactive, ref } from 'vue';
 import PageHeader from '@/components/shell/PageHeader.vue';
 import Button from '@/components/ui/button/Button.vue';
 import FormField from '@/components/ui/form-field/FormField.vue';
@@ -65,15 +65,21 @@ const classCreateRoutes: Record<string, typeof policiesMedicalCreate> = {
     travel: policiesTravelCreate,
 };
 
-const policyClass = ref(props.selected.class ?? '');
-const type = ref(props.selected.type ?? props.types[0]?.value ?? 'single');
-const clientId = ref(`${props.selected.client_id ?? ''}`);
-const carrierId = ref(`${props.selected.carrier_id ?? ''}`);
-const agentId = ref(`${props.selected.agent_id ?? ''}`);
-const status = ref(
-    props.selected.status ?? props.statuses[0]?.value ?? 'active',
-);
-const source = ref(props.selected.source ?? '');
+/**
+ * Remembered in the browser history entry, so browser Back to this screen restores the choices made here.
+ */
+const selection = useRemember(
+    reactive({
+        class: props.selected.class ?? '',
+        type: props.selected.type ?? props.types[0]?.value ?? 'single',
+        client_id: `${props.selected.client_id ?? ''}`,
+        carrier_id: `${props.selected.carrier_id ?? ''}`,
+        agent_id: `${props.selected.agent_id ?? ''}`,
+        status: props.selected.status ?? props.statuses[0]?.value ?? 'active',
+        source: props.selected.source ?? '',
+    }),
+    'Policies/Create',
+) as Record<keyof FirstStepSelection, string>;
 
 const showErrors = ref(false);
 
@@ -83,25 +89,24 @@ const errors = computed<Record<string, string | undefined>>(() => {
     }
 
     return {
-        class: policyClass.value ? undefined : 'Choose an insurance class.',
-        client_id: clientId.value ? undefined : 'Select a client.',
-        carrier_id: carrierId.value
+        class: selection.class ? undefined : 'Choose an insurance class.',
+        client_id: selection.client_id ? undefined : 'Select a client.',
+        carrier_id: selection.carrier_id
             ? undefined
             : 'Select an insurance company.',
-        source: source.value ? undefined : 'Select a lead source.',
+        source: selection.source ? undefined : 'Select a lead source.',
     };
 });
 
 const selectedClassLabel = computed(
     () =>
-        props.classes.find((option) => option.value === policyClass.value)
-            ?.label,
+        props.classes.find((option) => option.value === selection.class)?.label,
 );
 
 function continueToClass(): void {
     showErrors.value = true;
 
-    const createRoute = classCreateRoutes[policyClass.value];
+    const createRoute = classCreateRoutes[selection.class];
 
     if (
         !createRoute ||
@@ -113,12 +118,12 @@ function continueToClass(): void {
     router.visit(
         createRoute.url({
             query: {
-                type: type.value,
-                client_id: clientId.value,
-                carrier_id: carrierId.value,
-                agent_id: agentId.value,
-                status: status.value,
-                source: source.value,
+                type: selection.type,
+                client_id: selection.client_id,
+                carrier_id: selection.carrier_id,
+                agent_id: selection.agent_id,
+                status: selection.status,
+                source: selection.source,
             },
         }),
     );
@@ -141,14 +146,14 @@ function continueToClass(): void {
                 subtitle="Is this an individual or a group policy, and what does it insure?"
             >
                 <FormField label="Policy type" required>
-                    <RadioChips v-model="type" :options="types" />
+                    <RadioChips v-model="selection.type" :options="types" />
                 </FormField>
                 <FormField
                     label="Insurance class"
                     required
                     :error="errors.class"
                 >
-                    <RadioChips v-model="policyClass" :options="classes" />
+                    <RadioChips v-model="selection.class" :options="classes" />
                 </FormField>
             </FormSection>
 
@@ -165,7 +170,7 @@ function continueToClass(): void {
                     >
                         <Select
                             id="client_id"
-                            v-model="clientId"
+                            v-model="selection.client_id"
                             placeholder="Select client"
                         >
                             <option
@@ -185,7 +190,7 @@ function continueToClass(): void {
                     >
                         <Select
                             id="carrier_id"
-                            v-model="carrierId"
+                            v-model="selection.carrier_id"
                             placeholder="Select carrier"
                         >
                             <option
@@ -198,7 +203,7 @@ function continueToClass(): void {
                         </Select>
                     </FormField>
                     <FormField label="Agent" for="agent_id" optional>
-                        <Select id="agent_id" v-model="agentId">
+                        <Select id="agent_id" v-model="selection.agent_id">
                             <option value="">No agent</option>
                             <option
                                 v-for="agent in agents"
@@ -218,7 +223,10 @@ function continueToClass(): void {
             >
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <FormField label="Status" required>
-                        <RadioChips v-model="status" :options="statuses" />
+                        <RadioChips
+                            v-model="selection.status"
+                            :options="statuses"
+                        />
                     </FormField>
                     <FormField
                         label="Lead source"
@@ -228,7 +236,7 @@ function continueToClass(): void {
                     >
                         <Select
                             id="source"
-                            v-model="source"
+                            v-model="selection.source"
                             placeholder="Select"
                         >
                             <option
