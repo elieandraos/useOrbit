@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Agent;
 use App\Models\Carrier;
 use App\Models\Client;
 use App\Models\Organization;
@@ -113,6 +114,43 @@ test('update wires the submitted client and carrier onto the policy', function (
         'client_id' => $client->id,
         'carrier_id' => $carrier->id,
     ]);
+});
+
+test('keeping the policy\'s own archived client, carrier and agent on update is accepted', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->archived()->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->archived()->create(['created_by' => $user->id]);
+    $agent = Agent::factory()->forOrganization($user)->archived()->create();
+    $policy = Policy::factory()->forOrganization($user)->medical()->create([
+        'created_by' => $user->id,
+        'type' => 'single',
+        'client_id' => $client->id,
+        'carrier_id' => $carrier->id,
+        'agent_id' => $agent->id,
+    ]);
+
+    $this->actingAs($user)
+        ->patch(route('policies.medical.update', $policy), PolicyPayload::medicalSingle($client, $carrier, ['agent_id' => $agent->id]))
+        ->assertSessionHasNoErrors()
+        ->assertRedirect(route('policies.medical.show', $policy->fresh()));
+});
+
+test('switching to a different archived client, carrier or agent on update is rejected', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->medical()->create([
+        'created_by' => $user->id,
+        'type' => 'single',
+        'client_id' => Client::factory()->forOrganization($user)->archived()->create(['created_by' => $user->id])->id,
+        'carrier_id' => Carrier::factory()->forOrganization($user)->archived()->create(['created_by' => $user->id])->id,
+        'agent_id' => Agent::factory()->forOrganization($user)->archived()->create()->id,
+    ]);
+    $otherClient = Client::factory()->forOrganization($user)->archived()->create(['created_by' => $user->id]);
+    $otherCarrier = Carrier::factory()->forOrganization($user)->archived()->create(['created_by' => $user->id]);
+    $otherAgent = Agent::factory()->forOrganization($user)->archived()->create();
+
+    $this->actingAs($user)
+        ->patch(route('policies.medical.update', $policy), PolicyPayload::medicalSingle($otherClient, $otherCarrier, ['agent_id' => $otherAgent->id]))
+        ->assertSessionHasErrors(['client_id', 'carrier_id', 'agent_id']);
 });
 
 test('an insureds.*.id belonging to another policy is rejected', function () {
