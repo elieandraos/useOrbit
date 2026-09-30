@@ -93,3 +93,37 @@ test('the edit page receives the policy and the shared and travel form options',
             ->hasAll(['policy', 'clients', 'carriers', 'agents', 'types', 'statuses', 'sources', 'subclasses', 'coverageTiers'])
         );
 });
+
+test('the edit page offers active parties and the policy\'s own archived parties, but no other archived ones', function () {
+    $user = User::factory()->withOrganization()->create();
+    $activeClient = Client::factory()->forOrganization($user)->create(['created_by' => $user->id, 'first_name' => 'Adam']);
+    $activeCarrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id, 'name' => 'Allied Insurance']);
+    $activeAgent = Agent::factory()->forOrganization($user)->create(['first_name' => 'Adam']);
+    $archivedClient = Client::factory()->forOrganization($user)->archived()->create(['created_by' => $user->id, 'first_name' => 'Zoe']);
+    $archivedCarrier = Carrier::factory()->forOrganization($user)->archived()->create(['created_by' => $user->id, 'name' => 'Zenith Insurance']);
+    $archivedAgent = Agent::factory()->forOrganization($user)->archived()->create(['first_name' => 'Zoe']);
+    Client::factory()->forOrganization($user)->archived()->create(['created_by' => $user->id]);
+    Carrier::factory()->forOrganization($user)->archived()->create(['created_by' => $user->id]);
+    Agent::factory()->forOrganization($user)->archived()->create();
+    $policy = Policy::factory()->forOrganization($user)->travel()->create([
+        'created_by' => $user->id,
+        'client_id' => $archivedClient->id,
+        'carrier_id' => $archivedCarrier->id,
+        'agent_id' => $archivedAgent->id,
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('policies.travel.edit', $policy))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('clients', 2)
+            ->where('clients.0.id', $activeClient->id)
+            ->where('clients.1.id', $archivedClient->id)
+            ->has('carriers', 2)
+            ->where('carriers.0.id', $activeCarrier->id)
+            ->where('carriers.1.id', $archivedCarrier->id)
+            ->has('agents', 2)
+            ->where('agents.0.id', $activeAgent->id)
+            ->where('agents.1.id', $archivedAgent->id)
+        );
+});

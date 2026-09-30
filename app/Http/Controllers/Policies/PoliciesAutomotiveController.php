@@ -61,7 +61,7 @@ final class PoliciesAutomotiveController extends Controller
 
         return inertia('PolicyAutomotive/Edit', [
             'policy' => PolicyAutomotiveResource::make($policy),
-            ...$this->formOptions(),
+            ...$this->formOptions($policy),
         ]);
     }
 
@@ -83,10 +83,10 @@ final class PoliciesAutomotiveController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function formOptions(): array
+    private function formOptions(?Policy $policy = null): array
     {
         return [
-            ...$this->policyFormOptions->shared(),
+            ...$this->policyFormOptions->shared($policy),
             'subclasses' => PolicyClass::Automotive->subclasses(),
         ];
     }

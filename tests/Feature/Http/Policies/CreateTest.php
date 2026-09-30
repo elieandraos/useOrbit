@@ -130,24 +130,70 @@ test('the create page receives the shared form options with the policy classes a
         );
 });
 
-test('the create page orders clients and agents by id and carriers by name', function () {
+test('the create page orders clients, carriers and agents by their displayed name', function () {
     $user = User::factory()->withOrganization()->create();
-    $firstClient = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
-    $secondClient = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
-    Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id, 'name' => 'Zenith Insurance']);
-    Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id, 'name' => 'Allied Insurance']);
-    $firstAgent = Agent::factory()->forOrganization($user)->create();
-    $secondAgent = Agent::factory()->forOrganization($user)->create();
+    $zoeKhoury = Client::factory()->forOrganization($user)->create(['created_by' => $user->id, 'first_name' => 'Zoe', 'last_name' => 'Khoury']);
+    $bristolTrading = Client::factory()->forOrganization($user)->company()->create(['created_by' => $user->id, 'company_name' => 'Bristol Trading', 'first_name' => 'Zack', 'last_name' => 'Zein']);
+    $mayaAbboud = Client::factory()->forOrganization($user)->create(['created_by' => $user->id, 'first_name' => 'Maya', 'last_name' => 'Abboud']);
+    $mayaHaddad = Client::factory()->forOrganization($user)->create(['created_by' => $user->id, 'first_name' => 'Maya', 'last_name' => 'Haddad']);
+    $zenith = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id, 'name' => 'Zenith Insurance']);
+    $allied = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id, 'name' => 'Allied Insurance']);
+    $zoeAgent = Agent::factory()->forOrganization($user)->create(['first_name' => 'Zoe', 'last_name' => 'Abboud']);
+    $adamAgent = Agent::factory()->forOrganization($user)->create(['first_name' => 'Adam', 'last_name' => 'Zein']);
 
     $this->actingAs($user)
         ->get(route('policies.create'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->where('clients.0.id', $firstClient->id)
-            ->where('clients.1.id', $secondClient->id)
-            ->where('carriers.0.name', 'Allied Insurance')
-            ->where('carriers.1.name', 'Zenith Insurance')
-            ->where('agents.0.id', $firstAgent->id)
-            ->where('agents.1.id', $secondAgent->id)
+            ->where('clients.0.id', $bristolTrading->id)
+            ->where('clients.1.id', $mayaAbboud->id)
+            ->where('clients.2.id', $mayaHaddad->id)
+            ->where('clients.3.id', $zoeKhoury->id)
+            ->where('carriers.0.id', $allied->id)
+            ->where('carriers.1.id', $zenith->id)
+            ->where('agents.0.id', $adamAgent->id)
+            ->where('agents.1.id', $zoeAgent->id)
+        );
+});
+
+test('the create page offers only active clients, carriers and agents', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $agent = Agent::factory()->forOrganization($user)->create();
+    Client::factory()->forOrganization($user)->archived()->create(['created_by' => $user->id]);
+    Carrier::factory()->forOrganization($user)->archived()->create(['created_by' => $user->id]);
+    Agent::factory()->forOrganization($user)->archived()->create();
+
+    $this->actingAs($user)
+        ->get(route('policies.create'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('clients', 1)
+            ->where('clients.0.id', $client->id)
+            ->has('carriers', 1)
+            ->where('carriers.0.id', $carrier->id)
+            ->has('agents', 1)
+            ->where('agents.0.id', $agent->id)
+        );
+});
+
+test('archived parties are not preselected', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->archived()->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->archived()->create(['created_by' => $user->id]);
+    $agent = Agent::factory()->forOrganization($user)->archived()->create();
+
+    $this->actingAs($user)
+        ->get(route('policies.create', [
+            'client_id' => $client->id,
+            'carrier_id' => $carrier->id,
+            'agent_id' => $agent->id,
+        ]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('selected.client_id', null)
+            ->where('selected.carrier_id', null)
+            ->where('selected.agent_id', null)
         );
 });
