@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Enums\PolicyClass;
 use App\Http\Resources\DocumentResource;
-use App\Http\Resources\PolicyMedicalResource;
+use App\Http\Resources\PolicyResource;
 use App\Http\Resources\TagResource;
 use App\Models\Document;
 use App\Models\Organization;
@@ -29,12 +30,26 @@ test('authenticated user can list a policy documents', function () {
     $this->actingAs($user)
         ->get(route('policies.documents.index', $policy))
         ->assertOk()
-        ->assertHasResource('policy', PolicyMedicalResource::make($policy->load(['client', 'carrier', 'agent'])))
+        ->assertHasResource('policy', PolicyResource::make($policy->load(['client', 'carrier', 'agent'])))
         ->assertHasResource(
             'documents',
             DocumentResource::collection(
                 $policy->documents()->with(['uploadedBy', 'tags'])->latest()->orderByDesc('id')->get()
             )
+        );
+});
+
+test('a non-medical policy is shared with its own class and no medical-only data', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->automotive()->create();
+
+    $this->actingAs($user)
+        ->get(route('policies.documents.index', $policy))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('policy.class', PolicyClass::Automotive->value)
+            ->missing('policy.details')
+            ->missing('policy.insureds')
         );
 });
 

@@ -8,7 +8,7 @@ use App\Actions\Documents\UploadDocumentAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Documents\UploadDocumentRequest;
 use App\Http\Resources\DocumentResource;
-use App\Http\Resources\PolicyMedicalResource;
+use App\Http\Resources\PolicyResource;
 use App\Http\Resources\TagResource;
 use App\Models\Document;
 use App\Models\Policy;
@@ -38,7 +38,7 @@ final class PolicyDocumentsController extends Controller
             ->get();
 
         return inertia('PolicyDocuments/Index', [
-            'policy' => PolicyMedicalResource::make($policy),
+            'policy' => PolicyResource::make($policy),
             'documents' => DocumentResource::collection($documents),
             'tags' => TagResource::collection($tags),
             'uploadConfig' => [
