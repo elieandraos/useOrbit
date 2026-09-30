@@ -98,6 +98,8 @@ const floorArea = ref(
         ? `${props.policy.details.floor_area}`
         : '',
 );
+// Mirrors the server's `fire.year_built` maximum of the current year.
+const maxYearBuilt = new Date().getFullYear();
 const yearBuilt = ref(
     props.policy?.details.year_built
         ? `${props.policy.details.year_built}`
@@ -207,6 +209,7 @@ watch(countryId, () => {
                         name="fire[year_built]"
                         type="number"
                         min="1900"
+                        :max="maxYearBuilt"
                     />
                 </FormField>
                 <FormField

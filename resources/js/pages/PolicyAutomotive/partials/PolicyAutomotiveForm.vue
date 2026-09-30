@@ -84,6 +84,8 @@ const source = ref(props.policy?.source ?? props.defaults?.source ?? '');
 const plateNumber = ref(props.policy?.details.plate_number ?? '');
 const make = ref(props.policy?.details.make ?? '');
 const model = ref(props.policy?.details.model ?? '');
+// Mirrors the server's `automotive.year` maximum of next year.
+const maxVehicleYear = new Date().getFullYear() + 1;
 const year = ref(
     props.policy?.details.year ? `${props.policy.details.year}` : '',
 );
@@ -188,6 +190,7 @@ const isAllRisk = computed(() => subclass.value === 'All Risk');
                         name="automotive[year]"
                         type="number"
                         min="1900"
+                        :max="maxVehicleYear"
                     />
                 </FormField>
             </div>
