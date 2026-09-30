@@ -9,6 +9,12 @@ use Illuminate\Support\Facades\DB;
 
 final class PolicySort extends Sort
 {
+    /**
+     * Net premium as the index Amount column shows it: premium minus discount, with a
+     * missing discount counted as zero.
+     */
+    private const string NET_PREMIUM = 'premium_amount - COALESCE(discount_amount, 0)';
+
     /** @noinspection PhpUnused */
     public function policyNumber(string $direction): Builder
     {
@@ -42,7 +48,7 @@ final class PolicySort extends Sort
     /** @noinspection PhpUnused */
     public function amount(string $direction): Builder
     {
-        return $this->builder->orderBy('premium_amount', $direction);
+        return $this->builder->orderBy(DB::raw(self::NET_PREMIUM), $direction);
     }
 
     /** @noinspection PhpUnused */

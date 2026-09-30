@@ -191,28 +191,28 @@ test('effectiveFrom and effectiveTo combined narrow to the inclusive range', fun
     expect($policies->pluck('id')->all())->toBe([$inRange->id]);
 });
 
-test('amountMin is an inclusive lower bound', function () {
+test('amountMin is an inclusive lower bound on the net premium', function () {
     /** @var Policy $onBoundary */
-    $onBoundary = Policy::factory()->create(['premium_amount' => 500]);
+    $onBoundary = Policy::factory()->create(['premium_amount' => 700, 'discount_amount' => 200]);
     /** @var Policy $above */
-    $above = Policy::factory()->create(['premium_amount' => 750]);
-    Policy::factory()->create(['premium_amount' => 250]);
+    $above = Policy::factory()->create(['premium_amount' => 750, 'discount_amount' => 0]);
+    Policy::factory()->create(['premium_amount' => 600, 'discount_amount' => 150]);
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $policies = Policy::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new PolicyFilter(['amount_min' => 500]))->get();
+    $policies = Policy::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new PolicyFilter(['amount_min' => '500']))->get();
 
     expect($policies->pluck('id')->sort()->values()->all())->toBe(collect([$onBoundary->id, $above->id])->sort()->values()->all());
 });
 
-test('amountMax is an inclusive upper bound', function () {
+test('amountMax is an inclusive upper bound on the net premium', function () {
     /** @var Policy $onBoundary */
-    $onBoundary = Policy::factory()->create(['premium_amount' => 500]);
+    $onBoundary = Policy::factory()->create(['premium_amount' => 700, 'discount_amount' => 200]);
     /** @var Policy $below */
-    $below = Policy::factory()->create(['premium_amount' => 250]);
-    Policy::factory()->create(['premium_amount' => 750]);
+    $below = Policy::factory()->create(['premium_amount' => 250, 'discount_amount' => 0]);
+    Policy::factory()->create(['premium_amount' => 750, 'discount_amount' => 100]);
 
     /** @noinspection PhpUndefinedMethodInspection */
-    $policies = Policy::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new PolicyFilter(['amount_max' => 500]))->get();
+    $policies = Policy::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new PolicyFilter(['amount_max' => '500']))->get();
 
     expect($policies->pluck('id')->sort()->values()->all())->toBe(collect([$onBoundary->id, $below->id])->sort()->values()->all());
 });
