@@ -15,7 +15,6 @@ final class PolicyInsuredResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'member_code' => $this->member_code,
             'full_name' => $this->full_name,
             'relationship' => $this->relationship,
             'date_of_birth' => $this->date_of_birth->format('Y-m-d'),

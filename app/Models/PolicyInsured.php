@@ -15,7 +15,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * @property int $id
  * @property int $policy_id
- * @property string $member_code
  * @property string $full_name
  * @property string $relationship
  * @property CarbonImmutable $date_of_birth
@@ -27,7 +26,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read Policy $policy
  */
 #[Fillable([
-    'policy_id', 'member_code', 'full_name', 'relationship', 'date_of_birth', 'gender', 'medical_notes', 'status',
+    'policy_id', 'full_name', 'relationship', 'date_of_birth', 'gender', 'medical_notes', 'status',
 ])]
 final class PolicyInsured extends Model
 {

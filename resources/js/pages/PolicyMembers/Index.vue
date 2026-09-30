@@ -62,10 +62,7 @@ const filteredMembers = computed(() => {
             return true;
         }
 
-        return (
-            member.full_name.toLowerCase().includes(query) ||
-            member.member_code.toLowerCase().includes(query)
-        );
+        return member.full_name.toLowerCase().includes(query);
     });
 });
 
@@ -164,11 +161,6 @@ const isFiltered = computed(
                                 <th
                                     class="px-4 py-2.5 text-left font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase"
                                 >
-                                    Member code
-                                </th>
-                                <th
-                                    class="px-4 py-2.5 text-left font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase"
-                                >
                                     Relationship
                                 </th>
                                 <th
@@ -198,11 +190,6 @@ const isFiltered = computed(
                                     class="px-6 py-3 text-[13.5px] font-medium text-primary"
                                 >
                                     {{ member.full_name }}
-                                </td>
-                                <td
-                                    class="px-4 py-3 font-mono text-[12.5px] text-secondary"
-                                >
-                                    {{ member.member_code }}
                                 </td>
                                 <td
                                     class="px-4 py-3 text-[13px] text-secondary"

@@ -8,7 +8,7 @@ use App\Models\PolicyInsured;
 use App\Models\User;
 use Tests\Support\PolicyPayload;
 
-test('a policy without members gets each submitted insured with sequential member codes from MBR-001', function () {
+test('a policy without members gets each submitted insured', function () {
     $user = User::factory()->withOrganization()->create();
     setOrganizationContext($user);
     $policy = Policy::factory()->forOrganization($user)->medical()->create(['created_by' => $user->id, 'type' => 'group']);
@@ -24,26 +24,25 @@ test('a policy without members gets each submitted insured with sequential membe
         PolicyPayload::insured(['full_name' => 'Second Member', 'relationship' => 'Child', 'gender' => null]),
     ]);
 
-    $insureds = $policy->insureds()->orderBy('member_code')->get();
+    $insureds = $policy->insureds()->orderBy('id')->get();
     expect($insureds)->toHaveCount(2)
-        ->and($insureds[0]->only(['member_code', 'full_name', 'relationship', 'medical_notes', 'status']))->toBe([
-            'member_code' => 'MBR-001',
+        ->and($insureds[0]->only(['full_name', 'relationship', 'medical_notes', 'status']))->toBe([
             'full_name' => 'First Member',
             'relationship' => 'Spouse',
             'medical_notes' => 'Asthma',
             'status' => 'Active',
         ])
         ->and($insureds[0]->date_of_birth->format('Y-m-d'))->toBe('1990-05-12')
-        ->and($insureds[1]->member_code)->toBe('MBR-002')
+        ->and($insureds[1]->full_name)->toBe('Second Member')
         ->and($insureds[1]->gender)->toBeNull();
 });
 
-test('existing members keep their codes while new members continue after the highest code', function () {
+test('existing members are updated in place while new members are created', function () {
     $user = User::factory()->withOrganization()->create();
     setOrganizationContext($user);
     $policy = Policy::factory()->forOrganization($user)->medical()->create(['created_by' => $user->id, 'type' => 'group']);
-    $first = PolicyInsured::factory()->for($policy)->create(['member_code' => 'MBR-001']);
-    $third = PolicyInsured::factory()->for($policy)->create(['member_code' => 'MBR-003']);
+    $first = PolicyInsured::factory()->for($policy)->create();
+    $third = PolicyInsured::factory()->for($policy)->create();
 
     /** @noinspection PhpUnhandledExceptionInspection */
     app(SyncPolicyInsuredsAction::class)->handle($policy, [
@@ -52,9 +51,9 @@ test('existing members keep their codes while new members continue after the hig
         PolicyPayload::insured(['full_name' => 'New Member']),
     ]);
 
-    expect($first->fresh()->only(['member_code', 'full_name']))->toBe(['member_code' => 'MBR-001', 'full_name' => 'Renamed Member'])
-        ->and($third->fresh()->member_code)->toBe('MBR-003')
-        ->and($policy->insureds()->where('full_name', 'New Member')->value('member_code'))->toBe('MBR-004')
+    expect($first->fresh()->full_name)->toBe('Renamed Member')
+        ->and($third->fresh())->not->toBeNull()
+        ->and($policy->insureds()->where('full_name', 'New Member')->exists())->toBeTrue()
         ->and($policy->insureds()->count())->toBe(3);
 });
 
@@ -62,8 +61,8 @@ test('members omitted from the submission are deleted', function () {
     $user = User::factory()->withOrganization()->create();
     setOrganizationContext($user);
     $policy = Policy::factory()->forOrganization($user)->medical()->create(['created_by' => $user->id, 'type' => 'group']);
-    $kept = PolicyInsured::factory()->for($policy)->create(['member_code' => 'MBR-001']);
-    $omitted = PolicyInsured::factory()->for($policy)->create(['member_code' => 'MBR-002']);
+    $kept = PolicyInsured::factory()->for($policy)->create();
+    $omitted = PolicyInsured::factory()->for($policy)->create();
 
     /** @noinspection PhpUnhandledExceptionInspection */
     app(SyncPolicyInsuredsAction::class)->handle($policy, [

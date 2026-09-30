@@ -42,8 +42,6 @@ test('a group medical policy stores dependents in policy_insureds with sequentia
     ]));
 
     expect($policy->insureds)->toHaveCount(2)
-        ->and($policy->insureds[0]->member_code)->toBe('MBR-001')
-        ->and($policy->insureds[1]->member_code)->toBe('MBR-002')
         ->and($policy->medicalDetails->insured_full_name)->toBeNull();
 });
 

@@ -42,7 +42,6 @@ test('an existing member id updates that row in place instead of replacing it', 
         'type' => 'group',
     ]);
     $member = PolicyInsured::factory()->for($policy)->create([
-        'member_code' => 'MBR-001',
         'full_name' => 'Original Name',
     ]);
 
@@ -55,7 +54,6 @@ test('an existing member id updates that row in place instead of replacing it', 
 
     expect($policy->insureds)->toHaveCount(1)
         ->and($policy->insureds[0]->id)->toBe($member->id)
-        ->and($policy->insureds[0]->member_code)->toBe('MBR-001')
         ->and($policy->insureds[0]->full_name)->toBe('Renamed Member');
 });
 
@@ -68,8 +66,8 @@ test('omitting a previously-existing member removes it', function () {
         'created_by' => $user->id,
         'type' => 'group',
     ]);
-    $kept = PolicyInsured::factory()->for($policy)->create(['member_code' => 'MBR-001']);
-    $removed = PolicyInsured::factory()->for($policy)->create(['member_code' => 'MBR-002']);
+    $kept = PolicyInsured::factory()->for($policy)->create();
+    $removed = PolicyInsured::factory()->for($policy)->create();
 
     $attributes = PolicyPayload::medicalGroup($client, $carrier, [
         'insureds' => [PolicyPayload::insured(['id' => $kept->id])],
@@ -80,33 +78,6 @@ test('omitting a previously-existing member removes it', function () {
 
     expect($policy->insureds)->toHaveCount(1)
         ->and($policy->insureds->pluck('id'))->not->toContain($removed->id);
-});
-
-test('a newly added member receives the next sequential member_code without reusing a removed one', function () {
-    $user = User::factory()->withOrganization()->create();
-    setOrganizationContext($user);
-    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
-    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
-    $policy = Policy::factory()->forOrganization($user)->medical()->create([
-        'created_by' => $user->id,
-        'type' => 'group',
-    ]);
-    $kept = PolicyInsured::factory()->for($policy)->create(['member_code' => 'MBR-001']);
-    PolicyInsured::factory()->for($policy)->create(['member_code' => 'MBR-002']);
-
-    $attributes = PolicyPayload::medicalGroup($client, $carrier, [
-        'insureds' => [
-            PolicyPayload::insured(['id' => $kept->id]),
-            PolicyPayload::insured(['full_name' => 'New Member']),
-        ],
-    ]);
-
-    /** @noinspection PhpUnhandledExceptionInspection */
-    app(UpdatePolicyMedicalAction::class)->handle($user, $policy, $attributes);
-
-    $memberCodes = $policy->insureds()->pluck('member_code')->all();
-    expect($memberCodes)->toContain('MBR-003')
-        ->and($memberCodes)->not->toContain('MBR-002');
 });
 
 test('switching type away from group removes all insureds', function () {
@@ -136,7 +107,7 @@ test('an invalid member leaves the policy, its details, and its insureds unchang
         'type' => 'group',
         'premium_amount' => '1000.00',
     ]);
-    $kept = PolicyInsured::factory()->for($policy)->create(['member_code' => 'MBR-001']);
+    $kept = PolicyInsured::factory()->for($policy)->create();
 
     $attributes = PolicyPayload::medicalGroup($client, $carrier, [
         'insureds' => [

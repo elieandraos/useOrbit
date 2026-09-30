@@ -18,7 +18,6 @@ export interface PolicyMedicalDetails {
 
 export interface PolicyInsured {
     id: number;
-    member_code: string;
     full_name: string;
     relationship: string;
     date_of_birth: string;
