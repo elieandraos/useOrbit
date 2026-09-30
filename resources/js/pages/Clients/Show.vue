@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { PolicyResource } from '@/types/policy';
 import type { ClientResource } from './partials/client';
 import ClientDetailShell from './partials/ClientDetailShell.vue';
 import ClientPoliciesCard from './partials/ClientPoliciesCard.vue';
@@ -14,6 +15,7 @@ import RecentActivitiesCard from './partials/RecentActivitiesCard.vue';
 defineProps<{
     client: ClientResource;
     policiesCount: number;
+    recentPolicies: PolicyResource[];
 }>();
 </script>
 
@@ -40,7 +42,10 @@ defineProps<{
 
             <!-- Right column -->
             <div class="flex flex-col gap-4">
-                <ClientPoliciesCard :client="client" />
+                <ClientPoliciesCard
+                    :client="client"
+                    :policies="recentPolicies"
+                />
 
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <QuickStatsCard />
