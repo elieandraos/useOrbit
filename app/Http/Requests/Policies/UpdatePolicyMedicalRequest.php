@@ -73,7 +73,7 @@ final class UpdatePolicyMedicalRequest extends FormRequest
             ...$this->policyAttributes(),
 
             'medical.coverage_scope' => 'coverage scope',
-            'medical.class_tier' => 'class',
+            'medical.class_tier' => 'plan tier',
             'medical.co_insurance' => 'co-insurance',
             'medical.co_insurance_share' => 'co-insurance share',
             'medical.guaranteed_renewable' => 'guaranteed renewable',

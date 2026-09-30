@@ -29,7 +29,7 @@ const coInsuranceValue = props.policy.details.co_insurance
                     :value="policy.details.coverage_scope_label"
                 />
                 <DetailField
-                    label="Class"
+                    label="Plan tier"
                     :value="policy.details.class_tier_label"
                 />
                 <DetailField label="Co-insurance" :value="coInsuranceValue" />
