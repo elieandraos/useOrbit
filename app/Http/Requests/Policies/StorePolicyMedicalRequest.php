@@ -55,4 +55,33 @@ final class StorePolicyMedicalRequest extends FormRequest
             'insureds.*.medical_notes' => ['nullable', 'string'],
         ];
     }
+
+    /**
+     * Get the readable names of the fields, as the Medical policy form labels them.
+     *
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            ...$this->policyAttributes(),
+
+            'medical.coverage_scope' => 'coverage scope',
+            'medical.class_tier' => 'class',
+            'medical.co_insurance' => 'co-insurance',
+            'medical.co_insurance_share' => 'co-insurance share',
+            'medical.guaranteed_renewable' => 'guaranteed renewable',
+            'medical.insured_full_name' => 'insured full name',
+            'medical.insured_date_of_birth' => 'insured date of birth',
+            'medical.insured_gender' => 'insured gender',
+            'medical.insured_smoker' => 'insured smoker',
+            'medical.insured_medical_history' => 'insured medical history',
+            'insureds' => 'covered members',
+            'insureds.*.full_name' => 'member :position full name',
+            'insureds.*.relationship' => 'member :position relationship',
+            'insureds.*.date_of_birth' => 'member :position date of birth',
+            'insureds.*.gender' => 'member :position gender',
+            'insureds.*.medical_notes' => 'member :position medical notes',
+        ];
+    }
 }

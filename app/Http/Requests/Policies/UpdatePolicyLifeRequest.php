@@ -35,4 +35,21 @@ final class UpdatePolicyLifeRequest extends FormRequest
             'life.beneficiaries' => ['required', 'string'],
         ];
     }
+
+    /**
+     * Get the readable names of the fields, as the Life policy form labels them.
+     *
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            ...$this->policyAttributes(),
+
+            'life.sum_assured' => 'sum assured',
+            'life.term_years' => 'term in years',
+            'life.smoker' => 'smoker',
+            'life.beneficiaries' => 'beneficiaries',
+        ];
+    }
 }

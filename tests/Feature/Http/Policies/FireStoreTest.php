@@ -36,6 +36,20 @@ test('store returns validation errors when property fields are missing', functio
         ->assertSessionHasErrors(['fire.property_type', 'fire.floor_area', 'fire.street', 'fire.city', 'fire.state_id', 'fire.country_id', 'fire.sum_insured']);
 });
 
+test('a missing governorate is reported by its form label', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $state = State::factory()->lebanon()->create();
+
+    $payload = PolicyPayload::fire($client, $carrier, $state);
+    Arr::forget($payload, 'fire.state_id');
+
+    $this->actingAs($user)
+        ->post(route('policies.fire.store'), $payload)
+        ->assertSessionHasErrors(['fire.state_id' => 'The governorate field is required.']);
+});
+
 test('store redirects to policies.fire.show with a toast on success', function () {
     $user = User::factory()->withOrganization()->create();
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);

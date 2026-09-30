@@ -38,4 +38,26 @@ final class UpdatePolicyFireRequest extends FormRequest
             'fire.sum_insured' => ['required', 'numeric', 'min:0'],
         ];
     }
+
+    /**
+     * Get the readable names of the fields, as the Fire policy form labels them.
+     *
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            ...$this->policyAttributes(),
+
+            'fire.property_type' => 'property type',
+            'fire.floor_area' => 'floor area',
+            'fire.year_built' => 'year built',
+            'fire.street' => 'street',
+            'fire.building_floor' => 'building / floor',
+            'fire.city' => 'city',
+            'fire.country_id' => 'country',
+            'fire.state_id' => 'governorate',
+            'fire.sum_insured' => 'sum insured',
+        ];
+    }
 }

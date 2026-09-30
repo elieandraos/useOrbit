@@ -34,4 +34,22 @@ final class UpdatePolicyTravelRequest extends FormRequest
             'travel.coverage_tier' => ['required', new Enum(TravelCoverageTier::class)],
         ];
     }
+
+    /**
+     * Get the readable names of the fields, as the Travel policy form labels them.
+     *
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            ...$this->policyAttributes(),
+
+            'travel.destination' => 'destination',
+            'travel.trip_start_date' => 'trip start date',
+            'travel.trip_end_date' => 'trip end date',
+            'travel.travelers' => 'travelers',
+            'travel.coverage_tier' => 'coverage tier',
+        ];
+    }
 }

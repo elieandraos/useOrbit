@@ -35,4 +35,25 @@ final class UpdatePolicyAutomotiveRequest extends FormRequest
             'automotive.valuation_source' => ['required_if:subclass,All Risk', 'prohibited_unless:subclass,All Risk', 'nullable', 'string', 'max:50'],
         ];
     }
+
+    /**
+     * Get the readable names of the fields, as the Automotive policy form labels them.
+     *
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            ...$this->policyAttributes(),
+
+            'automotive.plate_number' => 'plate number',
+            'automotive.make' => 'make',
+            'automotive.model' => 'model',
+            'automotive.year' => 'year',
+            'automotive.vin' => 'VIN',
+            'automotive.color' => 'color',
+            'automotive.valuation_amount' => 'valuation amount',
+            'automotive.valuation_source' => 'valuation source',
+        ];
+    }
 }

@@ -61,6 +61,30 @@ trait PolicyValidationRules
     }
 
     /**
+     * Get the readable names of the fields shared by every policy, as the policy forms label them.
+     *
+     * @return array<string, string>
+     */
+    protected function policyAttributes(): array
+    {
+        return [
+            'policy_number' => 'policy number',
+            'class' => 'insurance class',
+            'subclass' => 'sub-class',
+            'type' => 'policy type',
+            'client_id' => 'client',
+            'carrier_id' => 'insurance company',
+            'agent_id' => 'agent',
+            'effective_date' => 'effective date',
+            'expiry_date' => 'expiry date',
+            'premium_amount' => 'premium amount',
+            'discount_amount' => 'discount amount',
+            'status' => 'status',
+            'source' => 'lead source',
+        ];
+    }
+
+    /**
      * An organization's party that is active, or the one the edited policy already holds even if it has since been archived.
      */
     private function assignablePartyRule(string $table, ?int $organizationId, string $activeStatus, ?int $currentPartyId): Exists

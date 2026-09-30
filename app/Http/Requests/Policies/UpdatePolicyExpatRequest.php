@@ -40,4 +40,26 @@ final class UpdatePolicyExpatRequest extends FormRequest
             'expat.visa_expiry_date' => ['nullable', 'date'],
         ];
     }
+
+    /**
+     * Get the readable names of the fields, as the Expat policy form labels them.
+     *
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            ...$this->policyAttributes(),
+
+            'expat.coverage_zone' => 'coverage zone',
+            'expat.travel_scope' => 'travel scope',
+            'expat.full_name' => 'full name',
+            'expat.gender' => 'gender',
+            'expat.nationality' => 'nationality',
+            'expat.date_of_birth' => 'date of birth',
+            'expat.phone' => 'phone',
+            'expat.country_id' => 'country',
+            'expat.visa_expiry_date' => 'visa expiry date',
+        ];
+    }
 }
