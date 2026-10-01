@@ -106,8 +106,12 @@ const branchCities = computed(() =>
             class="mt-3 flex items-center justify-between gap-3 border-t border-border-subtle pt-2.5"
         >
             <div class="flex shrink-0 items-center gap-1.5">
-                <Badge tone="neutral">0 clients</Badge>
-                <Badge tone="accent">0 policies</Badge>
+                <Badge tone="neutral"
+                    >{{ carrier.clients_count ?? 0 }} clients</Badge
+                >
+                <Badge tone="accent"
+                    >{{ carrier.policies_count ?? 0 }} policies</Badge
+                >
             </div>
             <div v-if="branchCities" class="flex min-w-0 items-center gap-1.5">
                 <Building2 class="size-3.5 shrink-0 text-tertiary" />

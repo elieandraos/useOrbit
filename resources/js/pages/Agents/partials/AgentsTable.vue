@@ -188,12 +188,12 @@ function sortBy(column: string) {
                             <td
                                 class="px-4 py-3 text-right font-mono text-[13px] text-primary"
                             >
-                                0
+                                {{ agent.clients_count ?? 0 }}
                             </td>
                             <td
                                 class="px-4 py-3 text-right font-mono text-[13px] text-primary"
                             >
-                                0
+                                {{ agent.policies_count ?? 0 }}
                             </td>
                             <td class="px-4 py-3">
                                 <Badge

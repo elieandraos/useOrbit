@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Enums\PolicyStatus;
 use App\Http\Resources\AgentResource;
 use App\Models\Agent;
+use App\Models\Client;
 use App\Models\Organization;
 use App\Models\Policy;
 use App\Models\User;
@@ -148,5 +149,28 @@ test('renewingPolicies includes both edges of the renewal window', function () {
         ->assertInertia(fn ($page) => $page->has('renewingPolicies', 2)
             ->where('renewingPolicies.0.id', $expiringToday->id)
             ->where('renewingPolicies.1.id', $expiringAtWindowEdge->id)
+        );
+});
+
+test('clientsCount counts the agent\'s distinct, non-deleted clients across live policies of any status', function () {
+    $user = User::factory()->withOrganization()->create();
+    $agent = Agent::factory()->forOrganization($user)->create();
+    $repeatClient = Client::factory()->forOrganization($user)->create();
+    $deletedClient = Client::factory()->forOrganization($user)->create();
+
+    Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'agent_id' => $agent->id, 'client_id' => $repeatClient->id]);
+    Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'agent_id' => $agent->id, 'client_id' => $repeatClient->id, 'status' => PolicyStatus::Frozen->value]);
+    Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'agent_id' => $agent->id, 'client_id' => Client::factory()->forOrganization($user), 'status' => PolicyStatus::Cancelled->value]);
+    Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'agent_id' => $agent->id, 'client_id' => Client::factory()->forOrganization($user)])->delete();
+    Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'agent_id' => $agent->id, 'client_id' => $deletedClient->id]);
+    $deletedClient->delete();
+    Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'agent_id' => Agent::factory()->forOrganization($user), 'client_id' => Client::factory()->forOrganization($user)]);
+
+    $this->actingAs($user)
+        ->get(route('agents.show', $agent))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('clientsCount', 2)
+            ->where('policiesCount', 4)
         );
 });

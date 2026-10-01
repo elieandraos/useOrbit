@@ -10,6 +10,7 @@ import QuickStatsCard from './partials/QuickStatsCard.vue';
 defineProps<{
     agent: AgentResource;
     policiesCount: number;
+    clientsCount: number;
     renewingPolicies: PolicyResource[];
 }>();
 </script>
@@ -30,6 +31,7 @@ defineProps<{
                 <QuickStatsCard
                     :agent="agent"
                     :policies-count="policiesCount"
+                    :clients-count="clientsCount"
                 />
                 <PoliciesRenewalCard :policies="renewingPolicies" />
             </div>
