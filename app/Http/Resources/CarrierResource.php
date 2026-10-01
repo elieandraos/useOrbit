@@ -25,6 +25,8 @@ final class CarrierResource extends JsonResource
             'created_at' => $this->created_at->format('M j, Y · g:i A'),
             'updated_at' => $this->updated_at->format('M j, Y · g:i A'),
             'updated_by_name' => $this->whenLoaded('updatedBy', fn () => $this->updatedBy?->name),
+            'policies_count' => $this->whenCounted('policies'),
+            'clients_count' => $this->whenCounted('clients'),
             'branches' => CarrierBranchResource::collection($this->whenLoaded('branches')),
         ];
     }

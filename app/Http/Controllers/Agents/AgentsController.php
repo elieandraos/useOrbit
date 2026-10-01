@@ -45,6 +45,8 @@ final class AgentsController extends Controller
 
         /** @noinspection PhpUndefinedMethodInspection */
         $agents = Agent::query()
+            ->withCount('policies')
+            ->withClientsCount()
             ->filter(new AgentFilter($request->validated()))
             ->sort(new AgentSort($sortColumn, $request->validated('direction')))
             ->paginate(7)
@@ -103,6 +105,7 @@ final class AgentsController extends Controller
         return inertia('Agents/Show', [
             'agent' => AgentResource::make($agent),
             'policiesCount' => $agent->policies()->count(),
+            'clientsCount' => $agent->countClients(),
             'renewingPolicies' => PolicyResource::collection($renewingPolicies),
         ]);
     }

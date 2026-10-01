@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\CarrierStatus;
 use App\Models\Concerns\BelongsToCurrentOrganization;
 use App\Models\Concerns\Filterable;
+use App\Models\Concerns\HasPolicyClients;
 use App\Models\Concerns\HasSlug;
 use App\Models\Concerns\Sortable;
 use App\Models\Contracts\NotificationSubject;
@@ -18,6 +19,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -37,6 +39,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read User|null $updatedBy
  * @property-read Collection<int, CarrierBranch> $branches
  * @property-read Collection<int, Policy> $policies
+ * @property-read Collection<int, Client> $clients
+ * @property-read int|null $clients_count
+ * @property-read int|null $policies_count
  */
 #[Fillable([
     'organization_id', 'slug', 'name', 'phone', 'website', 'status', 'created_by', 'updated_by',
@@ -44,7 +49,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 final class Carrier extends Model implements NotificationSubject
 {
     /** @use HasFactory<CarrierFactory> */
-    use BelongsToCurrentOrganization, Filterable, HasFactory, HasSlug, SoftDeletes, Sortable;
+    use BelongsToCurrentOrganization, Filterable, HasFactory, HasPolicyClients, HasSlug, SoftDeletes, Sortable;
 
     protected function casts(): array
     {
@@ -61,6 +66,11 @@ final class Carrier extends Model implements NotificationSubject
     public function policies(): HasMany
     {
         return $this->hasMany(Policy::class);
+    }
+
+    public function clients(): HasManyThrough
+    {
+        return $this->hasManyThrough(Client::class, Policy::class, 'carrier_id', 'id', 'id', 'client_id');
     }
 
     public function createdBy(): BelongsTo

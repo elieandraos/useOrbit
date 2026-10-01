@@ -102,8 +102,12 @@ function goToAgent(agent: AgentResource) {
             </div>
             <div class="flex items-center justify-between gap-3">
                 <div class="flex shrink-0 items-center gap-1.5">
-                    <Badge tone="neutral">0 clients</Badge>
-                    <Badge tone="accent">0 policies</Badge>
+                    <Badge tone="neutral"
+                        >{{ agent.clients_count ?? 0 }} clients</Badge
+                    >
+                    <Badge tone="accent"
+                        >{{ agent.policies_count ?? 0 }} policies</Badge
+                    >
                 </div>
                 <Badge
                     :tone="agent.status === 'active' ? 'success' : 'warning'"
