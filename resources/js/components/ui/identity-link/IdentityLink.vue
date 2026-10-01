@@ -12,7 +12,7 @@ defineProps<{
     <Link
         :href="href"
         data-slot="identity-link"
-        class="group/identity inline-flex min-w-0 items-center gap-2 rounded-sm font-medium text-primary transition-colors hover:text-accent focus-visible:ring-2 focus-visible:ring-accent-ring focus-visible:outline-none"
+        class="group/identity inline-flex min-w-0 items-center gap-2 rounded-sm font-medium text-accent transition-colors hover:text-accent-hover focus-visible:ring-2 focus-visible:ring-accent-ring focus-visible:outline-none"
     >
         <slot name="leading" />
         <span
