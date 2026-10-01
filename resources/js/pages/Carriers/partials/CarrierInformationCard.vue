@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DetailField } from '@/components/ui/detail-field';
 import type { CarrierResource } from './carrier';
-import DetailField from './DetailField.vue';
 
 defineProps<{
     carrier: CarrierResource;

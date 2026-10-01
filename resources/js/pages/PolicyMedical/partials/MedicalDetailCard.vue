@@ -2,7 +2,7 @@
 import { Link } from '@inertiajs/vue3';
 import { ArrowRight } from '@lucide/vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import DetailField from '@/pages/Clients/partials/DetailField.vue';
+import { DetailField } from '@/components/ui/detail-field';
 import { index as policiesMembersIndex } from '@/routes/policies/members';
 import type { PolicyMedicalResource } from './policy';
 

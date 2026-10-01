@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import Badge from '@/components/ui/badge/Badge.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DetailField } from '@/components/ui/detail-field';
 import type { ClientResource } from './client';
-import DetailField from './DetailField.vue';
 
 defineProps<{
     client: ClientResource;
