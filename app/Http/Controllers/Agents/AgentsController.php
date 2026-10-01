@@ -45,6 +45,8 @@ final class AgentsController extends Controller
 
         /** @noinspection PhpUndefinedMethodInspection */
         $agents = Agent::query()
+            ->withCount('policies')
+            ->withClientsCount()
             ->filter(new AgentFilter($request->validated()))
             ->sort(new AgentSort($sortColumn, $request->validated('direction')))
             ->paginate(7)

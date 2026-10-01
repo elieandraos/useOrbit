@@ -32,6 +32,8 @@ final class CarriersController extends Controller
         /** @noinspection PhpUndefinedMethodInspection */
         $carriers = Carrier::query()
             ->with('branches')
+            ->withCount('policies')
+            ->withClientsCount()
             ->filter(new CarrierFilter($request->validated()))
             ->sort(new CarrierSort($sortColumn, $request->validated('direction')))
             ->paginate(7)
