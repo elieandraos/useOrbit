@@ -84,6 +84,7 @@ final class CarriersController extends Controller
             'carrier' => CarrierResource::make($carrier),
             'countries' => CountryResource::collection(Country::query()->orderBy('name')->get()),
             'policiesCount' => $carrier->policies()->count(),
+            'clientsCount' => $carrier->countClients(),
         ]);
     }
 

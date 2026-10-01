@@ -9,6 +9,7 @@ defineProps<{
     carrier: CarrierResource;
     countries: { id: number; name: string }[];
     policiesCount: number;
+    clientsCount: number;
 }>();
 </script>
 
@@ -20,7 +21,10 @@ defineProps<{
             <!-- Left column -->
             <div class="flex flex-col gap-4">
                 <CarrierInformationCard :carrier="carrier" />
-                <QuickStatsCard :policies-count="policiesCount" />
+                <QuickStatsCard
+                    :policies-count="policiesCount"
+                    :clients-count="clientsCount"
+                />
             </div>
 
             <!-- Right column -->

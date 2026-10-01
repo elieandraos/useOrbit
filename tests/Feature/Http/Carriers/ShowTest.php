@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Enums\PolicyStatus;
 use App\Http\Resources\CarrierResource;
 use App\Models\Carrier;
 use App\Models\CarrierBranch;
+use App\Models\Client;
 use App\Models\Organization;
 use App\Models\Policy;
 use App\Models\User;
@@ -59,4 +61,27 @@ test('an archived carrier can still be shown', function () {
     $this->actingAs($user)
         ->get(route('carriers.show', $carrier))
         ->assertOk();
+});
+
+test('clientsCount counts the carrier\'s distinct, non-deleted clients across live policies of any status', function () {
+    $user = User::factory()->withOrganization()->create();
+    $carrier = Carrier::factory()->forOrganization($user)->create();
+    $repeatClient = Client::factory()->forOrganization($user)->create();
+    $deletedClient = Client::factory()->forOrganization($user)->create();
+
+    Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'carrier_id' => $carrier->id, 'client_id' => $repeatClient->id]);
+    Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'carrier_id' => $carrier->id, 'client_id' => $repeatClient->id, 'status' => PolicyStatus::Frozen->value]);
+    Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'carrier_id' => $carrier->id, 'client_id' => Client::factory()->forOrganization($user), 'status' => PolicyStatus::Cancelled->value]);
+    Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'carrier_id' => $carrier->id, 'client_id' => Client::factory()->forOrganization($user)])->delete();
+    Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'carrier_id' => $carrier->id, 'client_id' => $deletedClient->id]);
+    $deletedClient->delete();
+    Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'carrier_id' => Carrier::factory()->forOrganization($user), 'client_id' => Client::factory()->forOrganization($user)]);
+
+    $this->actingAs($user)
+        ->get(route('carriers.show', $carrier))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('clientsCount', 2)
+            ->where('policiesCount', 4)
+        );
 });
