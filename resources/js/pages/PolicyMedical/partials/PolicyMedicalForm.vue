@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Form, Link } from '@inertiajs/vue3';
-import { Plus } from '@lucide/vue';
+import { Plus, Trash2 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import Button from '@/components/ui/button/Button.vue';
 import DateInput from '@/components/ui/date-input/DateInput.vue';
@@ -463,20 +463,16 @@ const yesNo: Option[] = [
                         :value="row.id"
                     />
 
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm font-medium text-primary"
-                            >Member {{ index + 1 }}</span
-                        >
-                        <Button
+                    <div class="relative grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <button
                             type="button"
-                            variant="ghost"
-                            size="sm"
+                            :title="`Remove ${row.full_name || 'member'}`"
+                            :aria-label="`Remove ${row.full_name || 'member'}`"
+                            class="absolute -top-1 right-0 inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-secondary transition-colors outline-none hover:bg-sunken hover:text-danger focus-visible:ring-2 focus-visible:ring-accent-ring"
                             @click="removeRow(index)"
-                            >Remove</Button
                         >
-                    </div>
-
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <Trash2 class="size-3.5" />
+                        </button>
                         <FormField
                             label="Full name"
                             required
