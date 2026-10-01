@@ -317,7 +317,7 @@ const yesNo: Option[] = [
                     />
                 </FormField>
                 <FormField
-                    label="Class"
+                    label="Plan tier"
                     required
                     :error="errors['medical.class_tier']"
                 >

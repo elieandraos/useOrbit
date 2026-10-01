@@ -172,6 +172,19 @@ test('a single policy is rejected when the insured profile fields are missing', 
         ->assertSessionHasErrors(['medical.insured_full_name', 'medical.insured_date_of_birth', 'medical.insured_gender', 'medical.insured_smoker']);
 });
 
+test('a missing plan tier is reported by its form label', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $payload = PolicyPayload::medicalSingle($client, $carrier);
+    Arr::forget($payload, 'medical.class_tier');
+
+    $this->actingAs($user)
+        ->post(route('policies.medical.store'), $payload)
+        ->assertSessionHasErrors(['medical.class_tier' => 'The plan tier field is required.']);
+});
+
 test('a co_insurance_share is required when co_insurance is true', function () {
     $user = User::factory()->withOrganization()->create();
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);

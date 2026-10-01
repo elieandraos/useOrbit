@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import DetailField from '@/pages/Clients/partials/DetailField.vue';
+import { DetailField } from '@/components/ui/detail-field';
 import type { PolicyLifeResource } from './policy';
 
 defineProps<{

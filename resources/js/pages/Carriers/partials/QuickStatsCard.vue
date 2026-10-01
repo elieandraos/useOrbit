@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import type { CarrierResource } from './carrier';
+import { StatCell } from '@/components/ui/stat-cell';
 
 defineProps<{
-    carrier: CarrierResource;
+    policiesCount: number;
 }>();
 </script>
 
@@ -13,32 +13,7 @@ defineProps<{
             <CardTitle>Quick stats</CardTitle>
         </CardHeader>
         <CardContent class="p-0">
-            <div class="grid grid-cols-2">
-                <div class="px-[18px] py-3.5">
-                    <p
-                        class="font-mono text-[10.5px] tracking-[0.06em] text-tertiary uppercase"
-                    >
-                        Clients
-                    </p>
-                    <p
-                        class="mt-1 font-mono text-lg font-semibold text-primary"
-                    >
-                        0
-                    </p>
-                </div>
-                <div class="border-l border-border-subtle px-[18px] py-3.5">
-                    <p
-                        class="font-mono text-[10.5px] tracking-[0.06em] text-tertiary uppercase"
-                    >
-                        Policies
-                    </p>
-                    <p
-                        class="mt-1 font-mono text-lg font-semibold text-primary"
-                    >
-                        0
-                    </p>
-                </div>
-            </div>
+            <StatCell label="Policies" :value="policiesCount" />
         </CardContent>
     </Card>
 </template>

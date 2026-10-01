@@ -8,7 +8,6 @@ import AgentShowHeader from './AgentShowHeader.vue';
 
 const props = defineProps<{
     agent: AgentResource;
-    clientsCount: number;
     policiesCount: number;
 }>();
 
@@ -30,11 +29,7 @@ setLayoutProps({
     <Head :title="agent.full_name" />
 
     <div class="flex flex-1 flex-col">
-        <AgentShowHeader
-            :agent="agent"
-            :clients-count="clientsCount"
-            :policies-count="policiesCount"
-        />
+        <AgentShowHeader :agent="agent" :policies-count="policiesCount" />
 
         <div
             class="-mx-4 overflow-x-auto border-b border-border-subtle bg-surface px-4 sm:mx-0 sm:mt-6 sm:overflow-visible sm:border-0 sm:bg-transparent sm:px-0"

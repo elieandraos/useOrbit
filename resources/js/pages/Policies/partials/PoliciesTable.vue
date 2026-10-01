@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
 import { MoreHorizontal, Pencil } from '@lucide/vue';
+import PolicyClassTile from '@/components/policies/PolicyClassTile.vue';
 import { Avatar } from '@/components/ui/avatar';
 import Badge from '@/components/ui/badge/Badge.vue';
 import { DropMenu, DropMenuItem } from '@/components/ui/drop-menu';
@@ -29,15 +30,6 @@ defineProps<{
     policies: Paginated<PolicyResource>;
 }>();
 
-const classColors: Record<string, string> = {
-    medical: '#0369a1',
-    automotive: '#b45309',
-    expat: '#7c3aed',
-    life: '#15803d',
-    fire: '#b91c1c',
-    travel: '#0d9488',
-};
-
 const classRoutes: Record<
     string,
     {
@@ -52,10 +44,6 @@ const classRoutes: Record<
     life: { show: lifeShow, edit: lifeEdit },
     travel: { show: travelShow, edit: travelEdit },
 };
-
-function classColor(policy: PolicyResource): string {
-    return classColors[policy.class] ?? '#52525b';
-}
 
 function goToPolicy(policy: PolicyResource) {
     router.visit(classRoutes[policy.class].show(policy.slug).url);
@@ -77,7 +65,6 @@ function goToPolicy(policy: PolicyResource) {
                 v-for="policy in policies.data"
                 :key="policy.id"
                 :policy="policy"
-                :class-color="classColor(policy)"
                 :show-url="classRoutes[policy.class].show(policy.slug).url"
                 :edit-url="classRoutes[policy.class].edit(policy.slug).url"
             />
@@ -159,16 +146,7 @@ function goToPolicy(policy: PolicyResource) {
                         >
                             <td class="min-w-0 px-4 py-3">
                                 <div class="flex min-w-0 items-center gap-3">
-                                    <div
-                                        class="flex size-9 shrink-0 items-center justify-center rounded-lg border font-mono text-[10.5px] font-bold tracking-wider uppercase"
-                                        :style="{
-                                            backgroundColor: `${classColor(policy)}15`,
-                                            borderColor: `${classColor(policy)}30`,
-                                            color: classColor(policy),
-                                        }"
-                                    >
-                                        {{ policy.class_label.slice(0, 3) }}
-                                    </div>
+                                    <PolicyClassTile :policy="policy" />
                                     <div class="min-w-0">
                                         <div
                                             class="truncate text-[13.5px] font-medium text-primary"

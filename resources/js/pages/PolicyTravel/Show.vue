@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import PolicyDetailShell from '../Policies/partials/PolicyDetailShell.vue';
-import CoverageCard from './partials/CoverageCard.vue';
-import CoveragePeriodCard from './partials/CoveragePeriodCard.vue';
-import FinancialsCard from './partials/FinancialsCard.vue';
-import PartiesCard from './partials/PartiesCard.vue';
+import PolicyFinancialsCard from '../Policies/partials/PolicyFinancialsCard.vue';
+import PolicyPartiesCard from '../Policies/partials/PolicyPartiesCard.vue';
+import PolicyTermCard from '../Policies/partials/PolicyTermCard.vue';
 import type { PolicyTravelResource } from './partials/policy';
-import StatusOriginCard from './partials/StatusOriginCard.vue';
 import TravelDetailCard from './partials/TravelDetailCard.vue';
 
 defineProps<{
@@ -15,13 +13,20 @@ defineProps<{
 
 <template>
     <PolicyDetailShell :policy="policy">
-        <div class="grid grid-cols-1 items-start gap-5 pt-6 lg:grid-cols-2">
-            <CoverageCard :policy="policy" />
-            <PartiesCard :policy="policy" />
-            <CoveragePeriodCard :policy="policy" />
-            <FinancialsCard :policy="policy" />
-            <StatusOriginCard :policy="policy" />
-            <TravelDetailCard :policy="policy" />
+        <div
+            class="grid grid-cols-1 items-start gap-5 pt-6 lg:grid-cols-[1fr_360px]"
+        >
+            <!-- Main column -->
+            <div class="flex min-w-0 flex-col gap-4">
+                <TravelDetailCard :policy="policy" />
+                <PolicyFinancialsCard :policy="policy" />
+            </div>
+
+            <!-- Sidebar -->
+            <div class="flex flex-col gap-4">
+                <PolicyPartiesCard :policy="policy" />
+                <PolicyTermCard :policy="policy" />
+            </div>
         </div>
     </PolicyDetailShell>
 </template>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DetailField } from '@/components/ui/detail-field';
 import type { AgentResource } from './agent';
-import DetailField from './DetailField.vue';
 
 defineProps<{
     agent: AgentResource;

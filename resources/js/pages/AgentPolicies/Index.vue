@@ -12,17 +12,10 @@ defineProps<{
     policiesCount: number;
     policies: Paginated<PolicyResource>;
 }>();
-
-// The Clients tab is wired by a separate issue; this page only owns Policies.
-const clientsCount = 0;
 </script>
 
 <template>
-    <AgentDetailShell
-        :agent="agent"
-        :clients-count="clientsCount"
-        :policies-count="policiesCount"
-    >
+    <AgentDetailShell :agent="agent" :policies-count="policiesCount">
         <Head :title="`${agent.full_name} · Policies`" />
 
         <div class="mt-6 flex-1">

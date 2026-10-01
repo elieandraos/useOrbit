@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import DetailField from '@/pages/Clients/partials/DetailField.vue';
-import type { PolicyMedicalResource } from './policy';
+import { DetailField } from '@/components/ui/detail-field';
+import type { PolicyResource } from '@/types/policy';
 
 defineProps<{
-    policy: PolicyMedicalResource;
+    policy: PolicyResource;
 }>();
 </script>
 
@@ -14,7 +14,7 @@ defineProps<{
             <CardTitle>Financials</CardTitle>
         </CardHeader>
         <CardContent>
-            <div class="grid grid-cols-2 gap-x-3.5 gap-y-4">
+            <div class="grid grid-cols-2 gap-x-3.5 gap-y-4 sm:grid-cols-3">
                 <DetailField
                     label="Premium"
                     :value="policy.premium_amount"
