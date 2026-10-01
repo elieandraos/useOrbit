@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DetailField } from '@/components/ui/detail-field';
+import { StatCell } from '@/components/ui/stat-cell';
 import type { PolicyResource } from '@/types/policy';
 
 defineProps<{
@@ -10,26 +10,16 @@ defineProps<{
 
 <template>
     <Card>
-        <CardHeader>
+        <CardHeader bordered>
             <CardTitle>Financials</CardTitle>
         </CardHeader>
-        <CardContent>
-            <div class="grid grid-cols-2 gap-x-3.5 gap-y-4 sm:grid-cols-3">
-                <DetailField
-                    label="Premium"
-                    :value="policy.premium_amount"
-                    mono
-                />
-                <DetailField
-                    label="Discount"
-                    :value="policy.discount_amount"
-                    mono
-                />
-                <DetailField
-                    label="Net premium"
-                    :value="policy.net_premium"
-                    mono
-                />
+        <CardContent class="p-0">
+            <div
+                class="grid grid-cols-1 divide-y divide-border-subtle sm:grid-cols-3 sm:divide-x sm:divide-y-0"
+            >
+                <StatCell label="Premium" :value="policy.premium_amount" />
+                <StatCell label="Discount" :value="policy.discount_amount" />
+                <StatCell label="Net premium" :value="policy.net_premium" />
             </div>
         </CardContent>
     </Card>
