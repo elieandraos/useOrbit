@@ -2,6 +2,7 @@
 import { Head, setLayoutProps } from '@inertiajs/vue3';
 import { Tab, Tabs } from '@/components/ui/tabs';
 import { index as agentsIndex, show as agentsShow } from '@/routes/agents';
+import { index as agentsClientsIndex } from '@/routes/agents/clients';
 import { index as agentsPoliciesIndex } from '@/routes/agents/policies';
 import type { AgentResource } from './agent';
 import AgentShowHeader from './AgentShowHeader.vue';
@@ -36,7 +37,7 @@ setLayoutProps({
         >
             <Tabs class="min-w-max">
                 <Tab :href="agentsShow(agent.slug)">Overview</Tab>
-                <Tab href="#">Clients</Tab>
+                <Tab :href="agentsClientsIndex(agent.slug)">Clients</Tab>
                 <Tab :href="agentsPoliciesIndex(agent.slug)">Policies</Tab>
             </Tabs>
         </div>
