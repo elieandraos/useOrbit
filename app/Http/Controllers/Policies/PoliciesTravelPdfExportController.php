@@ -15,7 +15,7 @@ final class PoliciesTravelPdfExportController extends Controller
     #[Authorize('view', 'policy')]
     public function __invoke(Policy $policy, ExportPolicyTravelToPdfAction $action): Response
     {
-        $policy->load(['client', 'carrier', 'agent', 'travelDetails']);
+        $policy->load(['client', 'carrier', 'agent', 'currency', 'travelDetails']);
 
         return $action->handle($policy);
     }

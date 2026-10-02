@@ -76,3 +76,21 @@ test('authenticated user gets 404 for a non-medical policy', function () {
         ->get(route('policies.medical.export-pdf', $policy))
         ->assertNotFound();
 });
+
+test('the pdf shows every amount with the policy currency code and two decimals', function () {
+    $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $policy = Policy::factory()->forOrganization($user)->medical()->lbp()->create([
+        'created_by' => $user->id,
+        'client_id' => $client->id,
+        'carrier_id' => $carrier->id,
+        'premium_amount' => 150000,
+        'discount_amount' => 2500,
+    ]);
+
+    $html = view('exports.policy-medical-profile', ['policy' => $policy])->render();
+
+    expect($html)->toContain('LBP 150,000.00', 'LBP 2,500.00');
+});

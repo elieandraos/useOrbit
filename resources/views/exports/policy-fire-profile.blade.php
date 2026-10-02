@@ -1,3 +1,4 @@
+@use('App\Support\Money')
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -94,11 +95,11 @@
         <tr>
             <td>
                 <span class="label">Premium</span>
-                <span class="value">{{ number_format((float) $policy->premium_amount, 2) }}</span>
+                <span class="value">{{ Money::format($policy->premium_amount, $policy->currency->code) }}</span>
             </td>
             <td>
                 <span class="label">Discount</span>
-                <span class="value">{{ number_format((float) $policy->discount_amount, 2) }}</span>
+                <span class="value">{{ Money::format($policy->discount_amount, $policy->currency->code) }}</span>
             </td>
         </tr>
         <tr>
@@ -132,7 +133,7 @@
             </td>
             <td>
                 <span class="label">Sum insured</span>
-                <span class="value">{{ number_format((float) $policy->fireDetails->sum_insured, 2) }}</span>
+                <span class="value">{{ Money::format($policy->fireDetails->sum_insured, $policy->currency->code) }}</span>
             </td>
         </tr>
         <tr>

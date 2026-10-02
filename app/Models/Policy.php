@@ -56,6 +56,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read Client $client
  * @property-read Carrier $carrier
  * @property-read Agent|null $agent
+ * @property-read Currency $currency
  * @property-read User $createdBy
  * @property-read User|null $updatedBy
  * @property-read PolicyMedicalDetails|null $medicalDetails
@@ -104,6 +105,11 @@ final class Policy extends Model implements Documentable, Notable, NotificationS
     public function agent(): BelongsTo
     {
         return $this->belongsTo(Agent::class);
+    }
+
+    public function currency(): BelongsTo
+    {
+        return $this->belongsTo(Currency::class);
     }
 
     public function medicalDetails(): HasOne
