@@ -16,9 +16,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $id
  * @property string $name
  * @property bool $two_factor_required
+ * @property int|null $default_country_id
+ * @property int|null $default_currency_id
  * @property-read Collection<int, User> $users
  */
-#[Fillable(['name', 'two_factor_required'])]
+#[Fillable(['name', 'two_factor_required', 'default_country_id', 'default_currency_id'])]
 final class Organization extends Model
 {
     /** @use HasFactory<OrganizationFactory> */
