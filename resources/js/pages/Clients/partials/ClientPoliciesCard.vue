@@ -10,6 +10,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { formatMoney } from '@/lib/money';
 import { policyClassRoutes } from '@/lib/policyClassRoutes';
 import { policyStatusTone } from '@/lib/policyStatusTone';
 import { create as policiesCreate } from '@/routes/policies';
@@ -74,7 +75,7 @@ const props = defineProps<{
                 <p
                     class="shrink-0 font-mono text-[13px] font-medium text-primary"
                 >
-                    {{ policy.net_premium }}
+                    {{ formatMoney(policy.net_premium, policy.currency_code) }}
                 </p>
                 <ChevronRight class="size-4 shrink-0 text-tertiary" />
             </Link>

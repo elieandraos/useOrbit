@@ -26,7 +26,7 @@ test('authenticated user can list a carrier policies', function () {
         ->assertHasPaginatedResource(
             'policies',
             PolicyResource::collection(
-                $carrier->policies()->with(['client', 'carrier'])->latest('effective_date')->orderBy('id')->paginate(7)
+                $carrier->policies()->with(['client', 'carrier', 'currency'])->latest('effective_date')->orderBy('id')->paginate(7)
             )
         );
 });

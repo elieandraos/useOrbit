@@ -31,7 +31,7 @@ test('authenticated user can list their organization policies', function () {
         ->assertHasPaginatedResource(
             'policies',
             PolicyResource::collection(
-                Policy::query()->with(['client', 'carrier'])->latest('effective_date')->orderBy('id')->paginate(7)
+                Policy::query()->with(['client', 'carrier', 'currency'])->latest('effective_date')->orderBy('id')->paginate(7)
             )
         );
 });
@@ -94,6 +94,7 @@ test('the policy list exposes computed and labeled fields', function () {
             ->where('policies.data.0.premium_amount', '1000.00')
             ->where('policies.data.0.discount_amount', '150.00')
             ->where('policies.data.0.net_premium', '850.00')
+            ->where('policies.data.0.currency_code', 'USD')
             ->where('policies.data.0.class_label', 'Automotive')
             ->where('policies.data.0.type_label', 'Group')
             ->where('policies.data.0.status_label', 'Frozen')

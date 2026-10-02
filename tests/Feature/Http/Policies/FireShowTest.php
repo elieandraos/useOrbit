@@ -23,7 +23,7 @@ test('authenticated user can view a policy from their organization', function ()
         ->get(route('policies.fire.show', $policy))
         ->assertOk();
 
-    $policy->load(['client', 'carrier', 'agent', 'fireDetails.state', 'fireDetails.country']);
+    $policy->load(['client', 'carrier', 'agent', 'currency', 'fireDetails.state', 'fireDetails.country']);
 
     $response->assertHasResource('policy', PolicyFireResource::make($policy));
 });

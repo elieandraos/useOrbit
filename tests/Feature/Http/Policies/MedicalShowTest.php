@@ -26,7 +26,7 @@ test('authenticated user can view a policy from their organization', function ()
         ->get(route('policies.medical.show', $policy))
         ->assertOk();
 
-    $policy->load(['client', 'carrier', 'agent', 'medicalDetails']);
+    $policy->load(['client', 'carrier', 'agent', 'currency', 'medicalDetails']);
     if ($policy->type === PolicyType::Group) {
         $policy->load('insureds');
     }

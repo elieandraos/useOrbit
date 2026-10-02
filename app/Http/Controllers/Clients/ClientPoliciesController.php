@@ -17,7 +17,7 @@ final class ClientPoliciesController extends Controller
     public function __invoke(Client $client): Response
     {
         $policies = $client->policies()
-            ->with(['client', 'carrier'])
+            ->with(['client', 'carrier', 'currency'])
             ->latest('effective_date')
             ->orderBy('id')
             ->paginate(7)

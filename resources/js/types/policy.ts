@@ -26,6 +26,7 @@ export interface PolicyResource {
         full_name: string;
     } | null;
     currency_id: number;
+    currency_code: string;
     effective_date: string;
     effective_date_formatted: string;
     expiry_date: string;

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DetailField } from '@/components/ui/detail-field';
+import { formatMoney } from '@/lib/money';
 import type { PolicyAutomotiveResource } from './policy';
 
 const props = defineProps<{
@@ -31,7 +32,14 @@ const isAllRisk = props.policy.subclass === 'All Risk';
                 <template v-if="isAllRisk">
                     <DetailField
                         label="Valuation"
-                        :value="policy.details.valuation_amount"
+                        :value="
+                            policy.details.valuation_amount === null
+                                ? null
+                                : formatMoney(
+                                      policy.details.valuation_amount,
+                                      policy.currency_code,
+                                  )
+                        "
                         mono
                     />
                     <DetailField

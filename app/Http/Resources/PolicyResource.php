@@ -53,6 +53,7 @@ final class PolicyResource extends JsonResource
                 'full_name' => $this->agent->full_name,
             ]),
             'currency_id' => $this->currency_id,
+            'currency_code' => $this->whenLoaded('currency', fn () => $this->currency->code),
             'effective_date' => $this->effective_date->format('Y-m-d'),
             'effective_date_formatted' => $this->effective_date->format('M j, Y'),
             'expiry_date' => $this->expiry_date->format('Y-m-d'),

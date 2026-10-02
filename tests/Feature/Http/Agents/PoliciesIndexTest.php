@@ -32,7 +32,7 @@ test('authenticated user can list an agent\'s policies', function () {
         ->assertHasPaginatedResource(
             'policies',
             PolicyResource::collection(
-                $agent->policies()->with(['client', 'carrier'])->latest('effective_date')->orderBy('id')->paginate(7)
+                $agent->policies()->with(['client', 'carrier', 'currency'])->latest('effective_date')->orderBy('id')->paginate(7)
             )
         );
 });

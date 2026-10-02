@@ -32,7 +32,7 @@ final class PoliciesController extends Controller
     {
         /** @noinspection PhpUndefinedMethodInspection */
         $policies = Policy::query()
-            ->with(['client', 'carrier'])
+            ->with(['client', 'carrier', 'currency'])
             ->filter(new PolicyFilter($request->validated()))
             ->inListOrder()
             ->paginate(7)

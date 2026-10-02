@@ -23,7 +23,7 @@ test('authenticated user can view a policy from their organization', function ()
         ->get(route('policies.expat.show', $policy))
         ->assertOk();
 
-    $policy->load(['client', 'carrier', 'agent', 'expatDetails.country']);
+    $policy->load(['client', 'carrier', 'agent', 'currency', 'expatDetails.country']);
 
     $response->assertHasResource('policy', PolicyExpatResource::make($policy));
 });

@@ -104,7 +104,7 @@ final class ClientsController extends Controller
             'policiesCount' => $client->policies()->count(),
             'recentPolicies' => PolicyResource::collection(
                 $client->policies()
-                    ->with('carrier')
+                    ->with(['carrier', 'currency'])
                     ->latest('effective_date')
                     ->orderBy('id')
                     ->limit(5)

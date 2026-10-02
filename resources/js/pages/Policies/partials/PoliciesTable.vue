@@ -6,6 +6,7 @@ import { Avatar } from '@/components/ui/avatar';
 import Badge from '@/components/ui/badge/Badge.vue';
 import { DropMenu, DropMenuItem } from '@/components/ui/drop-menu';
 import { Pagination } from '@/components/ui/pagination';
+import { formatMoney } from '@/lib/money';
 import { policyStatusTone } from '@/lib/policyStatusTone';
 import {
     edit as automotiveEdit,
@@ -203,13 +204,24 @@ function goToPolicy(policy: PolicyResource) {
                                 <div
                                     class="font-mono text-[13px] font-medium text-primary"
                                 >
-                                    {{ policy.net_premium }}
+                                    {{
+                                        formatMoney(
+                                            policy.net_premium,
+                                            policy.currency_code,
+                                        )
+                                    }}
                                 </div>
                                 <div
                                     v-if="Number(policy.discount_amount) > 0"
                                     class="mt-0.5 font-mono text-[11px] text-tertiary"
                                 >
-                                    −{{ policy.discount_amount }} disc
+                                    −{{
+                                        formatMoney(
+                                            policy.discount_amount,
+                                            policy.currency_code,
+                                        )
+                                    }}
+                                    disc
                                 </div>
                             </td>
                             <td class="px-4 py-3">

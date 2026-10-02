@@ -47,7 +47,7 @@ final class PoliciesLifeController extends Controller
     #[Authorize('view', 'policy')]
     public function show(Policy $policy): Response
     {
-        $policy->load(['client', 'carrier', 'agent', 'lifeDetails']);
+        $policy->load(['client', 'carrier', 'agent', 'currency', 'lifeDetails']);
 
         return inertia('PolicyLife/Show', [
             'policy' => PolicyLifeResource::make($policy),
@@ -57,7 +57,7 @@ final class PoliciesLifeController extends Controller
     #[Authorize('update', 'policy')]
     public function edit(Policy $policy): Response
     {
-        $policy->load(['client', 'carrier', 'agent', 'lifeDetails']);
+        $policy->load(['client', 'carrier', 'agent', 'currency', 'lifeDetails']);
 
         return inertia('PolicyLife/Edit', [
             'policy' => PolicyLifeResource::make($policy),

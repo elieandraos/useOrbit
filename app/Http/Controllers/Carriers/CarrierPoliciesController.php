@@ -17,7 +17,7 @@ final class CarrierPoliciesController extends Controller
     public function __invoke(Carrier $carrier): Response
     {
         $policies = $carrier->policies()
-            ->with(['client', 'carrier'])
+            ->with(['client', 'carrier', 'currency'])
             ->latest('effective_date')
             ->orderBy('id')
             ->paginate(7)

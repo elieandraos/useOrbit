@@ -60,6 +60,7 @@ export interface PolicyMedicalResource {
     premium_amount: string;
     discount_amount: string;
     currency_id: number;
+    currency_code: string;
     net_premium: string;
     status: string;
     status_label: string;
