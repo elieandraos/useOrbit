@@ -8,6 +8,7 @@ use App\Enums\Gender;
 use App\Enums\LeadSource;
 use App\Models\Client;
 use App\Models\Country;
+use App\Models\Organization;
 use App\Models\State;
 use App\Models\User;
 
@@ -28,21 +29,21 @@ test('create page renders for authenticated user', function () {
         ->assertInertia(fn ($page) => $page->component('Clients/Create'));
 });
 
-test('create page passes the acting user country id as the default country', function () {
-    $country = Country::query()->create(['iso2' => 'LB', 'name' => 'Lebanon', 'iso3' => 'LBN', 'phone_code' => '961', 'region' => 'Asia', 'subregion' => 'Western Asia']);
-    $user = User::factory()->withOrganization()->create(['country_id' => $country->id]);
+test('create page passes the organization default country', function () {
+    $organization = Organization::factory()->withLebanonAndUsdDefaults()->create();
+    $user = User::factory()->forOrganization($organization)->create();
 
     $this->actingAs($user)
         ->get(route('clients.create'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('Clients/Create')
-            ->where('defaultCountryId', $country->id)
+            ->where('defaultCountryId', $organization->default_country_id)
         );
 });
 
-test('create page passes a null default country id when the acting user has none set', function () {
-    $user = User::factory()->withOrganization()->create(['country_id' => null]);
+test('create page passes a null default country when the organization has none', function () {
+    $user = User::factory()->withOrganization()->create();
 
     $this->actingAs($user)
         ->get(route('clients.create'))

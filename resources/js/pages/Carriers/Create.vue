@@ -9,6 +9,7 @@ import CarrierForm from './partials/CarrierForm.vue';
 
 defineProps<{
     countries: { id: number; name: string }[];
+    defaultCountryId: number | null;
 }>();
 
 defineOptions({
@@ -38,6 +39,7 @@ defineOptions({
 
         <CarrierForm
             :countries="countries"
+            :default-country-id="defaultCountryId"
             :route="carriersStore.form()"
             submit-label="Create carrier"
         />

@@ -34,6 +34,7 @@ defineProps<{
     currencies: PolicyCurrencyOption[];
     defaultCurrencyId: number | null;
     countries: CountryOption[];
+    defaultCountryId: number | null;
 }>();
 
 const query = new URLSearchParams(window.location.search);
@@ -89,6 +90,7 @@ defineOptions({
             :currencies="currencies"
             :default-currency-id="defaultCurrencyId"
             :countries="countries"
+            :default-country-id="defaultCountryId"
             :defaults="defaults"
             :route="policiesFireStore.form()"
             submit-label="Create policy"

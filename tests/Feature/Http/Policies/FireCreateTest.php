@@ -33,8 +33,9 @@ test('the create page receives the shared and fire form options', function () {
         );
 });
 
-test('the create page offers every country', function () {
-    $user = User::factory()->withOrganization()->create();
+test('the create page offers every country and pre-fills the organization default country', function () {
+    $organization = Organization::factory()->withLebanonAndUsdDefaults()->create();
+    $user = User::factory()->forOrganization($organization)->create();
     $otherCountry = Country::factory()->create();
 
     $this->actingAs($user)
@@ -43,7 +44,17 @@ test('the create page offers every country', function () {
         ->assertInertia(fn ($page) => $page
             ->has('countries', Country::query()->count())
             ->where('countries', fn ($countries) => collect($countries)->pluck('id')->contains($otherCountry->id))
+            ->where('defaultCountryId', $organization->default_country_id)
         );
+});
+
+test('the create page passes a null default country when the organization has none', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('policies.fire.create'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('defaultCountryId', null));
 });
 
 test('the create page offers only active clients, carriers and agents', function () {

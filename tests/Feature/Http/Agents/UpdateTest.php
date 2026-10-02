@@ -39,6 +39,20 @@ test('edit page renders with agent data', function () {
         );
 });
 
+test('edit page keeps an agent with no stored country blank instead of applying the organization default', function () {
+    $organization = Organization::factory()->withLebanonAndUsdDefaults()->create();
+    $user = User::factory()->forOrganization($organization)->create();
+    $agent = Agent::factory()->forOrganization($user)->create(['created_by' => $user->id, 'country_id' => null, 'state_id' => null]);
+
+    $this->actingAs($user)
+        ->get(route('agents.edit', $agent))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('agent.country_id', null)
+            ->missing('defaultCountryId')
+        );
+});
+
 test('update returns validation errors when required fields are missing', function () {
     $user = User::factory()->withOrganization()->create();
     $agent = Agent::factory()->forOrganization($user)->create();

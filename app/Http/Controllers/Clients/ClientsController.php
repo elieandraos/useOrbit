@@ -75,7 +75,7 @@ final class ClientsController extends Controller
             'leadSources' => collect(LeadSource::all()),
             'emergencyContactRelationships' => collect(EmergencyContactRelationship::all()),
             'clientTypes' => collect(ClientType::all()),
-            'defaultCountryId' => $user->country_id,
+            'defaultCountryId' => $user->organization->default_country_id,
         ]);
     }
 

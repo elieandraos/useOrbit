@@ -17,6 +17,7 @@ use App\Models\Policy;
 use App\Models\User;
 use App\Support\Policies\PolicyFormOptions;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -26,9 +27,15 @@ final class PoliciesFireController extends Controller
     public function __construct(private readonly PolicyFormOptions $policyFormOptions) {}
 
     #[Authorize('create', Policy::class)]
-    public function create(): Response
+    public function create(Request $request): Response
     {
-        return inertia('PolicyFire/Create', $this->formOptions());
+        /** @var User $user */
+        $user = $request->user();
+
+        return inertia('PolicyFire/Create', [
+            ...$this->formOptions(),
+            'defaultCountryId' => $user->organization->default_country_id,
+        ]);
     }
 
     /**

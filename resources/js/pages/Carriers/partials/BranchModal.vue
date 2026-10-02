@@ -20,6 +20,7 @@ const props = defineProps<{
     carrier: CarrierResource;
     countries: { id: number; name: string }[];
     branch?: CarrierBranchResource | null;
+    defaultCountryId?: number | null;
 }>();
 
 const open = defineModel<boolean>('open', { default: false });
@@ -58,7 +59,7 @@ function resetFields() {
     street.value = '';
     buildingFloor.value = '';
     city.value = '';
-    countryId.value = null;
+    countryId.value = props.defaultCountryId ?? null;
     stateId.value = null;
     stateLabel.value = undefined;
     contactName.value = '';

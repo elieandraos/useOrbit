@@ -71,6 +71,7 @@ const props = defineProps<{
     currencies: PolicyCurrencyOption[];
     defaultCurrencyId?: number | null;
     countries: CountryOption[];
+    defaultCountryId?: number | null;
     policy?: PolicyFireFormValues;
     defaults?: Record<string, string>;
     route: RouteFormDefinition<'post'>;
@@ -117,7 +118,12 @@ const yearBuilt = ref(
 const street = ref(props.policy?.details.street ?? '');
 const buildingFloor = ref(props.policy?.details.building_floor ?? '');
 const city = ref(props.policy?.details.city ?? '');
-const countryId = ref<number | null>(props.policy?.details.country_id ?? null);
+// An edited policy keeps its stored country; only a new policy gets the organization default.
+const countryId = ref<number | null>(
+    props.policy
+        ? props.policy.details.country_id
+        : (props.defaultCountryId ?? null),
+);
 const stateId = ref<number | null>(props.policy?.details.state_id ?? null);
 const sumInsured = ref(props.policy?.details.sum_insured ?? '');
 
