@@ -34,8 +34,7 @@ final class PoliciesController extends Controller
         $policies = Policy::query()
             ->with(['client', 'carrier'])
             ->filter(new PolicyFilter($request->validated()))
-            ->latest('effective_date')
-            ->orderBy('id')
+            ->inListOrder()
             ->paginate(7)
             ->withQueryString();
 

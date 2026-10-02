@@ -6,7 +6,6 @@ namespace App\Exports;
 
 use App\Filters\PolicyFilter;
 use App\Models\Policy;
-use App\Sorts\PolicySort;
 use Illuminate\Database\Eloquent\Builder;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -15,11 +14,7 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 final readonly class PoliciesExport implements FromQuery, WithHeadings, WithMapping
 {
     /** @param  array<string, mixed>  $filters */
-    public function __construct(
-        private array $filters,
-        private ?string $sortColumn,
-        private string $sortDirection,
-    ) {}
+    public function __construct(private array $filters) {}
 
     public function query(): Builder
     {
@@ -27,7 +22,7 @@ final readonly class PoliciesExport implements FromQuery, WithHeadings, WithMapp
         return Policy::query()
             ->with(['client', 'carrier', 'agent'])
             ->filter(new PolicyFilter($this->filters))
-            ->sort(new PolicySort($this->sortColumn, $this->sortDirection));
+            ->inListOrder();
     }
 
     public function headings(): array

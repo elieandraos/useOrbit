@@ -14,7 +14,7 @@ use App\Models\Policy;
 use App\Models\User;
 
 test('headings returns the export column labels', function () {
-    $export = new PoliciesExport([], null, 'asc');
+    $export = new PoliciesExport([]);
 
     expect($export->headings())->toBe([
         'Policy Number',
@@ -60,7 +60,7 @@ test('map transforms a policy into an export row', function () {
         'source' => PolicySource::Agent,
     ])->load(['client', 'carrier', 'agent']);
 
-    $export = new PoliciesExport([], null, 'asc');
+    $export = new PoliciesExport([]);
 
     expect($export->map($policy))->toBe([
         'POL-1000',
@@ -95,7 +95,7 @@ test('map returns a blank agent when the policy has none', function () {
         'agent_id' => null,
     ])->load(['client', 'carrier', 'agent']);
 
-    $export = new PoliciesExport([], null, 'asc');
+    $export = new PoliciesExport([]);
 
     expect($export->map($policy)[5])->toBeNull();
 });
@@ -111,7 +111,7 @@ test('query orders policies sharing an effective date the same way the index doe
     /** @var Policy $second */
     $second = Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'effective_date' => '2024-06-01']);
 
-    $export = new PoliciesExport([], null, 'asc');
+    $export = new PoliciesExport([]);
 
     expect($export->query()->pluck('id')->all())->toBe([$first->id, $second->id, $older->id]);
 });

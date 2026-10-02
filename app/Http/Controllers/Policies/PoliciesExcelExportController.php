@@ -21,11 +21,6 @@ final class PoliciesExcelExportController extends Controller
     #[Authorize('viewAny', Policy::class)]
     public function __invoke(IndexPolicyRequest $request, ExportPoliciesToExcelAction $action): BinaryFileResponse
     {
-        $filters = $request->validated();
-
-        $sortColumn = $filters['sort'] ?? null;
-        $sortDirection = $filters['direction'] ?? 'asc';
-
-        return $action->handle($filters, $sortColumn, $sortDirection);
+        return $action->handle($request->validated());
     }
 }

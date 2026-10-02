@@ -58,7 +58,6 @@ const activeFilterCount = computed(
 );
 
 // Mirrors the currently applied filters so the download matches what's on screen.
-// The index has no sort param, so the export falls back to the same default order.
 const exportUrl = computed(() =>
     policiesExport.url({
         query: Object.fromEntries(

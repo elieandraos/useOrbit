@@ -37,15 +37,6 @@ final class IndexPolicyRequest extends FormRequest
                 ...$this->policyAmountRules(),
                 Rule::when($this->filled('amount_min') && $this->filled('amount_max'), ['gte:amount_min']),
             ],
-            'sort' => ['nullable', 'in:policy_number,client,effective_date,amount,status'],
-            'direction' => ['in:asc,desc'],
         ];
-    }
-
-    protected function prepareForValidation(): void
-    {
-        $this->merge([
-            'direction' => $this->input('direction') ?? ($this->filled('sort') ? 'asc' : 'desc'),
-        ]);
     }
 }

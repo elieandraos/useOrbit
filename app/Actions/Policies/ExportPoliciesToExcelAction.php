@@ -18,11 +18,8 @@ final class ExportPoliciesToExcelAction
      * @throws Exception
      * @throws WriterException
      */
-    public function handle(array $filters, ?string $sortColumn, string $sortDirection): BinaryFileResponse
+    public function handle(array $filters): BinaryFileResponse
     {
-        return Excel::download(
-            new PoliciesExport($filters, $sortColumn, $sortDirection),
-            'policies.xlsx',
-        );
+        return Excel::download(new PoliciesExport($filters), 'policies.xlsx');
     }
 }
