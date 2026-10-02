@@ -56,11 +56,11 @@ test('the create page offers only active clients, carriers and agents', function
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->has('clients', 1)
-            ->where('clients.0.id', $client->id)
+            ->has('clients.0', fn ($option) => $option->where('id', $client->id)->where('full_name', $client->full_name))
             ->has('carriers', 1)
-            ->where('carriers.0.id', $carrier->id)
+            ->has('carriers.0', fn ($option) => $option->where('id', $carrier->id)->where('name', $carrier->name))
             ->has('agents', 1)
-            ->where('agents.0.id', $agent->id)
+            ->has('agents.0', fn ($option) => $option->where('id', $agent->id)->where('full_name', $agent->full_name))
         );
 });
 

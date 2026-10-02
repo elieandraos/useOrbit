@@ -14,7 +14,6 @@ use App\Enums\PolicyType;
 use App\Filters\PolicyFilter;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Policies\IndexPolicyRequest;
-use App\Http\Resources\CarrierResource;
 use App\Http\Resources\CurrencyResource;
 use App\Http\Resources\PolicyResource;
 use App\Models\Agent;
@@ -46,7 +45,7 @@ final class PoliciesController extends Controller
             'types' => collect(PolicyType::all()),
             'classes' => collect(PolicyClass::all()),
             'sources' => collect(PolicySource::all()),
-            'carriers' => CarrierResource::collection(Carrier::query()->orderBy('name')->get()),
+            'carriers' => Carrier::query()->orderBy('name')->get()->map(fn (Carrier $carrier): array => ['id' => $carrier->id, 'name' => $carrier->name]),
             'currencies' => CurrencyResource::collection(Currency::query()->orderBy('code')->get()),
             'filters' => [
                 'search' => $request->validated('search'),

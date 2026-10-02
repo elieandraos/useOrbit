@@ -118,13 +118,13 @@ test('the edit page offers active parties and the policy\'s own archived parties
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->has('clients', 2)
-            ->where('clients.0.id', $activeClient->id)
+            ->has('clients.0', fn ($option) => $option->where('id', $activeClient->id)->where('full_name', $activeClient->full_name))
             ->where('clients.1.id', $archivedClient->id)
             ->has('carriers', 2)
-            ->where('carriers.0.id', $activeCarrier->id)
+            ->has('carriers.0', fn ($option) => $option->where('id', $activeCarrier->id)->where('name', $activeCarrier->name))
             ->where('carriers.1.id', $archivedCarrier->id)
             ->has('agents', 2)
-            ->where('agents.0.id', $activeAgent->id)
+            ->has('agents.0', fn ($option) => $option->where('id', $activeAgent->id)->where('full_name', $activeAgent->full_name))
             ->where('agents.1.id', $archivedAgent->id)
         );
 });

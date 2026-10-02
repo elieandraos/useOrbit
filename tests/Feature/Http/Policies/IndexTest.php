@@ -268,8 +268,7 @@ test('the page exposes the filter option lists used by the filters drawer', func
             ->has('classes', 6)
             ->has('sources', 4)
             ->has('carriers', 1)
-            ->where('carriers.0.id', $carrier->id)
-            ->where('carriers.0.name', 'Bankers Assurance')
+            ->has('carriers.0', fn ($option) => $option->where('id', $carrier->id)->where('name', 'Bankers Assurance'))
         );
 });
 

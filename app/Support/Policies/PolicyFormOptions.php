@@ -10,9 +10,6 @@ use App\Enums\ClientStatus;
 use App\Enums\PolicySource;
 use App\Enums\PolicyStatus;
 use App\Enums\PolicyType;
-use App\Http\Resources\AgentResource;
-use App\Http\Resources\CarrierResource;
-use App\Http\Resources\ClientResource;
 use App\Http\Resources\CurrencyResource;
 use App\Models\Agent;
 use App\Models\Carrier;
@@ -33,14 +30,15 @@ final readonly class PolicyFormOptions
     /**
      * The select-option props shared by every policy create and edit page.
      *
-     * Only active parties are offered, except that an edited policy keeps its currently assigned
-     * client, carrier and agent among the options even after they have been archived. A new policy
-     * also gets the organization's default currency to pre-select; an edited policy keeps its own.
+     * Each party option carries only its id and the displayed name its select renders. Only active
+     * parties are offered, except that an edited policy keeps its currently assigned client, carrier
+     * and agent among the options even after they have been archived. A new policy also gets the
+     * organization's default currency to pre-select; an edited policy keeps its own.
      *
      * @return array{
-     *     clients: AnonymousResourceCollection,
-     *     carriers: AnonymousResourceCollection,
-     *     agents: AnonymousResourceCollection,
+     *     clients: Collection<int, array{id: int, full_name: string}>,
+     *     carriers: Collection<int, array{id: int, name: string}>,
+     *     agents: Collection<int, array{id: int, full_name: string}>,
      *     types: Collection<int, array{label: string, value: string}>,
      *     statuses: Collection<int, array{label: string, value: string}>,
      *     sources: Collection<int, array{label: string, value: string}>,
@@ -51,9 +49,9 @@ final readonly class PolicyFormOptions
     public function shared(?Policy $policy = null): array
     {
         return [
-            'clients' => ClientResource::collection($this->clients($policy?->client_id)),
-            'carriers' => CarrierResource::collection($this->carriers($policy?->carrier_id)),
-            'agents' => AgentResource::collection($this->agents($policy?->agent_id)),
+            'clients' => $this->clients($policy?->client_id)->map(fn (Client $client): array => ['id' => $client->id, 'full_name' => $client->full_name]),
+            'carriers' => $this->carriers($policy?->carrier_id)->map(fn (Carrier $carrier): array => ['id' => $carrier->id, 'name' => $carrier->name]),
+            'agents' => $this->agents($policy?->agent_id)->map(fn (Agent $agent): array => ['id' => $agent->id, 'full_name' => $agent->full_name]),
             'types' => collect(PolicyType::all()),
             'statuses' => collect(PolicyStatus::all()),
             'sources' => collect(PolicySource::all()),
