@@ -13,6 +13,7 @@ import RadioPills from '@/components/ui/radio-pills/RadioPills.vue';
 import Select from '@/components/ui/select/Select.vue';
 import { policyDateEndYear } from '@/lib/policyDateEndYear';
 import { index as policiesIndex } from '@/routes/policies';
+import type { PolicyCurrencyOption } from '@/types/policy';
 
 interface Option {
     label: string;
@@ -31,6 +32,7 @@ interface Filters {
     class: string[] | null;
     carrier_id: string | number | null;
     source: string | null;
+    currency_id: string | number | null;
     effective_from: string | null;
     effective_to: string | null;
     amount_min: string | number | null;
@@ -43,6 +45,7 @@ const props = defineProps<{
     classes: Option[];
     sources: Option[];
     carriers: CarrierOption[];
+    currencies: PolicyCurrencyOption[];
     filters: Filters;
 }>();
 
@@ -56,6 +59,9 @@ const carrierId = ref(
     props.filters.carrier_id ? String(props.filters.carrier_id) : '',
 );
 const source = ref(props.filters.source ?? '');
+const currencyId = ref(
+    props.filters.currency_id ? String(props.filters.currency_id) : '',
+);
 const effectiveFrom = ref(props.filters.effective_from ?? '');
 const effectiveTo = ref(props.filters.effective_to ?? '');
 const amountMin = ref(props.filters.amount_min ?? '');
@@ -77,10 +83,23 @@ watch(open, (isOpen) => {
         ? String(props.filters.carrier_id)
         : '';
     source.value = props.filters.source ?? '';
+    currencyId.value = props.filters.currency_id
+        ? String(props.filters.currency_id)
+        : '';
     effectiveFrom.value = props.filters.effective_from ?? '';
     effectiveTo.value = props.filters.effective_to ?? '';
     amountMin.value = props.filters.amount_min ?? '';
     amountMax.value = props.filters.amount_max ?? '';
+});
+
+// Amounts are only comparable within one currency, so clearing it clears the range.
+watch(currencyId, (selectedCurrencyId) => {
+    if (selectedCurrencyId) {
+        return;
+    }
+
+    amountMin.value = '';
+    amountMax.value = '';
 });
 
 function isClassSelected(value: string): boolean {
@@ -126,6 +145,10 @@ function applyFilters() {
 
     if (source.value) {
         query.source = source.value;
+    }
+
+    if (currencyId.value) {
+        query.currency_id = currencyId.value;
     }
 
     if (effectiveFrom.value) {
@@ -261,8 +284,30 @@ function clearFilters() {
             </FormField>
 
             <FormField
+                label="Currency"
+                for="filter_currency_id"
+                :error="formErrors.currency_id"
+            >
+                <Select id="filter_currency_id" v-model="currencyId" size="sm">
+                    <option value="">All currencies</option>
+                    <option
+                        v-for="currency in currencies"
+                        :key="currency.id"
+                        :value="`${currency.id}`"
+                    >
+                        {{ currency.code }} — {{ currency.name }}
+                    </option>
+                </Select>
+            </FormField>
+
+            <FormField
                 label="Amount range"
                 :error="formErrors.amount_max ?? formErrors.amount_min"
+                :helper="
+                    currencyId
+                        ? undefined
+                        : 'Select a currency to filter by amount.'
+                "
             >
                 <div class="flex items-center gap-3">
                     <Input
@@ -272,6 +317,7 @@ function clearFilters() {
                         step="0.01"
                         size="sm"
                         placeholder="Min"
+                        :disabled="!currencyId"
                     />
                     <span class="text-xs text-tertiary">to</span>
                     <Input
@@ -281,6 +327,7 @@ function clearFilters() {
                         step="0.01"
                         size="sm"
                         placeholder="Max"
+                        :disabled="!currencyId"
                     />
                 </div>
             </FormField>

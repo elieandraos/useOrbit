@@ -21,6 +21,7 @@ use App\Models\Country;
 use App\Models\User;
 use App\Sorts\AgentSort;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -66,10 +67,14 @@ final class AgentsController extends Controller
     }
 
     #[Authorize('create', Agent::class)]
-    public function create(): Response
+    public function create(Request $request): Response
     {
+        /** @var User $user */
+        $user = $request->user();
+
         return inertia('Agents/Create', [
             'countries' => CountryResource::collection(Country::query()->orderBy('name')->get()),
+            'defaultCountryId' => $user->organization->default_country_id,
         ]);
     }
 

@@ -18,6 +18,7 @@ use App\Models\Country;
 use App\Models\User;
 use App\Sorts\CarrierSort;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -53,10 +54,14 @@ final class CarriersController extends Controller
     }
 
     #[Authorize('create', Carrier::class)]
-    public function create(): Response
+    public function create(Request $request): Response
     {
+        /** @var User $user */
+        $user = $request->user();
+
         return inertia('Carriers/Create', [
             'countries' => CountryResource::collection(Country::query()->orderBy('name')->get()),
+            'defaultCountryId' => $user->organization->default_country_id,
         ]);
     }
 
@@ -76,13 +81,16 @@ final class CarriersController extends Controller
     }
 
     #[Authorize('view', 'carrier')]
-    public function show(Carrier $carrier): Response
+    public function show(Request $request, Carrier $carrier): Response
     {
+        /** @var User $user */
+        $user = $request->user();
         $carrier->load(['branches.state', 'branches.country']);
 
         return inertia('Carriers/Show', [
             'carrier' => CarrierResource::make($carrier),
             'countries' => CountryResource::collection(Country::query()->orderBy('name')->get()),
+            'defaultCountryId' => $user->organization->default_country_id,
             'policiesCount' => $carrier->policies()->count(),
             'clientsCount' => $carrier->countClients(),
         ]);

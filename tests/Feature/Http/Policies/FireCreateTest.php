@@ -6,6 +6,7 @@ use App\Models\Agent;
 use App\Models\Carrier;
 use App\Models\Client;
 use App\Models\Country;
+use App\Models\Organization;
 use App\Models\User;
 
 test('the create page offers the canonical fire subclasses', function () {
@@ -28,33 +29,32 @@ test('the create page receives the shared and fire form options', function () {
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('PolicyFire/Create')
-            ->hasAll(['clients', 'carriers', 'agents', 'types', 'statuses', 'sources', 'subclasses', 'countries'])
+            ->hasAll(['clients', 'carriers', 'agents', 'types', 'statuses', 'sources', 'currencies', 'subclasses', 'countries'])
         );
 });
 
-test('the create page offers only the configured market countries', function () {
-    $user = User::factory()->withOrganization()->create();
-    $lebanon = Country::query()->firstOrCreate(['iso2' => 'LB'], ['name' => 'Lebanon', 'iso3' => 'LBN']);
-    Country::factory()->create();
+test('the create page offers every country and pre-fills the organization default country', function () {
+    $organization = Organization::factory()->withLebanonAndUsdDefaults()->create();
+    $user = User::factory()->forOrganization($organization)->create();
+    $otherCountry = Country::factory()->create();
 
     $this->actingAs($user)
         ->get(route('policies.fire.create'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->has('countries', 1)
-            ->where('countries.0.id', $lebanon->id)
+            ->has('countries', Country::query()->count())
+            ->where('countries', fn ($countries) => collect($countries)->pluck('id')->contains($otherCountry->id))
+            ->where('defaultCountryId', $organization->default_country_id)
         );
 });
 
-test('no country is offered when no market is configured', function () {
-    config(['markets.countries' => []]);
+test('the create page passes a null default country when the organization has none', function () {
     $user = User::factory()->withOrganization()->create();
-    Country::query()->firstOrCreate(['iso2' => 'LB'], ['name' => 'Lebanon', 'iso3' => 'LBN']);
 
     $this->actingAs($user)
         ->get(route('policies.fire.create'))
         ->assertOk()
-        ->assertInertia(fn ($page) => $page->has('countries', 0));
+        ->assertInertia(fn ($page) => $page->where('defaultCountryId', null));
 });
 
 test('the create page offers only active clients, carriers and agents', function () {
@@ -77,4 +77,26 @@ test('the create page offers only active clients, carriers and agents', function
             ->has('agents', 1)
             ->where('agents.0.id', $agent->id)
         );
+});
+
+test('the create page pre-selects the organization default currency', function () {
+    $organization = Organization::factory()->withLebanonAndUsdDefaults()->create();
+    $user = User::factory()->forOrganization($organization)->create();
+
+    $this->actingAs($user)
+        ->get(route('policies.fire.create'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('defaultCurrencyId', $organization->default_currency_id)
+            ->where('currencies.0.id', $organization->default_currency_id)
+        );
+});
+
+test('the create page pre-selects no currency when the organization has no default', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('policies.fire.create'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('defaultCurrencyId', null));
 });

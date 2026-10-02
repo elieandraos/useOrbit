@@ -6,6 +6,7 @@ import {
     show as policiesMedicalShow,
     update as policiesMedicalUpdate,
 } from '@/routes/policies/medical';
+import type { PolicyCurrencyOption } from '@/types/policy';
 import type { PolicyMedicalResource } from './partials/policy';
 import PolicyMedicalForm from './partials/PolicyMedicalForm.vue';
 
@@ -29,6 +30,7 @@ const props = defineProps<{
     types: Option[];
     statuses: Option[];
     sources: Option[];
+    currencies: PolicyCurrencyOption[];
     coverageScopes: Option[];
     classTiers: Option[];
     genders: Option[];
@@ -70,6 +72,7 @@ setLayoutProps({
             :types="types"
             :statuses="statuses"
             :sources="sources"
+            :currencies="currencies"
             :coverage-scopes="coverageScopes"
             :class-tiers="classTiers"
             :genders="genders"

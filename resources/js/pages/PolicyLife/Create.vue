@@ -4,6 +4,7 @@ import PageHeader from '@/components/shell/PageHeader.vue';
 import BackToPolicyEntryButton from '@/pages/Policies/partials/BackToPolicyEntryButton.vue';
 import { index as policiesIndex } from '@/routes/policies';
 import { store as policiesLifeStore } from '@/routes/policies/life';
+import type { PolicyCurrencyOption } from '@/types/policy';
 import PolicyLifeForm from './partials/PolicyLifeForm.vue';
 
 interface Option {
@@ -25,6 +26,8 @@ defineProps<{
     types: Option[];
     statuses: Option[];
     sources: Option[];
+    currencies: PolicyCurrencyOption[];
+    defaultCurrencyId: number | null;
 }>();
 
 const query = new URLSearchParams(window.location.search);
@@ -77,6 +80,8 @@ defineOptions({
             :types="types"
             :statuses="statuses"
             :sources="sources"
+            :currencies="currencies"
+            :default-currency-id="defaultCurrencyId"
             :defaults="defaults"
             :route="policiesLifeStore.form()"
             submit-label="Create policy"

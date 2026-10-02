@@ -64,8 +64,9 @@ const phone = ref(props.client?.phone ?? '');
 const email = ref(props.client?.email ?? '');
 const street = ref(props.client?.street ?? '');
 const buildingFloor = ref(props.client?.building_floor ?? '');
+// An edited client keeps its stored country, even none; only a new client gets the organization default.
 const countryId = ref<number | null>(
-    props.client?.country_id ?? props.defaultCountryId ?? null,
+    props.client ? props.client.country_id : (props.defaultCountryId ?? null),
 );
 const stateId = ref<number | null>(props.client?.state_id ?? null);
 const city = ref(props.client?.city ?? '');

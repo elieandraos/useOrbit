@@ -4,7 +4,7 @@ import { computed, ref } from 'vue';
 import { useFileExport } from '@/composables/useFileExport';
 import { exportMethod as policiesExport } from '@/routes/policies';
 import type { Paginated } from '@/types';
-import type { PolicyResource } from '@/types/policy';
+import type { PolicyCurrencyOption, PolicyResource } from '@/types/policy';
 import EmptyState from './partials/EmptyState.vue';
 import FiltersDrawer from './partials/FiltersDrawer.vue';
 import PoliciesIndexHeader from './partials/PoliciesIndexHeader.vue';
@@ -27,6 +27,7 @@ const props = defineProps<{
     classes: Option[];
     sources: Option[];
     carriers: CarrierOption[];
+    currencies: PolicyCurrencyOption[];
     filters: {
         search: string | null;
         status: string | null;
@@ -34,6 +35,7 @@ const props = defineProps<{
         class: string[] | null;
         carrier_id: string | number | null;
         source: string | null;
+        currency_id: string | number | null;
         effective_from: string | null;
         effective_to: string | null;
         amount_min: string | number | null;
@@ -58,7 +60,6 @@ const activeFilterCount = computed(
 );
 
 // Mirrors the currently applied filters so the download matches what's on screen.
-// The index has no sort param, so the export falls back to the same default order.
 const exportUrl = computed(() =>
     policiesExport.url({
         query: Object.fromEntries(
@@ -103,6 +104,7 @@ function exportPolicies(): Promise<void> {
             :classes="classes"
             :sources="sources"
             :carriers="carriers"
+            :currencies="currencies"
             :filters="filters"
         />
     </div>

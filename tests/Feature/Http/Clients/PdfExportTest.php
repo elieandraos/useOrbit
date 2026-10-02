@@ -53,3 +53,14 @@ test('authenticated user gets 404 for a client from another organization', funct
         ->get(route('clients.export-pdf', $client))
         ->assertNotFound();
 });
+
+test('the pdf shows the current name of the organization that owns the client', function () {
+    $user = User::factory()->withOrganization()->create();
+    /** @var Client $client */
+    $client = Client::factory()->forOrganization($user)->create();
+    $user->organization->update(['name' => 'Cedar Brokers']);
+
+    $html = renderedPdfHtml(fn () => $this->actingAs($user)->get(route('clients.export-pdf', $client))->assertOk());
+
+    expect($html)->toContain('Cedar Brokers');
+});

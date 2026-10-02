@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DetailField } from '@/components/ui/detail-field';
+import { formatMoney } from '@/lib/money';
 import type { PolicyLifeResource } from './policy';
 
 defineProps<{
@@ -17,7 +18,12 @@ defineProps<{
             <div class="grid grid-cols-2 gap-x-3.5 gap-y-4">
                 <DetailField
                     label="Sum assured"
-                    :value="policy.details.sum_assured"
+                    :value="
+                        formatMoney(
+                            policy.details.sum_assured,
+                            policy.currency_code,
+                        )
+                    "
                     mono
                 />
                 <DetailField

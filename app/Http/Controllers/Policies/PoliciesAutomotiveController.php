@@ -47,7 +47,7 @@ final class PoliciesAutomotiveController extends Controller
     #[Authorize('view', 'policy')]
     public function show(Policy $policy): Response
     {
-        $policy->load(['client', 'carrier', 'agent', 'automotiveDetails']);
+        $policy->load(['client', 'carrier', 'agent', 'currency', 'automotiveDetails']);
 
         return inertia('PolicyAutomotive/Show', [
             'policy' => PolicyAutomotiveResource::make($policy),
@@ -57,7 +57,7 @@ final class PoliciesAutomotiveController extends Controller
     #[Authorize('update', 'policy')]
     public function edit(Policy $policy): Response
     {
-        $policy->load(['client', 'carrier', 'agent', 'automotiveDetails']);
+        $policy->load(['client', 'carrier', 'agent', 'currency', 'automotiveDetails']);
 
         return inertia('PolicyAutomotive/Edit', [
             'policy' => PolicyAutomotiveResource::make($policy),

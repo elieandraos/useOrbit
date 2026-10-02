@@ -4,6 +4,7 @@ import PageHeader from '@/components/shell/PageHeader.vue';
 import BackToPolicyEntryButton from '@/pages/Policies/partials/BackToPolicyEntryButton.vue';
 import { index as policiesIndex } from '@/routes/policies';
 import { store as policiesExpatStore } from '@/routes/policies/expat';
+import type { PolicyCurrencyOption } from '@/types/policy';
 import PolicyExpatForm from './partials/PolicyExpatForm.vue';
 
 interface Option {
@@ -30,6 +31,8 @@ defineProps<{
     types: Option[];
     statuses: Option[];
     sources: Option[];
+    currencies: PolicyCurrencyOption[];
+    defaultCurrencyId: number | null;
     coverageZones: Option[];
     genders: Option[];
     countries: CountryOption[];
@@ -85,6 +88,8 @@ defineOptions({
             :types="types"
             :statuses="statuses"
             :sources="sources"
+            :currencies="currencies"
+            :default-currency-id="defaultCurrencyId"
             :coverage-zones="coverageZones"
             :genders="genders"
             :countries="countries"

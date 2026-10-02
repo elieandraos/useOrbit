@@ -38,3 +38,14 @@ test('authenticated user gets 404 for a carrier from another organization', func
         ->get(route('carriers.export-pdf', $carrier))
         ->assertNotFound();
 });
+
+test('the pdf shows the current name of the organization that owns the carrier', function () {
+    $user = User::factory()->withOrganization()->create();
+    /** @var Carrier $carrier */
+    $carrier = Carrier::factory()->forOrganization($user)->create();
+    $user->organization->update(['name' => 'Cedar Brokers']);
+
+    $html = renderedPdfHtml(fn () => $this->actingAs($user)->get(route('carriers.export-pdf', $carrier))->assertOk());
+
+    expect($html)->toContain('Cedar Brokers');
+});

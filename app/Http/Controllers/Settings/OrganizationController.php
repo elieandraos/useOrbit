@@ -7,6 +7,10 @@ namespace App\Http\Controllers\Settings;
 use App\Actions\Organizations\UpdateTwoFactorRequirementAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\OrganizationUpdateRequest;
+use App\Http\Resources\CountryResource;
+use App\Http\Resources\CurrencyResource;
+use App\Models\Country;
+use App\Models\Currency;
 use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -26,8 +30,15 @@ final class OrganizationController extends Controller
         /** @var User $user */
         $user = $request->user();
 
+        $organization = $user->organization;
+
         return Inertia::render('settings/Organization', [
-            'twoFactorRequired' => $user->organization->two_factor_required,
+            'name' => $organization->name,
+            'defaultCountryId' => $organization->default_country_id,
+            'defaultCurrencyId' => $organization->default_currency_id,
+            'twoFactorRequired' => $organization->two_factor_required,
+            'countries' => CountryResource::collection(Country::query()->orderBy('name')->get()),
+            'currencies' => CurrencyResource::collection(Currency::query()->orderBy('code')->get()),
         ]);
     }
 

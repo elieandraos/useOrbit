@@ -77,6 +77,17 @@ test('recentPolicies lists the client\'s 5 most recent policies, newest effectiv
         );
 });
 
+test('recentPolicies expose the code of each policy currency', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create();
+    Policy::factory()->forOrganization($user)->lbp()->create(['client_id' => $client->id]);
+
+    $this->actingAs($user)
+        ->get(route('clients.show', $client))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('recentPolicies.0.currency_code', 'LBP'));
+});
+
 test('recentPolicies excludes other clients\' and other organizations\' policies', function () {
     $user = User::factory()->withOrganization()->create();
     $client = Client::factory()->forOrganization($user)->create();

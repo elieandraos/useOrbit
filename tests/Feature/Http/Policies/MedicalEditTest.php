@@ -90,7 +90,7 @@ test('the edit page receives the policy and the shared and medical form options'
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('PolicyMedical/Edit')
-            ->hasAll(['policy', 'clients', 'carriers', 'agents', 'types', 'statuses', 'sources', 'subclasses', 'coverageScopes', 'classTiers', 'genders'])
+            ->hasAll(['policy', 'clients', 'carriers', 'agents', 'types', 'statuses', 'sources', 'currencies', 'subclasses', 'coverageScopes', 'classTiers', 'genders'])
         );
 });
 
@@ -125,5 +125,19 @@ test('the edit page offers active parties and the policy\'s own archived parties
             ->has('agents', 2)
             ->where('agents.0.id', $activeAgent->id)
             ->where('agents.1.id', $archivedAgent->id)
+        );
+});
+
+test('the edit page shows the stored currency rather than the organization default', function () {
+    $organization = Organization::factory()->withLebanonAndUsdDefaults()->create();
+    $user = User::factory()->forOrganization($organization)->create();
+    $policy = Policy::factory()->forOrganization($user)->medical()->lbp()->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->get(route('policies.medical.edit', $policy))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('policy.currency_id', $policy->currency_id)
+            ->missing('defaultCurrencyId')
         );
 });

@@ -129,3 +129,39 @@ test('a subclass outside the life list is rejected', function (string $subclass)
         ->patch(route('policies.life.update', $policy), $payload)
         ->assertSessionHasErrors(['subclass']);
 })->with(['Standard', 'Universal life']);
+
+test('update rejects a missing or non-existent currency', function (?int $currencyId) {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->life()->create(['created_by' => $user->id]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->patch(route('policies.life.update', $policy), PolicyPayload::life($client, $carrier, ['currency_id' => $currencyId]))
+        ->assertSessionHasErrors(['currency_id']);
+
+    expect($policy->fresh()->currency_id)->toBe($policy->currency_id);
+})->with(['missing' => [null], 'non-existent' => [999999]]);
+
+test('update accepts the largest sum assured a policy holds', function () {
+    $amount = '9999999999999.99';
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->life()->create(['created_by' => $user->id]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->patch(route('policies.life.update', $policy), PolicyPayload::life($client, $carrier, ['life' => ['sum_assured' => $amount]]))
+        ->assertSessionHasNoErrors();
+});
+
+test('update rejects a sum assured above the largest amount or with more than two decimals', function (string $amount) {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->life()->create(['created_by' => $user->id]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->patch(route('policies.life.update', $policy), PolicyPayload::life($client, $carrier, ['life' => ['sum_assured' => $amount]]))
+        ->assertSessionHasErrors(['life.sum_assured']);
+})->with(['above the maximum' => ['10000000000000.00'], 'three decimals' => ['1000.001']]);

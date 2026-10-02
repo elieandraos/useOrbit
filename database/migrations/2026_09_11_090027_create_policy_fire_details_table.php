@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('city', 100);
             $table->foreignId('state_id')->nullable()->constrained('states')->nullOnDelete();
             $table->foreignId('country_id')->nullable()->constrained()->nullOnDelete();
-            $table->decimal('sum_insured', 12);
+            $table->decimal('sum_insured', 15);
             $table->timestamps();
         });
     }

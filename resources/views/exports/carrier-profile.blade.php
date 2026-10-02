@@ -68,6 +68,8 @@
     </style>
 </head>
 <body>
+    @include('exports.partials.organization-header')
+
     <h1>{{ $carrier->name }}</h1>
     <p class="subtitle">Carrier profile</p>
 

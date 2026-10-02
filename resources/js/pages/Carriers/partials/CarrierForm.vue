@@ -16,6 +16,7 @@ import type { CarrierResource } from './carrier';
 const props = defineProps<{
     countries: { id: number; name: string }[];
     carrier?: CarrierResource;
+    defaultCountryId?: number | null;
     route: RouteFormDefinition<'post'>;
     submitLabel: string;
 }>();
@@ -26,19 +27,14 @@ const name = ref(props.carrier?.name ?? '');
 const phone = ref(props.carrier?.phone ?? '');
 const website = ref(props.carrier?.website ?? '');
 
-const defaultCountryId = computed(
-    () =>
-        props.countries.find((country) => country.name === 'Lebanon')?.id ??
-        null,
-);
-
 const branch = computed(() => props.carrier?.branches?.[0]);
 
 const branchBuildingFloor = ref(branch.value?.building_floor ?? '');
 const branchStreet = ref(branch.value?.street ?? '');
 const branchCity = ref(branch.value?.city ?? '');
+// An edited carrier keeps its branch's stored country, even none; only a new carrier gets the organization default.
 const branchCountryId = ref<number | null>(
-    branch.value?.country_id ?? defaultCountryId.value,
+    branch.value ? branch.value.country_id : (props.defaultCountryId ?? null),
 );
 const branchStateId = ref<number | null>(branch.value?.state_id ?? null);
 

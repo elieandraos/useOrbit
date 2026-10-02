@@ -15,10 +15,12 @@ use App\Filters\PolicyFilter;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Policies\IndexPolicyRequest;
 use App\Http\Resources\CarrierResource;
+use App\Http\Resources\CurrencyResource;
 use App\Http\Resources\PolicyResource;
 use App\Models\Agent;
 use App\Models\Carrier;
 use App\Models\Client;
+use App\Models\Currency;
 use App\Models\Policy;
 use App\Support\Policies\PolicyFormOptions;
 use Illuminate\Http\Request;
@@ -32,10 +34,9 @@ final class PoliciesController extends Controller
     {
         /** @noinspection PhpUndefinedMethodInspection */
         $policies = Policy::query()
-            ->with(['client', 'carrier'])
+            ->with(['client', 'carrier', 'currency'])
             ->filter(new PolicyFilter($request->validated()))
-            ->latest('effective_date')
-            ->orderBy('id')
+            ->inListOrder()
             ->paginate(7)
             ->withQueryString();
 
@@ -46,6 +47,7 @@ final class PoliciesController extends Controller
             'classes' => collect(PolicyClass::all()),
             'sources' => collect(PolicySource::all()),
             'carriers' => CarrierResource::collection(Carrier::query()->orderBy('name')->get()),
+            'currencies' => CurrencyResource::collection(Currency::query()->orderBy('code')->get()),
             'filters' => [
                 'search' => $request->validated('search'),
                 'status' => $request->validated('status'),
@@ -53,6 +55,7 @@ final class PoliciesController extends Controller
                 'class' => $request->validated('class'),
                 'carrier_id' => $request->validated('carrier_id'),
                 'source' => $request->validated('source'),
+                'currency_id' => $request->validated('currency_id'),
                 'effective_from' => $request->validated('effective_from'),
                 'effective_to' => $request->validated('effective_to'),
                 'amount_min' => $request->validated('amount_min'),

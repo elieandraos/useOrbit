@@ -6,6 +6,7 @@ import {
     show as policiesExpatShow,
     update as policiesExpatUpdate,
 } from '@/routes/policies/expat';
+import type { PolicyCurrencyOption } from '@/types/policy';
 import type { PolicyExpatResource } from './partials/policy';
 import PolicyExpatForm from './partials/PolicyExpatForm.vue';
 
@@ -34,6 +35,7 @@ const props = defineProps<{
     types: Option[];
     statuses: Option[];
     sources: Option[];
+    currencies: PolicyCurrencyOption[];
     coverageZones: Option[];
     genders: Option[];
     countries: CountryOption[];
@@ -75,6 +77,7 @@ setLayoutProps({
             :types="types"
             :statuses="statuses"
             :sources="sources"
+            :currencies="currencies"
             :coverage-zones="coverageZones"
             :genders="genders"
             :countries="countries"

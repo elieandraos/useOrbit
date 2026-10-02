@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Database\Seeders;
 
 use App\Models\Country;
+use App\Models\Currency;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -19,6 +20,10 @@ class DatabaseSeeder extends Seeder
     {
         if (Country::query()->doesntExist()) {
             $this->call([CountrySeeder::class, StateSeeder::class]);
+        }
+
+        if (Currency::query()->doesntExist()) {
+            $this->call(CurrencySeeder::class);
         }
 
         if (app()->environment('local')) {

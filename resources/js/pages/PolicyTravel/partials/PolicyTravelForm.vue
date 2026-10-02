@@ -8,10 +8,12 @@ import FormSection from '@/components/ui/form-section/FormSection.vue';
 import Input from '@/components/ui/input/Input.vue';
 import RadioChips from '@/components/ui/radio-chips/RadioChips.vue';
 import Select from '@/components/ui/select/Select.vue';
+import { usePolicyCurrency } from '@/composables/usePolicyCurrency';
 import { policyDateEndYear } from '@/lib/policyDateEndYear';
+import PolicyFinancialsSection from '@/pages/Policies/partials/PolicyFinancialsSection.vue';
 import PolicyPartiesSection from '@/pages/Policies/partials/PolicyPartiesSection.vue';
 import { index as policiesIndex } from '@/routes/policies';
-import type { PolicyParties } from '@/types/policy';
+import type { PolicyCurrencyOption, PolicyParties } from '@/types/policy';
 import type { RouteFormDefinition } from '@/wayfinder';
 
 interface Option {
@@ -33,6 +35,7 @@ interface PolicyTravelFormValues extends PolicyParties {
     expiry_date: string;
     premium_amount: string;
     discount_amount: string | null;
+    currency_id: number;
     status: string;
     source: string;
     details: {
@@ -53,11 +56,19 @@ const props = defineProps<{
     types: Option[];
     statuses: Option[];
     sources: Option[];
+    currencies: PolicyCurrencyOption[];
+    defaultCurrencyId?: number | null;
     policy?: PolicyTravelFormValues;
     defaults?: Record<string, string>;
     route: RouteFormDefinition<'post'>;
     submitLabel: string;
 }>();
+
+const { currencyId, currencyCode } = usePolicyCurrency(
+    () => props.currencies,
+    props.policy?.currency_id,
+    props.defaultCurrencyId,
+);
 
 const policyNumber = ref(props.policy?.policy_number ?? '');
 const subclass = ref(props.policy?.subclass ?? props.subclasses[0] ?? '');
@@ -69,8 +80,6 @@ const type = ref(
 );
 const effectiveDate = ref(props.policy?.effective_date ?? '');
 const expiryDate = ref(props.policy?.expiry_date ?? '');
-const premiumAmount = ref(props.policy?.premium_amount ?? '');
-const discountAmount = ref(props.policy?.discount_amount ?? '');
 const status = ref(
     props.policy?.status ??
         props.defaults?.status ??
@@ -262,43 +271,13 @@ const coverageTier = ref(
             </FormSection>
         </div>
 
-        <FormSection
-            title="Financials"
-            subtitle="Premium and any discount applied."
-        >
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <FormField
-                    label="Premium amount"
-                    for="premium_amount"
-                    required
-                    :error="errors.premium_amount"
-                >
-                    <Input
-                        id="premium_amount"
-                        v-model="premiumAmount"
-                        name="premium_amount"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                    />
-                </FormField>
-                <FormField
-                    label="Discount amount"
-                    for="discount_amount"
-                    optional
-                    :error="errors.discount_amount"
-                >
-                    <Input
-                        id="discount_amount"
-                        v-model="discountAmount"
-                        name="discount_amount"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                    />
-                </FormField>
-            </div>
-        </FormSection>
+        <PolicyFinancialsSection
+            v-model:currency-id="currencyId"
+            :currencies="currencies"
+            :currency-code="currencyCode"
+            :policy="policy"
+            :errors="errors"
+        />
 
         <div class="flex justify-end gap-3">
             <Link :href="policiesIndex().url">

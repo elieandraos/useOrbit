@@ -18,6 +18,7 @@ import DeleteBranchModal from './DeleteBranchModal.vue';
 const props = defineProps<{
     carrier: CarrierResource;
     countries: { id: number; name: string }[];
+    defaultCountryId: number | null;
 }>();
 
 const showBranchModal = ref(false);
@@ -153,6 +154,7 @@ const branches = computed(() => props.carrier.branches);
             v-model:open="showBranchModal"
             :carrier="carrier"
             :countries="countries"
+            :default-country-id="defaultCountryId"
             :branch="branchBeingEdited"
         />
         <DeleteBranchModal v-model="branchToDelete" />

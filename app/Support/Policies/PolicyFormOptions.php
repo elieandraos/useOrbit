@@ -13,22 +13,29 @@ use App\Enums\PolicyType;
 use App\Http\Resources\AgentResource;
 use App\Http\Resources\CarrierResource;
 use App\Http\Resources\ClientResource;
+use App\Http\Resources\CurrencyResource;
 use App\Models\Agent;
 use App\Models\Carrier;
 use App\Models\Client;
+use App\Models\Currency;
+use App\Models\Organization;
 use App\Models\Policy;
+use App\Support\Tenancy\OrganizationContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Collection;
 
-final class PolicyFormOptions
+final readonly class PolicyFormOptions
 {
+    public function __construct(private OrganizationContext $organizationContext) {}
+
     /**
      * The select-option props shared by every policy create and edit page.
      *
      * Only active parties are offered, except that an edited policy keeps its currently assigned
-     * client, carrier and agent among the options even after they have been archived.
+     * client, carrier and agent among the options even after they have been archived. A new policy
+     * also gets the organization's default currency to pre-select; an edited policy keeps its own.
      *
      * @return array{
      *     clients: AnonymousResourceCollection,
@@ -37,6 +44,8 @@ final class PolicyFormOptions
      *     types: Collection<int, array{label: string, value: string}>,
      *     statuses: Collection<int, array{label: string, value: string}>,
      *     sources: Collection<int, array{label: string, value: string}>,
+     *     currencies: AnonymousResourceCollection,
+     *     defaultCurrencyId?: int|null,
      * }
      */
     public function shared(?Policy $policy = null): array
@@ -48,7 +57,20 @@ final class PolicyFormOptions
             'types' => collect(PolicyType::all()),
             'statuses' => collect(PolicyStatus::all()),
             'sources' => collect(PolicySource::all()),
+            'currencies' => CurrencyResource::collection(Currency::query()->orderBy('code')->get()),
+            ...($policy === null ? ['defaultCurrencyId' => $this->defaultCurrencyId()] : []),
         ];
+    }
+
+    /**
+     * The current organization's default currency, read fresh so a changed default applies to the next new policy.
+     */
+    private function defaultCurrencyId(): ?int
+    {
+        /** @var int|null $currencyId */
+        $currencyId = Organization::query()->whereKey($this->organizationContext->id())->value('default_currency_id');
+
+        return $currencyId;
     }
 
     /**

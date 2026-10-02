@@ -38,3 +38,14 @@ test('authenticated user gets 404 for an agent from another organization', funct
         ->get(route('agents.export-pdf', $agent))
         ->assertNotFound();
 });
+
+test('the pdf shows the current name of the organization that owns the agent', function () {
+    $user = User::factory()->withOrganization()->create();
+    /** @var Agent $agent */
+    $agent = Agent::factory()->forOrganization($user)->create();
+    $user->organization->update(['name' => 'Cedar Brokers']);
+
+    $html = renderedPdfHtml(fn () => $this->actingAs($user)->get(route('agents.export-pdf', $agent))->assertOk());
+
+    expect($html)->toContain('Cedar Brokers');
+});

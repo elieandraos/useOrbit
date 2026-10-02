@@ -12,7 +12,7 @@ final class ExportCarrierToPdfAction
 {
     public function handle(Carrier $carrier): Response
     {
-        return Pdf::loadView('exports.carrier-profile', ['carrier' => $carrier])
+        return Pdf::loadView('exports.carrier-profile', ['carrier' => $carrier, 'organization' => $carrier->organization])
             ->download("$carrier->slug.pdf");
     }
 }

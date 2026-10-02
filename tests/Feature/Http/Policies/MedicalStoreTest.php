@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\Agent;
 use App\Models\Carrier;
 use App\Models\Client;
+use App\Models\Currency;
 use App\Models\Organization;
 use App\Models\Policy;
 use App\Models\User;
@@ -350,3 +351,61 @@ test('a covered member born in the future is rejected', function () {
         ->post(route('policies.medical.store'), PolicyPayload::medicalGroup($client, $carrier, ['insureds' => [PolicyPayload::insured(['date_of_birth' => today()->addDay()->toDateString()])]]))
         ->assertSessionHasErrors(['insureds.0.date_of_birth']);
 });
+
+test('store saves the selected currency', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $currency = Currency::factory()->create();
+
+    $this->actingAs($user)
+        ->post(route('policies.medical.store'), PolicyPayload::medicalSingle($client, $carrier, ['currency_id' => $currency->id]))
+        ->assertSessionHasNoErrors();
+
+    expect(Policy::query()->sole()->currency_id)->toBe($currency->id);
+});
+
+test('store rejects a missing or non-existent currency', function (?int $currencyId) {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->post(route('policies.medical.store'), PolicyPayload::medicalSingle($client, $carrier, ['currency_id' => $currencyId]))
+        ->assertSessionHasErrors(['currency_id']);
+
+    expect(Policy::query()->exists())->toBeFalse();
+})->with(['missing' => [null], 'non-existent' => [999999]]);
+
+test('store accepts the largest premium and discount a policy holds', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->post(route('policies.medical.store'), PolicyPayload::medicalSingle($client, $carrier, [
+            'premium_amount' => '9999999999999.99',
+            'discount_amount' => '9999999999999.99',
+        ]))
+        ->assertSessionHasNoErrors();
+
+    expect(Policy::query()->count())->toBe(1);
+});
+
+test('store rejects a premium or discount above the largest amount or with more than two decimals', function (string $field, string $amount) {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->post(route('policies.medical.store'), PolicyPayload::medicalSingle($client, $carrier, [
+            'premium_amount' => '9999999999999.99',
+            $field => $amount,
+        ]))
+        ->assertSessionHasErrors([$field]);
+})->with([
+    'premium above the maximum' => ['premium_amount', '10000000000000.00'],
+    'premium with three decimals' => ['premium_amount', '1200.001'],
+    'discount above the maximum' => ['discount_amount', '10000000000000.00'],
+    'discount with three decimals' => ['discount_amount', '10.001'],
+]);

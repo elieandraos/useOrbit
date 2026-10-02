@@ -10,6 +10,7 @@ use App\Enums\PolicyType;
 use App\Http\Resources\PolicyResource;
 use App\Models\Carrier;
 use App\Models\Client;
+use App\Models\Currency;
 use App\Models\Organization;
 use App\Models\Policy;
 use App\Models\User;
@@ -31,7 +32,7 @@ test('authenticated user can list their organization policies', function () {
         ->assertHasPaginatedResource(
             'policies',
             PolicyResource::collection(
-                Policy::query()->with(['client', 'carrier'])->latest('effective_date')->orderBy('id')->paginate(7)
+                Policy::query()->with(['client', 'carrier', 'currency'])->latest('effective_date')->orderBy('id')->paginate(7)
             )
         );
 });
@@ -94,6 +95,7 @@ test('the policy list exposes computed and labeled fields', function () {
             ->where('policies.data.0.premium_amount', '1000.00')
             ->where('policies.data.0.discount_amount', '150.00')
             ->where('policies.data.0.net_premium', '850.00')
+            ->where('policies.data.0.currency_code', 'USD')
             ->where('policies.data.0.class_label', 'Automotive')
             ->where('policies.data.0.type_label', 'Group')
             ->where('policies.data.0.status_label', 'Frozen')
@@ -239,7 +241,7 @@ test('non-numeric amount bounds are rejected', function () {
     $user = User::factory()->withOrganization()->create();
 
     $this->actingAs($user)
-        ->get(route('policies.index', ['amount_min' => 'many']))
+        ->get(route('policies.index', ['currency_id' => Currency::factory()->create()->id, 'amount_min' => 'many']))
         ->assertInvalid(['amount_min']);
 });
 
@@ -247,18 +249,20 @@ test('amount_max below amount_min is rejected', function () {
     $user = User::factory()->withOrganization()->create();
 
     $this->actingAs($user)
-        ->get(route('policies.index', ['amount_min' => 500, 'amount_max' => 100]))
+        ->get(route('policies.index', ['currency_id' => Currency::factory()->create()->id, 'amount_min' => 500, 'amount_max' => 100]))
         ->assertInvalid(['amount_max']);
 });
 
 test('the page exposes the filter option lists used by the filters drawer', function () {
     $user = User::factory()->withOrganization()->create();
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id, 'name' => 'Bankers Assurance']);
+    $currency = Currency::factory()->create();
 
     $this->actingAs($user)
         ->get(route('policies.index'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
+            ->where('currencies', fn ($currencies) => collect($currencies)->contains(fn (array $option) => $option === ['id' => $currency->id, 'code' => $currency->code, 'name' => $currency->name]))
             ->has('statuses', 3)
             ->has('types', 2)
             ->has('classes', 6)
@@ -294,6 +298,7 @@ test('the filters prop reflects no applied filters by default', function () {
             ->where('filters.class', null)
             ->where('filters.carrier_id', null)
             ->where('filters.source', null)
+            ->where('filters.currency_id', null)
             ->where('filters.effective_from', null)
             ->where('filters.effective_to', null)
             ->where('filters.amount_min', null)
@@ -304,6 +309,7 @@ test('the filters prop reflects no applied filters by default', function () {
 test('the filters prop mirrors the applied query params', function () {
     $user = User::factory()->withOrganization()->create();
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $currency = Currency::factory()->create();
 
     $this->actingAs($user)
         ->get(route('policies.index', [
@@ -313,6 +319,7 @@ test('the filters prop mirrors the applied query params', function () {
             'class' => [PolicyClass::Fire->value, PolicyClass::Life->value],
             'carrier_id' => $carrier->id,
             'source' => PolicySource::Agent->value,
+            'currency_id' => $currency->id,
             'effective_from' => '2024-01-01',
             'effective_to' => '2024-12-31',
             'amount_min' => 100,
@@ -326,9 +333,70 @@ test('the filters prop mirrors the applied query params', function () {
             ->where('filters.class', [PolicyClass::Fire->value, PolicyClass::Life->value])
             ->where('filters.carrier_id', (string) $carrier->id)
             ->where('filters.source', PolicySource::Agent->value)
+            ->where('filters.currency_id', (string) $currency->id)
             ->where('filters.effective_from', '2024-01-01')
             ->where('filters.effective_to', '2024-12-31')
             ->where('filters.amount_min', '100')
             ->where('filters.amount_max', '5000')
         );
 });
+
+test('amount bounds accept the largest amount a policy holds', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('policies.index', ['currency_id' => Currency::factory()->create()->id, 'amount_min' => '9999999999999.99', 'amount_max' => '9999999999999.99']))
+        ->assertOk();
+});
+
+test('amount bounds above the largest amount or with more than two decimals are rejected', function (string $amount) {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('policies.index', ['currency_id' => Currency::factory()->create()->id, 'amount_min' => $amount, 'amount_max' => $amount]))
+        ->assertInvalid(['amount_min', 'amount_max']);
+})->with(['above the maximum' => ['10000000000000.00'], 'three decimals' => ['1.234']]);
+
+test('policies in every currency are listed when no currency is selected', function () {
+    $user = User::factory()->withOrganization()->create();
+    Policy::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    Policy::factory()->forOrganization($user)->lbp()->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->get(route('policies.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->has('policies.data', 2));
+});
+
+test('a currency_id filter narrows the response to that currency only', function () {
+    $user = User::factory()->withOrganization()->create();
+    Policy::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $lbpPolicy = Policy::factory()->forOrganization($user)->lbp()->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->get(route('policies.index', ['currency_id' => $lbpPolicy->currency_id]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('policies.data', 1)
+            ->where('policies.data.0.id', $lbpPolicy->id)
+        );
+});
+
+test('an amount bound without a currency is rejected', function (string $bound) {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('policies.index', [$bound => 100]))
+        ->assertInvalid([$bound]);
+})->with(['amount_min', 'amount_max']);
+
+test('a currency_id that does not exist or names several currencies is rejected', function (mixed $currencyId) {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('policies.index', ['currency_id' => $currencyId]))
+        ->assertInvalid(['currency_id']);
+})->with([
+    'missing currency' => [999999],
+    'several currencies' => fn () => [Currency::factory()->create()->id, Currency::factory()->create()->id],
+]);

@@ -22,6 +22,8 @@ test('provisions a new organization and its first owner', function () {
     $owner = User::query()->where('email', 'jane.owner@useorbit.com')->sole();
 
     expect($owner->organization_id)->toBe($organization->id)
+        ->and($organization->default_country_id)->toBeNull()
+        ->and($organization->default_currency_id)->toBeNull()
         ->and($owner->role)->toBe(OrganizationRole::Owner)
         ->and($owner->status)->toBe(OrganizationMemberStatus::Invited);
 

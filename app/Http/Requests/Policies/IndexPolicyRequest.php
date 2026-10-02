@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Policies;
 
+use App\Concerns\PolicyAmountValidationRules;
 use App\Enums\PolicyClass;
 use App\Enums\PolicySource;
 use App\Enums\PolicyStatus;
@@ -14,9 +15,15 @@ use Illuminate\Validation\Rules\Enum;
 
 final class IndexPolicyRequest extends FormRequest
 {
+    use PolicyAmountValidationRules;
+
+    /**
+     * Amounts are only comparable within one currency, so the amount bounds require a currency.
+     */
     public function rules(): array
     {
         $organizationId = $this->user()?->organization_id;
+        $hasCurrency = $this->filled('currency_id');
 
         return [
             'search' => ['nullable', 'string', 'max:255'],
@@ -28,22 +35,14 @@ final class IndexPolicyRequest extends FormRequest
             'source' => ['nullable', new Enum(PolicySource::class)],
             'effective_from' => ['nullable', 'date'],
             'effective_to' => ['nullable', 'date', 'after_or_equal:effective_from'],
-            'amount_min' => ['nullable', 'numeric', 'min:0'],
+            'currency_id' => ['nullable', 'integer', Rule::exists('currencies', 'id')],
+            'amount_min' => [Rule::prohibitedIf(! $hasCurrency), 'nullable', ...$this->policyAmountRules()],
             'amount_max' => [
+                Rule::prohibitedIf(! $hasCurrency),
                 'nullable',
-                'numeric',
-                'min:0',
+                ...$this->policyAmountRules(),
                 Rule::when($this->filled('amount_min') && $this->filled('amount_max'), ['gte:amount_min']),
             ],
-            'sort' => ['nullable', 'in:policy_number,client,effective_date,amount,status'],
-            'direction' => ['in:asc,desc'],
         ];
-    }
-
-    protected function prepareForValidation(): void
-    {
-        $this->merge([
-            'direction' => $this->input('direction') ?? ($this->filled('sort') ? 'asc' : 'desc'),
-        ]);
     }
 }

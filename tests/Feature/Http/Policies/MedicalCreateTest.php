@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\Agent;
 use App\Models\Carrier;
 use App\Models\Client;
+use App\Models\Organization;
 use App\Models\User;
 
 test('the create page offers the canonical medical subclasses', function () {
@@ -27,7 +28,7 @@ test('the create page receives the shared and medical form options', function ()
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('PolicyMedical/Create')
-            ->hasAll(['clients', 'carriers', 'agents', 'types', 'statuses', 'sources', 'subclasses', 'coverageScopes', 'classTiers', 'genders'])
+            ->hasAll(['clients', 'carriers', 'agents', 'types', 'statuses', 'sources', 'currencies', 'subclasses', 'coverageScopes', 'classTiers', 'genders'])
         );
 });
 
@@ -51,4 +52,26 @@ test('the create page offers only active clients, carriers and agents', function
             ->has('agents', 1)
             ->where('agents.0.id', $agent->id)
         );
+});
+
+test('the create page pre-selects the organization default currency', function () {
+    $organization = Organization::factory()->withLebanonAndUsdDefaults()->create();
+    $user = User::factory()->forOrganization($organization)->create();
+
+    $this->actingAs($user)
+        ->get(route('policies.medical.create'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('defaultCurrencyId', $organization->default_currency_id)
+            ->where('currencies.0.id', $organization->default_currency_id)
+        );
+});
+
+test('the create page pre-selects no currency when the organization has no default', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('policies.medical.create'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('defaultCurrencyId', null));
 });

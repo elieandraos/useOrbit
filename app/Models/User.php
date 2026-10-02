@@ -37,12 +37,10 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property string|null $invitation_token
  * @property Carbon|null $invitation_expires_at
  * @property Carbon|null $last_login_at
- * @property int|null $country_id
  * @property-read Organization $organization
- * @property-read Country|null $country
  * @property-read User|null $inviter
  */
-#[Fillable(['name', 'email', 'password', 'organization_id', 'role', 'status', 'invited_by', 'joined_at', 'invitation_token', 'invitation_expires_at', 'country_id'])]
+#[Fillable(['name', 'email', 'password', 'organization_id', 'role', 'status', 'invited_by', 'joined_at', 'invitation_token', 'invitation_expires_at'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 final class User extends Authenticatable
 {
@@ -70,11 +68,6 @@ final class User extends Authenticatable
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
-    }
-
-    public function country(): BelongsTo
-    {
-        return $this->belongsTo(Country::class);
     }
 
     public function inviter(): BelongsTo

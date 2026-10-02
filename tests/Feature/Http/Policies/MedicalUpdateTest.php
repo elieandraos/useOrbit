@@ -337,3 +337,16 @@ test('a covered member born in the future is rejected on update', function () {
         ->patch(route('policies.medical.update', $policy), PolicyPayload::medicalGroup($client, $carrier, ['insureds' => [PolicyPayload::insured(['date_of_birth' => today()->addDay()->toDateString()])]]))
         ->assertSessionHasErrors(['insureds.0.date_of_birth']);
 });
+
+test('update rejects a missing or non-existent currency', function (?int $currencyId) {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->medical()->create(['created_by' => $user->id]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->patch(route('policies.medical.update', $policy), PolicyPayload::medicalSingle($client, $carrier, ['currency_id' => $currencyId]))
+        ->assertSessionHasErrors(['currency_id']);
+
+    expect($policy->fresh()->currency_id)->toBe($policy->currency_id);
+})->with(['missing' => [null], 'non-existent' => [999999]]);

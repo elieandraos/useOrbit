@@ -145,16 +145,21 @@ function continueToClass(): void {
                 title="Policy type & class"
                 subtitle="Is this an individual or a group policy, and what does it insure?"
             >
-                <FormField label="Policy type" required>
-                    <RadioChips v-model="selection.type" :options="types" />
-                </FormField>
-                <FormField
-                    label="Insurance class"
-                    required
-                    :error="errors.class"
-                >
-                    <RadioChips v-model="selection.class" :options="classes" />
-                </FormField>
+                <div class="flex flex-wrap gap-x-10 gap-y-6">
+                    <FormField label="Policy type" required>
+                        <RadioChips v-model="selection.type" :options="types" />
+                    </FormField>
+                    <FormField
+                        label="Insurance class"
+                        required
+                        :error="errors.class"
+                    >
+                        <RadioChips
+                            v-model="selection.class"
+                            :options="classes"
+                        />
+                    </FormField>
+                </div>
             </FormSection>
 
             <FormSection

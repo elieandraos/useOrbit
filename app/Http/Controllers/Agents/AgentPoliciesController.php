@@ -17,7 +17,7 @@ final class AgentPoliciesController extends Controller
     public function __invoke(Agent $agent): Response
     {
         $policies = $agent->policies()
-            ->with(['client', 'carrier'])
+            ->with(['client', 'carrier', 'currency'])
             ->latest('effective_date')
             ->orderBy('id')
             ->paginate(7)

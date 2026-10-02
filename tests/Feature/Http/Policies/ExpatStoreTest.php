@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\Carrier;
 use App\Models\Client;
 use App\Models\Country;
+use App\Models\Currency;
 use App\Models\Policy;
 use App\Models\User;
 use Illuminate\Support\Arr;
@@ -174,18 +175,7 @@ test('an expat insured born in the future is rejected', function () {
         ->assertSessionHasErrors(['expat.date_of_birth']);
 });
 
-test('an expat country in the configured markets is accepted', function () {
-    $user = User::factory()->withOrganization()->create();
-    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
-    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
-    $lebanon = Country::query()->firstOrCreate(['iso2' => 'LB'], ['name' => 'Lebanon', 'iso3' => 'LBN']);
-
-    $this->actingAs($user)
-        ->post(route('policies.expat.store'), PolicyPayload::expat($client, $carrier, ['expat' => ['country_id' => $lebanon->id]]))
-        ->assertSessionHasNoErrors();
-});
-
-test('an expat country outside the configured markets is rejected', function () {
+test('any existing expat country is accepted', function () {
     $user = User::factory()->withOrganization()->create();
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
@@ -193,5 +183,40 @@ test('an expat country outside the configured markets is rejected', function () 
 
     $this->actingAs($user)
         ->post(route('policies.expat.store'), PolicyPayload::expat($client, $carrier, ['expat' => ['country_id' => $country->id]]))
+        ->assertSessionHasNoErrors();
+});
+
+test('an expat country that does not exist is rejected', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->post(route('policies.expat.store'), PolicyPayload::expat($client, $carrier, ['expat' => ['country_id' => 999999]]))
         ->assertSessionHasErrors(['expat.country_id']);
 });
+
+test('store saves the selected currency', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $currency = Currency::factory()->create();
+
+    $this->actingAs($user)
+        ->post(route('policies.expat.store'), PolicyPayload::expat($client, $carrier, ['currency_id' => $currency->id]))
+        ->assertSessionHasNoErrors();
+
+    expect(Policy::query()->sole()->currency_id)->toBe($currency->id);
+});
+
+test('store rejects a missing or non-existent currency', function (?int $currencyId) {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->post(route('policies.expat.store'), PolicyPayload::expat($client, $carrier, ['currency_id' => $currencyId]))
+        ->assertSessionHasErrors(['currency_id']);
+
+    expect(Policy::query()->exists())->toBeFalse();
+})->with(['missing' => [null], 'non-existent' => [999999]]);

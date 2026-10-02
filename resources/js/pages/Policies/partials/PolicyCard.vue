@@ -5,6 +5,7 @@ import PolicyClassTile from '@/components/policies/PolicyClassTile.vue';
 import { Avatar } from '@/components/ui/avatar';
 import Badge from '@/components/ui/badge/Badge.vue';
 import { DropMenu, DropMenuItem } from '@/components/ui/drop-menu';
+import { formatMoney } from '@/lib/money';
 import { policyStatusTone } from '@/lib/policyStatusTone';
 import type { PolicyResource } from '@/types/policy';
 
@@ -81,7 +82,7 @@ function goToPolicy() {
                     {{ policy.type_label }}
                 </Badge>
                 <span class="font-mono text-[13px] font-medium text-primary">
-                    {{ policy.net_premium }}
+                    {{ formatMoney(policy.net_premium, policy.currency_code) }}
                 </span>
             </div>
         </div>

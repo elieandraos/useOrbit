@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\Carrier;
 use App\Models\Client;
+use App\Models\Currency;
 use App\Models\Policy;
 use App\Models\User;
 use Illuminate\Support\Arr;
@@ -146,3 +147,49 @@ test('a compulsory policy prohibits a vehicle valuation', function () {
         ->post(route('policies.automotive.store'), $payload)
         ->assertSessionHasErrors(['automotive.valuation_amount', 'automotive.valuation_source']);
 });
+
+test('store saves the selected currency', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $currency = Currency::factory()->create();
+
+    $this->actingAs($user)
+        ->post(route('policies.automotive.store'), PolicyPayload::automotive($client, $carrier, ['currency_id' => $currency->id]))
+        ->assertSessionHasNoErrors();
+
+    expect(Policy::query()->sole()->currency_id)->toBe($currency->id);
+});
+
+test('store rejects a missing or non-existent currency', function (?int $currencyId) {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->post(route('policies.automotive.store'), PolicyPayload::automotive($client, $carrier, ['currency_id' => $currencyId]))
+        ->assertSessionHasErrors(['currency_id']);
+
+    expect(Policy::query()->exists())->toBeFalse();
+})->with(['missing' => [null], 'non-existent' => [999999]]);
+
+test('store accepts the largest valuation amount a policy holds', function () {
+    $amount = '9999999999999.99';
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->post(route('policies.automotive.store'), PolicyPayload::automotiveAllRisk($client, $carrier, ['automotive' => ['valuation_amount' => $amount]]))
+        ->assertSessionHasNoErrors();
+});
+
+test('store rejects a valuation amount above the largest amount or with more than two decimals', function (string $amount) {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->post(route('policies.automotive.store'), PolicyPayload::automotiveAllRisk($client, $carrier, ['automotive' => ['valuation_amount' => $amount]]))
+        ->assertSessionHasErrors(['automotive.valuation_amount']);
+})->with(['above the maximum' => ['10000000000000.00'], 'three decimals' => ['1000.001']]);

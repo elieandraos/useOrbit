@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\Carrier;
+use App\Models\Organization;
 use App\Models\User;
 
 $validPayload = [
@@ -37,6 +38,25 @@ test('create page renders for authenticated user', function () {
         ->get(route('carriers.create'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page->component('Carriers/Create'));
+});
+
+test('create page pre-fills the organization default country for the first branch', function () {
+    $organization = Organization::factory()->withLebanonAndUsdDefaults()->create();
+    $user = User::factory()->forOrganization($organization)->create();
+
+    $this->actingAs($user)
+        ->get(route('carriers.create'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('defaultCountryId', $organization->default_country_id));
+});
+
+test('create page passes a null default country when the organization has none', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('carriers.create'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('defaultCountryId', null));
 });
 
 test('store returns validation errors when required fields are missing', function () {

@@ -75,7 +75,7 @@ final class ClientsController extends Controller
             'leadSources' => collect(LeadSource::all()),
             'emergencyContactRelationships' => collect(EmergencyContactRelationship::all()),
             'clientTypes' => collect(ClientType::all()),
-            'defaultCountryId' => $user->country_id,
+            'defaultCountryId' => $user->organization->default_country_id,
         ]);
     }
 
@@ -104,7 +104,7 @@ final class ClientsController extends Controller
             'policiesCount' => $client->policies()->count(),
             'recentPolicies' => PolicyResource::collection(
                 $client->policies()
-                    ->with('carrier')
+                    ->with(['carrier', 'currency'])
                     ->latest('effective_date')
                     ->orderBy('id')
                     ->limit(5)

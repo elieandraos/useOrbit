@@ -13,13 +13,14 @@ use App\Models\Concerns\Filterable;
 use App\Models\Concerns\HasDocuments;
 use App\Models\Concerns\HasNotes;
 use App\Models\Concerns\HasSlug;
-use App\Models\Concerns\Sortable;
 use App\Models\Contracts\Documentable;
 use App\Models\Contracts\Notable;
 use App\Models\Contracts\NotificationSubject;
 use Carbon\CarbonImmutable;
 use Database\Factories\PolicyFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -39,6 +40,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $client_id
  * @property int $carrier_id
  * @property int|null $agent_id
+ * @property int $currency_id
  * @property CarbonImmutable $effective_date
  * @property CarbonImmutable $expiry_date
  * @property CarbonImmutable|null $bound_at
@@ -51,9 +53,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property CarbonImmutable|null $deleted_at
+ * @property-read Organization $organization
  * @property-read Client $client
  * @property-read Carrier $carrier
  * @property-read Agent|null $agent
+ * @property-read Currency $currency
  * @property-read User $createdBy
  * @property-read User|null $updatedBy
  * @property-read PolicyMedicalDetails|null $medicalDetails
@@ -66,13 +70,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 #[Fillable([
     'organization_id', 'slug', 'policy_number', 'class', 'subclass', 'type', 'client_id', 'carrier_id',
-    'agent_id', 'effective_date', 'expiry_date', 'bound_at', 'premium_amount', 'discount_amount',
+    'agent_id', 'currency_id', 'effective_date', 'expiry_date', 'bound_at', 'premium_amount', 'discount_amount',
     'status', 'source', 'created_by', 'updated_by',
 ])]
 final class Policy extends Model implements Documentable, Notable, NotificationSubject
 {
     /** @use HasFactory<PolicyFactory> */
-    use BelongsToCurrentOrganization, Filterable, HasDocuments, HasFactory, HasNotes, HasSlug, SoftDeletes, Sortable;
+    use BelongsToCurrentOrganization, Filterable, HasDocuments, HasFactory, HasNotes, HasSlug, SoftDeletes;
 
     protected function casts(): array
     {
@@ -102,6 +106,11 @@ final class Policy extends Model implements Documentable, Notable, NotificationS
     public function agent(): BelongsTo
     {
         return $this->belongsTo(Agent::class);
+    }
+
+    public function currency(): BelongsTo
+    {
+        return $this->belongsTo(Currency::class);
     }
 
     public function medicalDetails(): HasOne
@@ -147,6 +156,15 @@ final class Policy extends Model implements Documentable, Notable, NotificationS
     public function updatedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    /**
+     * Order policies the way the list and its export show them: newest effective date first, then by id.
+     */
+    #[Scope]
+    protected function inListOrder(Builder $query): Builder
+    {
+        return $query->latest('effective_date')->orderBy('id');
     }
 
     public function documentableKind(): string

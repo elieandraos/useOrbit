@@ -56,6 +56,8 @@
     </style>
 </head>
 <body>
+    @include('exports.partials.organization-header')
+
     <h1>{{ $agent->first_name }} {{ $agent->last_name }}</h1>
     <p class="subtitle">Agent profile</p>
 

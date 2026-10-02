@@ -10,6 +10,7 @@ use App\Enums\PolicyStatus;
 use App\Enums\PolicyType;
 use App\Models\Carrier;
 use App\Models\Client;
+use App\Models\Currency;
 use App\Models\Organization;
 use App\Models\Policy;
 use App\Models\PolicyAutomotiveDetails;
@@ -53,6 +54,7 @@ class PolicyFactory extends Factory
             'client_id' => Client::factory(),
             'carrier_id' => Carrier::factory(),
             'agent_id' => null,
+            'currency_id' => fn (): int => self::currencyId('USD', 'US Dollar'),
             'effective_date' => $effectiveDate->format('Y-m-d'),
             'expiry_date' => $expiryDate->format('Y-m-d'),
             'bound_at' => $effectiveDate->format('Y-m-d'),
@@ -74,6 +76,16 @@ class PolicyFactory extends Factory
             $policy->policy_number ??= 'POL-'.fake()->unique()->numerify('####');
             $policy->slug ??= Str::slug($policy->policy_number.'-'.fake()->unique()->numerify());
         });
+    }
+
+    /**
+     * A policy written in Lebanese Pounds, reusing the seeded LBP row when present.
+     */
+    public function lbp(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'currency_id' => self::currencyId('LBP', 'Lebanese Pound'),
+        ]);
     }
 
     public function forOrganization(User $user): static
@@ -148,5 +160,13 @@ class PolicyFactory extends Factory
         ])->afterCreating(function (Policy $policy): void {
             PolicyTravelDetails::factory()->for($policy)->create();
         });
+    }
+
+    /**
+     * The id of the currency with the given code, reusing the seeded row when present so no random currency is ever created.
+     */
+    private static function currencyId(string $code, string $name): int
+    {
+        return Currency::query()->firstOrCreate(['code' => $code], ['name' => $name])->id;
     }
 }

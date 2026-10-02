@@ -16,7 +16,7 @@ final class PoliciesMedicalPdfExportController extends Controller
     #[Authorize('view', 'policy')]
     public function __invoke(Policy $policy, ExportPolicyMedicalToPdfAction $action): Response
     {
-        $policy->load(['client', 'carrier', 'agent', 'medicalDetails']);
+        $policy->load(['client', 'carrier', 'agent', 'currency', 'medicalDetails']);
 
         if ($policy->type === PolicyType::Group) {
             $policy->load('insureds');

@@ -6,6 +6,7 @@ import {
     show as policiesTravelShow,
     update as policiesTravelUpdate,
 } from '@/routes/policies/travel';
+import type { PolicyCurrencyOption } from '@/types/policy';
 import type { PolicyTravelResource } from './partials/policy';
 import PolicyTravelForm from './partials/PolicyTravelForm.vue';
 
@@ -30,6 +31,7 @@ const props = defineProps<{
     types: Option[];
     statuses: Option[];
     sources: Option[];
+    currencies: PolicyCurrencyOption[];
 }>();
 
 setLayoutProps({
@@ -69,6 +71,7 @@ setLayoutProps({
             :types="types"
             :statuses="statuses"
             :sources="sources"
+            :currencies="currencies"
             :route="policiesTravelUpdate.form({ policy: policy.slug })"
             submit-label="Save changes"
         />

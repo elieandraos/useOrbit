@@ -17,6 +17,7 @@ use App\Models\Policy;
 use App\Models\User;
 use App\Support\Policies\PolicyFormOptions;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -26,9 +27,15 @@ final class PoliciesFireController extends Controller
     public function __construct(private readonly PolicyFormOptions $policyFormOptions) {}
 
     #[Authorize('create', Policy::class)]
-    public function create(): Response
+    public function create(Request $request): Response
     {
-        return inertia('PolicyFire/Create', $this->formOptions());
+        /** @var User $user */
+        $user = $request->user();
+
+        return inertia('PolicyFire/Create', [
+            ...$this->formOptions(),
+            'defaultCountryId' => $user->organization->default_country_id,
+        ]);
     }
 
     /**
@@ -49,7 +56,7 @@ final class PoliciesFireController extends Controller
     #[Authorize('view', 'policy')]
     public function show(Policy $policy): Response
     {
-        $policy->load(['client', 'carrier', 'agent', 'fireDetails.state', 'fireDetails.country']);
+        $policy->load(['client', 'carrier', 'agent', 'currency', 'fireDetails.state', 'fireDetails.country']);
 
         return inertia('PolicyFire/Show', [
             'policy' => PolicyFireResource::make($policy),
@@ -59,7 +66,7 @@ final class PoliciesFireController extends Controller
     #[Authorize('update', 'policy')]
     public function edit(Policy $policy): Response
     {
-        $policy->load(['client', 'carrier', 'agent', 'fireDetails.state', 'fireDetails.country']);
+        $policy->load(['client', 'carrier', 'agent', 'currency', 'fireDetails.state', 'fireDetails.country']);
 
         return inertia('PolicyFire/Edit', [
             'policy' => PolicyFireResource::make($policy),
@@ -90,7 +97,7 @@ final class PoliciesFireController extends Controller
         return [
             ...$this->policyFormOptions->shared($policy),
             'subclasses' => PolicyClass::Fire->subclasses(),
-            'countries' => CountryResource::collection(Country::query()->inMarkets()->orderBy('name')->get()),
+            'countries' => CountryResource::collection(Country::query()->orderBy('name')->get()),
         ];
     }
 }

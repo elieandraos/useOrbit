@@ -85,3 +85,14 @@ test('clientsCount counts the carrier\'s distinct, non-deleted clients across li
             ->where('policiesCount', 4)
         );
 });
+
+test('the carrier page passes the organization default country for a new branch', function () {
+    $organization = Organization::factory()->withLebanonAndUsdDefaults()->create();
+    $user = User::factory()->forOrganization($organization)->create();
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->get(route('carriers.show', $carrier))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('defaultCountryId', $organization->default_country_id));
+});

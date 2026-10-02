@@ -8,6 +8,7 @@ import QuickStatsCard from './partials/QuickStatsCard.vue';
 defineProps<{
     carrier: CarrierResource;
     countries: { id: number; name: string }[];
+    defaultCountryId: number | null;
     policiesCount: number;
     clientsCount: number;
 }>();
@@ -29,7 +30,11 @@ defineProps<{
 
             <!-- Right column -->
             <div class="flex flex-col gap-4">
-                <BranchesCard :carrier="carrier" :countries="countries" />
+                <BranchesCard
+                    :carrier="carrier"
+                    :countries="countries"
+                    :default-country-id="defaultCountryId"
+                />
             </div>
         </div>
     </CarrierDetailShell>

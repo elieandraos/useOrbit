@@ -6,6 +6,7 @@ import AgentForm from './partials/AgentForm.vue';
 
 defineProps<{
     countries: { id: number; name: string }[];
+    defaultCountryId: number | null;
 }>();
 
 defineOptions({
@@ -35,6 +36,7 @@ defineOptions({
 
         <AgentForm
             :countries="countries"
+            :default-country-id="defaultCountryId"
             :route="agentsStore.form()"
             submit-label="Create agent"
         />

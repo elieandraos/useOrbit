@@ -17,15 +17,10 @@ import type { AgentResource } from './agent';
 const props = defineProps<{
     countries: { id: number; name: string }[];
     agent?: AgentResource;
+    defaultCountryId?: number | null;
     route: RouteFormDefinition<'post'>;
     submitLabel: string;
 }>();
-
-const defaultCountryId = computed(
-    () =>
-        props.countries.find((country) => country.name === 'Lebanon')?.id ??
-        null,
-);
 
 const firstName = ref(props.agent?.first_name ?? '');
 const lastName = ref(props.agent?.last_name ?? '');
@@ -35,8 +30,9 @@ const phone = ref(props.agent?.phone ?? '');
 const email = ref(props.agent?.email ?? '');
 const street = ref(props.agent?.street ?? '');
 const buildingFloor = ref(props.agent?.building_floor ?? '');
+// An edited agent keeps its stored country, even none; only a new agent gets the organization default.
 const countryId = ref<number | null>(
-    props.agent?.country_id ?? defaultCountryId.value,
+    props.agent ? props.agent.country_id : (props.defaultCountryId ?? null),
 );
 const stateId = ref<number | null>(props.agent?.state_id ?? null);
 const city = ref(props.agent?.city ?? '');

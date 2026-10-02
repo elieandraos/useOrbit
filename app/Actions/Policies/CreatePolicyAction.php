@@ -19,7 +19,7 @@ final class CreatePolicyAction
     ) {}
 
     /**
-     * @param  array{policy_number: string, class: string, subclass: string, type: string, client_id: string, carrier_id: string, agent_id?: string|null, effective_date: string, expiry_date: string, premium_amount: string, discount_amount?: string|null, status: string, source: string}  $attributes
+     * @param  array{policy_number: string, class: string, subclass: string, type: string, client_id: string, carrier_id: string, agent_id?: string|null, currency_id: string, effective_date: string, expiry_date: string, premium_amount: string, discount_amount?: string|null, status: string, source: string}  $attributes
      *
      * @throws \Throwable
      */
@@ -41,6 +41,7 @@ final class CreatePolicyAction
                 'client_id' => $attributes['client_id'],
                 'carrier_id' => $attributes['carrier_id'],
                 'agent_id' => $attributes['agent_id'] ?? null,
+                'currency_id' => $attributes['currency_id'],
                 'effective_date' => $attributes['effective_date'],
                 'expiry_date' => $attributes['expiry_date'],
                 'premium_amount' => $attributes['premium_amount'],
