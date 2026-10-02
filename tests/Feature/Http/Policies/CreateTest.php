@@ -118,6 +118,26 @@ test('array class, type, status, and source values are not preselected', functio
         );
 });
 
+test('array client, carrier, and agent ids are not preselected', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $agent = Agent::factory()->forOrganization($user)->create();
+
+    $this->actingAs($user)
+        ->get(route('policies.create', [
+            'client_id' => [$client->id],
+            'carrier_id' => [$carrier->id],
+            'agent_id' => [$agent->id],
+        ]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('selected.client_id', null)
+            ->where('selected.carrier_id', null)
+            ->where('selected.agent_id', null)
+        );
+});
+
 test('the create page receives the shared form options with the policy classes and the selections', function () {
     $user = User::factory()->withOrganization()->create();
 

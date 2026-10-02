@@ -72,13 +72,21 @@ final class PoliciesController extends Controller
             'selected' => [
                 'class' => $this->selectedEnumValue($request, 'class', PolicyClass::class),
                 'type' => $this->selectedEnumValue($request, 'type', PolicyType::class),
-                'client_id' => Client::query()->where('status', ClientStatus::Active)->find($request->integer('client_id'))?->id,
-                'carrier_id' => Carrier::query()->where('status', CarrierStatus::Active)->find($request->integer('carrier_id'))?->id,
-                'agent_id' => Agent::query()->where('status', AgentStatus::Active)->find($request->integer('agent_id'))?->id,
+                'client_id' => Client::query()->where('status', ClientStatus::Active)->find($this->selectedId($request, 'client_id'))?->id,
+                'carrier_id' => Carrier::query()->where('status', CarrierStatus::Active)->find($this->selectedId($request, 'carrier_id'))?->id,
+                'agent_id' => Agent::query()->where('status', AgentStatus::Active)->find($this->selectedId($request, 'agent_id'))?->id,
                 'status' => $this->selectedEnumValue($request, 'status', PolicyStatus::class),
                 'source' => $this->selectedEnumValue($request, 'source', PolicySource::class),
             ],
         ]);
+    }
+
+    /**
+     * Resolve a carried-over query value to an ID, ignoring anything that isn't a single value.
+     */
+    private function selectedId(Request $request, string $key): ?int
+    {
+        return is_string($request->query($key)) ? $request->integer($key) : null;
     }
 
     /**
