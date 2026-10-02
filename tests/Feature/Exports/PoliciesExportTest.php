@@ -12,6 +12,7 @@ use App\Models\Carrier;
 use App\Models\Client;
 use App\Models\Policy;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 test('headings returns the export column labels', function () {
     $export = new PoliciesExport([]);
@@ -25,6 +26,7 @@ test('headings returns the export column labels', function () {
         'Agent',
         'Effective Date',
         'Expiry Date',
+        'Currency',
         'Premium Amount',
         'Discount Amount',
         'Status',
@@ -44,7 +46,7 @@ test('map transforms a policy into an export row', function () {
     $agent = Agent::factory()->forOrganization($user)->create(['created_by' => $user->id, 'first_name' => 'Karim', 'last_name' => 'Aoun']);
 
     /** @var Policy $policy */
-    $policy = Policy::factory()->forOrganization($user)->create([
+    $policy = Policy::factory()->forOrganization($user)->lbp()->create([
         'created_by' => $user->id,
         'policy_number' => 'POL-1000',
         'class' => PolicyClass::Fire,
@@ -54,11 +56,11 @@ test('map transforms a policy into an export row', function () {
         'agent_id' => $agent->id,
         'effective_date' => '2024-01-10',
         'expiry_date' => '2025-01-10',
-        'premium_amount' => 1000,
+        'premium_amount' => '9999999999999.99',
         'discount_amount' => 150,
         'status' => PolicyStatus::Active,
         'source' => PolicySource::Agent,
-    ])->load(['client', 'carrier', 'agent']);
+    ])->load(['client', 'carrier', 'agent', 'currency']);
 
     $export = new PoliciesExport([]);
 
@@ -71,8 +73,9 @@ test('map transforms a policy into an export row', function () {
         'Karim Aoun',
         '2024-01-10',
         '2025-01-10',
-        '1000.00',
-        '150.00',
+        'LBP',
+        9999999999999.99,
+        150.0,
         'Active',
         'Agent',
     ]);
@@ -93,7 +96,7 @@ test('map returns a blank agent when the policy has none', function () {
         'client_id' => $client->id,
         'carrier_id' => $carrier->id,
         'agent_id' => null,
-    ])->load(['client', 'carrier', 'agent']);
+    ])->load(['client', 'carrier', 'agent', 'currency']);
 
     $export = new PoliciesExport([]);
 
@@ -114,4 +117,34 @@ test('query orders policies sharing an effective date the same way the index doe
     $export = new PoliciesExport([]);
 
     expect($export->query()->pluck('id')->all())->toBe([$first->id, $second->id, $older->id]);
+});
+
+test('amount columns are formatted as numbers with two decimals', function () {
+    $export = new PoliciesExport([]);
+
+    expect($export->columnFormats())->toBe([
+        'J' => '#,##0.00',
+        'K' => '#,##0.00',
+    ]);
+});
+
+test('query eager loads each policy currency so mapping rows adds no queries', function () {
+    $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
+    $parties = [
+        'created_by' => $user->id,
+        'client_id' => Client::factory()->forOrganization($user)->create(['created_by' => $user->id])->id,
+        'carrier_id' => Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id])->id,
+    ];
+    Policy::factory(2)->forOrganization($user)->create($parties);
+    Policy::factory()->forOrganization($user)->lbp()->create($parties);
+
+    $export = new PoliciesExport([]);
+    $policies = $export->query()->get();
+
+    DB::enableQueryLog();
+    $currencyCodes = $policies->map(fn (Policy $policy): string => $export->map($policy)[8])->sort()->values()->all();
+
+    expect(DB::getQueryLog())->toBeEmpty()
+        ->and($currencyCodes)->toBe(['LBP', 'USD', 'USD']);
 });
