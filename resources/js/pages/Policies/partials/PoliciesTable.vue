@@ -119,7 +119,7 @@ function goToPolicy(policy: PolicyResource) {
                             <th
                                 class="px-4 py-2.5 text-left font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase"
                             >
-                                Effective → Expiry
+                                Effective Date
                             </th>
                             <th
                                 class="px-4 py-2.5 text-right font-mono text-[11px] font-normal tracking-wider text-tertiary uppercase"
@@ -157,7 +157,6 @@ function goToPolicy(policy: PolicyResource) {
                                         <div
                                             class="mt-0.5 truncate font-mono text-[11.5px] text-tertiary"
                                         >
-                                            {{ policy.subclass }} ·
                                             {{ policy.carrier.name }}
                                         </div>
                                     </div>
@@ -192,13 +191,10 @@ function goToPolicy(policy: PolicyResource) {
                                     </span>
                                 </div>
                             </td>
-                            <td class="px-4 py-3 font-mono text-[12.5px]">
-                                <div class="text-secondary">
-                                    {{ policy.effective_date_formatted }}
-                                </div>
-                                <div class="mt-0.5 text-tertiary">
-                                    → {{ policy.expiry_date_formatted }}
-                                </div>
+                            <td
+                                class="px-4 py-3 font-mono text-[12.5px] text-secondary"
+                            >
+                                {{ policy.effective_date_formatted }}
                             </td>
                             <td class="px-4 py-3 text-right">
                                 <div
