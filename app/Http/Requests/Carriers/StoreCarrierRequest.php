@@ -29,4 +29,25 @@ final class StoreCarrierRequest extends FormRequest
             'contact.phone' => ['nullable', 'string', 'max:30'],
         ];
     }
+
+    /**
+     * Get the readable names of the nested branch and contact fields, as the Carrier form labels them.
+     *
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'branch.street' => 'branch street',
+            'branch.building_floor' => 'branch building / floor',
+            'branch.city' => 'branch city',
+            'branch.country_id' => 'branch country',
+            'branch.state_id' => 'branch state',
+
+            'contact.name' => 'contact name',
+            'contact.role' => 'contact title / role',
+            'contact.email' => 'contact email',
+            'contact.phone' => 'contact phone',
+        ];
+    }
 }

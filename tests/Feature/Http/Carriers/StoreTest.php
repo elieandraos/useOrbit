@@ -99,7 +99,7 @@ test('store fails when branch.city is missing', function () use ($validPayload) 
             ...$validPayload,
             'branch' => collect($validPayload['branch'])->except('city')->all(),
         ])
-        ->assertSessionHasErrors(['branch.city']);
+        ->assertSessionHasErrors(['branch.city' => 'The branch city field is required.']);
 });
 
 test('store fails when contact.name is missing', function () use ($validPayload) {
@@ -110,5 +110,5 @@ test('store fails when contact.name is missing', function () use ($validPayload)
             ...$validPayload,
             'contact' => collect($validPayload['contact'])->except('name')->all(),
         ])
-        ->assertSessionHasErrors(['contact.name']);
+        ->assertSessionHasErrors(['contact.name' => 'The contact name field is required.']);
 });
