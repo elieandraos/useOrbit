@@ -12,7 +12,7 @@ final class ExportAgentToPdfAction
 {
     public function handle(Agent $agent): Response
     {
-        return Pdf::loadView('exports.agent-profile', ['agent' => $agent])
+        return Pdf::loadView('exports.agent-profile', ['agent' => $agent, 'organization' => $agent->organization])
             ->download("$agent->slug.pdf");
     }
 }

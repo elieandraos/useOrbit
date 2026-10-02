@@ -12,7 +12,7 @@ final class ExportClientToPdfAction
 {
     public function handle(Client $client): Response
     {
-        return Pdf::loadView('exports.client-profile', ['client' => $client])
+        return Pdf::loadView('exports.client-profile', ['client' => $client, 'organization' => $client->organization])
             ->download("$client->slug.pdf");
     }
 }

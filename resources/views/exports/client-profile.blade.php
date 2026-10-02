@@ -60,6 +60,8 @@
     </style>
 </head>
 <body>
+    @include('exports.partials.organization-header')
+
     <h1>{{ $client->client_type->value === 'company' ? $client->company_name : "$client->first_name $client->last_name" }}</h1>
     <p class="subtitle">Client profile</p>
 

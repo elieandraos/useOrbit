@@ -53,6 +53,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property CarbonImmutable|null $deleted_at
+ * @property-read Organization $organization
  * @property-read Client $client
  * @property-read Carrier $carrier
  * @property-read Agent|null $agent

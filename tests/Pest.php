@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\User;
 use App\Notifications\DocumentsUploadBatchProcessedNotification;
 use App\Support\Tenancy\OrganizationContext;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Str;
@@ -73,4 +74,23 @@ function createNotificationFor(User $user, bool $read = false): DatabaseNotifica
         'data' => ['summary' => 'Test notification.'],
         'read_at' => $read ? now() : null,
     ]);
+}
+
+/**
+ * Send a PDF export request and return the HTML its view rendered, since the PDF itself is compressed.
+ */
+function renderedPdfHtml(Closure $sendRequest): string
+{
+    $html = '';
+    $pdf = app('dompdf.wrapper');
+
+    Pdf::shouldReceive('loadView')->once()->andReturnUsing(function (string $view, array $data) use (&$html, $pdf) {
+        $html = view($view, $data)->render();
+
+        return $pdf->loadHTML($html);
+    });
+
+    $sendRequest();
+
+    return $html;
 }

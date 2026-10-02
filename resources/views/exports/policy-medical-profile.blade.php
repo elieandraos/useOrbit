@@ -72,6 +72,8 @@
     </style>
 </head>
 <body>
+    @include('exports.partials.organization-header')
+
     <h1>{{ $policy->policy_number }}</h1>
     <p class="subtitle">{{ $policy->class->label() }} policy profile</p>
 

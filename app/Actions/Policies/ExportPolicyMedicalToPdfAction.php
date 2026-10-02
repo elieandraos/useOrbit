@@ -12,7 +12,7 @@ final class ExportPolicyMedicalToPdfAction
 {
     public function handle(Policy $policy): Response
     {
-        return Pdf::loadView('exports.policy-medical-profile', ['policy' => $policy])
+        return Pdf::loadView('exports.policy-medical-profile', ['policy' => $policy, 'organization' => $policy->organization])
             ->download("$policy->slug.pdf");
     }
 }

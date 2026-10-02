@@ -68,7 +68,23 @@ test('the pdf shows every amount with the policy currency code and two decimals'
     ]);
     $policy->lifeDetails->update(['sum_assured' => '9999999999999.99']);
 
-    $html = view('exports.policy-life-profile', ['policy' => $policy])->render();
+    $html = view('exports.policy-life-profile', ['policy' => $policy, 'organization' => $user->organization])->render();
 
     expect($html)->toContain('LBP 150,000.00', 'LBP 2,500.00', 'LBP 9,999,999,999,999.99');
+});
+
+test('the pdf shows the current name of the organization that owns the policy', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $policy = Policy::factory()->forOrganization($user)->life()->create([
+        'created_by' => $user->id,
+        'client_id' => $client->id,
+        'carrier_id' => $carrier->id,
+    ]);
+    $user->organization->update(['name' => 'Cedar Brokers']);
+
+    $html = renderedPdfHtml(fn () => $this->actingAs($user)->get(route('policies.life.export-pdf', $policy))->assertOk());
+
+    expect($html)->toContain('Cedar Brokers');
 });
