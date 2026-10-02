@@ -167,7 +167,18 @@ test('a subclass outside the fire list is rejected', function (string $subclass)
         ->assertSessionHasErrors(['subclass']);
 })->with(['Standard', 'All Risk']);
 
-test('a fire country outside the configured markets is rejected', function () {
+test('a fire country that does not exist is rejected', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $state = State::factory()->create();
+
+    $this->actingAs($user)
+        ->post(route('policies.fire.store'), PolicyPayload::fire($client, $carrier, $state, ['fire' => ['country_id' => 999999]]))
+        ->assertSessionHasErrors(['fire.country_id']);
+});
+
+test('a fire policy can be written in any existing country', function () {
     $user = User::factory()->withOrganization()->create();
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
     $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
@@ -175,19 +186,9 @@ test('a fire country outside the configured markets is rejected', function () {
 
     $this->actingAs($user)
         ->post(route('policies.fire.store'), PolicyPayload::fire($client, $carrier, $state))
-        ->assertSessionHasErrors(['fire.country_id']);
-});
+        ->assertSessionHasNoErrors();
 
-test('no fire country is accepted when no market is configured', function () {
-    config(['markets.countries' => []]);
-    $user = User::factory()->withOrganization()->create();
-    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
-    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
-    $state = State::factory()->lebanon()->create();
-
-    $this->actingAs($user)
-        ->post(route('policies.fire.store'), PolicyPayload::fire($client, $carrier, $state))
-        ->assertSessionHasErrors(['fire.country_id']);
+    $this->assertDatabaseHas('policy_fire_details', ['country_id' => $state->country_id, 'state_id' => $state->id]);
 });
 
 test('store saves the selected currency', function () {

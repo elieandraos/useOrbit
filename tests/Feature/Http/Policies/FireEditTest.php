@@ -7,6 +7,7 @@ use App\Models\Carrier;
 use App\Models\Client;
 use App\Models\Organization;
 use App\Models\Policy;
+use App\Models\State;
 use App\Models\User;
 
 test('the edit page exposes the policy parties it pre-fills', function () {
@@ -139,5 +140,22 @@ test('the edit page shows the stored currency rather than the organization defau
         ->assertInertia(fn ($page) => $page
             ->where('policy.currency_id', $policy->currency_id)
             ->missing('defaultCurrencyId')
+        );
+});
+
+test('the edit page offers the stored country of any market and never applies the organization default', function () {
+    $organization = Organization::factory()->withLebanonAndUsdDefaults()->create();
+    $user = User::factory()->forOrganization($organization)->create();
+    $policy = Policy::factory()->forOrganization($user)->fire()->create(['created_by' => $user->id]);
+    $state = State::factory()->create();
+    $policy->fireDetails->update(['country_id' => $state->country_id, 'state_id' => $state->id]);
+
+    $this->actingAs($user)
+        ->get(route('policies.fire.edit', $policy))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('policy.details.country_id', $state->country_id)
+            ->where('countries', fn ($countries) => collect($countries)->pluck('id')->contains($state->country_id))
+            ->missing('defaultCountryId')
         );
 });

@@ -33,29 +33,17 @@ test('the create page receives the shared and fire form options', function () {
         );
 });
 
-test('the create page offers only the configured market countries', function () {
+test('the create page offers every country', function () {
     $user = User::factory()->withOrganization()->create();
-    $lebanon = Country::query()->firstOrCreate(['iso2' => 'LB'], ['name' => 'Lebanon', 'iso3' => 'LBN']);
-    Country::factory()->create();
+    $otherCountry = Country::factory()->create();
 
     $this->actingAs($user)
         ->get(route('policies.fire.create'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->has('countries', 1)
-            ->where('countries.0.id', $lebanon->id)
+            ->has('countries', Country::query()->count())
+            ->where('countries', fn ($countries) => collect($countries)->pluck('id')->contains($otherCountry->id))
         );
-});
-
-test('no country is offered when no market is configured', function () {
-    config(['markets.countries' => []]);
-    $user = User::factory()->withOrganization()->create();
-    Country::query()->firstOrCreate(['iso2' => 'LB'], ['name' => 'Lebanon', 'iso3' => 'LBN']);
-
-    $this->actingAs($user)
-        ->get(route('policies.fire.create'))
-        ->assertOk()
-        ->assertInertia(fn ($page) => $page->has('countries', 0));
 });
 
 test('the create page offers only active clients, carriers and agents', function () {

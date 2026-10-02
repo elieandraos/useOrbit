@@ -139,7 +139,7 @@ test('a subclass outside the fire list is rejected', function (string $subclass)
         ->assertSessionHasErrors(['subclass']);
 })->with(['Standard', 'All Risk']);
 
-test('a fire country outside the configured markets is rejected on update', function () {
+test('a fire country that does not exist is rejected on update', function () {
     $user = User::factory()->withOrganization()->create();
     $policy = Policy::factory()->forOrganization($user)->fire()->create(['created_by' => $user->id]);
     $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
@@ -147,7 +147,7 @@ test('a fire country outside the configured markets is rejected on update', func
     $state = State::factory()->create();
 
     $this->actingAs($user)
-        ->patch(route('policies.fire.update', $policy), PolicyPayload::fire($client, $carrier, $state))
+        ->patch(route('policies.fire.update', $policy), PolicyPayload::fire($client, $carrier, $state, ['fire' => ['country_id' => 999999]]))
         ->assertSessionHasErrors(['fire.country_id']);
 });
 

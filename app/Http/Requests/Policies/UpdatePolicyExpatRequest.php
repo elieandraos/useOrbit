@@ -10,7 +10,6 @@ use App\Enums\Gender;
 use App\Enums\PolicyClass;
 use App\Enums\PolicyStatus;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 
 final class UpdatePolicyExpatRequest extends FormRequest
@@ -36,7 +35,7 @@ final class UpdatePolicyExpatRequest extends FormRequest
             'expat.nationality' => ['required', 'string', 'max:100'],
             'expat.date_of_birth' => ['required', 'date', 'before_or_equal:today'],
             'expat.phone' => ['required', 'string', 'max:30'],
-            'expat.country_id' => ['nullable', 'integer', Rule::exists('countries', 'id')->whereIn('iso2', config('markets.countries'))],
+            'expat.country_id' => ['nullable', 'integer', 'exists:countries,id'],
             'expat.visa_expiry_date' => ['nullable', 'date'],
         ];
     }

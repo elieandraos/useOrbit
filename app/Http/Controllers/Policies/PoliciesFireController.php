@@ -90,7 +90,7 @@ final class PoliciesFireController extends Controller
         return [
             ...$this->policyFormOptions->shared($policy),
             'subclasses' => PolicyClass::Fire->subclasses(),
-            'countries' => CountryResource::collection(Country::query()->inMarkets()->orderBy('name')->get()),
+            'countries' => CountryResource::collection(Country::query()->orderBy('name')->get()),
         ];
     }
 }
