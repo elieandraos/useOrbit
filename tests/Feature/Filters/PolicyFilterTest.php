@@ -139,6 +139,17 @@ test('carrierId narrows to the exact matching carrier only', function () {
     expect($policies->pluck('id')->all())->toBe([$match->id]);
 });
 
+test('currencyId narrows to the exact matching currency only', function () {
+    /** @var Policy $match */
+    $match = Policy::factory()->lbp()->create();
+    Policy::factory()->create();
+
+    /** @noinspection PhpUndefinedMethodInspection */
+    $policies = Policy::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new PolicyFilter(['currency_id' => $match->currency_id]))->get();
+
+    expect($policies->pluck('id')->all())->toBe([$match->id]);
+});
+
 test('source narrows to the exact matching source only', function () {
     /** @var Policy $match */
     $match = Policy::factory()->create(['source' => PolicySource::Agent]);

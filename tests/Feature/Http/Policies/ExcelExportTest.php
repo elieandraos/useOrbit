@@ -109,3 +109,30 @@ test('an invalid status is rejected', function () {
         ->get(route('policies.export', ['status' => 'unknown']))
         ->assertInvalid(['status']);
 });
+
+test('a currency_id filter narrows the exported rows to that currency only', function () {
+    Excel::fake();
+
+    $user = User::factory()->withOrganization()->create();
+    Policy::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    /** @var Policy $lbpPolicy */
+    $lbpPolicy = Policy::factory()->forOrganization($user)->lbp()->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->get(route('policies.export', ['currency_id' => $lbpPolicy->currency_id]))
+        ->assertOk();
+
+    Excel::assertDownloaded('policies.xlsx', function (PoliciesExport $export) use ($lbpPolicy) {
+        return $export->query()->pluck('id')->all() === [$lbpPolicy->id];
+    });
+});
+
+test('an amount bound without a currency is rejected', function (string $bound) {
+    Excel::fake();
+
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('policies.export', [$bound => 100]))
+        ->assertInvalid([$bound]);
+})->with(['amount_min', 'amount_max']);

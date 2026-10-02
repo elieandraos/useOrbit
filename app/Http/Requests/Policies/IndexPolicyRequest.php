@@ -17,9 +17,13 @@ final class IndexPolicyRequest extends FormRequest
 {
     use PolicyAmountValidationRules;
 
+    /**
+     * Amounts are only comparable within one currency, so the amount bounds require a currency.
+     */
     public function rules(): array
     {
         $organizationId = $this->user()?->organization_id;
+        $hasCurrency = $this->filled('currency_id');
 
         return [
             'search' => ['nullable', 'string', 'max:255'],
@@ -31,8 +35,10 @@ final class IndexPolicyRequest extends FormRequest
             'source' => ['nullable', new Enum(PolicySource::class)],
             'effective_from' => ['nullable', 'date'],
             'effective_to' => ['nullable', 'date', 'after_or_equal:effective_from'],
-            'amount_min' => ['nullable', ...$this->policyAmountRules()],
+            'currency_id' => ['nullable', 'integer', Rule::exists('currencies', 'id')],
+            'amount_min' => [Rule::prohibitedIf(! $hasCurrency), 'nullable', ...$this->policyAmountRules()],
             'amount_max' => [
+                Rule::prohibitedIf(! $hasCurrency),
                 'nullable',
                 ...$this->policyAmountRules(),
                 Rule::when($this->filled('amount_min') && $this->filled('amount_max'), ['gte:amount_min']),

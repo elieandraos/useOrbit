@@ -56,6 +56,12 @@ final class PolicyFilter extends QueryFilter
     }
 
     /** @noinspection PhpUnused */
+    public function currencyId(int|string $value): Builder
+    {
+        return $this->builder->where('currency_id', $value);
+    }
+
+    /** @noinspection PhpUnused */
     public function source(string $value): Builder
     {
         return $this->builder->where('source', $value);
