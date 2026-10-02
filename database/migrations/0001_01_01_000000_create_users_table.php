@@ -29,7 +29,6 @@ return new class extends Migration
             $table->string('invitation_token')->nullable()->unique();
             $table->timestamp('invitation_expires_at')->nullable();
             $table->timestamp('last_login_at')->nullable();
-            $table->foreignId('country_id')->nullable()->constrained()->nullOnDelete();
             $table->rememberToken();
             $table->timestamps();
         });

@@ -37,7 +37,6 @@ final class UserSeeder extends Seeder
             'role' => OrganizationRole::Owner,
             'status' => OrganizationMemberStatus::Active,
             'joined_at' => now(),
-            'country_id' => $country->id,
         ]);
     }
 }
