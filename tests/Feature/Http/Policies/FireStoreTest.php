@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\Carrier;
 use App\Models\Client;
+use App\Models\Currency;
 use App\Models\Policy;
 use App\Models\State;
 use App\Models\User;
@@ -188,6 +189,33 @@ test('no fire country is accepted when no market is configured', function () {
         ->post(route('policies.fire.store'), PolicyPayload::fire($client, $carrier, $state))
         ->assertSessionHasErrors(['fire.country_id']);
 });
+
+test('store saves the selected currency', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $state = State::factory()->lebanon()->create();
+    $currency = Currency::factory()->create();
+
+    $this->actingAs($user)
+        ->post(route('policies.fire.store'), PolicyPayload::fire($client, $carrier, $state, ['currency_id' => $currency->id]))
+        ->assertSessionHasNoErrors();
+
+    expect(Policy::query()->sole()->currency_id)->toBe($currency->id);
+});
+
+test('store rejects a missing or non-existent currency', function (?int $currencyId) {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $state = State::factory()->lebanon()->create();
+
+    $this->actingAs($user)
+        ->post(route('policies.fire.store'), PolicyPayload::fire($client, $carrier, $state, ['currency_id' => $currencyId]))
+        ->assertSessionHasErrors(['currency_id']);
+
+    expect(Policy::query()->exists())->toBeFalse();
+})->with(['missing' => [null], 'non-existent' => [999999]]);
 
 test('store accepts the largest sum insured a policy holds', function () {
     $amount = '9999999999999.99';

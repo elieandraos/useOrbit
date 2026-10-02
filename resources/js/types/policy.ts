@@ -25,6 +25,7 @@ export interface PolicyResource {
         slug: string;
         full_name: string;
     } | null;
+    currency_id: number;
     effective_date: string;
     effective_date_formatted: string;
     expiry_date: string;
@@ -36,6 +37,12 @@ export interface PolicyResource {
     status_label: string;
     source: string;
     source_label: string;
+}
+
+export interface PolicyCurrencyOption {
+    id: number;
+    code: string;
+    name: string;
 }
 
 export interface PolicyPartyOption {

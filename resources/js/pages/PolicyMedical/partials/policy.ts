@@ -59,6 +59,7 @@ export interface PolicyMedicalResource {
     expiry_date_formatted: string;
     premium_amount: string;
     discount_amount: string;
+    currency_id: number;
     net_premium: string;
     status: string;
     status_label: string;

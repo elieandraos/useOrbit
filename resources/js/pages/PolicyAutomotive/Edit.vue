@@ -6,6 +6,7 @@ import {
     show as policiesAutomotiveShow,
     update as policiesAutomotiveUpdate,
 } from '@/routes/policies/automotive';
+import type { PolicyCurrencyOption } from '@/types/policy';
 import type { PolicyAutomotiveResource } from './partials/policy';
 import PolicyAutomotiveForm from './partials/PolicyAutomotiveForm.vue';
 
@@ -29,6 +30,7 @@ const props = defineProps<{
     types: Option[];
     statuses: Option[];
     sources: Option[];
+    currencies: PolicyCurrencyOption[];
 }>();
 
 setLayoutProps({
@@ -67,6 +69,7 @@ setLayoutProps({
             :types="types"
             :statuses="statuses"
             :sources="sources"
+            :currencies="currencies"
             :route="policiesAutomotiveUpdate.form({ policy: policy.slug })"
             submit-label="Save changes"
         />

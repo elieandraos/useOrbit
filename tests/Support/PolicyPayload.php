@@ -6,12 +6,14 @@ namespace Tests\Support;
 
 use App\Models\Carrier;
 use App\Models\Client;
+use App\Models\Currency;
 use App\Models\State;
 
 /**
  * Builds policy request payloads for the HTTP and action tests: the base policy fields plus one class slice.
  *
  * Overrides merge into nested class slices key by key, while a list (such as `insureds`) replaces the default list outright.
+ * The currency defaults to US Dollars, reusing the row `PolicyFactory` creates the same way.
  */
 final class PolicyPayload
 {
@@ -29,6 +31,7 @@ final class PolicyPayload
             'client_id' => $client->id,
             'carrier_id' => $carrier->id,
             'agent_id' => null,
+            'currency_id' => Currency::query()->firstOrCreate(['code' => 'USD'], ['name' => 'US Dollar'])->id,
             'effective_date' => '2026-01-01',
             'expiry_date' => '2027-01-01',
             'premium_amount' => '1200.00',

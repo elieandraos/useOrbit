@@ -196,3 +196,16 @@ test('an expat country outside the configured markets is rejected on update', fu
         ->patch(route('policies.expat.update', $policy), PolicyPayload::expat($client, $carrier, ['expat' => ['country_id' => $country->id]]))
         ->assertSessionHasErrors(['expat.country_id']);
 });
+
+test('update rejects a missing or non-existent currency', function (?int $currencyId) {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->expat()->create(['created_by' => $user->id]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->patch(route('policies.expat.update', $policy), PolicyPayload::expat($client, $carrier, ['currency_id' => $currencyId]))
+        ->assertSessionHasErrors(['currency_id']);
+
+    expect($policy->fresh()->currency_id)->toBe($policy->currency_id);
+})->with(['missing' => [null], 'non-existent' => [999999]]);

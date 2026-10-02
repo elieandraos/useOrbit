@@ -6,6 +6,7 @@ use App\Enums\OrganizationRole;
 use App\Models\Country;
 use App\Models\Currency;
 use App\Models\Organization;
+use App\Models\Policy;
 use App\Models\User;
 
 test('owner can view the organization settings page', function () {
@@ -180,3 +181,20 @@ test('updating the organization details rejects invalid input', function (array 
     'non-existent country' => [['default_country_id' => 999999], 'default_country_id'],
     'non-existent currency' => [['default_currency_id' => 999999], 'default_currency_id'],
 ]);
+
+test('changing the default currency leaves existing policies in their own currency', function () {
+    $organization = Organization::factory()->withLebanonAndUsdDefaults()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+    $policy = Policy::factory()->forOrganization($owner)->create(['created_by' => $owner->id]);
+    $otherCurrency = Currency::factory()->create();
+
+    $this->actingAs($owner)
+        ->patch(route('organization.details.update'), [
+            'name' => $organization->name,
+            'default_country_id' => $organization->default_country_id,
+            'default_currency_id' => $otherCurrency->id,
+        ])
+        ->assertSessionHasNoErrors();
+
+    expect($policy->fresh()->currency_id)->toBe($organization->default_currency_id);
+});

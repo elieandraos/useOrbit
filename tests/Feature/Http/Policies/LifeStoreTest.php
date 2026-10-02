@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\Carrier;
 use App\Models\Client;
+use App\Models\Currency;
 use App\Models\Policy;
 use App\Models\User;
 use Illuminate\Support\Arr;
@@ -90,6 +91,31 @@ test('a subclass outside the life list is rejected', function (string $subclass)
         ->post(route('policies.life.store'), $payload)
         ->assertSessionHasErrors(['subclass']);
 })->with(['Standard', 'Universal life']);
+
+test('store saves the selected currency', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $currency = Currency::factory()->create();
+
+    $this->actingAs($user)
+        ->post(route('policies.life.store'), PolicyPayload::life($client, $carrier, ['currency_id' => $currency->id]))
+        ->assertSessionHasNoErrors();
+
+    expect(Policy::query()->sole()->currency_id)->toBe($currency->id);
+});
+
+test('store rejects a missing or non-existent currency', function (?int $currencyId) {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->post(route('policies.life.store'), PolicyPayload::life($client, $carrier, ['currency_id' => $currencyId]))
+        ->assertSessionHasErrors(['currency_id']);
+
+    expect(Policy::query()->exists())->toBeFalse();
+})->with(['missing' => [null], 'non-existent' => [999999]]);
 
 test('store accepts the largest sum assured a policy holds', function () {
     $amount = '9999999999999.99';

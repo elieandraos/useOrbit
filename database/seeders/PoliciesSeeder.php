@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Enums\PolicyClass;
 use App\Enums\PolicyType;
 use App\Models\Agent;
 use App\Models\Carrier;
 use App\Models\Client;
+use App\Models\Currency;
 use App\Models\Organization;
 use App\Models\Policy;
 use App\Models\PolicyInsured;
@@ -47,14 +49,27 @@ final class PoliciesSeeder extends Seeder
             'policy_number' => 'POL-'.Str::upper(Str::random(8)),
         ];
 
+        $usd = Currency::query()->where('code', 'USD')->firstOrFail();
+        $lbp = Currency::query()->where('code', 'LBP')->firstOrFail();
+
         foreach (['medical', 'automotive', 'expat', 'fire', 'life', 'travel'] as $state) {
-            Policy::factory()->count(4)->forOrganization($user)->{$state}()->state($attributes)->create();
+            Policy::factory()->count(3)->forOrganization($user)->{$state}()->state($attributes)
+                ->state(['currency_id' => $usd->id])
+                ->create();
+
+            /** @var Policy $lbpPolicy */
+            $lbpPolicy = Policy::factory()->forOrganization($user)->{$state}()->state($attributes)
+                ->state(['currency_id' => $lbp->id, 'premium_amount' => fn (): float => fake()->randomFloat(2, 20_000_000, 450_000_000)])
+                ->create();
+
+            $this->priceDetailsInLbp($lbpPolicy);
         }
 
         /** @var Policy $groupMedicalPolicy */
         $groupMedicalPolicy = Policy::factory()->forOrganization($user)->medical()->create([
             ...($attributes)(),
             'type' => PolicyType::Group->value,
+            'currency_id' => $usd->id,
         ]);
 
         PolicyInsured::factory()
@@ -67,5 +82,20 @@ final class PoliciesSeeder extends Seeder
                 ['relationship' => 'Child'],
             )
             ->create();
+    }
+
+    /**
+     * Give a Lebanese Pound policy's class-specific amount a believable LBP value; the detail factories price in US Dollars.
+     */
+    private function priceDetailsInLbp(Policy $policy): void
+    {
+        match ($policy->class) {
+            PolicyClass::Fire => $policy->fireDetails?->update(['sum_insured' => fake()->randomFloat(2, 4_000_000_000, 90_000_000_000)]),
+            PolicyClass::Life => $policy->lifeDetails?->update(['sum_assured' => fake()->randomFloat(2, 2_000_000_000, 45_000_000_000)]),
+            PolicyClass::Automotive => $policy->automotiveDetails?->valuation_amount === null
+                ? null
+                : $policy->automotiveDetails->update(['valuation_amount' => fake()->randomFloat(2, 450_000_000, 13_000_000_000)]),
+            default => null,
+        };
     }
 }

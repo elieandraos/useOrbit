@@ -6,6 +6,7 @@ import {
     show as policiesLifeShow,
     update as policiesLifeUpdate,
 } from '@/routes/policies/life';
+import type { PolicyCurrencyOption } from '@/types/policy';
 import type { PolicyLifeResource } from './partials/policy';
 import PolicyLifeForm from './partials/PolicyLifeForm.vue';
 
@@ -29,6 +30,7 @@ const props = defineProps<{
     types: Option[];
     statuses: Option[];
     sources: Option[];
+    currencies: PolicyCurrencyOption[];
 }>();
 
 setLayoutProps({
@@ -67,6 +69,7 @@ setLayoutProps({
             :types="types"
             :statuses="statuses"
             :sources="sources"
+            :currencies="currencies"
             :route="policiesLifeUpdate.form({ policy: policy.slug })"
             submit-label="Save changes"
         />

@@ -157,3 +157,16 @@ test('a coverage tier outside the set is rejected on update', function () {
         ->patch(route('policies.travel.update', $policy), PolicyPayload::travel($client, $carrier, ['travel' => ['coverage_tier' => 'Platinum']]))
         ->assertSessionHasErrors(['travel.coverage_tier']);
 });
+
+test('update rejects a missing or non-existent currency', function (?int $currencyId) {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->travel()->create(['created_by' => $user->id]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->patch(route('policies.travel.update', $policy), PolicyPayload::travel($client, $carrier, ['currency_id' => $currencyId]))
+        ->assertSessionHasErrors(['currency_id']);
+
+    expect($policy->fresh()->currency_id)->toBe($policy->currency_id);
+})->with(['missing' => [null], 'non-existent' => [999999]]);

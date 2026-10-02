@@ -6,6 +6,7 @@ import {
     show as policiesFireShow,
     update as policiesFireUpdate,
 } from '@/routes/policies/fire';
+import type { PolicyCurrencyOption } from '@/types/policy';
 import type { PolicyFireResource } from './partials/policy';
 import PolicyFireForm from './partials/PolicyFireForm.vue';
 
@@ -34,6 +35,7 @@ const props = defineProps<{
     types: Option[];
     statuses: Option[];
     sources: Option[];
+    currencies: PolicyCurrencyOption[];
     countries: CountryOption[];
 }>();
 
@@ -73,6 +75,7 @@ setLayoutProps({
             :types="types"
             :statuses="statuses"
             :sources="sources"
+            :currencies="currencies"
             :countries="countries"
             :route="policiesFireUpdate.form({ policy: policy.slug })"
             submit-label="Save changes"

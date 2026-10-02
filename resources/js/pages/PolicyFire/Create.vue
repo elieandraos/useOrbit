@@ -4,6 +4,7 @@ import PageHeader from '@/components/shell/PageHeader.vue';
 import BackToPolicyEntryButton from '@/pages/Policies/partials/BackToPolicyEntryButton.vue';
 import { index as policiesIndex } from '@/routes/policies';
 import { store as policiesFireStore } from '@/routes/policies/fire';
+import type { PolicyCurrencyOption } from '@/types/policy';
 import PolicyFireForm from './partials/PolicyFireForm.vue';
 
 interface Option {
@@ -30,6 +31,8 @@ defineProps<{
     types: Option[];
     statuses: Option[];
     sources: Option[];
+    currencies: PolicyCurrencyOption[];
+    defaultCurrencyId: number | null;
     countries: CountryOption[];
 }>();
 
@@ -83,6 +86,8 @@ defineOptions({
             :types="types"
             :statuses="statuses"
             :sources="sources"
+            :currencies="currencies"
+            :default-currency-id="defaultCurrencyId"
             :countries="countries"
             :defaults="defaults"
             :route="policiesFireStore.form()"

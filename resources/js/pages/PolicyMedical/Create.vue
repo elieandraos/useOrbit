@@ -4,6 +4,7 @@ import PageHeader from '@/components/shell/PageHeader.vue';
 import BackToPolicyEntryButton from '@/pages/Policies/partials/BackToPolicyEntryButton.vue';
 import { index as policiesIndex } from '@/routes/policies';
 import { store as policiesMedicalStore } from '@/routes/policies/medical';
+import type { PolicyCurrencyOption } from '@/types/policy';
 import PolicyMedicalForm from './partials/PolicyMedicalForm.vue';
 
 interface Option {
@@ -25,6 +26,8 @@ defineProps<{
     types: Option[];
     statuses: Option[];
     sources: Option[];
+    currencies: PolicyCurrencyOption[];
+    defaultCurrencyId: number | null;
     coverageScopes: Option[];
     classTiers: Option[];
     genders: Option[];
@@ -80,6 +83,8 @@ defineOptions({
             :types="types"
             :statuses="statuses"
             :sources="sources"
+            :currencies="currencies"
+            :default-currency-id="defaultCurrencyId"
             :coverage-scopes="coverageScopes"
             :class-tiers="classTiers"
             :genders="genders"

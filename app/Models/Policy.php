@@ -39,6 +39,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $client_id
  * @property int $carrier_id
  * @property int|null $agent_id
+ * @property int $currency_id
  * @property CarbonImmutable $effective_date
  * @property CarbonImmutable $expiry_date
  * @property CarbonImmutable|null $bound_at
@@ -66,7 +67,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 #[Fillable([
     'organization_id', 'slug', 'policy_number', 'class', 'subclass', 'type', 'client_id', 'carrier_id',
-    'agent_id', 'effective_date', 'expiry_date', 'bound_at', 'premium_amount', 'discount_amount',
+    'agent_id', 'currency_id', 'effective_date', 'expiry_date', 'bound_at', 'premium_amount', 'discount_amount',
     'status', 'source', 'created_by', 'updated_by',
 ])]
 final class Policy extends Model implements Documentable, Notable, NotificationSubject

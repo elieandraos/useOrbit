@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\Carrier;
 use App\Models\Client;
+use App\Models\Currency;
 use App\Models\Organization;
 use App\Models\Policy;
 use App\Models\State;
@@ -150,6 +151,20 @@ test('a fire country outside the configured markets is rejected on update', func
         ->assertSessionHasErrors(['fire.country_id']);
 });
 
+test('update rejects a missing or non-existent currency', function (?int $currencyId) {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->fire()->create(['created_by' => $user->id]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $state = State::factory()->lebanon()->create();
+
+    $this->actingAs($user)
+        ->patch(route('policies.fire.update', $policy), PolicyPayload::fire($client, $carrier, $state, ['currency_id' => $currencyId]))
+        ->assertSessionHasErrors(['currency_id']);
+
+    expect($policy->fresh()->currency_id)->toBe($policy->currency_id);
+})->with(['missing' => [null], 'non-existent' => [999999]]);
+
 test('update accepts the largest sum insured a policy holds', function () {
     $amount = '9999999999999.99';
     $user = User::factory()->withOrganization()->create();
@@ -174,3 +189,28 @@ test('update rejects a sum insured above the largest amount or with more than tw
         ->patch(route('policies.fire.update', $policy), PolicyPayload::fire($client, $carrier, $state, ['fire' => ['sum_insured' => $amount]]))
         ->assertSessionHasErrors(['fire.sum_insured']);
 })->with(['above the maximum' => ['10000000000000.00'], 'three decimals' => ['1000.001']]);
+
+test('changing the currency stores every amount exactly as submitted, without conversion', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->fire()->create(['created_by' => $user->id, 'premium_amount' => '600.00']);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $state = State::factory()->lebanon()->create();
+    $lbp = Currency::factory()->create();
+
+    $this->actingAs($user)
+        ->patch(route('policies.fire.update', $policy), PolicyPayload::fire($client, $carrier, $state, [
+            'currency_id' => $lbp->id,
+            'premium_amount' => '600.00',
+            'discount_amount' => '50.00',
+            'fire' => ['sum_insured' => '250000.00'],
+        ]))
+        ->assertSessionHasNoErrors();
+
+    $policy->refresh();
+
+    expect($policy->currency_id)->toBe($lbp->id)
+        ->and($policy->premium_amount)->toBe('600.00')
+        ->and($policy->discount_amount)->toBe('50.00')
+        ->and($policy->fireDetails->sum_insured)->toBe('250000.00');
+});
