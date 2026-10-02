@@ -76,12 +76,12 @@ final class PolicyFilter extends QueryFilter
     /** @noinspection PhpUnused */
     public function amountMin(int|string $value): Builder
     {
-        return $this->builder->whereRaw(self::NET_PREMIUM.' >= CAST(? AS DECIMAL(12, 2))', [$value]);
+        return $this->builder->whereRaw(self::NET_PREMIUM.' >= CAST(? AS DECIMAL(15, 2))', [$value]);
     }
 
     /** @noinspection PhpUnused */
     public function amountMax(int|string $value): Builder
     {
-        return $this->builder->whereRaw(self::NET_PREMIUM.' <= CAST(? AS DECIMAL(12, 2))', [$value]);
+        return $this->builder->whereRaw(self::NET_PREMIUM.' <= CAST(? AS DECIMAL(15, 2))', [$value]);
     }
 }

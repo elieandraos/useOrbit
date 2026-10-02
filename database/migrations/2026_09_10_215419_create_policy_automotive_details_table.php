@@ -22,7 +22,7 @@ return new class extends Migration
             $table->unsignedSmallInteger('year');
             $table->string('vin', 50)->nullable();
             $table->string('color', 30)->nullable();
-            $table->decimal('valuation_amount', 12)->nullable();
+            $table->decimal('valuation_amount', 15)->nullable();
             $table->string('valuation_source', 50)->nullable();
             $table->timestamps();
         });

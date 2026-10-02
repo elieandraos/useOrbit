@@ -188,3 +188,26 @@ test('no fire country is accepted when no market is configured', function () {
         ->post(route('policies.fire.store'), PolicyPayload::fire($client, $carrier, $state))
         ->assertSessionHasErrors(['fire.country_id']);
 });
+
+test('store accepts the largest sum insured a policy holds', function () {
+    $amount = '9999999999999.99';
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $state = State::factory()->lebanon()->create();
+
+    $this->actingAs($user)
+        ->post(route('policies.fire.store'), PolicyPayload::fire($client, $carrier, $state, ['fire' => ['sum_insured' => $amount]]))
+        ->assertSessionHasNoErrors();
+});
+
+test('store rejects a sum insured above the largest amount or with more than two decimals', function (string $amount) {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $state = State::factory()->lebanon()->create();
+
+    $this->actingAs($user)
+        ->post(route('policies.fire.store'), PolicyPayload::fire($client, $carrier, $state, ['fire' => ['sum_insured' => $amount]]))
+        ->assertSessionHasErrors(['fire.sum_insured']);
+})->with(['above the maximum' => ['10000000000000.00'], 'three decimals' => ['1000.001']]);

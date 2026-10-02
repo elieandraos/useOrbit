@@ -24,6 +24,8 @@ use Illuminate\Validation\Rules\Exists;
  */
 trait PolicyValidationRules
 {
+    use PolicyAmountValidationRules;
+
     /**
      * Get the validation rules shared by every policy, whatever its class.
      *
@@ -53,8 +55,8 @@ trait PolicyValidationRules
             'agent_id' => ['nullable', 'integer', $this->assignablePartyRule('agents', $organizationId, AgentStatus::Active->value, $policy?->agent_id)],
             'effective_date' => ['required', 'date'],
             'expiry_date' => ['required', 'date', 'after_or_equal:effective_date'],
-            'premium_amount' => ['required', 'numeric', 'min:0'],
-            'discount_amount' => ['nullable', 'numeric', 'min:0', 'lte:premium_amount'],
+            'premium_amount' => ['required', ...$this->policyAmountRules()],
+            'discount_amount' => ['nullable', ...$this->policyAmountRules(), 'lte:premium_amount'],
             'status' => ['required', new Enum(PolicyStatus::class)],
             'source' => ['required', new Enum(PolicySource::class)],
         ];

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Policies;
 
+use App\Concerns\PolicyAmountValidationRules;
 use App\Enums\PolicyClass;
 use App\Enums\PolicySource;
 use App\Enums\PolicyStatus;
@@ -14,6 +15,8 @@ use Illuminate\Validation\Rules\Enum;
 
 final class IndexPolicyRequest extends FormRequest
 {
+    use PolicyAmountValidationRules;
+
     public function rules(): array
     {
         $organizationId = $this->user()?->organization_id;
@@ -28,11 +31,10 @@ final class IndexPolicyRequest extends FormRequest
             'source' => ['nullable', new Enum(PolicySource::class)],
             'effective_from' => ['nullable', 'date'],
             'effective_to' => ['nullable', 'date', 'after_or_equal:effective_from'],
-            'amount_min' => ['nullable', 'numeric', 'min:0'],
+            'amount_min' => ['nullable', ...$this->policyAmountRules()],
             'amount_max' => [
                 'nullable',
-                'numeric',
-                'min:0',
+                ...$this->policyAmountRules(),
                 Rule::when($this->filled('amount_min') && $this->filled('amount_max'), ['gte:amount_min']),
             ],
             'sort' => ['nullable', 'in:policy_number,client,effective_date,amount,status'],

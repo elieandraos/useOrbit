@@ -27,8 +27,8 @@ return new class extends Migration
             $table->date('effective_date');
             $table->date('expiry_date');
             $table->date('bound_at')->nullable();
-            $table->decimal('premium_amount', 12);
-            $table->decimal('discount_amount', 12)->default(0);
+            $table->decimal('premium_amount', 15);
+            $table->decimal('discount_amount', 15)->default(0);
             $table->string('status', 20)->default('active');
             $table->string('source', 20);
             $table->foreignId('created_by')->constrained('users')->restrictOnDelete();

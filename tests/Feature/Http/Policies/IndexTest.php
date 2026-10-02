@@ -332,3 +332,19 @@ test('the filters prop mirrors the applied query params', function () {
             ->where('filters.amount_max', '5000')
         );
 });
+
+test('amount bounds accept the largest amount a policy holds', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('policies.index', ['amount_min' => '9999999999999.99', 'amount_max' => '9999999999999.99']))
+        ->assertOk();
+});
+
+test('amount bounds above the largest amount or with more than two decimals are rejected', function (string $amount) {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('policies.index', ['amount_min' => $amount, 'amount_max' => $amount]))
+        ->assertInvalid(['amount_min', 'amount_max']);
+})->with(['above the maximum' => ['10000000000000.00'], 'three decimals' => ['1.234']]);

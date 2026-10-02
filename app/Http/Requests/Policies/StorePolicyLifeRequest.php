@@ -29,7 +29,7 @@ final class StorePolicyLifeRequest extends FormRequest
         return [
             ...$this->policyRules(PolicyClass::Life),
 
-            'life.sum_assured' => ['required', 'numeric', 'min:0'],
+            'life.sum_assured' => ['required', ...$this->policyAmountRules()],
             'life.term_years' => ['required', 'integer', 'min:1', 'max:100'],
             'life.smoker' => ['required', 'boolean'],
             'life.beneficiaries' => ['required', 'string'],

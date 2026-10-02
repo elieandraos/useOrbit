@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('policy_life_details', function (Blueprint $table) {
             $table->id();
             $table->foreignId('policy_id')->unique()->constrained()->cascadeOnDelete();
-            $table->decimal('sum_assured', 12);
+            $table->decimal('sum_assured', 15);
             $table->unsignedSmallInteger('term_years');
             $table->boolean('smoker');
             $table->text('beneficiaries');

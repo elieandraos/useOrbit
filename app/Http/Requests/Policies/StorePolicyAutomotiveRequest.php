@@ -31,7 +31,7 @@ final class StorePolicyAutomotiveRequest extends FormRequest
             'automotive.year' => ['required', 'integer', 'min:1900', 'max:'.(now()->year + 1)],
             'automotive.vin' => ['nullable', 'string', 'max:50'],
             'automotive.color' => ['nullable', 'string', 'max:30'],
-            'automotive.valuation_amount' => ['required_if:subclass,All Risk', 'prohibited_unless:subclass,All Risk', 'nullable', 'numeric', 'min:0'],
+            'automotive.valuation_amount' => ['required_if:subclass,All Risk', 'prohibited_unless:subclass,All Risk', 'nullable', ...$this->policyAmountRules()],
             'automotive.valuation_source' => ['required_if:subclass,All Risk', 'prohibited_unless:subclass,All Risk', 'nullable', 'string', 'max:50'],
         ];
     }

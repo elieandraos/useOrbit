@@ -146,3 +146,24 @@ test('a compulsory policy prohibits a vehicle valuation', function () {
         ->post(route('policies.automotive.store'), $payload)
         ->assertSessionHasErrors(['automotive.valuation_amount', 'automotive.valuation_source']);
 });
+
+test('store accepts the largest valuation amount a policy holds', function () {
+    $amount = '9999999999999.99';
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->post(route('policies.automotive.store'), PolicyPayload::automotiveAllRisk($client, $carrier, ['automotive' => ['valuation_amount' => $amount]]))
+        ->assertSessionHasNoErrors();
+});
+
+test('store rejects a valuation amount above the largest amount or with more than two decimals', function (string $amount) {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->post(route('policies.automotive.store'), PolicyPayload::automotiveAllRisk($client, $carrier, ['automotive' => ['valuation_amount' => $amount]]))
+        ->assertSessionHasErrors(['automotive.valuation_amount']);
+})->with(['above the maximum' => ['10000000000000.00'], 'three decimals' => ['1000.001']]);
