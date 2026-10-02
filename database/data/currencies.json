@@ -1,0 +1,13 @@
+[
+    {"code": "USD", "name": "US Dollar"},
+    {"code": "EUR", "name": "Euro"},
+    {"code": "GBP", "name": "Pound Sterling"},
+    {"code": "CHF", "name": "Swiss Franc"},
+    {"code": "CAD", "name": "Canadian Dollar"},
+    {"code": "AUD", "name": "Australian Dollar"},
+    {"code": "AED", "name": "UAE Dirham"},
+    {"code": "SAR", "name": "Saudi Riyal"},
+    {"code": "QAR", "name": "Qatari Rial"},
+    {"code": "EGP", "name": "Egyptian Pound"},
+    {"code": "LBP", "name": "Lebanese Pound"}
+]
