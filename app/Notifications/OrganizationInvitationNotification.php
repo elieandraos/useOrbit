@@ -31,7 +31,11 @@ final class OrganizationInvitationNotification extends Notification implements S
         return ['mail'];
     }
 
-    /** @noinspection PhpUnusedParameterInspection */
+    /**
+     * The header shows the organization's current name, read when the queued notification is sent.
+     *
+     * @noinspection PhpUnusedParameterInspection
+     */
     public function toMail(object $notifiable): MailMessage
     {
         $line = $this->invitedBy === null
@@ -49,6 +53,7 @@ final class OrganizationInvitationNotification extends Notification implements S
             ->subject(__('You\'ve been invited to join :organization', ['organization' => $this->organization->name]))
             ->line($line)
             ->action(__('Accept Invitation'), route('invitations.show', $this->token))
-            ->line(__('This invitation will expire in 7 days.'));
+            ->line(__('This invitation will expire in 7 days.'))
+            ->markdown('mail.organization-invitation', ['organizationName' => $this->organization->name]);
     }
 }
