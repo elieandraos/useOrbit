@@ -13,6 +13,7 @@ use App\Enums\PolicyType;
 use App\Http\Resources\CurrencyResource;
 use App\Models\Agent;
 use App\Models\Carrier;
+use App\Models\CarrierBranch;
 use App\Models\Client;
 use App\Models\Currency;
 use App\Models\Organization;
@@ -20,6 +21,7 @@ use App\Models\Policy;
 use App\Support\Tenancy\OrganizationContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Collection;
 
@@ -30,14 +32,15 @@ final readonly class PolicyFormOptions
     /**
      * The select-option props shared by every policy create and edit page.
      *
-     * Each party option carries only its id and the displayed name its select renders. Only active
+     * Each party option carries only its id and the displayed name its select renders, and each carrier
+     * also lists its branches by id and label for the issuing branch select. Only active
      * parties are offered, except that an edited policy keeps its currently assigned client, carrier
      * and agent among the options even after they have been archived. A new policy also gets the
      * organization's default currency to pre-select; an edited policy keeps its own.
      *
      * @return array{
      *     clients: Collection<int, array{id: int, full_name: string}>,
-     *     carriers: Collection<int, array{id: int, name: string}>,
+     *     carriers: Collection<int, array{id: int, name: string, branches: Collection<int, array{id: int, label: string}>}>,
      *     agents: Collection<int, array{id: int, full_name: string}>,
      *     types: Collection<int, array{label: string, value: string}>,
      *     statuses: Collection<int, array{label: string, value: string}>,
@@ -50,7 +53,11 @@ final readonly class PolicyFormOptions
     {
         return [
             'clients' => $this->clients($policy?->client_id)->map(fn (Client $client): array => ['id' => $client->id, 'full_name' => $client->full_name]),
-            'carriers' => $this->carriers($policy?->carrier_id)->map(fn (Carrier $carrier): array => ['id' => $carrier->id, 'name' => $carrier->name]),
+            'carriers' => $this->carriers($policy?->carrier_id)->map(fn (Carrier $carrier): array => [
+                'id' => $carrier->id,
+                'name' => $carrier->name,
+                'branches' => $carrier->branches->map(fn (CarrierBranch $branch): array => ['id' => $branch->id, 'label' => $branch->label]),
+            ]),
             'agents' => $this->agents($policy?->agent_id)->map(fn (Agent $agent): array => ['id' => $agent->id, 'full_name' => $agent->full_name]),
             'types' => collect(PolicyType::all()),
             'statuses' => collect(PolicyStatus::all()),
@@ -87,13 +94,14 @@ final readonly class PolicyFormOptions
     }
 
     /**
-     * Active carriers, plus the kept one, ordered by name.
+     * Active carriers, plus the kept one, ordered by name, each with its branches ordered by label.
      *
      * @return EloquentCollection<int, Carrier>
      */
     private function carriers(?int $keptCarrierId): EloquentCollection
     {
         return Carrier::query()
+            ->with(['branches' => fn (HasMany $query): HasMany => $query->select(['id', 'carrier_id', 'city', 'street'])->orderBy('city')->orderBy('street')->orderBy('id')])
             ->where(fn (Builder $query): Builder => $this->activeOrKept($query, CarrierStatus::Active->value, $keptCarrierId))
             ->orderBy('name')
             ->orderBy('id')

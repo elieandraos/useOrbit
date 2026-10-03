@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import FormField from '@/components/ui/form-field/FormField.vue';
 import FormSection from '@/components/ui/form-section/FormSection.vue';
 import Select from '@/components/ui/select/Select.vue';
@@ -24,6 +24,19 @@ const carrierId = ref(
         ? `${props.policy.carrier.id}`
         : (props.defaults?.carrier_id ?? ''),
 );
+const carrierBranchId = ref(
+    props.policy ? `${props.policy.carrier_branch?.id ?? ''}` : '',
+);
+const carrierBranches = computed(
+    () =>
+        props.carriers.find((carrier) => `${carrier.id}` === carrierId.value)
+            ?.branches ?? [],
+);
+
+watch(carrierId, () => {
+    carrierBranchId.value = '';
+});
+
 const agentId = ref(
     props.policy
         ? `${props.policy.agent?.id ?? ''}`
@@ -75,6 +88,27 @@ const agentId = ref(
                     :value="`${carrier.id}`"
                 >
                     {{ carrier.name }}
+                </option>
+            </Select>
+        </FormField>
+        <FormField
+            label="Issuing branch"
+            for="carrier_branch_id"
+            optional
+            :error="errors.carrier_branch_id"
+        >
+            <Select
+                id="carrier_branch_id"
+                v-model="carrierBranchId"
+                name="carrier_branch_id"
+            >
+                <option value="">No branch</option>
+                <option
+                    v-for="branch in carrierBranches"
+                    :key="branch.id"
+                    :value="`${branch.id}`"
+                >
+                    {{ branch.label }}
                 </option>
             </Select>
         </FormField>

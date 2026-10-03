@@ -48,7 +48,7 @@ test('the create page offers only active clients, carriers and agents', function
             ->has('clients', 1)
             ->has('clients.0', fn ($option) => $option->where('id', $client->id)->where('full_name', $client->full_name))
             ->has('carriers', 1)
-            ->has('carriers.0', fn ($option) => $option->where('id', $carrier->id)->where('name', $carrier->name))
+            ->has('carriers.0', fn ($option) => $option->where('id', $carrier->id)->where('name', $carrier->name)->has('branches', 0))
             ->has('agents', 1)
             ->has('agents.0', fn ($option) => $option->where('id', $agent->id)->where('full_name', $agent->full_name))
         );

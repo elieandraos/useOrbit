@@ -50,13 +50,19 @@ export interface PolicyCurrencyOption {
     name: string;
 }
 
+export interface PolicyCarrierBranchOption {
+    id: number;
+    label: string;
+}
+
 export interface PolicyPartyOption {
     id: number;
     full_name?: string;
     name?: string;
+    branches?: PolicyCarrierBranchOption[];
 }
 
 export type PolicyParties = Pick<
     PolicyResource,
-    'client' | 'carrier' | 'agent'
+    'client' | 'carrier' | 'carrier_branch' | 'agent'
 >;

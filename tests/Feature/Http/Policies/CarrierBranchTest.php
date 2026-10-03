@@ -115,6 +115,34 @@ test('update keeps the branch of the policy\'s own archived carrier', function (
     expect($policy->fresh()->carrier_branch_id)->toBe($branch->id);
 })->with('policy classes');
 
+test('the edit page offers each carrier\'s branches by label, including the policy\'s own archived carrier, and nothing from another organization', function () {
+    $user = User::factory()->withOrganization()->create();
+    $activeCarrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id, 'name' => 'Allied Insurance']);
+    $archivedCarrier = Carrier::factory()->forOrganization($user)->archived()->create(['created_by' => $user->id, 'name' => 'Zenith Insurance']);
+    $hamra = CarrierBranch::factory()->forCarrier($activeCarrier)->create(['city' => 'Beirut', 'street' => 'Hamra Street']);
+    $jounieh = CarrierBranch::factory()->forCarrier($activeCarrier)->create(['city' => 'Jounieh', 'street' => null]);
+    $tripoli = CarrierBranch::factory()->forCarrier($archivedCarrier)->create(['city' => 'Tripoli', 'street' => 'Mina Road']);
+    CarrierBranch::factory()->forCarrier(Carrier::factory()->for(Organization::factory())->create())->create();
+    $policy = Policy::factory()->forOrganization($user)->fire()->create([
+        'created_by' => $user->id,
+        'carrier_id' => $archivedCarrier->id,
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('policies.fire.edit', $policy))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('carriers', 2)
+            ->where('carriers.0.branches', [
+                ['id' => $hamra->id, 'label' => 'Beirut — Hamra Street'],
+                ['id' => $jounieh->id, 'label' => 'Jounieh'],
+            ])
+            ->where('carriers.1.branches', [
+                ['id' => $tripoli->id, 'label' => 'Tripoli — Mina Road'],
+            ])
+        );
+});
+
 test('the show page exposes the branch\'s current label, and a null branch for a policy without one', function (string $class) {
     $user = User::factory()->withOrganization()->create();
     $parties = [

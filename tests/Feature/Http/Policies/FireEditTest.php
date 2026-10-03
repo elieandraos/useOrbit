@@ -121,7 +121,7 @@ test('the edit page offers active parties and the policy\'s own archived parties
             ->has('clients.0', fn ($option) => $option->where('id', $activeClient->id)->where('full_name', $activeClient->full_name))
             ->where('clients.1.id', $archivedClient->id)
             ->has('carriers', 2)
-            ->has('carriers.0', fn ($option) => $option->where('id', $activeCarrier->id)->where('name', $activeCarrier->name))
+            ->has('carriers.0', fn ($option) => $option->where('id', $activeCarrier->id)->where('name', $activeCarrier->name)->has('branches', 0))
             ->where('carriers.1.id', $archivedCarrier->id)
             ->has('agents', 2)
             ->has('agents.0', fn ($option) => $option->where('id', $activeAgent->id)->where('full_name', $activeAgent->full_name))
