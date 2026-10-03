@@ -9,6 +9,7 @@ use App\Enums\PolicySource;
 use App\Enums\PolicyStatus;
 use App\Enums\PolicyType;
 use App\Models\Carrier;
+use App\Models\CarrierBranch;
 use App\Models\Client;
 use App\Models\Currency;
 use App\Models\Organization;
@@ -53,6 +54,7 @@ class PolicyFactory extends Factory
             'type' => fake()->randomElement(PolicyType::cases())->value,
             'client_id' => Client::factory(),
             'carrier_id' => Carrier::factory(),
+            'carrier_branch_id' => null,
             'agent_id' => null,
             'currency_id' => fn (): int => self::currencyId('USD', 'US Dollar'),
             'effective_date' => $effectiveDate->format('Y-m-d'),
@@ -85,6 +87,16 @@ class PolicyFactory extends Factory
     {
         return $this->state(fn (array $attributes): array => [
             'currency_id' => self::currencyId('LBP', 'Lebanese Pound'),
+        ]);
+    }
+
+    /**
+     * A policy issued by a branch of its own carrier.
+     */
+    public function withCarrierBranch(): static
+    {
+        return $this->state([
+            'carrier_branch_id' => fn (array $attributes): int => CarrierBranch::factory()->create(['carrier_id' => $attributes['carrier_id']])->id,
         ]);
     }
 

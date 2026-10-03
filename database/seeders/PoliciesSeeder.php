@@ -33,21 +33,27 @@ final class PoliciesSeeder extends Seeder
         app(OrganizationContext::class)->set($organization->id);
 
         $clients = Client::query()->get();
-        $carriers = Carrier::query()->get();
+        $carriers = Carrier::query()->with('branches')->get();
         $agents = Agent::query()->get();
 
         // PolicyFactory's default policy_number only avoids collisions within one PHP process
         // (fake()->unique()), so repeated `db:seed` runs against the same persistent database
         // can and do collide on the unique (organization_id, policy_number) index. Seeded data
         // needs a wider, effectively-unique value across separate runs.
-        $attributes = fn (): array => [
-            'client_id' => $clients->random()->id,
-            'carrier_id' => $carriers->random()->id,
-            'agent_id' => fake()->boolean() ? $agents->random()->id : null,
-            'created_by' => $user->id,
-            'type' => PolicyType::Single->value,
-            'policy_number' => 'POL-'.Str::upper(Str::random(8)),
-        ];
+        $attributes = function () use ($clients, $carriers, $agents, $user): array {
+            /** @var Carrier $carrier */
+            $carrier = $carriers->random();
+
+            return [
+                'client_id' => $clients->random()->id,
+                'carrier_id' => $carrier->id,
+                'carrier_branch_id' => $carrier->branches->isNotEmpty() && fake()->boolean() ? $carrier->branches->random()->id : null,
+                'agent_id' => fake()->boolean() ? $agents->random()->id : null,
+                'created_by' => $user->id,
+                'type' => PolicyType::Single->value,
+                'policy_number' => 'POL-'.Str::upper(Str::random(8)),
+            ];
+        };
 
         $usd = Currency::query()->where('code', 'USD')->firstOrFail();
         $lbp = Currency::query()->where('code', 'LBP')->firstOrFail();

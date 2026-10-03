@@ -16,7 +16,7 @@ final class CreatePolicyLifeAction
     ) {}
 
     /**
-     * @param  array{policy_number: string, class: string, subclass: string, type: string, client_id: string, carrier_id: string, agent_id?: string|null, currency_id: string, effective_date: string, expiry_date: string, premium_amount: string, discount_amount?: string|null, status: string, source: string, life: array{sum_assured: string, term_years: string, smoker: bool, beneficiaries: string}}  $attributes
+     * @param  array{policy_number: string, class: string, subclass: string, type: string, client_id: string, carrier_id: string, carrier_branch_id?: string|null, agent_id?: string|null, currency_id: string, effective_date: string, expiry_date: string, premium_amount: string, discount_amount?: string|null, status: string, source: string, life: array{sum_assured: string, term_years: string, smoker: bool, beneficiaries: string}}  $attributes
      *
      * @throws \Throwable
      */

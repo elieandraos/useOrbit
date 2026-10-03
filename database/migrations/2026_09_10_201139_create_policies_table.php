@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('type', 10);
             $table->foreignId('client_id')->constrained()->restrictOnDelete();
             $table->foreignId('carrier_id')->constrained()->restrictOnDelete();
+            $table->foreignId('carrier_branch_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('agent_id')->nullable()->constrained()->nullOnDelete();
             $table->date('effective_date');
             $table->date('expiry_date');

@@ -39,6 +39,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property PolicyType $type
  * @property int $client_id
  * @property int $carrier_id
+ * @property int|null $carrier_branch_id
  * @property int|null $agent_id
  * @property int $currency_id
  * @property CarbonImmutable $effective_date
@@ -56,6 +57,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read Organization $organization
  * @property-read Client $client
  * @property-read Carrier $carrier
+ * @property-read CarrierBranch|null $carrierBranch
  * @property-read Agent|null $agent
  * @property-read Currency $currency
  * @property-read User $createdBy
@@ -70,7 +72,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 #[Fillable([
     'organization_id', 'slug', 'policy_number', 'class', 'subclass', 'type', 'client_id', 'carrier_id',
-    'agent_id', 'currency_id', 'effective_date', 'expiry_date', 'bound_at', 'premium_amount', 'discount_amount',
+    'carrier_branch_id', 'agent_id', 'currency_id', 'effective_date', 'expiry_date', 'bound_at', 'premium_amount', 'discount_amount',
     'status', 'source', 'created_by', 'updated_by',
 ])]
 final class Policy extends Model implements Documentable, Notable, NotificationSubject
@@ -101,6 +103,11 @@ final class Policy extends Model implements Documentable, Notable, NotificationS
     public function carrier(): BelongsTo
     {
         return $this->belongsTo(Carrier::class);
+    }
+
+    public function carrierBranch(): BelongsTo
+    {
+        return $this->belongsTo(CarrierBranch::class);
     }
 
     public function agent(): BelongsTo

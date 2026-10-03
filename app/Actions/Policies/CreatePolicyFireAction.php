@@ -16,7 +16,7 @@ final class CreatePolicyFireAction
     ) {}
 
     /**
-     * @param  array{policy_number: string, class: string, subclass: string, type: string, client_id: string, carrier_id: string, agent_id?: string|null, currency_id: string, effective_date: string, expiry_date: string, premium_amount: string, discount_amount?: string|null, status: string, source: string, fire: array{property_type: string, floor_area: string, year_built: string|null, street: string, building_floor: string|null, city: string, state_id: string, country_id: string, sum_insured: string}}  $attributes
+     * @param  array{policy_number: string, class: string, subclass: string, type: string, client_id: string, carrier_id: string, carrier_branch_id?: string|null, agent_id?: string|null, currency_id: string, effective_date: string, expiry_date: string, premium_amount: string, discount_amount?: string|null, status: string, source: string, fire: array{property_type: string, floor_area: string, year_built: string|null, street: string, building_floor: string|null, city: string, state_id: string, country_id: string, sum_insured: string}}  $attributes
      *
      * @throws \Throwable
      */
