@@ -23,7 +23,7 @@ test('authenticated user can view a policy from their organization', function ()
         ->get(route('policies.automotive.show', $policy))
         ->assertOk();
 
-    $policy->load(['client', 'carrier', 'agent', 'currency', 'automotiveDetails']);
+    $policy->load(['client', 'carrier', 'carrierBranch', 'agent', 'currency', 'automotiveDetails']);
 
     $response->assertHasResource('policy', PolicyAutomotiveResource::make($policy));
 });

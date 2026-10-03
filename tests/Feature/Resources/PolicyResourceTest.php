@@ -28,7 +28,7 @@ test('a class resource exposes the base policy representation plus its own detai
     setOrganizationContext($user);
     $policy = Policy::factory()->forOrganization($user)->{$class}()->create(['created_by' => $user->id]);
     PolicyInsured::factory()->for($policy)->create();
-    $policy->load(['client', 'carrier', 'agent', 'currency', $detailsRelation, 'insureds']);
+    $policy->load(['client', 'carrier', 'carrierBranch', 'agent', 'currency', $detailsRelation, 'insureds']);
 
     $base = Arr::except(PolicyResource::make($policy)->resolve(), 'insureds');
     $serialized = $resource::make($policy)->resolve();
@@ -45,7 +45,7 @@ test('a class resource omits relations that were not loaded', function (string $
 
     expect($resource::make($policy->fresh())->resolve())
         ->toHaveKeys(['id', 'policy_number', 'net_premium', 'status_label'])
-        ->not->toHaveKeys(['client', 'carrier', 'agent', 'currency_code', 'details', 'insureds']);
+        ->not->toHaveKeys(['client', 'carrier', 'carrier_branch', 'agent', 'currency_code', 'details', 'insureds']);
 })->with('policy class resources');
 
 test('the resource exposes the code of the policy currency once it is loaded', function () {

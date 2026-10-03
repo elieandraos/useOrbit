@@ -20,6 +20,10 @@ export interface PolicyResource {
         slug: string;
         name: string;
     };
+    carrier_branch?: {
+        id: number;
+        label: string;
+    } | null;
     agent: {
         id: number;
         slug: string;

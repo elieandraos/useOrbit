@@ -51,7 +51,7 @@ final class PoliciesExpatController extends Controller
     #[Authorize('view', 'policy')]
     public function show(Policy $policy): Response
     {
-        $policy->load(['client', 'carrier', 'agent', 'currency', 'expatDetails.country']);
+        $policy->load(['client', 'carrier', 'carrierBranch', 'agent', 'currency', 'expatDetails.country']);
 
         return inertia('PolicyExpat/Show', [
             'policy' => PolicyExpatResource::make($policy),
@@ -61,7 +61,7 @@ final class PoliciesExpatController extends Controller
     #[Authorize('update', 'policy')]
     public function edit(Policy $policy): Response
     {
-        $policy->load(['client', 'carrier', 'agent', 'currency', 'expatDetails.country']);
+        $policy->load(['client', 'carrier', 'carrierBranch', 'agent', 'currency', 'expatDetails.country']);
 
         return inertia('PolicyExpat/Edit', [
             'policy' => PolicyExpatResource::make($policy),

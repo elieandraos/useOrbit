@@ -47,6 +47,10 @@ final class PolicyResource extends JsonResource
                 'slug' => $this->carrier->slug,
                 'name' => $this->carrier->name,
             ]),
+            'carrier_branch' => $this->whenLoaded('carrierBranch', fn () => $this->carrierBranch === null ? null : [
+                'id' => $this->carrierBranch->id,
+                'label' => $this->carrierBranch->label,
+            ]),
             'agent' => $this->whenLoaded('agent', fn () => $this->agent === null ? null : [
                 'id' => $this->agent->id,
                 'slug' => $this->agent->slug,

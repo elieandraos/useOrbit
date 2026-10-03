@@ -7,6 +7,7 @@ namespace App\Models;
 use Carbon\CarbonImmutable;
 use Database\Factories\CarrierBranchFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -25,6 +26,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $contact_phone
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
+ * @property-read string $label
  * @property-read Carrier $carrier
  * @property-read Country|null $country
  * @property-read State|null $state
@@ -51,5 +53,15 @@ final class CarrierBranch extends Model
     public function state(): BelongsTo
     {
         return $this->belongsTo(State::class);
+    }
+
+    /**
+     * The branch as every policy surface names it: "City — street", or just the city when there's no street.
+     */
+    protected function label(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): string => collect([$this->city, $this->street])->filter()->implode(' — '),
+        );
     }
 }

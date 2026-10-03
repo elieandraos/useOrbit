@@ -51,7 +51,7 @@ final class PoliciesMedicalController extends Controller
     #[Authorize('view', 'policy')]
     public function show(Policy $policy): Response
     {
-        $policy->load(['client', 'carrier', 'agent', 'currency', 'medicalDetails']);
+        $policy->load(['client', 'carrier', 'carrierBranch', 'agent', 'currency', 'medicalDetails']);
 
         if ($policy->type === PolicyType::Group) {
             $policy->load('insureds');
@@ -65,7 +65,7 @@ final class PoliciesMedicalController extends Controller
     #[Authorize('update', 'policy')]
     public function edit(Policy $policy): Response
     {
-        $policy->load(['client', 'carrier', 'agent', 'currency', 'medicalDetails']);
+        $policy->load(['client', 'carrier', 'carrierBranch', 'agent', 'currency', 'medicalDetails']);
 
         if ($policy->type === PolicyType::Group) {
             $policy->load('insureds');

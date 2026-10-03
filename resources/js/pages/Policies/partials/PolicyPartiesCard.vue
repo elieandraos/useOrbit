@@ -22,6 +22,7 @@ const parties = computed(() => [
         role: 'Insurance company',
         name: props.policy.carrier.name,
         href: carriersShow(props.policy.carrier.slug),
+        detail: props.policy.carrier_branch?.label,
     },
     ...(props.policy.agent
         ? [
@@ -59,6 +60,12 @@ const parties = computed(() => [
                             class="font-mono text-[10.5px] tracking-[0.06em] text-tertiary uppercase"
                         >
                             {{ party.role }}
+                        </p>
+                        <p
+                            v-if="party.detail"
+                            class="truncate text-[12.5px] text-secondary"
+                        >
+                            {{ party.detail }}
                         </p>
                     </div>
                 </li>

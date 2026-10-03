@@ -48,7 +48,7 @@ final class PoliciesTravelController extends Controller
     #[Authorize('view', 'policy')]
     public function show(Policy $policy): Response
     {
-        $policy->load(['client', 'carrier', 'agent', 'currency', 'travelDetails']);
+        $policy->load(['client', 'carrier', 'carrierBranch', 'agent', 'currency', 'travelDetails']);
 
         return inertia('PolicyTravel/Show', [
             'policy' => PolicyTravelResource::make($policy),
@@ -58,7 +58,7 @@ final class PoliciesTravelController extends Controller
     #[Authorize('update', 'policy')]
     public function edit(Policy $policy): Response
     {
-        $policy->load(['client', 'carrier', 'agent', 'currency', 'travelDetails']);
+        $policy->load(['client', 'carrier', 'carrierBranch', 'agent', 'currency', 'travelDetails']);
 
         return inertia('PolicyTravel/Edit', [
             'policy' => PolicyTravelResource::make($policy),

@@ -114,3 +114,28 @@ test('update keeps the branch of the policy\'s own archived carrier', function (
 
     expect($policy->fresh()->carrier_branch_id)->toBe($branch->id);
 })->with('policy classes');
+
+test('the show page exposes the branch\'s current label, and a null branch for a policy without one', function (string $class) {
+    $user = User::factory()->withOrganization()->create();
+    $parties = [
+        'created_by' => $user->id,
+        'client_id' => Client::factory()->forOrganization($user)->create(['created_by' => $user->id])->id,
+        'carrier_id' => Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id])->id,
+    ];
+    $policyWithBranch = Policy::factory()->forOrganization($user)->{$class}()->withCarrierBranch()->create($parties);
+    $policyWithoutBranch = Policy::factory()->forOrganization($user)->{$class}()->create($parties);
+    $policyWithBranch->carrierBranch->update(['city' => 'Saida', 'street' => null]);
+
+    $this->actingAs($user)
+        ->get(route("policies.$class.show", $policyWithBranch))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('policy.carrier_branch', [
+            'id' => $policyWithBranch->carrier_branch_id,
+            'label' => 'Saida',
+        ]));
+
+    $this->actingAs($user)
+        ->get(route("policies.$class.show", $policyWithoutBranch))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('policy.carrier_branch', null));
+})->with('policy classes');

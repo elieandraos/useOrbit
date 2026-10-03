@@ -56,7 +56,7 @@ final class PoliciesFireController extends Controller
     #[Authorize('view', 'policy')]
     public function show(Policy $policy): Response
     {
-        $policy->load(['client', 'carrier', 'agent', 'currency', 'fireDetails.state', 'fireDetails.country']);
+        $policy->load(['client', 'carrier', 'carrierBranch', 'agent', 'currency', 'fireDetails.state', 'fireDetails.country']);
 
         return inertia('PolicyFire/Show', [
             'policy' => PolicyFireResource::make($policy),
@@ -66,7 +66,7 @@ final class PoliciesFireController extends Controller
     #[Authorize('update', 'policy')]
     public function edit(Policy $policy): Response
     {
-        $policy->load(['client', 'carrier', 'agent', 'currency', 'fireDetails.state', 'fireDetails.country']);
+        $policy->load(['client', 'carrier', 'carrierBranch', 'agent', 'currency', 'fireDetails.state', 'fireDetails.country']);
 
         return inertia('PolicyFire/Edit', [
             'policy' => PolicyFireResource::make($policy),

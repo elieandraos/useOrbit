@@ -23,7 +23,7 @@ test('authenticated user can view a policy from their organization', function ()
         ->get(route('policies.travel.show', $policy))
         ->assertOk();
 
-    $policy->load(['client', 'carrier', 'agent', 'currency', 'travelDetails']);
+    $policy->load(['client', 'carrier', 'carrierBranch', 'agent', 'currency', 'travelDetails']);
 
     $response->assertHasResource('policy', PolicyTravelResource::make($policy));
 });
