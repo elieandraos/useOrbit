@@ -167,3 +167,32 @@ test('the show page exposes the branch\'s current label, and a null branch for a
         ->assertOk()
         ->assertInertia(fn ($page) => $page->where('policy.carrier_branch', null));
 })->with('policy classes');
+
+test('the pdf shows the branch label', function (string $class) {
+    $user = User::factory()->withOrganization()->create();
+    $parties = [
+        'created_by' => $user->id,
+        'client_id' => Client::factory()->forOrganization($user)->create(['created_by' => $user->id])->id,
+        'carrier_id' => Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id])->id,
+    ];
+    $policy = Policy::factory()->forOrganization($user)->{$class}()->withCarrierBranch()->create($parties);
+    $policy->carrierBranch->update(['city' => 'Beirut', 'street' => 'Hamra Street']);
+
+    $html = renderedPdfHtml(fn () => $this->actingAs($user)->get(route("policies.$class.export-pdf", $policy))->assertOk());
+
+    expect($html)->toMatch('/Carrier branch<\/span>\s*<span class="value">Beirut — Hamra Street</');
+})->with('policy classes');
+
+test('the pdf shows a dash for a policy without a branch', function (string $class) {
+    $user = User::factory()->withOrganization()->create();
+    $parties = [
+        'created_by' => $user->id,
+        'client_id' => Client::factory()->forOrganization($user)->create(['created_by' => $user->id])->id,
+        'carrier_id' => Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id])->id,
+    ];
+    $policy = Policy::factory()->forOrganization($user)->{$class}()->create($parties);
+
+    $html = renderedPdfHtml(fn () => $this->actingAs($user)->get(route("policies.$class.export-pdf", $policy))->assertOk());
+
+    expect($html)->toMatch('/Carrier branch<\/span>\s*<span class="value">—</');
+})->with('policy classes');

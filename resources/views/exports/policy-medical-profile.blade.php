@@ -95,9 +95,16 @@
                 <span class="value">{{ $policy->agent?->full_name ?? '—' }}</span>
             </td>
             <td>
+                <span class="label">Carrier branch</span>
+                <span class="value">{{ $policy->carrierBranch?->label ?? '—' }}</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
                 <span class="label">Type</span>
                 <span class="value">{{ $policy->type->label() }}</span>
             </td>
+            <td></td>
         </tr>
         <tr>
             <td>
