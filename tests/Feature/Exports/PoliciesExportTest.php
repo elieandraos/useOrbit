@@ -9,6 +9,7 @@ use App\Enums\PolicyType;
 use App\Exports\PoliciesExport;
 use App\Models\Agent;
 use App\Models\Carrier;
+use App\Models\CarrierBranch;
 use App\Models\Client;
 use App\Models\Policy;
 use App\Models\User;
@@ -23,6 +24,7 @@ test('headings returns the export column labels', function () {
         'Type',
         'Client',
         'Carrier',
+        'Carrier Branch',
         'Agent',
         'Effective Date',
         'Expiry Date',
@@ -53,6 +55,7 @@ test('map transforms a policy into an export row', function () {
         'type' => PolicyType::Single,
         'client_id' => $client->id,
         'carrier_id' => $carrier->id,
+        'carrier_branch_id' => CarrierBranch::factory()->forCarrier($carrier)->create(['city' => 'Beirut', 'street' => 'Hamra Street'])->id,
         'agent_id' => $agent->id,
         'effective_date' => '2024-01-10',
         'expiry_date' => '2025-01-10',
@@ -60,7 +63,7 @@ test('map transforms a policy into an export row', function () {
         'discount_amount' => 150,
         'status' => PolicyStatus::Active,
         'source' => PolicySource::Agent,
-    ])->load(['client', 'carrier', 'agent', 'currency']);
+    ])->load(['client', 'carrier', 'carrierBranch', 'agent', 'currency']);
 
     $export = new PoliciesExport([]);
 
@@ -70,6 +73,7 @@ test('map transforms a policy into an export row', function () {
         'Single',
         'Aline Haddad',
         'Bankers Assurance',
+        'Beirut — Hamra Street',
         'Karim Aoun',
         '2024-01-10',
         '2025-01-10',
@@ -81,7 +85,7 @@ test('map transforms a policy into an export row', function () {
     ]);
 });
 
-test('map returns a blank agent when the policy has none', function () {
+test('map returns a blank agent and carrier branch when the policy has neither', function () {
     $user = User::factory()->withOrganization()->create();
     setOrganizationContext($user);
 
@@ -96,11 +100,12 @@ test('map returns a blank agent when the policy has none', function () {
         'client_id' => $client->id,
         'carrier_id' => $carrier->id,
         'agent_id' => null,
-    ])->load(['client', 'carrier', 'agent', 'currency']);
+    ])->load(['client', 'carrier', 'carrierBranch', 'agent', 'currency']);
 
     $export = new PoliciesExport([]);
 
-    expect($export->map($policy)[5])->toBeNull();
+    expect($export->map($policy)[5])->toBeNull()
+        ->and($export->map($policy)[6])->toBeNull();
 });
 
 test('query orders policies sharing an effective date the same way the index does', function () {
@@ -123,12 +128,12 @@ test('amount columns are formatted as numbers with two decimals', function () {
     $export = new PoliciesExport([]);
 
     expect($export->columnFormats())->toBe([
-        'J' => '#,##0.00',
         'K' => '#,##0.00',
+        'L' => '#,##0.00',
     ]);
 });
 
-test('query eager loads each policy currency so mapping rows adds no queries', function () {
+test('query eager loads each policy currency and carrier branch so mapping rows adds no queries', function () {
     $user = User::factory()->withOrganization()->create();
     setOrganizationContext($user);
     $parties = [
@@ -136,15 +141,16 @@ test('query eager loads each policy currency so mapping rows adds no queries', f
         'client_id' => Client::factory()->forOrganization($user)->create(['created_by' => $user->id])->id,
         'carrier_id' => Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id])->id,
     ];
-    Policy::factory(2)->forOrganization($user)->create($parties);
+    Policy::factory(2)->forOrganization($user)->withCarrierBranch()->create($parties);
     Policy::factory()->forOrganization($user)->lbp()->create($parties);
 
     $export = new PoliciesExport([]);
     $policies = $export->query()->get();
 
     DB::enableQueryLog();
-    $currencyCodes = $policies->map(fn (Policy $policy): string => $export->map($policy)[8])->sort()->values()->all();
+    $rows = $policies->map(fn (Policy $policy): array => $export->map($policy));
 
     expect(DB::getQueryLog())->toBeEmpty()
-        ->and($currencyCodes)->toBe(['LBP', 'USD', 'USD']);
+        ->and($rows->pluck(9)->sort()->values()->all())->toBe(['LBP', 'USD', 'USD'])
+        ->and($rows->pluck(5)->filter()->count())->toBe(2);
 });

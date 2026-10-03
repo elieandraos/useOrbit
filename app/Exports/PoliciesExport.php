@@ -22,7 +22,7 @@ final readonly class PoliciesExport implements FromQuery, WithColumnFormatting, 
     {
         /** @noinspection PhpUndefinedMethodInspection */
         return Policy::query()
-            ->with(['client', 'carrier', 'agent', 'currency'])
+            ->with(['client', 'carrier', 'carrierBranch', 'agent', 'currency'])
             ->filter(new PolicyFilter($this->filters))
             ->inListOrder();
     }
@@ -35,6 +35,7 @@ final readonly class PoliciesExport implements FromQuery, WithColumnFormatting, 
             'Type',
             'Client',
             'Carrier',
+            'Carrier Branch',
             'Agent',
             'Effective Date',
             'Expiry Date',
@@ -54,8 +55,8 @@ final readonly class PoliciesExport implements FromQuery, WithColumnFormatting, 
     public function columnFormats(): array
     {
         return [
-            'J' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1,
             'K' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1,
+            'L' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1,
         ];
     }
 
@@ -68,6 +69,7 @@ final readonly class PoliciesExport implements FromQuery, WithColumnFormatting, 
             $row->type->label(),
             $row->client->full_name,
             $row->carrier->name,
+            $row->carrierBranch?->label,
             $row->agent?->full_name,
             $row->effective_date->format('Y-m-d'),
             $row->expiry_date->format('Y-m-d'),
