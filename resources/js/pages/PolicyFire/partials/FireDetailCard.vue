@@ -11,7 +11,7 @@ defineProps<{
 
 <template>
     <Card>
-        <CardHeader>
+        <CardHeader bordered>
             <CardTitle>Fire detail</CardTitle>
         </CardHeader>
         <CardContent>

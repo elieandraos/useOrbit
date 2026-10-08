@@ -19,7 +19,7 @@ const coInsuranceValue = props.policy.details.co_insurance
 
 <template>
     <Card>
-        <CardHeader>
+        <CardHeader bordered>
             <CardTitle>Medical detail</CardTitle>
         </CardHeader>
         <CardContent>

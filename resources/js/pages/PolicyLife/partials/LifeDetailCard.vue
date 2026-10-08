@@ -11,7 +11,7 @@ defineProps<{
 
 <template>
     <Card>
-        <CardHeader>
+        <CardHeader bordered>
             <CardTitle>Life detail</CardTitle>
         </CardHeader>
         <CardContent>

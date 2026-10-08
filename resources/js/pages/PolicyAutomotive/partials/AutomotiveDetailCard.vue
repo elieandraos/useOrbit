@@ -13,7 +13,7 @@ const isAllRisk = props.policy.subclass === 'All Risk';
 
 <template>
     <Card>
-        <CardHeader>
+        <CardHeader bordered>
             <CardTitle>Automotive detail</CardTitle>
         </CardHeader>
         <CardContent>

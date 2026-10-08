@@ -18,8 +18,8 @@ defineProps<{
         >
             <!-- Main column -->
             <div class="flex min-w-0 flex-col gap-4">
-                <AutomotiveDetailCard :policy="policy" />
                 <PolicyFinancialsCard :policy="policy" />
+                <AutomotiveDetailCard :policy="policy" />
             </div>
 
             <!-- Sidebar -->

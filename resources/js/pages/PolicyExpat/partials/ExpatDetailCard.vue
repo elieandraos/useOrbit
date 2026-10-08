@@ -12,7 +12,7 @@ const isInOut = props.policy.details.coverage_zone === 'in_out';
 
 <template>
     <Card>
-        <CardHeader>
+        <CardHeader bordered>
             <CardTitle>Expat detail</CardTitle>
         </CardHeader>
         <CardContent>
