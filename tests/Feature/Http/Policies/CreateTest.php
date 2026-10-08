@@ -210,3 +210,12 @@ test('archived parties are not preselected', function () {
             ->where('selected.agent_id', null)
         );
 });
+
+test('the create page encrypts its history', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('policies.create'))
+        ->assertOk()
+        ->assertInertiaHistoryEncrypted();
+});

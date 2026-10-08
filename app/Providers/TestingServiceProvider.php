@@ -57,5 +57,12 @@ final class TestingServiceProvider extends ServiceProvider
                 'toast' => ['type' => $type, 'message' => $message],
             ]);
         });
+
+        TestResponse::macro('assertInertiaHistoryEncrypted', function (bool $encrypted = true) {
+            /** @var TestResponse $this */
+            return $this->assertInertia(function (AssertableInertia $inertia) use ($encrypted) {
+                expect(array_key_exists('encryptHistory', $inertia->toArray()))->toBe($encrypted);
+            });
+        });
     }
 }

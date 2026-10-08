@@ -21,12 +21,12 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'organization'])->group(function () {
     Route::get('policies', [PoliciesController::class, 'index'])->name('policies.index');
-    Route::get('policies/create', [PoliciesController::class, 'create'])->name('policies.create');
+    Route::get('policies/create', [PoliciesController::class, 'create'])->name('policies.create')->middleware('inertia.encrypt');
     Route::get('policies/export', PoliciesExcelExportController::class)->name('policies.export');
 
     Route::get('clients/{client:slug}/policies', ClientPoliciesController::class)->name('clients.policies.index');
 
-    Route::get('policies/medical/create', [PoliciesMedicalController::class, 'create'])->name('policies.medical.create');
+    Route::get('policies/medical/create', [PoliciesMedicalController::class, 'create'])->name('policies.medical.create')->middleware('inertia.encrypt');
     Route::post('policies/medical', [PoliciesMedicalController::class, 'store'])->name('policies.medical.store');
     Route::middleware('policy-class:medical')->group(function () {
         Route::get('policies/medical/{policy:slug}', [PoliciesMedicalController::class, 'show'])->name('policies.medical.show');
@@ -35,7 +35,7 @@ Route::middleware(['auth', 'organization'])->group(function () {
         Route::get('policies/medical/{policy:slug}/export', PoliciesMedicalPdfExportController::class)->name('policies.medical.export-pdf');
     });
 
-    Route::get('policies/automotive/create', [PoliciesAutomotiveController::class, 'create'])->name('policies.automotive.create');
+    Route::get('policies/automotive/create', [PoliciesAutomotiveController::class, 'create'])->name('policies.automotive.create')->middleware('inertia.encrypt');
     Route::post('policies/automotive', [PoliciesAutomotiveController::class, 'store'])->name('policies.automotive.store');
     Route::middleware('policy-class:automotive')->group(function () {
         Route::get('policies/automotive/{policy:slug}', [PoliciesAutomotiveController::class, 'show'])->name('policies.automotive.show');
@@ -44,7 +44,7 @@ Route::middleware(['auth', 'organization'])->group(function () {
         Route::get('policies/automotive/{policy:slug}/export', PoliciesAutomotivePdfExportController::class)->name('policies.automotive.export-pdf');
     });
 
-    Route::get('policies/expat/create', [PoliciesExpatController::class, 'create'])->name('policies.expat.create');
+    Route::get('policies/expat/create', [PoliciesExpatController::class, 'create'])->name('policies.expat.create')->middleware('inertia.encrypt');
     Route::post('policies/expat', [PoliciesExpatController::class, 'store'])->name('policies.expat.store');
     Route::middleware('policy-class:expat')->group(function () {
         Route::get('policies/expat/{policy:slug}', [PoliciesExpatController::class, 'show'])->name('policies.expat.show');
@@ -53,7 +53,7 @@ Route::middleware(['auth', 'organization'])->group(function () {
         Route::get('policies/expat/{policy:slug}/export', PoliciesExpatPdfExportController::class)->name('policies.expat.export-pdf');
     });
 
-    Route::get('policies/fire/create', [PoliciesFireController::class, 'create'])->name('policies.fire.create');
+    Route::get('policies/fire/create', [PoliciesFireController::class, 'create'])->name('policies.fire.create')->middleware('inertia.encrypt');
     Route::post('policies/fire', [PoliciesFireController::class, 'store'])->name('policies.fire.store');
     Route::middleware('policy-class:fire')->group(function () {
         Route::get('policies/fire/{policy:slug}', [PoliciesFireController::class, 'show'])->name('policies.fire.show');
@@ -62,7 +62,7 @@ Route::middleware(['auth', 'organization'])->group(function () {
         Route::get('policies/fire/{policy:slug}/export', PoliciesFirePdfExportController::class)->name('policies.fire.export-pdf');
     });
 
-    Route::get('policies/life/create', [PoliciesLifeController::class, 'create'])->name('policies.life.create');
+    Route::get('policies/life/create', [PoliciesLifeController::class, 'create'])->name('policies.life.create')->middleware('inertia.encrypt');
     Route::post('policies/life', [PoliciesLifeController::class, 'store'])->name('policies.life.store');
     Route::middleware('policy-class:life')->group(function () {
         Route::get('policies/life/{policy:slug}', [PoliciesLifeController::class, 'show'])->name('policies.life.show');
@@ -71,7 +71,7 @@ Route::middleware(['auth', 'organization'])->group(function () {
         Route::get('policies/life/{policy:slug}/export', PoliciesLifePdfExportController::class)->name('policies.life.export-pdf');
     });
 
-    Route::get('policies/travel/create', [PoliciesTravelController::class, 'create'])->name('policies.travel.create');
+    Route::get('policies/travel/create', [PoliciesTravelController::class, 'create'])->name('policies.travel.create')->middleware('inertia.encrypt');
     Route::post('policies/travel', [PoliciesTravelController::class, 'store'])->name('policies.travel.store');
     Route::middleware('policy-class:travel')->group(function () {
         Route::get('policies/travel/{policy:slug}', [PoliciesTravelController::class, 'show'])->name('policies.travel.show');

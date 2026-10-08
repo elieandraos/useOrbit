@@ -108,3 +108,13 @@ test('no insureds key is present on a life policy', function () {
         ->assertOk()
         ->assertInertia(fn ($page) => $page->missing('policy.insureds'));
 });
+
+test('the show page does not encrypt its history', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->life()->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->get(route('policies.life.show', $policy))
+        ->assertOk()
+        ->assertInertiaHistoryEncrypted(false);
+});

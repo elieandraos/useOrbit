@@ -399,3 +399,12 @@ test('a currency_id that does not exist or names several currencies is rejected'
     'missing currency' => [999999],
     'several currencies' => fn () => [Currency::factory()->create()->id, Currency::factory()->create()->id],
 ]);
+
+test('the index page does not encrypt its history', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->get(route('policies.index'))
+        ->assertOk()
+        ->assertInertiaHistoryEncrypted(false);
+});

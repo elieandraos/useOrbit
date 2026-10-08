@@ -209,3 +209,14 @@ test('a client archived since the first step stays in the summary with its error
             ->has('errors.client_id')
         );
 });
+
+test('the create page encrypts its history', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->get(route('policies.fire.create', PolicyPayload::entryQuery($client, $carrier)))
+        ->assertOk()
+        ->assertInertiaHistoryEncrypted();
+});

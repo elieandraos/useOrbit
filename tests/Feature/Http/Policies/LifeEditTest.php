@@ -141,3 +141,13 @@ test('the edit page shows the stored currency rather than the organization defau
             ->missing('defaultCurrencyId')
         );
 });
+
+test('the edit page does not encrypt its history', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->life()->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->get(route('policies.life.edit', $policy))
+        ->assertOk()
+        ->assertInertiaHistoryEncrypted(false);
+});
