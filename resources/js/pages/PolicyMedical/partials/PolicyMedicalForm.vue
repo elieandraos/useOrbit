@@ -499,6 +499,7 @@ const yesNo: Option[] = [
                                 <Input
                                     v-model="row.relationship"
                                     :name="`insureds[${index}][relationship]`"
+                                    placeholder="e.g. Employee, Spouse, Child"
                                 />
                             </FormField>
                         </div>
