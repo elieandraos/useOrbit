@@ -8,6 +8,7 @@ import FormSection from '@/components/ui/form-section/FormSection.vue';
 import RadioChips from '@/components/ui/radio-chips/RadioChips.vue';
 import Select from '@/components/ui/select/Select.vue';
 import { endPolicyCreateFlow } from '@/lib/policyCreateFlow';
+import PolicyClientTypeahead from '@/pages/Policies/partials/PolicyClientTypeahead.vue';
 import { index as policiesIndex } from '@/routes/policies';
 import { create as policiesAutomotiveCreate } from '@/routes/policies/automotive';
 import { create as policiesExpatCreate } from '@/routes/policies/expat';
@@ -29,10 +30,22 @@ interface FirstStepSelection {
     carrier_id: number | null;
     agent_id: number | null;
     source: string | null;
+    /** The selected client with its displayed name, resolved by the server. */
+    client: { id: number; full_name: string } | null;
+}
+
+interface RememberedSelection {
+    class: string;
+    type: string;
+    client_id: number | string | null;
+    /** The selected client's displayed name, remembered so Back/Forward keeps it without a lookup. */
+    client_label: string | null;
+    carrier_id: string;
+    agent_id: string;
+    source: string;
 }
 
 const props = defineProps<{
-    clients: PolicyPartyOption[];
     carriers: PolicyPartyOption[];
     agents: PolicyPartyOption[];
     classes: Option[];
@@ -71,13 +84,14 @@ const selection = useRemember(
     reactive({
         class: props.selected.class ?? '',
         type: props.selected.type ?? props.types[0]?.value ?? 'single',
-        client_id: `${props.selected.client_id ?? ''}`,
+        client_id: props.selected.client?.id ?? null,
+        client_label: props.selected.client?.full_name ?? null,
         carrier_id: `${props.selected.carrier_id ?? ''}`,
         agent_id: `${props.selected.agent_id ?? ''}`,
         source: props.selected.source ?? '',
     }),
     'Policies/Create',
-) as Record<keyof FirstStepSelection, string>;
+) as RememberedSelection;
 
 const showErrors = ref(false);
 
@@ -117,7 +131,7 @@ function continueToClass(): void {
         createRoute.url({
             query: {
                 type: selection.type,
-                client_id: selection.client_id,
+                client_id: selection.client_id ?? '',
                 carrier_id: selection.carrier_id,
                 agent_id: selection.agent_id,
                 source: selection.source,
@@ -170,19 +184,11 @@ function continueToClass(): void {
                         required
                         :error="errors.client_id"
                     >
-                        <Select
+                        <PolicyClientTypeahead
                             id="client_id"
                             v-model="selection.client_id"
-                            placeholder="Select client"
-                        >
-                            <option
-                                v-for="client in clients"
-                                :key="client.id"
-                                :value="`${client.id}`"
-                            >
-                                {{ client.full_name }}
-                            </option>
-                        </Select>
+                            v-model:label="selection.client_label"
+                        />
                     </FormField>
                     <FormField
                         label="Insurance company"

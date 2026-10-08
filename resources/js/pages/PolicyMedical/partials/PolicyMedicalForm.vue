@@ -70,7 +70,6 @@ interface PolicyMedicalFormValues extends PolicyParties {
 }
 
 const props = defineProps<{
-    clients: EntityOption[];
     carriers: EntityOption[];
     agents: EntityOption[];
     subclasses: string[];
@@ -579,7 +578,6 @@ function cancel(): void {
 
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
             <PolicyPartiesSection
-                :clients="clients"
                 :carriers="carriers"
                 :agents="agents"
                 :policy="policy"

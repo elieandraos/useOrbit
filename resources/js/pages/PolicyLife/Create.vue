@@ -18,7 +18,6 @@ interface EntityOption {
 }
 
 defineProps<{
-    clients: EntityOption[];
     carriers: EntityOption[];
     agents: EntityOption[];
     subclasses: string[];
@@ -55,7 +54,6 @@ defineOptions({
         />
 
         <PolicyLifeForm
-            :clients="clients"
             :carriers="carriers"
             :agents="agents"
             :subclasses="subclasses"

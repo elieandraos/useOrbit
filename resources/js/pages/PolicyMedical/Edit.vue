@@ -23,7 +23,6 @@ interface EntityOption {
 
 const props = defineProps<{
     policy: PolicyMedicalResource;
-    clients: EntityOption[];
     carriers: EntityOption[];
     agents: EntityOption[];
     subclasses: string[];
@@ -64,7 +63,6 @@ setLayoutProps({
 
         <PolicyMedicalForm
             :policy="policy"
-            :clients="clients"
             :carriers="carriers"
             :agents="agents"
             :subclasses="subclasses"

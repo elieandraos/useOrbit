@@ -28,7 +28,6 @@ interface CountryOption {
 
 const props = defineProps<{
     policy: PolicyFireResource;
-    clients: EntityOption[];
     carriers: EntityOption[];
     agents: EntityOption[];
     subclasses: string[];
@@ -67,7 +66,6 @@ setLayoutProps({
 
         <PolicyFireForm
             :policy="policy"
-            :clients="clients"
             :carriers="carriers"
             :agents="agents"
             :subclasses="subclasses"

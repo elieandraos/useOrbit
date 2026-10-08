@@ -90,19 +90,18 @@ test('the edit page receives the policy and the shared and travel form options',
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('PolicyTravel/Edit')
-            ->hasAll(['policy', 'clients', 'carriers', 'agents', 'types', 'sources', 'currencies', 'subclasses', 'coverageTiers'])
+            ->hasAll(['policy', 'carriers', 'agents', 'types', 'sources', 'currencies', 'subclasses', 'coverageTiers'])
+            ->missing('clients')
         );
 });
 
-test('the edit page offers active parties and the policy\'s own archived parties, but no other archived ones', function () {
+test('the edit page offers active carriers and agents and the policy\'s own archived ones, and shows its archived client', function () {
     $user = User::factory()->withOrganization()->create();
-    $activeClient = Client::factory()->forOrganization($user)->create(['created_by' => $user->id, 'first_name' => 'Adam']);
     $activeCarrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id, 'name' => 'Allied Insurance']);
     $activeAgent = Agent::factory()->forOrganization($user)->create(['first_name' => 'Adam']);
     $archivedClient = Client::factory()->forOrganization($user)->archived()->create(['created_by' => $user->id, 'first_name' => 'Zoe']);
     $archivedCarrier = Carrier::factory()->forOrganization($user)->archived()->create(['created_by' => $user->id, 'name' => 'Zenith Insurance']);
     $archivedAgent = Agent::factory()->forOrganization($user)->archived()->create(['first_name' => 'Zoe']);
-    Client::factory()->forOrganization($user)->archived()->create(['created_by' => $user->id]);
     Carrier::factory()->forOrganization($user)->archived()->create(['created_by' => $user->id]);
     Agent::factory()->forOrganization($user)->archived()->create();
     $policy = Policy::factory()->forOrganization($user)->travel()->create([
@@ -116,9 +115,8 @@ test('the edit page offers active parties and the policy\'s own archived parties
         ->get(route('policies.travel.edit', $policy))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->has('clients', 2)
-            ->has('clients.0', fn ($option) => $option->where('id', $activeClient->id)->where('full_name', $activeClient->full_name))
-            ->where('clients.1.id', $archivedClient->id)
+            ->where('policy.client.id', $archivedClient->id)
+            ->where('policy.client.full_name', $archivedClient->full_name)
             ->has('carriers', 2)
             ->has('carriers.0', fn ($option) => $option->where('id', $activeCarrier->id)->where('name', $activeCarrier->name)->has('branches', 0))
             ->where('carriers.1.id', $archivedCarrier->id)
