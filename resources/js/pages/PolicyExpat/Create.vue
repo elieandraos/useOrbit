@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import PageHeader from '@/components/shell/PageHeader.vue';
-import BackToPolicyEntryButton from '@/pages/Policies/partials/BackToPolicyEntryButton.vue';
 import { index as policiesIndex } from '@/routes/policies';
 import { store as policiesExpatStore } from '@/routes/policies/expat';
-import type { PolicyCurrencyOption } from '@/types/policy';
+import type { PolicyCurrencyOption, PolicyEntry } from '@/types/policy';
 import PolicyExpatForm from './partials/PolicyExpatForm.vue';
 
 interface Option {
@@ -32,19 +31,11 @@ defineProps<{
     sources: Option[];
     currencies: PolicyCurrencyOption[];
     defaultCurrencyId: number | null;
+    entry: PolicyEntry;
     coverageZones: Option[];
     genders: Option[];
     countries: CountryOption[];
 }>();
-
-const query = new URLSearchParams(window.location.search);
-const defaults: Record<string, string> = {};
-
-for (const [key, value] of query.entries()) {
-    if (value) {
-        defaults[key] = value;
-    }
-}
 
 defineOptions({
     layout: {
@@ -69,17 +60,9 @@ defineOptions({
             title="New Expat policy"
             subtitle="Coverage, parties, and the Expat-specific details for this policy."
             :divider="false"
-        >
-            <template #actions>
-                <BackToPolicyEntryButton
-                    policy-class="expat"
-                    form="policy-form"
-                />
-            </template>
-        </PageHeader>
+        />
 
         <PolicyExpatForm
-            id="policy-form"
             :clients="clients"
             :carriers="carriers"
             :agents="agents"
@@ -91,7 +74,7 @@ defineOptions({
             :coverage-zones="coverageZones"
             :genders="genders"
             :countries="countries"
-            :defaults="defaults"
+            :entry="entry"
             :route="policiesExpatStore.form()"
             submit-label="Create policy"
         />

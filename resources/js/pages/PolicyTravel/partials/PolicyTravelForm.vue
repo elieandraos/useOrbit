@@ -10,10 +10,15 @@ import RadioChips from '@/components/ui/radio-chips/RadioChips.vue';
 import Select from '@/components/ui/select/Select.vue';
 import { usePolicyCurrency } from '@/composables/usePolicyCurrency';
 import { policyDateEndYear } from '@/lib/policyDateEndYear';
+import PolicyEntrySummary from '@/pages/Policies/partials/PolicyEntrySummary.vue';
 import PolicyFinancialsSection from '@/pages/Policies/partials/PolicyFinancialsSection.vue';
 import PolicyPartiesSection from '@/pages/Policies/partials/PolicyPartiesSection.vue';
 import { index as policiesIndex } from '@/routes/policies';
-import type { PolicyCurrencyOption, PolicyParties } from '@/types/policy';
+import type {
+    PolicyCurrencyOption,
+    PolicyEntry,
+    PolicyParties,
+} from '@/types/policy';
 import type { RouteFormDefinition } from '@/wayfinder';
 
 interface Option {
@@ -57,7 +62,8 @@ const props = defineProps<{
     currencies: PolicyCurrencyOption[];
     defaultCurrencyId?: number | null;
     policy?: PolicyTravelFormValues;
-    defaults?: Record<string, string>;
+    /** On a new policy, the first step's choices, summarized instead of asked again. */
+    entry?: PolicyEntry;
     route: RouteFormDefinition<'post'>;
     submitLabel: string;
 }>();
@@ -72,13 +78,13 @@ const policyNumber = ref(props.policy?.policy_number ?? '');
 const subclass = ref(props.policy?.subclass ?? props.subclasses[0] ?? '');
 const type = ref(
     props.policy?.type ??
-        props.defaults?.type ??
+        props.entry?.type.value ??
         props.types[0]?.value ??
         'single',
 );
 const effectiveDate = ref(props.policy?.effective_date ?? '');
 const expiryDate = ref(props.policy?.expiry_date ?? '');
-const source = ref(props.policy?.source ?? props.defaults?.source ?? '');
+const source = ref(props.policy?.source ?? '');
 
 const destination = ref(props.policy?.details.destination ?? '');
 const tripStartDate = ref(props.policy?.details.trip_start_date ?? '');
@@ -97,6 +103,8 @@ const coverageTier = ref(
     >
         <input type="hidden" name="class" value="travel" />
 
+        <PolicyEntrySummary v-if="entry" :entry="entry" :errors="errors" />
+
         <FormSection
             title="Coverage"
             subtitle="The policy number and the kind of Travel coverage."
@@ -114,7 +122,12 @@ const coverageTier = ref(
                         name="policy_number"
                     />
                 </FormField>
-                <FormField label="Policy type" required :error="errors.type">
+                <FormField
+                    v-if="!entry"
+                    label="Policy type"
+                    required
+                    :error="errors.type"
+                >
                     <RadioChips v-model="type" name="type" :options="types" />
                 </FormField>
             </div>
@@ -200,13 +213,17 @@ const coverageTier = ref(
                 :carriers="carriers"
                 :agents="agents"
                 :policy="policy"
-                :defaults="defaults"
+                :entry="entry"
                 :errors="errors"
             />
 
             <FormSection
-                title="Coverage period & origin"
-                subtitle="Effective dates and how this policy came to you."
+                :title="entry ? 'Coverage period' : 'Coverage period & origin'"
+                :subtitle="
+                    entry
+                        ? 'Effective dates.'
+                        : 'Effective dates and how this policy came to you.'
+                "
             >
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <FormField
@@ -233,6 +250,7 @@ const coverageTier = ref(
                     </FormField>
                 </div>
                 <FormField
+                    v-if="!entry"
                     label="Lead source"
                     for="source"
                     required

@@ -66,3 +66,20 @@ export type PolicyParties = Pick<
     PolicyResource,
     'client' | 'carrier' | 'carrier_branch' | 'agent'
 >;
+
+export interface PolicyEntryChoice {
+    value: string;
+    label: string;
+}
+
+/**
+ * The first-step choices a new policy's details step summarizes, resolved and labelled by the server.
+ */
+export interface PolicyEntry {
+    class: PolicyEntryChoice;
+    type: PolicyEntryChoice;
+    client: { id: number; full_name: string };
+    carrier: { id: number; name: string };
+    agent: { id: number; full_name: string } | null;
+    source: PolicyEntryChoice;
+}

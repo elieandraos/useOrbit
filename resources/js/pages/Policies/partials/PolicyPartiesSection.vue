@@ -3,26 +3,27 @@ import { computed, ref, watch } from 'vue';
 import FormField from '@/components/ui/form-field/FormField.vue';
 import FormSection from '@/components/ui/form-section/FormSection.vue';
 import Select from '@/components/ui/select/Select.vue';
-import type { PolicyParties, PolicyPartyOption } from '@/types/policy';
+import type {
+    PolicyEntry,
+    PolicyParties,
+    PolicyPartyOption,
+} from '@/types/policy';
 
 const props = defineProps<{
     clients: PolicyPartyOption[];
     carriers: PolicyPartyOption[];
     agents: PolicyPartyOption[];
     policy?: PolicyParties;
-    defaults?: Record<string, string>;
+    /** On a new policy, the first step's choices: only the issuing branch is chosen here. */
+    entry?: PolicyEntry;
     errors: Record<string, string | undefined>;
 }>();
 
-const clientId = ref(
-    props.policy
-        ? `${props.policy.client.id}`
-        : (props.defaults?.client_id ?? ''),
-);
+const clientId = ref(props.policy ? `${props.policy.client.id}` : '');
 const carrierId = ref(
     props.policy
         ? `${props.policy.carrier.id}`
-        : (props.defaults?.carrier_id ?? ''),
+        : `${props.entry?.carrier.id ?? ''}`,
 );
 const carrierBranchId = ref(
     props.policy ? `${props.policy.carrier_branch?.id ?? ''}` : '',
@@ -37,19 +38,20 @@ watch(carrierId, () => {
     carrierBranchId.value = '';
 });
 
-const agentId = ref(
-    props.policy
-        ? `${props.policy.agent?.id ?? ''}`
-        : (props.defaults?.agent_id ?? ''),
-);
+const agentId = ref(props.policy ? `${props.policy.agent?.id ?? ''}` : '');
 </script>
 
 <template>
     <FormSection
-        title="Parties"
-        subtitle="Who the policy belongs to and who's underwriting it."
+        :title="entry ? 'Issuing branch' : 'Parties'"
+        :subtitle="
+            entry
+                ? `The ${entry.carrier.name} branch that issued this policy.`
+                : 'Who the policy belongs to and who\'s underwriting it.'
+        "
     >
         <FormField
+            v-if="!entry"
             label="Client"
             for="client_id"
             required
@@ -71,6 +73,7 @@ const agentId = ref(
             </Select>
         </FormField>
         <FormField
+            v-if="!entry"
             label="Insurance company"
             for="carrier_id"
             required
@@ -113,6 +116,7 @@ const agentId = ref(
             </Select>
         </FormField>
         <FormField
+            v-if="!entry"
             label="Agent"
             for="agent_id"
             optional

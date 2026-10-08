@@ -12,10 +12,15 @@ import { Typeahead } from '@/components/ui/typeahead';
 import type { TypeaheadOption } from '@/components/ui/typeahead';
 import { usePolicyCurrency } from '@/composables/usePolicyCurrency';
 import { policyDateEndYear } from '@/lib/policyDateEndYear';
+import PolicyEntrySummary from '@/pages/Policies/partials/PolicyEntrySummary.vue';
 import PolicyFinancialsSection from '@/pages/Policies/partials/PolicyFinancialsSection.vue';
 import PolicyPartiesSection from '@/pages/Policies/partials/PolicyPartiesSection.vue';
 import { index as policiesIndex } from '@/routes/policies';
-import type { PolicyCurrencyOption, PolicyParties } from '@/types/policy';
+import type {
+    PolicyCurrencyOption,
+    PolicyEntry,
+    PolicyParties,
+} from '@/types/policy';
 import type { RouteFormDefinition } from '@/wayfinder';
 
 interface Option {
@@ -70,7 +75,8 @@ const props = defineProps<{
     genders: Option[];
     countries: CountryOption[];
     policy?: PolicyExpatFormValues;
-    defaults?: Record<string, string>;
+    /** On a new policy, the first step's choices, summarized instead of asked again. */
+    entry?: PolicyEntry;
     route: RouteFormDefinition<'post'>;
     submitLabel: string;
 }>();
@@ -85,13 +91,13 @@ const policyNumber = ref(props.policy?.policy_number ?? '');
 const subclass = ref(props.policy?.subclass ?? props.subclasses[0] ?? '');
 const type = ref(
     props.policy?.type ??
-        props.defaults?.type ??
+        props.entry?.type.value ??
         props.types[0]?.value ??
         'single',
 );
 const effectiveDate = ref(props.policy?.effective_date ?? '');
 const expiryDate = ref(props.policy?.expiry_date ?? '');
-const source = ref(props.policy?.source ?? props.defaults?.source ?? '');
+const source = ref(props.policy?.source ?? '');
 
 const coverageZone = ref(
     props.policy?.details.coverage_zone ?? props.coverageZones[0]?.value ?? '',
@@ -125,6 +131,8 @@ const countryOptions = computed<TypeaheadOption[]>(() =>
     >
         <input type="hidden" name="class" value="expat" />
 
+        <PolicyEntrySummary v-if="entry" :entry="entry" :errors="errors" />
+
         <FormSection
             title="Coverage"
             subtitle="The policy number and the kind of Expat coverage."
@@ -142,7 +150,12 @@ const countryOptions = computed<TypeaheadOption[]>(() =>
                         name="policy_number"
                     />
                 </FormField>
-                <FormField label="Policy type" required :error="errors.type">
+                <FormField
+                    v-if="!entry"
+                    label="Policy type"
+                    required
+                    :error="errors.type"
+                >
                     <RadioChips v-model="type" name="type" :options="types" />
                 </FormField>
             </div>
@@ -279,13 +292,17 @@ const countryOptions = computed<TypeaheadOption[]>(() =>
                 :carriers="carriers"
                 :agents="agents"
                 :policy="policy"
-                :defaults="defaults"
+                :entry="entry"
                 :errors="errors"
             />
 
             <FormSection
-                title="Coverage period & origin"
-                subtitle="Effective dates and how this policy came to you."
+                :title="entry ? 'Coverage period' : 'Coverage period & origin'"
+                :subtitle="
+                    entry
+                        ? 'Effective dates.'
+                        : 'Effective dates and how this policy came to you.'
+                "
             >
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <FormField
@@ -312,6 +329,7 @@ const countryOptions = computed<TypeaheadOption[]>(() =>
                     </FormField>
                 </div>
                 <FormField
+                    v-if="!entry"
                     label="Lead source"
                     for="source"
                     required

@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import PageHeader from '@/components/shell/PageHeader.vue';
-import BackToPolicyEntryButton from '@/pages/Policies/partials/BackToPolicyEntryButton.vue';
 import { index as policiesIndex } from '@/routes/policies';
 import { store as policiesFireStore } from '@/routes/policies/fire';
-import type { PolicyCurrencyOption } from '@/types/policy';
+import type { PolicyCurrencyOption, PolicyEntry } from '@/types/policy';
 import PolicyFireForm from './partials/PolicyFireForm.vue';
 
 interface Option {
@@ -32,18 +31,10 @@ defineProps<{
     sources: Option[];
     currencies: PolicyCurrencyOption[];
     defaultCurrencyId: number | null;
+    entry: PolicyEntry;
     countries: CountryOption[];
     defaultCountryId: number | null;
 }>();
-
-const query = new URLSearchParams(window.location.search);
-const defaults: Record<string, string> = {};
-
-for (const [key, value] of query.entries()) {
-    if (value) {
-        defaults[key] = value;
-    }
-}
 
 defineOptions({
     layout: {
@@ -68,17 +59,9 @@ defineOptions({
             title="New Fire policy"
             subtitle="Coverage, parties, and the Fire-specific details for this policy."
             :divider="false"
-        >
-            <template #actions>
-                <BackToPolicyEntryButton
-                    policy-class="fire"
-                    form="policy-form"
-                />
-            </template>
-        </PageHeader>
+        />
 
         <PolicyFireForm
-            id="policy-form"
             :clients="clients"
             :carriers="carriers"
             :agents="agents"
@@ -89,7 +72,7 @@ defineOptions({
             :default-currency-id="defaultCurrencyId"
             :countries="countries"
             :default-country-id="defaultCountryId"
-            :defaults="defaults"
+            :entry="entry"
             :route="policiesFireStore.form()"
             submit-label="Create policy"
         />

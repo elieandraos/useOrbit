@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import PageHeader from '@/components/shell/PageHeader.vue';
-import BackToPolicyEntryButton from '@/pages/Policies/partials/BackToPolicyEntryButton.vue';
 import { index as policiesIndex } from '@/routes/policies';
 import { store as policiesMedicalStore } from '@/routes/policies/medical';
-import type { PolicyCurrencyOption } from '@/types/policy';
+import type { PolicyCurrencyOption, PolicyEntry } from '@/types/policy';
 import PolicyMedicalForm from './partials/PolicyMedicalForm.vue';
 
 interface Option {
@@ -27,19 +26,11 @@ defineProps<{
     sources: Option[];
     currencies: PolicyCurrencyOption[];
     defaultCurrencyId: number | null;
+    entry: PolicyEntry;
     coverageScopes: Option[];
     classTiers: Option[];
     genders: Option[];
 }>();
-
-const query = new URLSearchParams(window.location.search);
-const defaults: Record<string, string> = {};
-
-for (const [key, value] of query.entries()) {
-    if (value) {
-        defaults[key] = value;
-    }
-}
 
 defineOptions({
     layout: {
@@ -64,17 +55,9 @@ defineOptions({
             title="New Medical policy"
             subtitle="Coverage, parties, and the Medical-specific details for this policy."
             :divider="false"
-        >
-            <template #actions>
-                <BackToPolicyEntryButton
-                    policy-class="medical"
-                    form="policy-form"
-                />
-            </template>
-        </PageHeader>
+        />
 
         <PolicyMedicalForm
-            id="policy-form"
             :clients="clients"
             :carriers="carriers"
             :agents="agents"
@@ -86,7 +69,7 @@ defineOptions({
             :coverage-scopes="coverageScopes"
             :class-tiers="classTiers"
             :genders="genders"
-            :defaults="defaults"
+            :entry="entry"
             :route="policiesMedicalStore.form()"
             submit-label="Create policy"
         />
