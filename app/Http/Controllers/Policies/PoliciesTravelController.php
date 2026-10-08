@@ -14,8 +14,10 @@ use App\Http\Requests\Policies\UpdatePolicyTravelRequest;
 use App\Http\Resources\PolicyTravelResource;
 use App\Models\Policy;
 use App\Models\User;
+use App\Support\Policies\PolicyEntrySelection;
 use App\Support\Policies\PolicyFormOptions;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -25,9 +27,20 @@ final class PoliciesTravelController extends Controller
     public function __construct(private readonly PolicyFormOptions $policyFormOptions) {}
 
     #[Authorize('create', Policy::class)]
-    public function create(): Response
+    public function create(Request $request, PolicyEntrySelection $policyEntrySelection): Response|RedirectResponse
     {
-        return inertia('PolicyTravel/Create', $this->formOptions());
+        $entry = $policyEntrySelection->summary($request, PolicyClass::Travel);
+
+        if ($entry === null) {
+            Inertia::flash('toast', ['type' => 'warning', 'message' => __('Some of your choices are missing or no longer available.')]);
+
+            return to_route('policies.create', $policyEntrySelection->backToEntryQuery($request, PolicyClass::Travel));
+        }
+
+        return inertia('PolicyTravel/Create', [
+            ...$this->formOptions(),
+            'entry' => $entry,
+        ]);
     }
 
     /**

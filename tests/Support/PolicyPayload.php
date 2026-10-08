@@ -10,7 +10,8 @@ use App\Models\Currency;
 use App\Models\State;
 
 /**
- * Builds policy request payloads for the HTTP and action tests: the base policy fields plus one class slice.
+ * Builds policy request payloads for the HTTP and action tests: the base policy fields plus one class slice, and the
+ * first-step query a class's details step is opened with.
  *
  * Overrides merge into nested class slices key by key, while a list (such as `insureds`) replaces the default list outright.
  * The currency defaults to US Dollars, reusing the row `PolicyFactory` creates the same way.
@@ -38,6 +39,23 @@ final class PolicyPayload
             'discount_amount' => null,
             'source' => 'client',
         ], $overrides);
+    }
+
+    /**
+     * The first-step choices a class's details step is opened with.
+     *
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    public static function entryQuery(Client $client, Carrier $carrier, array $overrides = []): array
+    {
+        return [
+            'type' => 'single',
+            'client_id' => $client->id,
+            'carrier_id' => $carrier->id,
+            'source' => 'client',
+            ...$overrides,
+        ];
     }
 
     /**

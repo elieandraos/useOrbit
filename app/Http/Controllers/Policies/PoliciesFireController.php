@@ -15,6 +15,7 @@ use App\Http\Resources\PolicyFireResource;
 use App\Models\Country;
 use App\Models\Policy;
 use App\Models\User;
+use App\Support\Policies\PolicyEntrySelection;
 use App\Support\Policies\PolicyFormOptions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,14 +28,23 @@ final class PoliciesFireController extends Controller
     public function __construct(private readonly PolicyFormOptions $policyFormOptions) {}
 
     #[Authorize('create', Policy::class)]
-    public function create(Request $request): Response
+    public function create(Request $request, PolicyEntrySelection $policyEntrySelection): Response|RedirectResponse
     {
+        $entry = $policyEntrySelection->summary($request, PolicyClass::Fire);
+
+        if ($entry === null) {
+            Inertia::flash('toast', ['type' => 'warning', 'message' => __('Some of your choices are missing or no longer available.')]);
+
+            return to_route('policies.create', $policyEntrySelection->backToEntryQuery($request, PolicyClass::Fire));
+        }
+
         /** @var User $user */
         $user = $request->user();
 
         return inertia('PolicyFire/Create', [
             ...$this->formOptions(),
             'defaultCountryId' => $user->organization->default_country_id,
+            'entry' => $entry,
         ]);
     }
 
