@@ -352,6 +352,28 @@ test('update rejects a missing or non-existent currency', function (?int $curren
     expect($policy->fresh()->currency_id)->toBe($policy->currency_id);
 })->with(['missing' => [null], 'non-existent' => [999999]]);
 
+test('a discount up to the premium is accepted on update', function (?string $discount) {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->medical()->create(['created_by' => $user->id]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->patch(route('policies.medical.update', $policy), PolicyPayload::medicalSingle($client, $carrier, ['premium_amount' => '1200.00', 'discount_amount' => $discount]))
+        ->assertSessionHasNoErrors();
+})->with(['equal to the premium' => '1200.00', 'null' => null]);
+
+test('a discount greater than the premium is rejected on update', function () {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->medical()->create(['created_by' => $user->id]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->patch(route('policies.medical.update', $policy), PolicyPayload::medicalSingle($client, $carrier, ['premium_amount' => '1200.00', 'discount_amount' => '1200.01']))
+        ->assertSessionHasErrors(['discount_amount']);
+});
+
 test('update keeps the stored status whether or not a status is posted', function (PolicyStatus $status, array $posted) {
     $user = User::factory()->withOrganization()->create();
     $policy = Policy::factory()->forOrganization($user)->medical()->create(['created_by' => $user->id, 'status' => $status]);
