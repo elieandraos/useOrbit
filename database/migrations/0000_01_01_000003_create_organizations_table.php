@@ -19,6 +19,7 @@ return new class extends Migration
             $table->boolean('two_factor_required')->default(false);
             $table->foreignId('default_country_id')->nullable()->constrained('countries')->nullOnDelete();
             $table->foreignId('default_currency_id')->nullable()->constrained('currencies')->restrictOnDelete();
+            $table->string('timezone')->nullable();
             $table->timestamps();
         });
     }

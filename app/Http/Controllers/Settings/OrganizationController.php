@@ -13,6 +13,7 @@ use App\Models\Country;
 use App\Models\Currency;
 use App\Models\Organization;
 use App\Models\User;
+use DateTimeZone;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
@@ -36,9 +37,11 @@ final class OrganizationController extends Controller
             'name' => $organization->name,
             'defaultCountryId' => $organization->default_country_id,
             'defaultCurrencyId' => $organization->default_currency_id,
+            'timezone' => $organization->timezone,
             'twoFactorRequired' => $organization->two_factor_required,
             'countries' => CountryResource::collection(Country::query()->orderBy('name')->get()),
             'currencies' => CurrencyResource::collection(Currency::query()->orderBy('code')->get()),
+            'timezones' => DateTimeZone::listIdentifiers(DateTimeZone::ALL),
         ]);
     }
 

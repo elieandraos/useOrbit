@@ -119,8 +119,10 @@ test('renewingPolicies lists only this agent\'s active policies expiring within 
         );
 });
 
-test('renewingPolicies includes both edges of the renewal window', function () {
-    $user = User::factory()->withOrganization()->create();
+test('renewingPolicies includes both edges of the renewal window', function (?string $timezone) {
+    $this->travelTo('2026-01-15 12:00:00');
+    $organization = Organization::factory()->create(['timezone' => $timezone]);
+    $user = User::factory()->forOrganization($organization)->create();
     $agent = Agent::factory()->forOrganization($user)->create();
 
     $expiringToday = Policy::factory()->forOrganization($user)->create([
@@ -150,7 +152,43 @@ test('renewingPolicies includes both edges of the renewal window', function () {
             ->where('renewingPolicies.0.id', $expiringToday->id)
             ->where('renewingPolicies.1.id', $expiringAtWindowEdge->id)
         );
-});
+})->with([
+    'no organization timezone' => [null],
+    'east of UTC' => ['Asia/Beirut'],
+    'west of UTC' => ['America/New_York'],
+]);
+
+test('renewingPolicies measures its window from the organization-local date', function (string $instant, string $timezone, string $includedToday, string $includedEdge, string $excludedBefore, string $excludedAfter) {
+    $this->travelTo($instant);
+    $organization = Organization::factory()->create(['timezone' => $timezone]);
+    $user = User::factory()->forOrganization($organization)->create();
+    $agent = Agent::factory()->forOrganization($user)->create();
+
+    $createActivePolicyExpiringOn = fn (string $expiryDate): Policy => Policy::factory()->forOrganization($user)->create([
+        'agent_id' => $agent->id,
+        'created_by' => $user->id,
+        'status' => PolicyStatus::Active->value,
+        'expiry_date' => $expiryDate,
+    ]);
+
+    $expiringLocalToday = $createActivePolicyExpiringOn($includedToday);
+    $expiringAtLocalWindowEdge = $createActivePolicyExpiringOn($includedEdge);
+    $createActivePolicyExpiringOn($excludedBefore);
+    $createActivePolicyExpiringOn($excludedAfter);
+
+    $this->actingAs($user)
+        ->get(route('agents.show', $agent))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->has('renewingPolicies', 2)
+            ->where('renewingPolicies.0.id', $expiringLocalToday->id)
+            ->where('renewingPolicies.1.id', $expiringAtLocalWindowEdge->id)
+        );
+})->with([
+    // 00:30 on 16 Jan in Beirut: the UTC date's expiry has already passed locally.
+    'east of UTC, just after local midnight' => ['2026-01-15 22:30:00', 'Asia/Beirut', '2026-01-16', '2026-02-15', '2026-01-15', '2026-02-16'],
+    // 22:00 on 15 Jan in New York: the UTC window's last day is still a day out locally.
+    'west of UTC, just before local midnight' => ['2026-01-16 03:00:00', 'America/New_York', '2026-01-15', '2026-02-14', '2026-01-14', '2026-02-15'],
+]);
 
 test('clientsCount counts the agent\'s distinct, non-deleted clients across live policies of any status', function () {
     $user = User::factory()->withOrganization()->create();

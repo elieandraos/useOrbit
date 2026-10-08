@@ -20,6 +20,7 @@ use App\Models\Agent;
 use App\Models\Country;
 use App\Models\User;
 use App\Sorts\AgentSort;
+use App\Support\Tenancy\OrganizationTimezone;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
@@ -94,15 +95,17 @@ final class AgentsController extends Controller
     }
 
     #[Authorize('view', 'agent')]
-    public function show(Agent $agent): Response
+    public function show(Agent $agent, OrganizationTimezone $organizationTimezone): Response
     {
         $agent->load(['country', 'state']);
+
+        $today = $organizationTimezone->today();
 
         $renewingPolicies = $agent->policies()
             ->with(['client', 'carrier'])
             ->where('status', PolicyStatus::Active->value)
-            ->whereDate('expiry_date', '>=', now()->toDateString())
-            ->whereDate('expiry_date', '<=', now()->addDays(self::RENEWING_SOON_WINDOW_DAYS)->toDateString())
+            ->whereDate('expiry_date', '>=', $today->toDateString())
+            ->whereDate('expiry_date', '<=', $today->addDays(self::RENEWING_SOON_WINDOW_DAYS)->toDateString())
             ->orderBy('expiry_date')
             ->limit(self::RENEWING_SOON_LIMIT)
             ->get();

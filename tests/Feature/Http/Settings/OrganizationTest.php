@@ -94,7 +94,10 @@ test('updating the organization requires a boolean value', function () {
 });
 
 test('the organization settings page shows the current name and defaults', function () {
-    $organization = Organization::factory()->withLebanonAndUsdDefaults()->create(['name' => 'Acme Insurance']);
+    $organization = Organization::factory()->withLebanonAndUsdDefaults()->create([
+        'name' => 'Acme Insurance',
+        'timezone' => 'Asia/Beirut',
+    ]);
     $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
 
     $this->actingAs($owner)
@@ -105,6 +108,8 @@ test('the organization settings page shows the current name and defaults', funct
             ->where('defaultCurrencyId', $organization->default_currency_id)
             ->where('currencies.0.id', $organization->default_currency_id)
             ->where('currencies.0.code', 'USD')
+            ->where('timezone', 'Asia/Beirut')
+            ->where('timezones', DateTimeZone::listIdentifiers(DateTimeZone::ALL))
         );
 });
 
@@ -119,6 +124,7 @@ test('owner can rename the organization and set its default country and currency
             'name' => 'Acme Insurance',
             'default_country_id' => $country->id,
             'default_currency_id' => $currency->id,
+            'timezone' => null,
         ])
         ->assertSessionHasNoErrors()
         ->assertRedirect();
@@ -139,6 +145,7 @@ test('owner can clear the default country and currency', function () {
             'name' => $organization->name,
             'default_country_id' => '',
             'default_currency_id' => '',
+            'timezone' => '',
         ])
         ->assertSessionHasNoErrors();
 
@@ -157,10 +164,14 @@ test('non-owners cannot update the organization details', function (Organization
             'name' => 'Renamed',
             'default_country_id' => null,
             'default_currency_id' => null,
+            'timezone' => 'Asia/Beirut',
         ])
         ->assertForbidden();
 
-    expect($organization->fresh()->name)->toBe('Acme Insurance');
+    $organization->refresh();
+
+    expect($organization->name)->toBe('Acme Insurance')
+        ->and($organization->timezone)->toBeNull();
 })->with([OrganizationRole::Admin, OrganizationRole::Member]);
 
 test('updating the organization details rejects invalid input', function (array $input, string $field) {
@@ -172,6 +183,7 @@ test('updating the organization details rejects invalid input', function (array 
             'name' => 'Acme Insurance',
             'default_country_id' => null,
             'default_currency_id' => null,
+            'timezone' => null,
             ...$input,
         ])
         ->assertSessionHasErrors($field);
@@ -180,6 +192,8 @@ test('updating the organization details rejects invalid input', function (array 
     'name too long' => [['name' => str_repeat('a', 256)], 'name'],
     'non-existent country' => [['default_country_id' => 999999], 'default_country_id'],
     'non-existent currency' => [['default_currency_id' => 999999], 'default_currency_id'],
+    'unknown timezone identifier' => [['timezone' => 'Mars/Olympus_Mons'], 'timezone'],
+    'utc offset instead of a timezone identifier' => [['timezone' => '+03:00'], 'timezone'],
 ]);
 
 test('changing the default currency leaves existing policies in their own currency', function () {
@@ -193,8 +207,69 @@ test('changing the default currency leaves existing policies in their own curren
             'name' => $organization->name,
             'default_country_id' => $organization->default_country_id,
             'default_currency_id' => $otherCurrency->id,
+            'timezone' => null,
         ])
         ->assertSessionHasNoErrors();
 
     expect($policy->fresh()->currency_id)->toBe($organization->default_currency_id);
+});
+
+test('owner can set and change the organization timezone', function (?string $currentTimezone) {
+    $organization = Organization::factory()->create(['timezone' => $currentTimezone]);
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+
+    $this->actingAs($owner)
+        ->patch(route('organization.details.update'), [
+            'name' => $organization->name,
+            'default_country_id' => null,
+            'default_currency_id' => null,
+            'timezone' => 'Asia/Beirut',
+        ])
+        ->assertSessionHasNoErrors()
+        ->assertRedirect();
+
+    expect($organization->fresh()->timezone)->toBe('Asia/Beirut');
+})->with([
+    'unset' => [null],
+    'another timezone' => ['America/New_York'],
+]);
+
+test('owner can clear the organization timezone back to UTC', function () {
+    $organization = Organization::factory()->create(['timezone' => 'Asia/Beirut']);
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+
+    $this->actingAs($owner)
+        ->patch(route('organization.details.update'), [
+            'name' => $organization->name,
+            'default_country_id' => null,
+            'default_currency_id' => null,
+            'timezone' => '',
+        ])
+        ->assertSessionHasNoErrors();
+
+    expect($organization->fresh()->timezone)->toBeNull();
+});
+
+test('changing the timezone leaves existing policy dates unconverted', function () {
+    $organization = Organization::factory()->withLebanonAndUsdDefaults()->create();
+    $owner = User::factory()->forOrganization($organization, OrganizationRole::Owner)->create();
+    $policy = Policy::factory()->forOrganization($owner)->create([
+        'created_by' => $owner->id,
+        'effective_date' => '2026-01-15',
+        'expiry_date' => '2027-01-14',
+    ]);
+
+    $this->actingAs($owner)
+        ->patch(route('organization.details.update'), [
+            'name' => $organization->name,
+            'default_country_id' => $organization->default_country_id,
+            'default_currency_id' => $organization->default_currency_id,
+            'timezone' => 'Pacific/Kiritimati',
+        ])
+        ->assertSessionHasNoErrors();
+
+    $policy->refresh();
+
+    expect($policy->effective_date->toDateString())->toBe('2026-01-15')
+        ->and($policy->expiry_date->toDateString())->toBe('2027-01-14');
 });
