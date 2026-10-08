@@ -1,3 +1,5 @@
+import type { PolicyDisplayStatus } from '@/types/policy';
+
 export interface PolicyTravelDetails {
     id: number;
     destination: string;
@@ -43,8 +45,8 @@ export interface PolicyTravelResource {
     currency_id: number;
     currency_code: string;
     net_premium: string;
-    status: string;
-    status_label: string;
+    display_status: PolicyDisplayStatus;
+    display_status_label: string;
     source: string;
     source_label: string;
     details: PolicyTravelDetails;

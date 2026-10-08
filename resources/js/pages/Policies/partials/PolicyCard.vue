@@ -67,8 +67,8 @@ function goToPolicy() {
                         {{ policy.client.full_name }}
                     </span>
                 </div>
-                <Badge :tone="policyStatusTone[policy.status] ?? 'neutral'" dot>
-                    {{ policy.status_label }}
+                <Badge :tone="policyStatusTone[policy.display_status]" dot>
+                    {{ policy.display_status_label }}
                 </Badge>
             </div>
             <div

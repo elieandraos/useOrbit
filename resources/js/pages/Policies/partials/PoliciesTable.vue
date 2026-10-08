@@ -223,12 +223,11 @@ function goToPolicy(policy: PolicyResource) {
                             <td class="px-4 py-3">
                                 <Badge
                                     :tone="
-                                        policyStatusTone[policy.status] ??
-                                        'neutral'
+                                        policyStatusTone[policy.display_status]
                                     "
                                     dot
                                 >
-                                    {{ policy.status_label }}
+                                    {{ policy.display_status_label }}
                                 </Badge>
                             </td>
                             <td class="px-4 py-3 text-right" @click.stop>

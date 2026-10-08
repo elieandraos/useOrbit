@@ -1,3 +1,5 @@
+import type { PolicyDisplayStatus } from '@/types/policy';
+
 export interface PolicyExpatDetails {
     id: number;
     coverage_zone: string;
@@ -49,8 +51,8 @@ export interface PolicyExpatResource {
     currency_id: number;
     currency_code: string;
     net_premium: string;
-    status: string;
-    status_label: string;
+    display_status: PolicyDisplayStatus;
+    display_status_label: string;
     source: string;
     source_label: string;
     details: PolicyExpatDetails;

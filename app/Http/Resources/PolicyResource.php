@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\Policy;
+use App\Support\Policies\PolicyDisplayStatusResolver;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -28,6 +29,8 @@ final class PolicyResource extends JsonResource
      */
     public function baseAttributes(): array
     {
+        $displayStatus = app(PolicyDisplayStatusResolver::class)->for($this->resource);
+
         return [
             'id' => $this->id,
             'slug' => $this->slug,
@@ -65,8 +68,8 @@ final class PolicyResource extends JsonResource
             'premium_amount' => $this->premium_amount,
             'discount_amount' => $this->discount_amount,
             'net_premium' => number_format((float) $this->premium_amount - (float) $this->discount_amount, 2, '.', ''),
-            'status' => $this->status,
-            'status_label' => $this->status->label(),
+            'display_status' => $displayStatus,
+            'display_status_label' => $displayStatus->label(),
             'source' => $this->source,
             'source_label' => $this->source->label(),
         ];

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Policies;
 
 use App\Enums\PolicyClass;
+use App\Enums\PolicyDisplayStatus;
 use App\Enums\PolicySource;
-use App\Enums\PolicyStatus;
 use App\Enums\PolicyType;
 use App\Filters\PolicyFilter;
 use App\Http\Controllers\Controller;
@@ -37,7 +37,7 @@ final class PoliciesController extends Controller
 
         return inertia('Policies/Index', [
             'policies' => PolicyResource::collection($policies),
-            'statuses' => collect(PolicyStatus::all()),
+            'statuses' => collect(PolicyDisplayStatus::all()),
             'types' => collect(PolicyType::all()),
             'classes' => collect(PolicyClass::all()),
             'sources' => collect(PolicySource::all()),

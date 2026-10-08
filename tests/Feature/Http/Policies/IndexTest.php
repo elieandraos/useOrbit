@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Enums\ClientType;
 use App\Enums\PolicyClass;
+use App\Enums\PolicyDisplayStatus;
 use App\Enums\PolicySource;
 use App\Enums\PolicyStatus;
 use App\Enums\PolicyType;
@@ -98,7 +99,8 @@ test('the policy list exposes computed and labeled fields', function () {
             ->where('policies.data.0.currency_code', 'USD')
             ->where('policies.data.0.class_label', 'Automotive')
             ->where('policies.data.0.type_label', 'Group')
-            ->where('policies.data.0.status_label', 'Frozen')
+            ->where('policies.data.0.display_status', PolicyDisplayStatus::Frozen->value)
+            ->where('policies.data.0.display_status_label', 'Frozen')
             ->where('policies.data.0.source_label', 'Friend')
         );
 });
@@ -154,19 +156,21 @@ test('no status is hidden by default, unlike the archived-by-default Client beha
         ->assertInertia(fn ($page) => $page->has('policies.data', 3));
 });
 
-test('a status filter narrows the response to the exact matching status only', function () {
+test('a status filter narrows the response to the matching display status only', function () {
+    $this->travelTo('2026-03-10 12:00:00');
     $user = User::factory()->withOrganization()->create();
 
     /** @var Policy $match */
-    $match = Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'status' => PolicyStatus::Frozen]);
-    Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'status' => PolicyStatus::Active]);
+    $match = Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'effective_date' => '2025-03-10', 'expiry_date' => '2026-03-09']);
+    Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, 'effective_date' => '2025-03-10', 'expiry_date' => '2026-03-10']);
 
     $this->actingAs($user)
-        ->get(route('policies.index', ['status' => PolicyStatus::Frozen->value]))
+        ->get(route('policies.index', ['status' => PolicyDisplayStatus::Expired->value]))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->has('policies.data', 1)
             ->where('policies.data.0.id', $match->id)
+            ->where('policies.data.0.display_status_label', 'Expired')
         );
 });
 
@@ -186,13 +190,16 @@ test('a class[] filter narrows the response to any of the selected classes', fun
         );
 });
 
-test('an invalid status is rejected', function () {
+test('an invalid status is rejected, including the stored-only active status', function (string $status) {
     $user = User::factory()->withOrganization()->create();
 
     $this->actingAs($user)
-        ->get(route('policies.index', ['status' => 'unknown']))
+        ->get(route('policies.index', ['status' => $status]))
         ->assertInvalid(['status']);
-});
+})->with([
+    'unknown' => 'unknown',
+    'stored-only active' => 'active',
+]);
 
 test('an invalid type is rejected', function () {
     $user = User::factory()->withOrganization()->create();
@@ -263,7 +270,7 @@ test('the page exposes the filter option lists used by the filters drawer', func
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->where('currencies', fn ($currencies) => collect($currencies)->contains(fn (array $option) => $option === ['id' => $currency->id, 'code' => $currency->code, 'name' => $currency->name]))
-            ->has('statuses', 3)
+            ->where('statuses', PolicyDisplayStatus::all())
             ->has('types', 2)
             ->has('classes', 6)
             ->has('sources', 4)
@@ -313,7 +320,7 @@ test('the filters prop mirrors the applied query params', function () {
     $this->actingAs($user)
         ->get(route('policies.index', [
             'search' => 'POL-1000',
-            'status' => PolicyStatus::Frozen->value,
+            'status' => PolicyDisplayStatus::InForce->value,
             'type' => PolicyType::Group->value,
             'class' => [PolicyClass::Fire->value, PolicyClass::Life->value],
             'carrier_id' => $carrier->id,
@@ -327,7 +334,7 @@ test('the filters prop mirrors the applied query params', function () {
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->where('filters.search', 'POL-1000')
-            ->where('filters.status', PolicyStatus::Frozen->value)
+            ->where('filters.status', PolicyDisplayStatus::InForce->value)
             ->where('filters.type', PolicyType::Group->value)
             ->where('filters.class', [PolicyClass::Fire->value, PolicyClass::Life->value])
             ->where('filters.carrier_id', (string) $carrier->id)
