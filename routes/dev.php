@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 
 if (app()->environment('local')) {
     Route::get('/design-foundation', fn () => redirect('/design-foundation/button'))->name('design-foundation');
@@ -32,4 +35,30 @@ if (app()->environment('local')) {
     Route::get('/design-foundation/range-slider', fn () => inertia('design-foundation/range-slider/Index'))->name('design-foundation.range-slider');
     Route::get('/design-foundation/switch', fn () => inertia('design-foundation/switch/Index'))->name('design-foundation.switch');
     Route::get('/design-foundation/typeahead', fn () => inertia('design-foundation/typeahead/Index'))->name('design-foundation.typeahead');
+    Route::get('/design-foundation/typeahead/search', function (Request $request): JsonResponse {
+        $needle = Str::lower(trim($request->string('q')->toString()));
+
+        if (Str::length($needle) < 2) {
+            return response()->json(['data' => []]);
+        }
+
+        $people = collect([
+            'Aline Rizk', 'Bassam Khoury', 'Carla Nassar', 'Dany Azar', 'Farah Saliba', 'Georges Matar',
+            'Hiba Daher', 'Jad Frem', 'Joelle Karam', 'Karl Hayek', 'Lara Sfeir', 'Maher Chidiac',
+            'Maya Gemayel', 'Nadim Sarkis', 'Nadine Abou Jaoude', 'Omar Itani', 'Rana Haddad',
+            'Tarek Moussa', 'Yara Kassab', 'Ziad Feghali',
+        ]);
+
+        $matches = $people
+            ->map(fn (string $name, int $index): array => [
+                'id' => $index + 1,
+                'name' => $name,
+                'email' => Str::slug($name, '.').'@example.test',
+            ])
+            ->filter(fn (array $person): bool => Str::contains(Str::lower($person['name']), $needle))
+            ->take(8)
+            ->values();
+
+        return response()->json(['data' => $matches]);
+    })->name('design-foundation.typeahead.search');
 }
