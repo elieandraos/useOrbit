@@ -22,6 +22,8 @@ use App\Models\Contracts\NotificationSubject;
 use Carbon\CarbonImmutable;
 use Database\Factories\ClientFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -129,6 +131,18 @@ final class Client extends Model implements Documentable, Notable, NotificationS
                 ? (string) $this->company_name
                 : "$this->first_name $this->last_name",
         );
+    }
+
+    /**
+     * Order clients by their displayed name: the company name for a company, otherwise first then last name.
+     */
+    #[Scope]
+    protected function inDisplayedNameOrder(Builder $query): Builder
+    {
+        return $query
+            ->orderByRaw("CASE WHEN client_type = 'company' THEN company_name ELSE first_name END")
+            ->orderByRaw("CASE WHEN client_type = 'company' THEN company_name ELSE last_name END")
+            ->orderBy('id');
     }
 
     public function documentableKind(): string
