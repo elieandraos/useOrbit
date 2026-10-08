@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\Gender;
+use App\Enums\PolicyDisplayStatus;
 use App\Enums\PolicyType;
 use App\Http\Resources\PolicyMedicalResource;
 use App\Models\Agent;
@@ -148,4 +149,25 @@ test('insureds are absent for a single policy', function () {
         ->get(route('policies.medical.show', $policy))
         ->assertOk()
         ->assertInertia(fn ($page) => $page->missing('policy.insureds'));
+});
+
+test('the policy exposes the display status computed from the organization-local date', function () {
+    $this->travelTo('2026-03-10 20:00:00');
+    $user = User::factory()->withOrganization()->create();
+    $user->organization->update(['timezone' => 'Asia/Tokyo']);
+    $policy = Policy::factory()->forOrganization($user)->medical()->create([
+        'created_by' => $user->id,
+        'effective_date' => '2026-03-11',
+        'expiry_date' => '2027-03-10',
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('policies.medical.show', $policy))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('policy.display_status', PolicyDisplayStatus::InForce->value)
+            ->where('policy.display_status_label', 'In force')
+            ->missing('policy.status')
+            ->missing('policy.status_label')
+        );
 });

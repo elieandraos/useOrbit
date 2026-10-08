@@ -3,7 +3,10 @@
 declare(strict_types=1);
 
 use App\Enums\PolicyClass;
+use App\Enums\PolicyDisplayStatus;
 use App\Exports\PoliciesExport;
+use App\Models\Carrier;
+use App\Models\Client;
 use App\Models\Organization;
 use App\Models\Policy;
 use App\Models\User;
@@ -102,13 +105,43 @@ test('a sort query param does not reorder the exported rows', function () {
     });
 });
 
-test('an invalid status is rejected', function () {
+test('a status filter narrows the exported rows to the matching display status, as on the index', function () {
+    Excel::fake();
+    $this->travelTo('2026-03-10 12:00:00');
+
+    $user = User::factory()->withOrganization()->create();
+    $parties = [
+        'created_by' => $user->id,
+        'client_id' => Client::factory()->forOrganization($user)->create(['created_by' => $user->id])->id,
+        'carrier_id' => Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id])->id,
+    ];
+
+    /** @var Policy $upcoming */
+    $upcoming = Policy::factory()->forOrganization($user)->create([...$parties, 'effective_date' => '2026-03-11', 'expiry_date' => '2027-03-10']);
+    Policy::factory()->forOrganization($user)->create([...$parties, 'effective_date' => '2026-03-10', 'expiry_date' => '2027-03-09']);
+
+    $this->actingAs($user)
+        ->get(route('policies.export', ['status' => PolicyDisplayStatus::Upcoming->value]))
+        ->assertOk();
+
+    Excel::assertDownloaded('policies.xlsx', function (PoliciesExport $export) use ($upcoming) {
+        $policies = $export->query()->get();
+
+        return $policies->pluck('id')->all() === [$upcoming->id]
+            && $export->map($policies->sole())[12] === 'Upcoming';
+    });
+});
+
+test('an invalid status is rejected, including the stored-only active status', function (string $status) {
     $user = User::factory()->withOrganization()->create();
 
     $this->actingAs($user)
-        ->get(route('policies.export', ['status' => 'unknown']))
+        ->get(route('policies.export', ['status' => $status]))
         ->assertInvalid(['status']);
-});
+})->with([
+    'unknown' => 'unknown',
+    'stored-only active' => 'active',
+]);
 
 test('a currency_id filter narrows the exported rows to that currency only', function () {
     Excel::fake();

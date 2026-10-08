@@ -6,8 +6,8 @@ namespace App\Http\Requests\Policies;
 
 use App\Concerns\PolicyAmountValidationRules;
 use App\Enums\PolicyClass;
+use App\Enums\PolicyDisplayStatus;
 use App\Enums\PolicySource;
-use App\Enums\PolicyStatus;
 use App\Enums\PolicyType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -27,7 +27,7 @@ final class IndexPolicyRequest extends FormRequest
 
         return [
             'search' => ['nullable', 'string', 'max:255'],
-            'status' => ['nullable', new Enum(PolicyStatus::class)],
+            'status' => ['nullable', new Enum(PolicyDisplayStatus::class)],
             'type' => ['nullable', new Enum(PolicyType::class)],
             'class' => ['nullable', 'array'],
             'class.*' => [new Enum(PolicyClass::class)],

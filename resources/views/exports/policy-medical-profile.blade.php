@@ -129,7 +129,7 @@
         <tr>
             <td>
                 <span class="label">Status</span>
-                <span class="value">{{ $policy->status->label() }}</span>
+                <span class="value">{{ $displayStatus->label() }}</span>
             </td>
             <td>
                 <span class="label">Source</span>

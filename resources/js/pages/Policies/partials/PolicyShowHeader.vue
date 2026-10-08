@@ -46,8 +46,8 @@ function exportPolicy(): Promise<void> {
             <div
                 class="mt-1.5 flex flex-wrap items-center justify-center gap-2"
             >
-                <Badge :tone="policyStatusTone[policy.status] ?? 'neutral'" dot>
-                    {{ policy.status_label }}
+                <Badge :tone="policyStatusTone[policy.display_status]" dot>
+                    {{ policy.display_status_label }}
                 </Badge>
                 <Badge tone="accent">{{ policy.type_label }}</Badge>
             </div>
@@ -91,10 +91,10 @@ function exportPolicy(): Promise<void> {
                             {{ policy.policy_number }}
                         </h1>
                         <Badge
-                            :tone="policyStatusTone[policy.status] ?? 'neutral'"
+                            :tone="policyStatusTone[policy.display_status]"
                             dot
                         >
-                            {{ policy.status_label }}
+                            {{ policy.display_status_label }}
                         </Badge>
                         <Badge tone="accent">{{ policy.type_label }}</Badge>
                     </div>

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Enums\PolicyDisplayStatus;
+use App\Enums\PolicyStatus;
 use App\Http\Resources\PolicyAutomotiveResource;
 use App\Http\Resources\PolicyExpatResource;
 use App\Http\Resources\PolicyFireResource;
@@ -13,6 +15,7 @@ use App\Models\Policy;
 use App\Models\PolicyInsured;
 use App\Models\User;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 
 dataset('policy class resources', [
     'automotive' => ['automotive', PolicyAutomotiveResource::class, 'automotiveDetails'],
@@ -44,7 +47,7 @@ test('a class resource omits relations that were not loaded', function (string $
     $policy = Policy::factory()->forOrganization($user)->{$class}()->create(['created_by' => $user->id]);
 
     expect($resource::make($policy->fresh())->resolve())
-        ->toHaveKeys(['id', 'policy_number', 'net_premium', 'status_label'])
+        ->toHaveKeys(['id', 'policy_number', 'net_premium', 'display_status_label'])
         ->not->toHaveKeys(['client', 'carrier', 'carrier_branch', 'agent', 'currency_code', 'details', 'insureds']);
 })->with('policy class resources');
 
@@ -55,4 +58,35 @@ test('the resource exposes the code of the policy currency once it is loaded', f
 
     expect(PolicyResource::make($policy->load('currency'))->resolve())
         ->toHaveKey('currency_code', 'LBP');
+});
+
+test('the resource exposes the display status in place of the stored status', function () {
+    $this->travelTo('2026-03-10 12:00:00');
+    $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
+    $policy = Policy::factory()->forOrganization($user)->create([
+        'created_by' => $user->id,
+        'status' => PolicyStatus::Active,
+        'effective_date' => '2026-03-11',
+        'expiry_date' => '2027-03-10',
+    ]);
+
+    expect(PolicyResource::make($policy->fresh())->resolve())
+        ->toMatchArray([
+            'display_status' => PolicyDisplayStatus::Upcoming,
+            'display_status_label' => 'Upcoming',
+        ])
+        ->not->toHaveKeys(['status', 'status_label']);
+});
+
+test('a policy collection resolves the organization date once, not once per row', function () {
+    $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
+    Policy::factory(3)->forOrganization($user)->create(['created_by' => $user->id]);
+    $policies = Policy::query()->get();
+
+    DB::enableQueryLog();
+    PolicyResource::collection($policies)->resolve();
+
+    expect(DB::getQueryLog())->toHaveCount(1);
 });

@@ -1,6 +1,9 @@
 export type PolicyClass =
     'medical' | 'automotive' | 'expat' | 'fire' | 'life' | 'travel';
 
+export type PolicyDisplayStatus =
+    'upcoming' | 'in_force' | 'expired' | 'cancelled' | 'frozen';
+
 export interface PolicyResource {
     id: number;
     slug: string;
@@ -38,8 +41,8 @@ export interface PolicyResource {
     premium_amount: string;
     discount_amount: string;
     net_premium: string;
-    status: string;
-    status_label: string;
+    display_status: PolicyDisplayStatus;
+    display_status_label: string;
     source: string;
     source_label: string;
 }

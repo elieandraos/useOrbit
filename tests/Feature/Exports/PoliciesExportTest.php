@@ -37,6 +37,7 @@ test('headings returns the export column labels', function () {
 });
 
 test('map transforms a policy into an export row', function () {
+    $this->travelTo('2026-03-10 12:00:00');
     $user = User::factory()->withOrganization()->create();
     setOrganizationContext($user);
 
@@ -80,7 +81,7 @@ test('map transforms a policy into an export row', function () {
         'LBP',
         9999999999999.99,
         150.0,
-        'Active',
+        'Expired',
         'Agent',
     ]);
 });
@@ -133,7 +134,7 @@ test('amount columns are formatted as numbers with two decimals', function () {
     ]);
 });
 
-test('query eager loads each policy currency and carrier branch so mapping rows adds no queries', function () {
+test('query eager loads each policy relation so mapping rows adds only the one organization date lookup', function () {
     $user = User::factory()->withOrganization()->create();
     setOrganizationContext($user);
     $parties = [
@@ -150,7 +151,32 @@ test('query eager loads each policy currency and carrier branch so mapping rows 
     DB::enableQueryLog();
     $rows = $policies->map(fn (Policy $policy): array => $export->map($policy));
 
-    expect(DB::getQueryLog())->toBeEmpty()
+    expect(DB::getQueryLog())->toHaveCount(1)
         ->and($rows->pluck(9)->sort()->values()->all())->toBe(['LBP', 'USD', 'USD'])
         ->and($rows->pluck(5)->filter()->count())->toBe(2);
 });
+
+test('map writes the display status computed from the organization-local date', function (string $status, string $effectiveDate, string $expiryDate, string $label) {
+    $this->travelTo('2026-03-10 20:00:00');
+    $user = User::factory()->withOrganization()->create();
+    $user->organization->update(['timezone' => 'Asia/Tokyo']);
+    setOrganizationContext($user);
+
+    /** @var Policy $policy */
+    $policy = Policy::factory()->forOrganization($user)->create([
+        'created_by' => $user->id,
+        'client_id' => Client::factory()->forOrganization($user)->create(['created_by' => $user->id])->id,
+        'carrier_id' => Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id])->id,
+        'status' => $status,
+        'effective_date' => $effectiveDate,
+        'expiry_date' => $expiryDate,
+    ])->load(['client', 'carrier', 'carrierBranch', 'agent', 'currency']);
+
+    expect((new PoliciesExport([]))->map($policy)[12])->toBe($label);
+})->with([
+    'upcoming' => [PolicyStatus::Active->value, '2026-03-12', '2027-03-11', 'Upcoming'],
+    'in force from the local today' => [PolicyStatus::Active->value, '2026-03-11', '2027-03-10', 'In force'],
+    'expired' => [PolicyStatus::Active->value, '2025-03-10', '2026-03-10', 'Expired'],
+    'cancelled' => [PolicyStatus::Cancelled->value, '2026-03-11', '2027-03-10', 'Cancelled'],
+    'frozen' => [PolicyStatus::Frozen->value, '2026-03-11', '2027-03-10', 'Frozen'],
+]);

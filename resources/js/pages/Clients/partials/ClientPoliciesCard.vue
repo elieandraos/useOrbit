@@ -61,9 +61,9 @@ const props = defineProps<{
                             >{{ policy.subclass }}</span
                         >
                         <Badge
-                            :tone="policyStatusTone[policy.status] ?? 'neutral'"
+                            :tone="policyStatusTone[policy.display_status]"
                             dot
-                            >{{ policy.status_label }}</Badge
+                            >{{ policy.display_status_label }}</Badge
                         >
                     </div>
                     <p

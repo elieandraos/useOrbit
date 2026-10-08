@@ -3,13 +3,17 @@
 declare(strict_types=1);
 
 use App\Enums\PolicyClass;
+use App\Enums\PolicyDisplayStatus;
 use App\Enums\PolicySource;
 use App\Enums\PolicyStatus;
 use App\Enums\PolicyType;
 use App\Filters\PolicyFilter;
+use App\Http\Resources\PolicyResource;
 use App\Models\Carrier;
 use App\Models\Policy;
 use App\Models\Scopes\CurrentOrganizationScope;
+use App\Models\User;
+use Carbon\CarbonImmutable;
 
 test('empty filters return the unfiltered builder', function () {
     Policy::factory(3)->create();
@@ -80,16 +84,78 @@ test('search excludes non-matching policies', function () {
     expect($policies)->toHaveCount(0);
 });
 
-test('status narrows to the exact matching status only', function () {
-    /** @var Policy $match */
-    $match = Policy::factory()->create(['status' => PolicyStatus::Cancelled]);
-    Policy::factory()->create(['status' => PolicyStatus::Active]);
+dataset('display status boundary days', [
+    'effective today' => [PolicyStatus::Active, 0, 365, PolicyDisplayStatus::InForce],
+    'expiry today' => [PolicyStatus::Active, -365, 0, PolicyDisplayStatus::InForce],
+    'single-day term' => [PolicyStatus::Active, 0, 0, PolicyDisplayStatus::InForce],
+    'effective tomorrow' => [PolicyStatus::Active, 1, 366, PolicyDisplayStatus::Upcoming],
+    'expiry yesterday' => [PolicyStatus::Active, -366, -1, PolicyDisplayStatus::Expired],
+    'cancelled while in force' => [PolicyStatus::Cancelled, 0, 0, PolicyDisplayStatus::Cancelled],
+    'cancelled before the term' => [PolicyStatus::Cancelled, 1, 366, PolicyDisplayStatus::Cancelled],
+    'frozen after the term' => [PolicyStatus::Frozen, -366, -1, PolicyDisplayStatus::Frozen],
+    'frozen while in force' => [PolicyStatus::Frozen, -1, 1, PolicyDisplayStatus::Frozen],
+]);
 
+dataset('organization timezones', [
+    'UTC fallback' => [null, '2026-03-10'],
+    'Asia/Tokyo override, a day ahead of UTC' => ['Asia/Tokyo', '2026-03-11'],
+]);
+
+/**
+ * Create a policy in an organization with the given timezone, and make it the current organization.
+ *
+ * @param  array<string, mixed>  $attributes
+ */
+function policyInOrganizationWithTimezone(?string $timezone, array $attributes): Policy
+{
+    $user = User::factory()->withOrganization()->create();
+    $user->organization->update(['timezone' => $timezone]);
+    setOrganizationContext($user);
+
+    return Policy::factory()->forOrganization($user)->create(['created_by' => $user->id, ...$attributes])->fresh();
+}
+
+/**
+ * @return array<int, int>
+ */
+function policyIdsWithDisplayStatus(PolicyDisplayStatus $displayStatus): array
+{
     /** @noinspection PhpUndefinedMethodInspection */
-    $policies = Policy::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new PolicyFilter(['status' => PolicyStatus::Cancelled->value]))->get();
+    return Policy::query()->filter(new PolicyFilter(['status' => $displayStatus->value]))->pluck('id')->all();
+}
 
-    expect($policies->pluck('id')->all())->toBe([$match->id]);
-});
+test('the resource value and the status filter agree on every boundary day', function (PolicyStatus $status, int $effectiveOffset, int $expiryOffset, PolicyDisplayStatus $expected, ?string $timezone, string $localToday) {
+    $this->travelTo('2026-03-10 20:00:00');
+    $today = CarbonImmutable::parse($localToday);
+    $policy = policyInOrganizationWithTimezone($timezone, [
+        'status' => $status,
+        'effective_date' => $today->addDays($effectiveOffset)->toDateString(),
+        'expiry_date' => $today->addDays($expiryOffset)->toDateString(),
+    ]);
+
+    expect(PolicyResource::make($policy)->resolve()['display_status'])->toBe($expected);
+
+    foreach (PolicyDisplayStatus::cases() as $displayStatus) {
+        expect(policyIdsWithDisplayStatus($displayStatus))->toBe($displayStatus === $expected ? [$policy->id] : []);
+    }
+})->with('display status boundary days')->with('organization timezones');
+
+test('both paths flip together at the organization-local midnight, not the UTC one', function (string $instant, string $timezone, PolicyDisplayStatus $expected, PolicyDisplayStatus $other) {
+    $this->travelTo($instant);
+    $policy = policyInOrganizationWithTimezone($timezone, [
+        'status' => PolicyStatus::Active,
+        'effective_date' => '2025-01-16',
+        'expiry_date' => '2026-01-15',
+    ]);
+
+    expect(PolicyResource::make($policy)->resolve()['display_status'])->toBe($expected)
+        ->and(policyIdsWithDisplayStatus($expected))->toBe([$policy->id])
+        ->and(policyIdsWithDisplayStatus($other))->toBe([]);
+})->with([
+    'Beirut, one second before local midnight' => ['2026-01-15 21:59:59', 'Asia/Beirut', PolicyDisplayStatus::InForce, PolicyDisplayStatus::Expired],
+    'Beirut, local midnight while UTC is still on the expiry day' => ['2026-01-15 22:00:00', 'Asia/Beirut', PolicyDisplayStatus::Expired, PolicyDisplayStatus::InForce],
+    'New York, UTC already past the expiry day' => ['2026-01-16 03:00:00', 'America/New_York', PolicyDisplayStatus::InForce, PolicyDisplayStatus::Expired],
+]);
 
 test('type narrows to the exact matching type only', function () {
     /** @var Policy $match */
@@ -244,6 +310,10 @@ test('amountMin and amountMax combined narrow to the inclusive range', function 
 });
 
 test('all filters combined narrow to a single matching policy', function () {
+    $this->travelTo('2024-06-01 12:00:00');
+    $user = User::factory()->withOrganization()->create();
+    setOrganizationContext($user);
+
     /** @var Carrier $carrier */
     $carrier = Carrier::factory()->create();
 
@@ -251,6 +321,7 @@ test('all filters combined narrow to a single matching policy', function () {
     $match = Policy::factory()->create([
         'policy_number' => 'POL-1000',
         'status' => PolicyStatus::Active,
+        'expiry_date' => '2025-01-09',
         'type' => PolicyType::Group,
         'class' => PolicyClass::Fire,
         'carrier_id' => $carrier->id,
@@ -267,13 +338,14 @@ test('all filters combined narrow to a single matching policy', function () {
         'carrier_id' => $carrier->id,
         'source' => PolicySource::Agent,
         'effective_date' => '2024-01-10',
+        'expiry_date' => '2025-01-09',
         'premium_amount' => 9999,
     ]);
 
     /** @noinspection PhpUndefinedMethodInspection */
     $policies = Policy::query()->withoutGlobalScope(CurrentOrganizationScope::class)->filter(new PolicyFilter([
         'search' => '1000',
-        'status' => PolicyStatus::Active->value,
+        'status' => PolicyDisplayStatus::InForce->value,
         'type' => PolicyType::Group->value,
         'class' => [PolicyClass::Fire->value],
         'carrier_id' => $carrier->id,

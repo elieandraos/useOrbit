@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Filters;
 
+use App\Enums\PolicyDisplayStatus;
+use App\Enums\PolicyStatus;
+use App\Support\Policies\PolicyDisplayStatusResolver;
 use Illuminate\Database\Eloquent\Builder;
 
 final class PolicyFilter extends QueryFilter
@@ -23,10 +26,30 @@ final class PolicyFilter extends QueryFilter
         });
     }
 
-    /** @noinspection PhpUnused */
+    /**
+     * Filter by display status, the SQL counterpart of PolicyDisplayStatus::resolve() with identical
+     * boundaries, against the same organization-local date the resource uses.
+     *
+     * @noinspection PhpUnused
+     */
     public function status(string $value): Builder
     {
-        return $this->builder->where('status', $value);
+        $today = app(PolicyDisplayStatusResolver::class)->today()->toDateString();
+
+        return match (PolicyDisplayStatus::from($value)) {
+            PolicyDisplayStatus::Cancelled => $this->builder->where('status', PolicyStatus::Cancelled->value),
+            PolicyDisplayStatus::Frozen => $this->builder->where('status', PolicyStatus::Frozen->value),
+            PolicyDisplayStatus::Upcoming => $this->builder
+                ->where('status', PolicyStatus::Active->value)
+                ->whereDate('effective_date', '>', $today),
+            PolicyDisplayStatus::InForce => $this->builder
+                ->where('status', PolicyStatus::Active->value)
+                ->whereDate('effective_date', '<=', $today)
+                ->whereDate('expiry_date', '>=', $today),
+            PolicyDisplayStatus::Expired => $this->builder
+                ->where('status', PolicyStatus::Active->value)
+                ->whereDate('expiry_date', '<', $today),
+        };
     }
 
     /** @noinspection PhpUnused */

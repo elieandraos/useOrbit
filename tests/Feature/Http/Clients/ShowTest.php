@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Enums\PolicyDisplayStatus;
+use App\Enums\PolicyStatus;
 use App\Http\Resources\ClientResource;
 use App\Models\Carrier;
 use App\Models\Client;
@@ -144,4 +146,24 @@ test('a company client can be shown without a date of birth or gender', function
         ->get(route('clients.show', $client))
         ->assertOk()
         ->assertHasResource('client', ClientResource::make($client->load(['country', 'state'])));
+});
+
+test('recentPolicies expose each policy display status', function () {
+    $this->travelTo('2026-03-10 12:00:00');
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create();
+    Policy::factory()->forOrganization($user)->create([
+        'client_id' => $client->id,
+        'status' => PolicyStatus::Active,
+        'effective_date' => '2025-03-10',
+        'expiry_date' => '2026-03-09',
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('clients.show', $client))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('recentPolicies.0.display_status', PolicyDisplayStatus::Expired->value)
+            ->where('recentPolicies.0.display_status_label', 'Expired')
+        );
 });

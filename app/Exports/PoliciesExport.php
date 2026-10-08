@@ -6,6 +6,7 @@ namespace App\Exports;
 
 use App\Filters\PolicyFilter;
 use App\Models\Policy;
+use App\Support\Policies\PolicyDisplayStatusResolver;
 use Illuminate\Database\Eloquent\Builder;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
@@ -76,7 +77,7 @@ final readonly class PoliciesExport implements FromQuery, WithColumnFormatting, 
             $row->currency->code,
             (float) $row->premium_amount,
             (float) $row->discount_amount,
-            $row->status->label(),
+            app(PolicyDisplayStatusResolver::class)->for($row)->label(),
             $row->source->label(),
         ];
     }
