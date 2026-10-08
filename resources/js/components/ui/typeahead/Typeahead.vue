@@ -1,24 +1,34 @@
-<script setup lang="ts">
-import type { HTMLAttributes } from "vue"
-import { ChevronDown } from "@lucide/vue"
-import { computed, ref, useTemplateRef, watch } from "vue"
-import { onClickOutside, useDebounceFn, useVModel } from "@vueuse/core"
-import { cn } from "@/lib/utils"
-import Spinner from "@/components/ui/spinner/Spinner.vue"
-
+<script lang="ts">
 export interface TypeaheadOption {
     value: number | string
     label: string
 }
+</script>
+
+<script setup lang="ts" generic="T extends TypeaheadOption">
+import type { HTMLAttributes } from "vue"
+import { ChevronDown, X } from "@lucide/vue"
+import { computed, nextTick, ref, shallowRef, useTemplateRef, watch } from "vue"
+import { onClickOutside, useDebounceFn, useVModel } from "@vueuse/core"
+import { cn } from "@/lib/utils"
+import Spinner from "@/components/ui/spinner/Spinner.vue"
 
 defineOptions({ inheritAttrs: false })
 
 interface Props {
     modelValue?: number | string | null
-    options?: TypeaheadOption[]
-    search?: (query: string) => Promise<TypeaheadOption[]>
+    options?: T[]
+    search?: (query: string) => Promise<T[]>
+    /**
+     * Async mode only: below this many (trimmed) characters no search runs and no results show.
+     */
+    minQueryLength?: number
     loading?: boolean
     initialLabel?: string | null
+    /**
+     * The chosen option's label, bindable with `v-model:label`.
+     */
+    label?: string | null
     debounce?: number
     placeholder?: string
     name?: string
@@ -30,10 +40,23 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
     size: "md",
     debounce: 300,
+    minQueryLength: 0,
 })
 
 const emits = defineEmits<{
     (e: "update:modelValue", payload: number | string | null): void
+    (e: "update:label", payload: string | null): void
+}>()
+
+const slots = defineSlots<{
+    /**
+     * Replaces the input while a value is selected; a clear button is rendered beside it.
+     */
+    selected?: (props: { option: T | null; label: string; clear: () => void }) => unknown
+    /**
+     * Replaces the label inside each result row.
+     */
+    option?: (props: { option: T; index: number; highlighted: boolean }) => unknown
 }>()
 
 const modelValue = useVModel(props, "modelValue", emits, { passive: true })
@@ -44,10 +67,15 @@ const inputRef = useTemplateRef<HTMLInputElement>("inputRef")
 const query = ref("")
 const open = ref(false)
 const highlightedIndex = ref(-1)
-const asyncOptions = ref<TypeaheadOption[]>([])
+const asyncOptions = shallowRef<T[]>([])
+const chosenOption = shallowRef<T | null>(null)
 const searching = ref(false)
 
+const isAsync = computed(() => !props.options && Boolean(props.search))
+
 const optionPool = computed(() => props.options ?? asyncOptions.value)
+
+const meetsMinimumLength = computed(() => query.value.trim().length >= props.minQueryLength)
 
 const visibleOptions = computed(() => {
     if (props.options) {
@@ -61,15 +89,37 @@ const visibleOptions = computed(() => {
 
 const isLoading = computed(() => props.loading || searching.value)
 
-const selectedLabel = computed(() => {
-    if (modelValue.value === null || modelValue.value === undefined || modelValue.value === "") {
-        return ""
+const hasValue = computed(() => modelValue.value !== null && modelValue.value !== undefined && modelValue.value !== "")
+
+const selectedOption = computed<T | null>(() => {
+    if (!hasValue.value) {
+        return null
     }
 
     const match = optionPool.value.find((option) => String(option.value) === String(modelValue.value))
 
-    return match?.label ?? props.initialLabel ?? ""
+    if (match) {
+        return match
+    }
+
+    if (isAsync.value && chosenOption.value && String(chosenOption.value.value) === String(modelValue.value)) {
+        return chosenOption.value
+    }
+
+    return null
 })
+
+const selectedLabel = computed(() => {
+    if (!hasValue.value) {
+        return ""
+    }
+
+    return selectedOption.value?.label ?? props.initialLabel ?? props.label ?? ""
+})
+
+const showSelectedState = computed(() => hasValue.value && Boolean(slots.selected))
+
+const showMinimumLengthHint = computed(() => isAsync.value && props.minQueryLength > 0 && !meetsMinimumLength.value)
 
 watch(
     selectedLabel,
@@ -83,8 +133,17 @@ watch(
 
 let requestId = 0
 
-async function runSearch(value: string) {
-    if (!props.search) {
+/**
+ * Discards any scheduled or in-flight search so a late response can't bring back stale results.
+ */
+function invalidateSearch() {
+    requestId++
+    searching.value = false
+    asyncOptions.value = []
+}
+
+async function runSearch(value: string, scheduledRequestId: number) {
+    if (!props.search || scheduledRequestId !== requestId) {
         return
     }
 
@@ -106,13 +165,25 @@ async function runSearch(value: string) {
 
 const debouncedSearch = useDebounceFn(runSearch, () => props.debounce)
 
+function searchForQuery() {
+    if (!props.search) {
+        return
+    }
+
+    if (isAsync.value && !meetsMinimumLength.value) {
+        invalidateSearch()
+
+        return
+    }
+
+    debouncedSearch(query.value, requestId)
+}
+
 function openDropdown() {
     open.value = true
     highlightedIndex.value = -1
 
-    if (props.search) {
-        debouncedSearch(query.value)
-    }
+    searchForQuery()
 }
 
 function onFocus() {
@@ -125,16 +196,33 @@ function onInput(event: Event) {
     open.value = true
     highlightedIndex.value = -1
 
-    if (props.search) {
-        debouncedSearch(query.value)
-    }
+    searchForQuery()
 }
 
-function selectOption(option: TypeaheadOption) {
+function selectOption(option: T) {
+    chosenOption.value = option
     modelValue.value = option.value
     query.value = option.label
     open.value = false
     highlightedIndex.value = -1
+    emits("update:label", option.label)
+}
+
+async function clear() {
+    if (props.disabled) {
+        return
+    }
+
+    invalidateSearch()
+    chosenOption.value = null
+    modelValue.value = null
+    query.value = ""
+    open.value = false
+    highlightedIndex.value = -1
+    emits("update:label", null)
+
+    await nextTick()
+    inputRef.value?.focus()
 }
 
 function closeDropdown() {
@@ -186,7 +274,24 @@ const wrapperClass = computed(() =>
 
 <template>
     <div ref="wrapperRef" data-slot="typeahead" class="relative">
-        <div :class="wrapperClass">
+        <div v-if="showSelectedState" :class="wrapperClass" data-slot="typeahead-selected">
+            <div class="flex min-w-0 flex-1 items-center gap-2 px-3 text-primary">
+                <slot name="selected" :option="selectedOption" :label="selectedLabel" :clear="clear">
+                    <span class="truncate">{{ selectedLabel }}</span>
+                </slot>
+            </div>
+            <button
+                type="button"
+                aria-label="Clear selection"
+                :disabled="disabled"
+                class="mr-2 flex size-5 shrink-0 items-center justify-center rounded-[6px] text-tertiary transition-colors hover:bg-sunken hover:text-primary"
+                @click="clear"
+            >
+                <X class="size-3.5" />
+            </button>
+        </div>
+
+        <div v-else :class="wrapperClass">
             <input
                 ref="inputRef"
                 v-bind="$attrs"
@@ -204,25 +309,32 @@ const wrapperClass = computed(() =>
         </div>
 
         <ul
-            v-if="open"
+            v-if="open && !showSelectedState"
             class="absolute z-20 mt-1 w-full max-h-60 overflow-y-auto rounded-[10px] border border-border bg-surface p-1 shadow-lg"
         >
-            <li v-if="!isLoading && visibleOptions.length === 0" class="px-2 py-1.5 text-sm text-tertiary">No results found</li>
-            <li
-                v-for="(option, index) in visibleOptions"
-                :key="option.value"
-                :class="
-                    cn(
-                        'flex items-center rounded-[6px] px-2 py-1.5 text-sm cursor-pointer transition-colors text-primary',
-                        index === highlightedIndex ? 'bg-sunken' : 'hover:bg-sunken',
-                    )
-                "
-                @mousedown.prevent
-                @click="selectOption(option)"
-                @mouseenter="highlightedIndex = index"
-            >
-                {{ option.label }}
+            <li v-if="showMinimumLengthHint" class="px-2 py-1.5 text-sm text-tertiary">
+                Type at least {{ minQueryLength }} {{ minQueryLength === 1 ? "character" : "characters" }} to search
             </li>
+            <template v-else>
+                <li v-if="!isLoading && visibleOptions.length === 0" class="px-2 py-1.5 text-sm text-tertiary">No results found</li>
+                <li
+                    v-for="(option, index) in visibleOptions"
+                    :key="option.value"
+                    :class="
+                        cn(
+                            'flex items-center rounded-[6px] px-2 py-1.5 text-sm cursor-pointer transition-colors text-primary',
+                            index === highlightedIndex ? 'bg-sunken' : 'hover:bg-sunken',
+                        )
+                    "
+                    @mousedown.prevent
+                    @click="selectOption(option)"
+                    @mouseenter="highlightedIndex = index"
+                >
+                    <slot name="option" :option="option" :index="index" :highlighted="index === highlightedIndex">
+                        {{ option.label }}
+                    </slot>
+                </li>
+            </template>
         </ul>
 
         <input type="hidden" :name="name" :value="modelValue ?? ''" />
