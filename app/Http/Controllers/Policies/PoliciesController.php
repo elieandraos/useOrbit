@@ -70,7 +70,7 @@ final class PoliciesController extends Controller
             ...$policyFormOptions->shared(),
             'classes' => collect(PolicyClass::all()),
             'selected' => [
-                'class' => $this->selectedEnumValue($request, 'class', PolicyClass::class),
+                'class' => $this->selectedEnumValue($request, 'class', PolicyClass::class) ?? PolicyClass::Medical->value,
                 'type' => $this->selectedEnumValue($request, 'type', PolicyType::class),
                 'client_id' => Client::query()->where('status', ClientStatus::Active)->find($this->selectedId($request, 'client_id'))?->id,
                 'carrier_id' => Carrier::query()->where('status', CarrierStatus::Active)->find($this->selectedId($request, 'carrier_id'))?->id,

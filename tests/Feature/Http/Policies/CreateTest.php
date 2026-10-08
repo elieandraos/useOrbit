@@ -13,14 +13,14 @@ test('guests are redirected to the login page', function () {
         ->assertRedirect(route('login'));
 });
 
-test('nothing is preselected by default', function () {
+test('only the medical class is preselected by default', function () {
     $user = User::factory()->withOrganization()->create();
 
     $this->actingAs($user)
         ->get(route('policies.create'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page->where('selected', [
-            'class' => null,
+            'class' => 'medical',
             'type' => null,
             'client_id' => null,
             'carrier_id' => null,
@@ -77,7 +77,7 @@ test('parties from another organization are not preselected', function () {
         );
 });
 
-test('unknown class, type, and source values are not preselected', function () {
+test('unknown class, type, and source values are not preselected, and the class falls back to medical', function () {
     $user = User::factory()->withOrganization()->create();
 
     $this->actingAs($user)
@@ -88,13 +88,13 @@ test('unknown class, type, and source values are not preselected', function () {
         ]))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->where('selected.class', null)
+            ->where('selected.class', 'medical')
             ->where('selected.type', null)
             ->where('selected.source', null)
         );
 });
 
-test('array class, type, and source values are not preselected', function () {
+test('array class, type, and source values are not preselected, and the class falls back to medical', function () {
     $user = User::factory()->withOrganization()->create();
 
     $this->actingAs($user)
@@ -105,7 +105,7 @@ test('array class, type, and source values are not preselected', function () {
         ]))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->where('selected.class', null)
+            ->where('selected.class', 'medical')
             ->where('selected.type', null)
             ->where('selected.source', null)
         );
