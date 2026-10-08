@@ -11,6 +11,7 @@ import Select from '@/components/ui/select/Select.vue';
 import { Typeahead } from '@/components/ui/typeahead';
 import type { TypeaheadOption } from '@/components/ui/typeahead';
 import { usePolicyCurrency } from '@/composables/usePolicyCurrency';
+import { endPolicyCreateFlow } from '@/lib/policyCreateFlow';
 import { policyDateEndYear } from '@/lib/policyDateEndYear';
 import PolicyEntrySummary from '@/pages/Policies/partials/PolicyEntrySummary.vue';
 import PolicyFinancialsSection from '@/pages/Policies/partials/PolicyFinancialsSection.vue';
@@ -121,6 +122,15 @@ const countryOptions = computed<TypeaheadOption[]>(() =>
         label: country.name,
     })),
 );
+
+/**
+ * Cancelling a new policy ends the Create flow; cancelling an edit leaves history alone.
+ */
+function cancel(): void {
+    if (props.entry) {
+        endPolicyCreateFlow();
+    }
+}
 </script>
 
 <template>
@@ -362,7 +372,7 @@ const countryOptions = computed<TypeaheadOption[]>(() =>
         />
 
         <div class="flex justify-end gap-3">
-            <Link :href="policiesIndex().url">
+            <Link :href="policiesIndex().url" @before="cancel">
                 <Button type="button" variant="ghost">Cancel</Button>
             </Link>
             <Button type="submit" :disabled="processing">{{

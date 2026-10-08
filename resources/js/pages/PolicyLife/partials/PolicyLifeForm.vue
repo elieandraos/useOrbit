@@ -10,6 +10,7 @@ import RadioChips from '@/components/ui/radio-chips/RadioChips.vue';
 import Select from '@/components/ui/select/Select.vue';
 import Textarea from '@/components/ui/textarea/Textarea.vue';
 import { usePolicyCurrency } from '@/composables/usePolicyCurrency';
+import { endPolicyCreateFlow } from '@/lib/policyCreateFlow';
 import { policyDateEndYear } from '@/lib/policyDateEndYear';
 import PolicyEntrySummary from '@/pages/Policies/partials/PolicyEntrySummary.vue';
 import PolicyFinancialsSection from '@/pages/Policies/partials/PolicyFinancialsSection.vue';
@@ -98,6 +99,15 @@ const termYears = ref(
 );
 const smoker = ref(props.policy?.details.smoker ? '1' : '0');
 const beneficiaries = ref(props.policy?.details.beneficiaries ?? '');
+
+/**
+ * Cancelling a new policy ends the Create flow; cancelling an edit leaves history alone.
+ */
+function cancel(): void {
+    if (props.entry) {
+        endPolicyCreateFlow();
+    }
+}
 </script>
 
 <template>
@@ -285,7 +295,7 @@ const beneficiaries = ref(props.policy?.details.beneficiaries ?? '');
         />
 
         <div class="flex justify-end gap-3">
-            <Link :href="policiesIndex().url">
+            <Link :href="policiesIndex().url" @before="cancel">
                 <Button type="button" variant="ghost">Cancel</Button>
             </Link>
             <Button type="submit" :disabled="processing">{{

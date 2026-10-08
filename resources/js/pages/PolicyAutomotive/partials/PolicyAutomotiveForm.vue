@@ -9,6 +9,7 @@ import Input from '@/components/ui/input/Input.vue';
 import RadioChips from '@/components/ui/radio-chips/RadioChips.vue';
 import Select from '@/components/ui/select/Select.vue';
 import { usePolicyCurrency } from '@/composables/usePolicyCurrency';
+import { endPolicyCreateFlow } from '@/lib/policyCreateFlow';
 import { policyDateEndYear } from '@/lib/policyDateEndYear';
 import PolicyEntrySummary from '@/pages/Policies/partials/PolicyEntrySummary.vue';
 import PolicyFinancialsSection from '@/pages/Policies/partials/PolicyFinancialsSection.vue';
@@ -102,6 +103,15 @@ const valuationAmount = ref(props.policy?.details.valuation_amount ?? '');
 const valuationSource = ref(props.policy?.details.valuation_source ?? '');
 
 const isAllRisk = computed(() => subclass.value === 'All Risk');
+
+/**
+ * Cancelling a new policy ends the Create flow; cancelling an edit leaves history alone.
+ */
+function cancel(): void {
+    if (props.entry) {
+        endPolicyCreateFlow();
+    }
+}
 </script>
 
 <template>
@@ -347,7 +357,7 @@ const isAllRisk = computed(() => subclass.value === 'All Risk');
         />
 
         <div class="flex justify-end gap-3">
-            <Link :href="policiesIndex().url">
+            <Link :href="policiesIndex().url" @before="cancel">
                 <Button type="button" variant="ghost">Cancel</Button>
             </Link>
             <Button type="submit" :disabled="processing">{{

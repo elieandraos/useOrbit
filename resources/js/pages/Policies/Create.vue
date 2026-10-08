@@ -7,6 +7,7 @@ import FormField from '@/components/ui/form-field/FormField.vue';
 import FormSection from '@/components/ui/form-section/FormSection.vue';
 import RadioChips from '@/components/ui/radio-chips/RadioChips.vue';
 import Select from '@/components/ui/select/Select.vue';
+import { endPolicyCreateFlow } from '@/lib/policyCreateFlow';
 import { index as policiesIndex } from '@/routes/policies';
 import { create as policiesAutomotiveCreate } from '@/routes/policies/automotive';
 import { create as policiesExpatCreate } from '@/routes/policies/expat';
@@ -244,7 +245,7 @@ function continueToClass(): void {
             </FormSection>
 
             <div class="flex justify-end gap-3">
-                <Link :href="policiesIndex().url">
+                <Link :href="policiesIndex().url" @before="endPolicyCreateFlow">
                     <Button type="button" variant="ghost">Cancel</Button>
                 </Link>
                 <Button type="button" @click="continueToClass">
