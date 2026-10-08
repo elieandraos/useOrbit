@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Form, Link } from '@inertiajs/vue3';
 import { Plus, Trash2 } from '@lucide/vue';
-import { computed, ref } from 'vue';
+import { computed, ref, toRefs } from 'vue';
 import Button from '@/components/ui/button/Button.vue';
 import DateInput from '@/components/ui/date-input/DateInput.vue';
 import FormField from '@/components/ui/form-field/FormField.vue';
@@ -10,7 +10,14 @@ import Input from '@/components/ui/input/Input.vue';
 import RadioChips from '@/components/ui/radio-chips/RadioChips.vue';
 import Select from '@/components/ui/select/Select.vue';
 import { usePolicyCurrency } from '@/composables/usePolicyCurrency';
-import { endPolicyCreateFlow } from '@/lib/policyCreateFlow';
+import {
+    initialPolicyCommonEntries,
+    usePolicyFormEntries,
+} from '@/composables/usePolicyFormEntries';
+import {
+    endPolicyCreateFlow,
+    forgetPolicyCreateFlow,
+} from '@/lib/policyCreateFlow';
 import { policyDateEndYear } from '@/lib/policyDateEndYear';
 import PolicyEntrySummary from '@/pages/Policies/partials/PolicyEntrySummary.vue';
 import PolicyFinancialsSection from '@/pages/Policies/partials/PolicyFinancialsSection.vue';
@@ -87,49 +94,13 @@ const props = defineProps<{
     submitLabel: string;
 }>();
 
-const { currencyId, currencyCode } = usePolicyCurrency(
-    () => props.currencies,
-    props.policy?.currency_id,
-    props.defaultCurrencyId,
-);
-
-const policyNumber = ref(props.policy?.policy_number ?? '');
-const subclass = ref(props.policy?.subclass ?? props.subclasses[0] ?? '');
 const type = ref(
     props.policy?.type ??
         props.entry?.type.value ??
         props.types[0]?.value ??
         'single',
 );
-const effectiveDate = ref(props.policy?.effective_date ?? '');
-const expiryDate = ref(props.policy?.expiry_date ?? '');
 const source = ref(props.policy?.source ?? '');
-
-const coverageScope = ref(
-    props.policy?.details.coverage_scope ??
-        props.coverageScopes[0]?.value ??
-        '',
-);
-const classTier = ref(
-    props.policy?.details.class_tier ?? props.classTiers[0]?.value ?? '',
-);
-const coInsurance = ref(props.policy?.details.co_insurance ? '1' : '0');
-const coInsuranceShare = ref(props.policy?.details.co_insurance_share ?? '');
-const guaranteedRenewable = ref(
-    props.policy?.details.guaranteed_renewable ? '1' : '0',
-);
-
-const insuredFullName = ref(props.policy?.details.insured_full_name ?? '');
-const insuredDateOfBirth = ref(
-    props.policy?.details.insured_date_of_birth ?? '',
-);
-const insuredGender = ref(
-    props.policy?.details.insured_gender ?? props.genders[0]?.value ?? '',
-);
-const insuredSmoker = ref(props.policy?.details.insured_smoker ? '1' : '0');
-const insuredMedicalHistory = ref(
-    props.policy?.details.insured_medical_history ?? '',
-);
 
 interface InsuredRow {
     key: number;
@@ -157,9 +128,74 @@ function makeRow(insured?: InsuredValues): InsuredRow {
     };
 }
 
-const insuredRows = ref<InsuredRow[]>(
-    (props.policy?.insureds ?? []).map((insured) => makeRow(insured)),
-);
+/**
+ * Both type sections are held, so switching Single and Group keeps each one's entries; the `v-if` submits only the
+ * selected type's.
+ */
+const { entries, carriedWork } = usePolicyFormEntries({
+    policyClass: 'medical',
+    entry: props.entry,
+    common: initialPolicyCommonEntries(props.policy, props.defaultCurrencyId),
+    details: () => ({
+        subclass: props.policy?.subclass ?? props.subclasses[0] ?? '',
+        coverage_scope:
+            props.policy?.details.coverage_scope ??
+            props.coverageScopes[0]?.value ??
+            '',
+        class_tier:
+            props.policy?.details.class_tier ??
+            props.classTiers[0]?.value ??
+            '',
+        co_insurance: props.policy?.details.co_insurance ? '1' : '0',
+        co_insurance_share: props.policy?.details.co_insurance_share ?? '',
+        guaranteed_renewable: props.policy?.details.guaranteed_renewable
+            ? '1'
+            : '0',
+        insured_full_name: props.policy?.details.insured_full_name ?? '',
+        insured_date_of_birth:
+            props.policy?.details.insured_date_of_birth ?? '',
+        insured_gender:
+            props.policy?.details.insured_gender ??
+            props.genders[0]?.value ??
+            '',
+        insured_smoker: props.policy?.details.insured_smoker ? '1' : '0',
+        insured_medical_history:
+            props.policy?.details.insured_medical_history ?? '',
+        insured_rows: (props.policy?.insureds ?? []).map((insured) =>
+            makeRow(insured),
+        ),
+    }),
+});
+
+const {
+    policy_number: policyNumber,
+    carrier_branch_id: carrierBranchId,
+    effective_date: effectiveDate,
+    expiry_date: expiryDate,
+    currency_id: currencyId,
+    premium_amount: premiumAmount,
+    discount_amount: discountAmount,
+} = toRefs(entries.common);
+
+const {
+    subclass,
+    coverage_scope: coverageScope,
+    class_tier: classTier,
+    co_insurance: coInsurance,
+    co_insurance_share: coInsuranceShare,
+    guaranteed_renewable: guaranteedRenewable,
+    insured_full_name: insuredFullName,
+    insured_date_of_birth: insuredDateOfBirth,
+    insured_gender: insuredGender,
+    insured_smoker: insuredSmoker,
+    insured_medical_history: insuredMedicalHistory,
+    insured_rows: insuredRows,
+} = toRefs(entries.details);
+
+// Rows restored or carried over keep their keys, so new ones continue after them.
+nextRowKey = Math.max(0, ...insuredRows.value.map((row) => row.key));
+
+const { currencyCode } = usePolicyCurrency(() => props.currencies, currencyId);
 
 function addRow() {
     insuredRows.value.push(makeRow());
@@ -275,18 +311,33 @@ function cancel(): void {
         endPolicyCreateFlow();
     }
 }
+
+/**
+ * Creating the policy ends the Create flow: the server clears its history, and its work is forgotten here.
+ */
+function forgetCreatedFlow(): void {
+    if (props.entry) {
+        forgetPolicyCreateFlow();
+    }
+}
 </script>
 
 <template>
     <Form
         v-bind="route"
+        :on-success="forgetCreatedFlow"
         v-slot="{ errors, processing, submit }"
         :on-before="confirmTypeChangeDiscard"
         class="mx-auto flex w-full max-w-[1100px] flex-col gap-4"
     >
         <input type="hidden" name="class" value="medical" />
 
-        <PolicyEntrySummary v-if="entry" :entry="entry" :errors="errors" />
+        <PolicyEntrySummary
+            v-if="entry"
+            :entry="entry"
+            :errors="errors"
+            :carried-work="carriedWork"
+        />
 
         <FormSection
             title="Coverage"
@@ -580,6 +631,7 @@ function cancel(): void {
             <PolicyPartiesSection
                 :carriers="carriers"
                 :agents="agents"
+                v-model:carrier-branch-id="carrierBranchId"
                 :policy="policy"
                 :entry="entry"
                 :errors="errors"
@@ -644,9 +696,10 @@ function cancel(): void {
 
         <PolicyFinancialsSection
             v-model:currency-id="currencyId"
+            v-model:premium-amount="premiumAmount"
+            v-model:discount-amount="discountAmount"
             :currencies="currencies"
             :currency-code="currencyCode"
-            :policy="policy"
             :errors="errors"
         />
 

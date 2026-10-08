@@ -26,9 +26,10 @@ const carrierId = ref(
         ? `${props.policy.carrier.id}`
         : `${props.entry?.carrier.id ?? ''}`,
 );
-const carrierBranchId = ref(
-    props.policy ? `${props.policy.carrier_branch?.id ?? ''}` : '',
-);
+/** Held by the form, so a new policy's issuing branch is remembered and carried with its other entries. */
+const carrierBranchId = defineModel<string>('carrierBranchId', {
+    required: true,
+});
 const carrierBranches = computed(
     () =>
         props.carriers.find((carrier) => `${carrier.id}` === carrierId.value)

@@ -1,13 +1,27 @@
 <script setup lang="ts">
 import { Head, Link, router, useRemember } from '@inertiajs/vue3';
-import { computed, reactive, ref } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import PageHeader from '@/components/shell/PageHeader.vue';
 import Button from '@/components/ui/button/Button.vue';
 import FormField from '@/components/ui/form-field/FormField.vue';
 import FormSection from '@/components/ui/form-section/FormSection.vue';
 import RadioChips from '@/components/ui/radio-chips/RadioChips.vue';
 import Select from '@/components/ui/select/Select.vue';
-import { endPolicyCreateFlow } from '@/lib/policyCreateFlow';
+import {
+    applyPolicyDiscardRules,
+    carryPolicyWork,
+    checkPolicyCreateSnapshot,
+    clonePolicyEntries,
+    dropDiscardedPolicyWork,
+    endPolicyCreateFlow,
+    stampPolicyCreateFlow,
+    startPolicyCreateFlow,
+    takePolicyCarriedWork,
+} from '@/lib/policyCreateFlow';
+import type {
+    PolicyCarriedWork,
+    PolicyCreateFlowStamp,
+} from '@/lib/policyCreateFlow';
 import PolicyClientTypeahead from '@/pages/Policies/partials/PolicyClientTypeahead.vue';
 import { index as policiesIndex } from '@/routes/policies';
 import { create as policiesAutomotiveCreate } from '@/routes/policies/automotive';
@@ -34,7 +48,7 @@ interface FirstStepSelection {
     client: { id: number; full_name: string } | null;
 }
 
-interface RememberedSelection {
+interface RememberedSelection extends PolicyCreateFlowStamp {
     class: string;
     type: string;
     client_id: number | string | null;
@@ -43,6 +57,8 @@ interface RememberedSelection {
     carrier_id: string;
     agent_id: string;
     source: string;
+    /** The second step's entries, received from it and handed on at Continue. */
+    work: PolicyCarriedWork | null;
 }
 
 const props = defineProps<{
@@ -77,11 +93,31 @@ const classCreateRoutes: Record<string, typeof policiesMedicalCreate> = {
     travel: policiesTravelCreate,
 };
 
-/**
- * Remembered in the browser history entry, so browser Back to this screen restores the choices made here.
- */
-const selection = useRemember(
-    reactive({
+const rememberKey = 'Policies/Create';
+const restored = router.restore(rememberKey) as RememberedSelection | undefined;
+const handedOver = takePolicyCarriedWork();
+const restoreCheck = restored ? checkPolicyCreateSnapshot(restored) : null;
+
+let initialSelection: RememberedSelection;
+
+if (restored && restoreCheck) {
+    const snapshot = clonePolicyEntries(restored);
+
+    initialSelection = {
+        ...snapshot,
+        ...stampPolicyCreateFlow(),
+        work: snapshot.work
+            ? dropDiscardedPolicyWork(snapshot.work, restoreCheck)
+            : null,
+    };
+} else {
+    // A visit that isn't a flow navigation starts a new flow. An older entry of another flow (or of this one
+    // after a refresh) restored from history starts empty, joining the current flow rather than replacing it.
+    if (!handedOver && !restored) {
+        startPolicyCreateFlow();
+    }
+
+    initialSelection = {
         class: props.selected.class ?? '',
         type: props.selected.type ?? props.types[0]?.value ?? 'single',
         client_id: props.selected.client?.id ?? null,
@@ -89,9 +125,43 @@ const selection = useRemember(
         carrier_id: `${props.selected.carrier_id ?? ''}`,
         agent_id: `${props.selected.agent_id ?? ''}`,
         source: props.selected.source ?? '',
-    }),
-    'Policies/Create',
+        work: handedOver?.work ?? null,
+        ...stampPolicyCreateFlow(),
+    };
+}
+
+// Written back first, so the restore below gets the checked, re-stamped snapshot instead of the stored one.
+router.remember(clonePolicyEntries(initialSelection), rememberKey);
+
+/**
+ * Remembered in the browser history entry, so browser Back to this screen restores the choices made here, and the
+ * second step's work it carries.
+ */
+const selection = useRemember(
+    reactive(initialSelection),
+    rememberKey,
 ) as RememberedSelection;
+
+/**
+ * A different class or carrier discards the carried class entries or issuing branch as soon as it's chosen.
+ */
+watch(
+    () => [selection.class, selection.carrier_id] as const,
+    ([policyClass, carrierId]) => {
+        if (!selection.work) {
+            return;
+        }
+
+        selection.work = applyPolicyDiscardRules(
+            selection.work,
+            policyClass,
+            carrierId,
+        );
+        Object.assign(selection, stampPolicyCreateFlow());
+    },
+);
+
+const carryToClass = carryPolicyWork(() => selection.work);
 
 const showErrors = ref(false);
 
@@ -137,6 +207,7 @@ function continueToClass(): void {
                 source: selection.source,
             },
         }),
+        carryToClass,
     );
 }
 </script>
