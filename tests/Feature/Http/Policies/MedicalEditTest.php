@@ -90,7 +90,7 @@ test('the edit page receives the policy and the shared and medical form options'
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('PolicyMedical/Edit')
-            ->hasAll(['policy', 'clients', 'carriers', 'agents', 'types', 'statuses', 'sources', 'currencies', 'subclasses', 'coverageScopes', 'classTiers', 'genders'])
+            ->hasAll(['policy', 'clients', 'carriers', 'agents', 'types', 'sources', 'currencies', 'subclasses', 'coverageScopes', 'classTiers', 'genders'])
         );
 });
 

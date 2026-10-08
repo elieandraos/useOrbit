@@ -25,7 +25,6 @@ defineProps<{
     subclasses: string[];
     coverageTiers: Option[];
     types: Option[];
-    statuses: Option[];
     sources: Option[];
     currencies: PolicyCurrencyOption[];
     defaultCurrencyId: number | null;
@@ -80,7 +79,6 @@ defineOptions({
             :subclasses="subclasses"
             :coverage-tiers="coverageTiers"
             :types="types"
-            :statuses="statuses"
             :sources="sources"
             :currencies="currencies"
             :default-currency-id="defaultCurrencyId"

@@ -28,7 +28,7 @@ test('the create page receives the shared and automotive form options', function
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('PolicyAutomotive/Create')
-            ->hasAll(['clients', 'carriers', 'agents', 'types', 'statuses', 'sources', 'currencies', 'subclasses'])
+            ->hasAll(['clients', 'carriers', 'agents', 'types', 'sources', 'currencies', 'subclasses'])
         );
 });
 

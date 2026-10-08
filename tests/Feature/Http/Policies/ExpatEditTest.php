@@ -90,7 +90,7 @@ test('the edit page receives the policy and the shared and expat form options', 
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('PolicyExpat/Edit')
-            ->hasAll(['policy', 'clients', 'carriers', 'agents', 'types', 'statuses', 'sources', 'currencies', 'subclasses', 'coverageZones', 'genders', 'countries'])
+            ->hasAll(['policy', 'clients', 'carriers', 'agents', 'types', 'sources', 'currencies', 'subclasses', 'coverageZones', 'genders', 'countries'])
         );
 });
 

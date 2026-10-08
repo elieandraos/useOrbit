@@ -27,7 +27,6 @@ interface FirstStepSelection {
     client_id: number | null;
     carrier_id: number | null;
     agent_id: number | null;
-    status: string | null;
     source: string | null;
 }
 
@@ -37,7 +36,6 @@ const props = defineProps<{
     agents: PolicyPartyOption[];
     classes: Option[];
     types: Option[];
-    statuses: Option[];
     sources: Option[];
     selected: FirstStepSelection;
 }>();
@@ -75,7 +73,6 @@ const selection = useRemember(
         client_id: `${props.selected.client_id ?? ''}`,
         carrier_id: `${props.selected.carrier_id ?? ''}`,
         agent_id: `${props.selected.agent_id ?? ''}`,
-        status: props.selected.status ?? props.statuses[0]?.value ?? 'active',
         source: props.selected.source ?? '',
     }),
     'Policies/Create',
@@ -122,7 +119,6 @@ function continueToClass(): void {
                 client_id: selection.client_id,
                 carrier_id: selection.carrier_id,
                 agent_id: selection.agent_id,
-                status: selection.status,
                 source: selection.source,
             },
         }),
@@ -222,17 +218,8 @@ function continueToClass(): void {
                 </div>
             </FormSection>
 
-            <FormSection
-                title="Status & origin"
-                subtitle="Current status and how this policy came to you."
-            >
+            <FormSection title="Origin" subtitle="How this policy came to you.">
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <FormField label="Status" required>
-                        <RadioChips
-                            v-model="selection.status"
-                            :options="statuses"
-                        />
-                    </FormField>
                     <FormField
                         label="Lead source"
                         for="source"

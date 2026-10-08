@@ -90,7 +90,7 @@ test('the edit page receives the policy and the shared and automotive form optio
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('PolicyAutomotive/Edit')
-            ->hasAll(['policy', 'clients', 'carriers', 'agents', 'types', 'statuses', 'sources', 'currencies', 'subclasses'])
+            ->hasAll(['policy', 'clients', 'carriers', 'agents', 'types', 'sources', 'currencies', 'subclasses'])
         );
 });
 

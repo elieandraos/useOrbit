@@ -29,7 +29,6 @@ defineProps<{
     agents: EntityOption[];
     subclasses: string[];
     types: Option[];
-    statuses: Option[];
     sources: Option[];
     currencies: PolicyCurrencyOption[];
     defaultCurrencyId: number | null;
@@ -86,7 +85,6 @@ defineOptions({
             :agents="agents"
             :subclasses="subclasses"
             :types="types"
-            :statuses="statuses"
             :sources="sources"
             :currencies="currencies"
             :default-currency-id="defaultCurrencyId"

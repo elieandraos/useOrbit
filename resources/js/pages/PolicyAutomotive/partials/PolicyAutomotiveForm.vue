@@ -36,7 +36,6 @@ interface PolicyAutomotiveFormValues extends PolicyParties {
     premium_amount: string;
     discount_amount: string | null;
     currency_id: number;
-    status: string;
     source: string;
     details: {
         plate_number: string;
@@ -56,7 +55,6 @@ const props = defineProps<{
     agents: EntityOption[];
     subclasses: string[];
     types: Option[];
-    statuses: Option[];
     sources: Option[];
     currencies: PolicyCurrencyOption[];
     defaultCurrencyId?: number | null;
@@ -82,12 +80,6 @@ const type = ref(
 );
 const effectiveDate = ref(props.policy?.effective_date ?? '');
 const expiryDate = ref(props.policy?.expiry_date ?? '');
-const status = ref(
-    props.policy?.status ??
-        props.defaults?.status ??
-        props.statuses[0]?.value ??
-        'active',
-);
 const source = ref(props.policy?.source ?? props.defaults?.source ?? '');
 
 const plateNumber = ref(props.policy?.details.plate_number ?? '');
@@ -277,8 +269,8 @@ const isAllRisk = computed(() => subclass.value === 'All Risk');
             />
 
             <FormSection
-                title="Coverage period & status"
-                subtitle="Effective dates and current standing."
+                title="Coverage period & origin"
+                subtitle="Effective dates and how this policy came to you."
             >
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <FormField
@@ -304,13 +296,6 @@ const isAllRisk = computed(() => subclass.value === 'All Risk');
                         />
                     </FormField>
                 </div>
-                <FormField label="Status" required :error="errors.status">
-                    <RadioChips
-                        v-model="status"
-                        name="status"
-                        :options="statuses"
-                    />
-                </FormField>
                 <FormField
                     label="Lead source"
                     for="source"

@@ -25,7 +25,6 @@ test('nothing is preselected by default', function () {
             'client_id' => null,
             'carrier_id' => null,
             'agent_id' => null,
-            'status' => null,
             'source' => null,
         ]));
 });
@@ -43,7 +42,6 @@ test('the carried-over first-step values are restored', function () {
             'client_id' => $client->id,
             'carrier_id' => $carrier->id,
             'agent_id' => $agent->id,
-            'status' => 'frozen',
             'source' => 'friend',
         ]))
         ->assertOk()
@@ -53,7 +51,6 @@ test('the carried-over first-step values are restored', function () {
             'client_id' => $client->id,
             'carrier_id' => $carrier->id,
             'agent_id' => $agent->id,
-            'status' => 'frozen',
             'source' => 'friend',
         ]));
 });
@@ -80,40 +77,36 @@ test('parties from another organization are not preselected', function () {
         );
 });
 
-test('unknown class, type, status, and source values are not preselected', function () {
+test('unknown class, type, and source values are not preselected', function () {
     $user = User::factory()->withOrganization()->create();
 
     $this->actingAs($user)
         ->get(route('policies.create', [
             'class' => 'marine',
             'type' => 'family',
-            'status' => 'expired',
             'source' => 'billboard',
         ]))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->where('selected.class', null)
             ->where('selected.type', null)
-            ->where('selected.status', null)
             ->where('selected.source', null)
         );
 });
 
-test('array class, type, status, and source values are not preselected', function () {
+test('array class, type, and source values are not preselected', function () {
     $user = User::factory()->withOrganization()->create();
 
     $this->actingAs($user)
         ->get(route('policies.create', [
             'class' => ['life'],
             'type' => ['group'],
-            'status' => ['frozen'],
             'source' => ['friend'],
         ]))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->where('selected.class', null)
             ->where('selected.type', null)
-            ->where('selected.status', null)
             ->where('selected.source', null)
         );
 });
@@ -146,7 +139,7 @@ test('the create page receives the shared form options with the policy classes a
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('Policies/Create')
-            ->hasAll(['clients', 'carriers', 'agents', 'types', 'statuses', 'sources', 'classes', 'selected'])
+            ->hasAll(['clients', 'carriers', 'agents', 'types', 'sources', 'classes', 'selected'])
         );
 });
 

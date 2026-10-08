@@ -33,7 +33,6 @@ const props = defineProps<{
     agents: EntityOption[];
     subclasses: string[];
     types: Option[];
-    statuses: Option[];
     sources: Option[];
     currencies: PolicyCurrencyOption[];
     countries: CountryOption[];
@@ -73,7 +72,6 @@ setLayoutProps({
             :agents="agents"
             :subclasses="subclasses"
             :types="types"
-            :statuses="statuses"
             :sources="sources"
             :currencies="currencies"
             :countries="countries"

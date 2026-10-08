@@ -8,7 +8,6 @@ use App\Enums\AgentStatus;
 use App\Enums\CarrierStatus;
 use App\Enums\ClientStatus;
 use App\Enums\PolicySource;
-use App\Enums\PolicyStatus;
 use App\Enums\PolicyType;
 use App\Http\Resources\CurrencyResource;
 use App\Models\Agent;
@@ -43,7 +42,6 @@ final readonly class PolicyFormOptions
      *     carriers: Collection<int, array{id: int, name: string, branches: Collection<int, array{id: int, label: string}>}>,
      *     agents: Collection<int, array{id: int, full_name: string}>,
      *     types: Collection<int, array{label: string, value: string}>,
-     *     statuses: Collection<int, array{label: string, value: string}>,
      *     sources: Collection<int, array{label: string, value: string}>,
      *     currencies: AnonymousResourceCollection,
      *     defaultCurrencyId?: int|null,
@@ -60,7 +58,6 @@ final readonly class PolicyFormOptions
             ]),
             'agents' => $this->agents($policy?->agent_id)->map(fn (Agent $agent): array => ['id' => $agent->id, 'full_name' => $agent->full_name]),
             'types' => collect(PolicyType::all()),
-            'statuses' => collect(PolicyStatus::all()),
             'sources' => collect(PolicySource::all()),
             'currencies' => CurrencyResource::collection(Currency::query()->orderBy('code')->get()),
             ...($policy === null ? ['defaultCurrencyId' => $this->defaultCurrencyId()] : []),

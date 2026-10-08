@@ -29,7 +29,7 @@ test('the create page receives the shared and expat form options', function () {
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('PolicyExpat/Create')
-            ->hasAll(['clients', 'carriers', 'agents', 'types', 'statuses', 'sources', 'currencies', 'subclasses', 'coverageZones', 'genders', 'countries'])
+            ->hasAll(['clients', 'carriers', 'agents', 'types', 'sources', 'currencies', 'subclasses', 'coverageZones', 'genders', 'countries'])
         );
 });
 

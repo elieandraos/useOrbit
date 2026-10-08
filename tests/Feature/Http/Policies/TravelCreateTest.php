@@ -29,7 +29,7 @@ test('the create page receives the shared and travel form options', function () 
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('PolicyTravel/Create')
-            ->hasAll(['clients', 'carriers', 'agents', 'types', 'statuses', 'sources', 'currencies', 'subclasses', 'coverageTiers'])
+            ->hasAll(['clients', 'carriers', 'agents', 'types', 'sources', 'currencies', 'subclasses', 'coverageTiers'])
         );
 });
 

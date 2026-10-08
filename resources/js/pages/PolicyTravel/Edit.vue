@@ -29,7 +29,6 @@ const props = defineProps<{
     subclasses: string[];
     coverageTiers: Option[];
     types: Option[];
-    statuses: Option[];
     sources: Option[];
     currencies: PolicyCurrencyOption[];
 }>();
@@ -69,7 +68,6 @@ setLayoutProps({
             :subclasses="subclasses"
             :coverage-tiers="coverageTiers"
             :types="types"
-            :statuses="statuses"
             :sources="sources"
             :currencies="currencies"
             :route="policiesTravelUpdate.form({ policy: policy.slug })"

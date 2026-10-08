@@ -10,14 +10,7 @@ const props = defineProps<{
     form: string;
 }>();
 
-const firstStepKeys = [
-    'type',
-    'client_id',
-    'carrier_id',
-    'agent_id',
-    'status',
-    'source',
-];
+const firstStepKeys = ['type', 'client_id', 'carrier_id', 'agent_id', 'source'];
 
 function backToEntry(): void {
     const form = document.getElementById(props.form);

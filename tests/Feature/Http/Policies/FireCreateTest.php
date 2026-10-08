@@ -29,7 +29,7 @@ test('the create page receives the shared and fire form options', function () {
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('PolicyFire/Create')
-            ->hasAll(['clients', 'carriers', 'agents', 'types', 'statuses', 'sources', 'currencies', 'subclasses', 'countries'])
+            ->hasAll(['clients', 'carriers', 'agents', 'types', 'sources', 'currencies', 'subclasses', 'countries'])
         );
 });
 

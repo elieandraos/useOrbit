@@ -28,7 +28,7 @@ test('the create page receives the shared and medical form options', function ()
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('PolicyMedical/Create')
-            ->hasAll(['clients', 'carriers', 'agents', 'types', 'statuses', 'sources', 'currencies', 'subclasses', 'coverageScopes', 'classTiers', 'genders'])
+            ->hasAll(['clients', 'carriers', 'agents', 'types', 'sources', 'currencies', 'subclasses', 'coverageScopes', 'classTiers', 'genders'])
         );
 });
 

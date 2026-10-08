@@ -28,7 +28,6 @@ const props = defineProps<{
     agents: EntityOption[];
     subclasses: string[];
     types: Option[];
-    statuses: Option[];
     sources: Option[];
     currencies: PolicyCurrencyOption[];
     coverageScopes: Option[];
@@ -70,7 +69,6 @@ setLayoutProps({
             :agents="agents"
             :subclasses="subclasses"
             :types="types"
-            :statuses="statuses"
             :sources="sources"
             :currencies="currencies"
             :coverage-scopes="coverageScopes"

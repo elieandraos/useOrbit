@@ -28,7 +28,7 @@ test('the create page receives the shared and life form options', function () {
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('PolicyLife/Create')
-            ->hasAll(['clients', 'carriers', 'agents', 'types', 'statuses', 'sources', 'currencies', 'subclasses'])
+            ->hasAll(['clients', 'carriers', 'agents', 'types', 'sources', 'currencies', 'subclasses'])
         );
 });
 

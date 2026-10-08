@@ -90,7 +90,7 @@ test('the edit page receives the policy and the shared and life form options', f
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('PolicyLife/Edit')
-            ->hasAll(['policy', 'clients', 'carriers', 'agents', 'types', 'statuses', 'sources', 'currencies', 'subclasses'])
+            ->hasAll(['policy', 'clients', 'carriers', 'agents', 'types', 'sources', 'currencies', 'subclasses'])
         );
 });
 

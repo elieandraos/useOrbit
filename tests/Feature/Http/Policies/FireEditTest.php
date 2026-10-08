@@ -91,7 +91,7 @@ test('the edit page receives the policy and the shared and fire form options', f
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('PolicyFire/Edit')
-            ->hasAll(['policy', 'clients', 'carriers', 'agents', 'types', 'statuses', 'sources', 'currencies', 'subclasses', 'countries'])
+            ->hasAll(['policy', 'clients', 'carriers', 'agents', 'types', 'sources', 'currencies', 'subclasses', 'countries'])
         );
 });
 
