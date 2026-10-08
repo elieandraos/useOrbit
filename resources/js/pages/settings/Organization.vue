@@ -22,9 +22,11 @@ const props = defineProps<{
     name: string;
     defaultCountryId: number | null;
     defaultCurrencyId: number | null;
+    timezone: string | null;
     twoFactorRequired: boolean;
     countries: { id: number; name: string }[];
     currencies: { id: number; code: string; name: string }[];
+    timezones: string[];
 }>();
 
 defineOptions({
@@ -41,6 +43,7 @@ defineOptions({
 const name = ref(props.name);
 const defaultCountryId = ref<number | string | null>(props.defaultCountryId);
 const defaultCurrencyId = ref(props.defaultCurrencyId?.toString() ?? '');
+const timezone = ref<number | string | null>(props.timezone);
 const twoFactorRequired = ref(props.twoFactorRequired);
 
 const countryOptions = computed<TypeaheadOption[]>(() => [
@@ -48,6 +51,14 @@ const countryOptions = computed<TypeaheadOption[]>(() => [
     ...props.countries.map((country) => ({
         value: country.id,
         label: country.name,
+    })),
+]);
+
+const timezoneOptions = computed<TypeaheadOption[]>(() => [
+    { value: '', label: 'UTC (default)' },
+    ...props.timezones.map((identifier) => ({
+        value: identifier,
+        label: identifier.replaceAll('_', ' '),
     })),
 ]);
 </script>
@@ -136,6 +147,22 @@ const countryOptions = computed<TypeaheadOption[]>(() => [
                                 {{ currency.code }} — {{ currency.name }}
                             </option>
                         </Select>
+                    </FormField>
+
+                    <FormField
+                        label="Timezone"
+                        for="timezone"
+                        optional
+                        helper="Decides when a new day starts for your organization. Stored policy dates are never converted."
+                        :error="errors.timezone"
+                    >
+                        <Typeahead
+                            id="timezone"
+                            v-model="timezone"
+                            name="timezone"
+                            :options="timezoneOptions"
+                            placeholder="UTC (default)"
+                        />
                     </FormField>
 
                     <div class="flex items-center gap-4">

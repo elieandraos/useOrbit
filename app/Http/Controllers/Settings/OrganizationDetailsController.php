@@ -16,7 +16,7 @@ use Inertia\Inertia;
 final class OrganizationDetailsController extends Controller
 {
     /**
-     * Update the organization's name, default country and default currency.
+     * Update the organization's name, default country, default currency and timezone.
      */
     #[Authorize('update', Organization::class)]
     public function __invoke(OrganizationDetailsUpdateRequest $request, UpdateOrganizationDetailsAction $action): RedirectResponse
