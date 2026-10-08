@@ -254,3 +254,24 @@ test('store ignores a posted status and stores the policy as active', function (
 
     expect(Policy::query()->sole()->status)->toBe(PolicyStatus::Active);
 });
+
+test('a successful store clears the create flow history', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $state = State::factory()->lebanon()->create();
+
+    $this->actingAs($user)
+        ->post(route('policies.fire.store'), PolicyPayload::fire($client, $carrier, $state))
+        ->assertSessionHasNoErrors()
+        ->assertInertiaHistoryCleared();
+});
+
+test('a store that fails validation keeps the create flow history', function () {
+    $user = User::factory()->withOrganization()->create();
+
+    $this->actingAs($user)
+        ->post(route('policies.fire.store'))
+        ->assertSessionHasErrors('policy_number')
+        ->assertInertiaHistoryCleared(false);
+});

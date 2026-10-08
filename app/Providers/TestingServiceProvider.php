@@ -64,5 +64,12 @@ final class TestingServiceProvider extends ServiceProvider
                 expect(array_key_exists('encryptHistory', $inertia->toArray()))->toBe($encrypted);
             });
         });
+
+        TestResponse::macro('assertInertiaHistoryCleared', function (bool $cleared = true) {
+            /** @var TestResponse $this */
+            return $cleared
+                ? $this->assertSessionHas('inertia.clear_history', true)
+                : $this->assertSessionMissing('inertia.clear_history');
+        });
     }
 }

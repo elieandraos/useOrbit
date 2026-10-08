@@ -54,6 +54,7 @@ final class PoliciesTravelController extends Controller
         $policy = $action->handle($user, $request->validated());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Policy created.')]);
+        Inertia::clearHistory();
 
         return to_route('policies.travel.show', $policy);
     }
