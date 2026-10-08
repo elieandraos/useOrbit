@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\PolicyStatus;
 use App\Models\Carrier;
 use App\Models\Client;
 use App\Models\Organization;
@@ -165,3 +166,22 @@ test('update rejects a sum assured above the largest amount or with more than tw
         ->patch(route('policies.life.update', $policy), PolicyPayload::life($client, $carrier, ['life' => ['sum_assured' => $amount]]))
         ->assertSessionHasErrors(['life.sum_assured']);
 })->with(['above the maximum' => ['10000000000000.00'], 'three decimals' => ['1000.001']]);
+
+test('update keeps the stored status whether or not a status is posted', function (PolicyStatus $status, array $posted) {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->life()->create(['created_by' => $user->id, 'status' => $status]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->patch(route('policies.life.update', $policy), PolicyPayload::life($client, $carrier, $posted))
+        ->assertSessionHasNoErrors();
+
+    expect($policy->fresh()->status)->toBe($status);
+})->with([
+    'cancelled' => PolicyStatus::Cancelled,
+    'frozen' => PolicyStatus::Frozen,
+])->with([
+    'without a posted status' => [[]],
+    'with a posted status' => [['status' => 'active']],
+]);

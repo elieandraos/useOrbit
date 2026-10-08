@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\PolicyStatus;
 use App\Models\Carrier;
 use App\Models\Client;
 use App\Models\Country;
@@ -220,3 +221,15 @@ test('store rejects a missing or non-existent currency', function (?int $currenc
 
     expect(Policy::query()->exists())->toBeFalse();
 })->with(['missing' => [null], 'non-existent' => [999999]]);
+
+test('store ignores a posted status and stores the policy as active', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->post(route('policies.expat.store'), PolicyPayload::expat($client, $carrier, ['status' => 'frozen']))
+        ->assertSessionHasNoErrors();
+
+    expect(Policy::query()->sole()->status)->toBe(PolicyStatus::Active);
+});

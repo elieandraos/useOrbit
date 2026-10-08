@@ -9,7 +9,6 @@ use App\Enums\Gender;
 use App\Enums\MedicalClassTier;
 use App\Enums\MedicalCoverageScope;
 use App\Enums\PolicyClass;
-use App\Enums\PolicyStatus;
 use App\Enums\PolicyType;
 use App\Models\Policy;
 use Illuminate\Foundation\Http\FormRequest;
@@ -23,7 +22,6 @@ final class UpdatePolicyMedicalRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'status' => $this->input('status') ?? PolicyStatus::Active->value,
             'medical' => [
                 ...$this->input('medical', []),
                 'co_insurance' => $this->boolean('medical.co_insurance'),

@@ -19,7 +19,7 @@ final class UpdatePolicyAction
     ) {}
 
     /**
-     * @param  array{policy_number: string, class: string, subclass: string, type: string, client_id: string, carrier_id: string, carrier_branch_id?: string|null, agent_id?: string|null, currency_id: string, effective_date: string, expiry_date: string, premium_amount: string, discount_amount?: string|null, status: string, source: string}  $attributes
+     * @param  array{policy_number: string, class: string, subclass: string, type: string, client_id: string, carrier_id: string, carrier_branch_id?: string|null, agent_id?: string|null, currency_id: string, effective_date: string, expiry_date: string, premium_amount: string, discount_amount?: string|null, source: string}  $attributes
      *
      * @throws \Throwable
      */
@@ -49,7 +49,6 @@ final class UpdatePolicyAction
                 'expiry_date' => $attributes['expiry_date'],
                 'premium_amount' => $attributes['premium_amount'],
                 'discount_amount' => $attributes['discount_amount'] ?? 0,
-                'status' => $attributes['status'],
                 'source' => $attributes['source'],
                 'updated_by' => $user->id,
             ]);

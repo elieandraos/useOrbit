@@ -9,7 +9,6 @@ use App\Enums\CarrierStatus;
 use App\Enums\ClientStatus;
 use App\Enums\PolicyClass;
 use App\Enums\PolicySource;
-use App\Enums\PolicyStatus;
 use App\Enums\PolicyType;
 use App\Models\Policy;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -59,7 +58,6 @@ trait PolicyValidationRules
             'currency_id' => ['required', 'integer', 'exists:currencies,id'],
             'premium_amount' => ['required', ...$this->policyAmountRules()],
             'discount_amount' => ['nullable', ...$this->policyAmountRules(), 'lte:premium_amount'],
-            'status' => ['required', new Enum(PolicyStatus::class)],
             'source' => ['required', new Enum(PolicySource::class)],
         ];
     }
@@ -85,7 +83,6 @@ trait PolicyValidationRules
             'currency_id' => 'currency',
             'premium_amount' => 'premium amount',
             'discount_amount' => 'discount amount',
-            'status' => 'status',
             'source' => 'lead source',
         ];
     }

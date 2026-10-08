@@ -8,7 +8,6 @@ use App\Concerns\PolicyValidationRules;
 use App\Enums\ExpatCoverageZone;
 use App\Enums\Gender;
 use App\Enums\PolicyClass;
-use App\Enums\PolicyStatus;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
 
@@ -19,7 +18,6 @@ final class StorePolicyExpatRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'status' => $this->input('status') ?? PolicyStatus::Active->value,
         ]);
     }
 

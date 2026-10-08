@@ -6,7 +6,6 @@ namespace App\Http\Requests\Policies;
 
 use App\Concerns\PolicyValidationRules;
 use App\Enums\PolicyClass;
-use App\Enums\PolicyStatus;
 use Illuminate\Foundation\Http\FormRequest;
 
 final class StorePolicyAutomotiveRequest extends FormRequest
@@ -16,7 +15,6 @@ final class StorePolicyAutomotiveRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'status' => $this->input('status') ?? PolicyStatus::Active->value,
         ]);
     }
 

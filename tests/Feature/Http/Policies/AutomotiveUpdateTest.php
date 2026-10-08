@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\PolicyStatus;
 use App\Models\Carrier;
 use App\Models\Client;
 use App\Models\Organization;
@@ -214,3 +215,22 @@ test('update rejects a valuation amount above the largest amount or with more th
         ->patch(route('policies.automotive.update', $policy), PolicyPayload::automotiveAllRisk($client, $carrier, ['automotive' => ['valuation_amount' => $amount]]))
         ->assertSessionHasErrors(['automotive.valuation_amount']);
 })->with(['above the maximum' => ['10000000000000.00'], 'three decimals' => ['1000.001']]);
+
+test('update keeps the stored status whether or not a status is posted', function (PolicyStatus $status, array $posted) {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->automotive()->create(['created_by' => $user->id, 'status' => $status]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->patch(route('policies.automotive.update', $policy), PolicyPayload::automotive($client, $carrier, $posted))
+        ->assertSessionHasNoErrors();
+
+    expect($policy->fresh()->status)->toBe($status);
+})->with([
+    'cancelled' => PolicyStatus::Cancelled,
+    'frozen' => PolicyStatus::Frozen,
+])->with([
+    'without a posted status' => [[]],
+    'with a posted status' => [['status' => 'active']],
+]);

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\PolicyStatus;
 use App\Models\Carrier;
 use App\Models\Client;
 use App\Models\Currency;
@@ -193,3 +194,15 @@ test('store rejects a valuation amount above the largest amount or with more tha
         ->post(route('policies.automotive.store'), PolicyPayload::automotiveAllRisk($client, $carrier, ['automotive' => ['valuation_amount' => $amount]]))
         ->assertSessionHasErrors(['automotive.valuation_amount']);
 })->with(['above the maximum' => ['10000000000000.00'], 'three decimals' => ['1000.001']]);
+
+test('store ignores a posted status and stores the policy as active', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->post(route('policies.automotive.store'), PolicyPayload::automotive($client, $carrier, ['status' => 'frozen']))
+        ->assertSessionHasNoErrors();
+
+    expect(Policy::query()->sole()->status)->toBe(PolicyStatus::Active);
+});

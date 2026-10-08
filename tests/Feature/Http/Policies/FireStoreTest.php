@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\PolicyStatus;
 use App\Models\Carrier;
 use App\Models\Client;
 use App\Models\Currency;
@@ -240,3 +241,16 @@ test('store rejects a sum insured above the largest amount or with more than two
         ->post(route('policies.fire.store'), PolicyPayload::fire($client, $carrier, $state, ['fire' => ['sum_insured' => $amount]]))
         ->assertSessionHasErrors(['fire.sum_insured']);
 })->with(['above the maximum' => ['10000000000000.00'], 'three decimals' => ['1000.001']]);
+
+test('store ignores a posted status and stores the policy as active', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $state = State::factory()->lebanon()->create();
+
+    $this->actingAs($user)
+        ->post(route('policies.fire.store'), PolicyPayload::fire($client, $carrier, $state, ['status' => 'frozen']))
+        ->assertSessionHasNoErrors();
+
+    expect(Policy::query()->sole()->status)->toBe(PolicyStatus::Active);
+});

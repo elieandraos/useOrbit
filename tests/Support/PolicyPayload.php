@@ -36,7 +36,6 @@ final class PolicyPayload
             'expiry_date' => '2027-01-01',
             'premium_amount' => '1200.00',
             'discount_amount' => null,
-            'status' => 'active',
             'source' => 'client',
         ], $overrides);
     }

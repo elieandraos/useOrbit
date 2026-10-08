@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\PolicyStatus;
 use App\Models\Agent;
 use App\Models\Carrier;
 use App\Models\Client;
@@ -409,3 +410,15 @@ test('store rejects a premium or discount above the largest amount or with more 
     'discount above the maximum' => ['discount_amount', '10000000000000.00'],
     'discount with three decimals' => ['discount_amount', '10.001'],
 ]);
+
+test('store ignores a posted status and stores the policy as active', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->post(route('policies.medical.store'), PolicyPayload::medicalSingle($client, $carrier, ['status' => 'frozen']))
+        ->assertSessionHasNoErrors();
+
+    expect(Policy::query()->sole()->status)->toBe(PolicyStatus::Active);
+});

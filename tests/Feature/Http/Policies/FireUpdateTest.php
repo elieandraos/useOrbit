@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\PolicyStatus;
 use App\Models\Carrier;
 use App\Models\Client;
 use App\Models\Currency;
@@ -214,3 +215,23 @@ test('changing the currency stores every amount exactly as submitted, without co
         ->and($policy->discount_amount)->toBe('50.00')
         ->and($policy->fireDetails->sum_insured)->toBe('250000.00');
 });
+
+test('update keeps the stored status whether or not a status is posted', function (PolicyStatus $status, array $posted) {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->fire()->create(['created_by' => $user->id, 'status' => $status]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $state = State::factory()->lebanon()->create();
+
+    $this->actingAs($user)
+        ->patch(route('policies.fire.update', $policy), PolicyPayload::fire($client, $carrier, $state, $posted))
+        ->assertSessionHasNoErrors();
+
+    expect($policy->fresh()->status)->toBe($status);
+})->with([
+    'cancelled' => PolicyStatus::Cancelled,
+    'frozen' => PolicyStatus::Frozen,
+])->with([
+    'without a posted status' => [[]],
+    'with a posted status' => [['status' => 'active']],
+]);

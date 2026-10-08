@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\PolicyStatus;
 use App\Models\Agent;
 use App\Models\Carrier;
 use App\Models\Client;
@@ -350,3 +351,22 @@ test('update rejects a missing or non-existent currency', function (?int $curren
 
     expect($policy->fresh()->currency_id)->toBe($policy->currency_id);
 })->with(['missing' => [null], 'non-existent' => [999999]]);
+
+test('update keeps the stored status whether or not a status is posted', function (PolicyStatus $status, array $posted) {
+    $user = User::factory()->withOrganization()->create();
+    $policy = Policy::factory()->forOrganization($user)->medical()->create(['created_by' => $user->id, 'status' => $status]);
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->patch(route('policies.medical.update', $policy), PolicyPayload::medicalSingle($client, $carrier, $posted))
+        ->assertSessionHasNoErrors();
+
+    expect($policy->fresh()->status)->toBe($status);
+})->with([
+    'cancelled' => PolicyStatus::Cancelled,
+    'frozen' => PolicyStatus::Frozen,
+])->with([
+    'without a posted status' => [[]],
+    'with a posted status' => [['status' => 'active']],
+]);
