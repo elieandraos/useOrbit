@@ -1,25 +1,21 @@
 <script setup lang="ts">
-import { ref } from 'vue';
 import FormField from '@/components/ui/form-field/FormField.vue';
 import FormSection from '@/components/ui/form-section/FormSection.vue';
 import Input from '@/components/ui/input/Input.vue';
 import Select from '@/components/ui/select/Select.vue';
 import type { PolicyCurrencyOption } from '@/types/policy';
 
-const props = defineProps<{
+defineProps<{
     currencies: PolicyCurrencyOption[];
     currencyCode: string;
-    policy?: {
-        premium_amount: string;
-        discount_amount: string | null;
-    };
     errors: Record<string, string | undefined>;
 }>();
 
 const currencyId = defineModel<string>('currencyId', { required: true });
-
-const premiumAmount = ref(props.policy?.premium_amount ?? '');
-const discountAmount = ref(props.policy?.discount_amount ?? '');
+const premiumAmount = defineModel<string>('premiumAmount', { required: true });
+const discountAmount = defineModel<string>('discountAmount', {
+    required: true,
+});
 </script>
 
 <template>

@@ -1,23 +1,30 @@
 import type { ComputedRef, Ref } from 'vue';
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import type { PolicyCurrencyOption } from '@/types/policy';
 
 export type UsePolicyCurrencyReturn = {
-    currencyId: Ref<string>;
     currencyCode: ComputedRef<string>;
 };
 
 /**
- * The policy form's selected currency: the stored one on edit, otherwise the organization default, and its code for labelling amounts.
+ * The currency a policy form starts with: the stored one on edit, otherwise the organization default.
+ */
+export function initialPolicyCurrencyId(
+    storedCurrencyId: number | null | undefined,
+    defaultCurrencyId: number | null | undefined,
+): string {
+    const initialCurrencyId = storedCurrencyId ?? defaultCurrencyId;
+
+    return initialCurrencyId ? `${initialCurrencyId}` : '';
+}
+
+/**
+ * The policy form's selected currency code, for labelling amounts.
  */
 export function usePolicyCurrency(
     currencies: () => PolicyCurrencyOption[],
-    storedCurrencyId: number | null | undefined,
-    defaultCurrencyId: number | null | undefined,
+    currencyId: Ref<string>,
 ): UsePolicyCurrencyReturn {
-    const initialCurrencyId = storedCurrencyId ?? defaultCurrencyId;
-    const currencyId = ref(initialCurrencyId ? `${initialCurrencyId}` : '');
-
     const currencyCode = computed(
         () =>
             currencies().find(
@@ -25,5 +32,5 @@ export function usePolicyCurrency(
             )?.code ?? '',
     );
 
-    return { currencyId, currencyCode };
+    return { currencyCode };
 }

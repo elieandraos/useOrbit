@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Form, Link } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, ref, toRefs } from 'vue';
 import Button from '@/components/ui/button/Button.vue';
 import DateInput from '@/components/ui/date-input/DateInput.vue';
 import FormField from '@/components/ui/form-field/FormField.vue';
@@ -11,7 +11,14 @@ import Select from '@/components/ui/select/Select.vue';
 import { Typeahead } from '@/components/ui/typeahead';
 import type { TypeaheadOption } from '@/components/ui/typeahead';
 import { usePolicyCurrency } from '@/composables/usePolicyCurrency';
-import { endPolicyCreateFlow } from '@/lib/policyCreateFlow';
+import {
+    initialPolicyCommonEntries,
+    usePolicyFormEntries,
+} from '@/composables/usePolicyFormEntries';
+import {
+    endPolicyCreateFlow,
+    forgetPolicyCreateFlow,
+} from '@/lib/policyCreateFlow';
 import { policyDateEndYear } from '@/lib/policyDateEndYear';
 import PolicyEntrySummary from '@/pages/Policies/partials/PolicyEntrySummary.vue';
 import PolicyFinancialsSection from '@/pages/Policies/partials/PolicyFinancialsSection.vue';
@@ -81,37 +88,59 @@ const props = defineProps<{
     submitLabel: string;
 }>();
 
-const { currencyId, currencyCode } = usePolicyCurrency(
-    () => props.currencies,
-    props.policy?.currency_id,
-    props.defaultCurrencyId,
-);
-
-const policyNumber = ref(props.policy?.policy_number ?? '');
-const subclass = ref(props.policy?.subclass ?? props.subclasses[0] ?? '');
 const type = ref(
     props.policy?.type ??
         props.entry?.type.value ??
         props.types[0]?.value ??
         'single',
 );
-const effectiveDate = ref(props.policy?.effective_date ?? '');
-const expiryDate = ref(props.policy?.expiry_date ?? '');
 const source = ref(props.policy?.source ?? '');
 
-const coverageZone = ref(
-    props.policy?.details.coverage_zone ?? props.coverageZones[0]?.value ?? '',
-);
-const travelScope = ref(props.policy?.details.travel_scope ?? '');
-const fullName = ref(props.policy?.details.full_name ?? '');
-const gender = ref(
-    props.policy?.details.gender ?? props.genders[0]?.value ?? '',
-);
-const nationality = ref(props.policy?.details.nationality ?? '');
-const dateOfBirth = ref(props.policy?.details.date_of_birth ?? '');
-const phone = ref(props.policy?.details.phone ?? '');
-const countryId = ref<number | null>(props.policy?.details.country_id ?? null);
-const visaExpiryDate = ref(props.policy?.details.visa_expiry_date ?? '');
+const { entries, carriedWork } = usePolicyFormEntries({
+    policyClass: 'expat',
+    entry: props.entry,
+    common: initialPolicyCommonEntries(props.policy, props.defaultCurrencyId),
+    details: () => ({
+        subclass: props.policy?.subclass ?? props.subclasses[0] ?? '',
+        coverage_zone:
+            props.policy?.details.coverage_zone ??
+            props.coverageZones[0]?.value ??
+            '',
+        travel_scope: props.policy?.details.travel_scope ?? '',
+        full_name: props.policy?.details.full_name ?? '',
+        gender: props.policy?.details.gender ?? props.genders[0]?.value ?? '',
+        nationality: props.policy?.details.nationality ?? '',
+        date_of_birth: props.policy?.details.date_of_birth ?? '',
+        phone: props.policy?.details.phone ?? '',
+        country_id: (props.policy?.details.country_id ?? null) as number | null,
+        visa_expiry_date: props.policy?.details.visa_expiry_date ?? '',
+    }),
+});
+
+const {
+    policy_number: policyNumber,
+    carrier_branch_id: carrierBranchId,
+    effective_date: effectiveDate,
+    expiry_date: expiryDate,
+    currency_id: currencyId,
+    premium_amount: premiumAmount,
+    discount_amount: discountAmount,
+} = toRefs(entries.common);
+
+const {
+    subclass,
+    coverage_zone: coverageZone,
+    travel_scope: travelScope,
+    full_name: fullName,
+    gender,
+    nationality,
+    date_of_birth: dateOfBirth,
+    phone,
+    country_id: countryId,
+    visa_expiry_date: visaExpiryDate,
+} = toRefs(entries.details);
+
+const { currencyCode } = usePolicyCurrency(() => props.currencies, currencyId);
 
 const isInOut = computed(() => coverageZone.value === 'in_out');
 
@@ -130,17 +159,32 @@ function cancel(): void {
         endPolicyCreateFlow();
     }
 }
+
+/**
+ * Creating the policy ends the Create flow: the server clears its history, and its work is forgotten here.
+ */
+function forgetCreatedFlow(): void {
+    if (props.entry) {
+        forgetPolicyCreateFlow();
+    }
+}
 </script>
 
 <template>
     <Form
         v-bind="route"
+        :on-success="forgetCreatedFlow"
         v-slot="{ errors, processing }"
         class="mx-auto flex w-full max-w-[1100px] flex-col gap-4"
     >
         <input type="hidden" name="class" value="expat" />
 
-        <PolicyEntrySummary v-if="entry" :entry="entry" :errors="errors" />
+        <PolicyEntrySummary
+            v-if="entry"
+            :entry="entry"
+            :errors="errors"
+            :carried-work="carriedWork"
+        />
 
         <FormSection
             title="Coverage"
@@ -299,6 +343,7 @@ function cancel(): void {
             <PolicyPartiesSection
                 :carriers="carriers"
                 :agents="agents"
+                v-model:carrier-branch-id="carrierBranchId"
                 :policy="policy"
                 :entry="entry"
                 :errors="errors"
@@ -363,9 +408,10 @@ function cancel(): void {
 
         <PolicyFinancialsSection
             v-model:currency-id="currencyId"
+            v-model:premium-amount="premiumAmount"
+            v-model:discount-amount="discountAmount"
             :currencies="currencies"
             :currency-code="currencyCode"
-            :policy="policy"
             :errors="errors"
         />
 

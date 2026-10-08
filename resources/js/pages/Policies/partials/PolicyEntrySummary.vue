@@ -5,13 +5,19 @@ import { computed } from 'vue';
 import Button from '@/components/ui/button/Button.vue';
 import { DetailField } from '@/components/ui/detail-field';
 import FormSection from '@/components/ui/form-section/FormSection.vue';
+import { carryPolicyWork } from '@/lib/policyCreateFlow';
+import type { PolicyCarriedWork } from '@/lib/policyCreateFlow';
 import { create as policiesCreate } from '@/routes/policies';
 import type { PolicyEntry } from '@/types/policy';
 
 const props = defineProps<{
     entry: PolicyEntry;
     errors: Record<string, string | undefined>;
+    /** This step's entries, carried back to the first step by Back (also the way to correct the errors shown here). */
+    carriedWork: () => PolicyCarriedWork;
 }>();
+
+const carryBack = carryPolicyWork(() => props.carriedWork());
 
 /**
  * The first step, with this summary's choices selected again.
@@ -67,7 +73,7 @@ const entryErrors = computed(() =>
                 />
                 <DetailField label="Agent" :value="entry.agent?.full_name" />
             </div>
-            <Link :href="entryHref">
+            <Link :href="entryHref" v-bind="carryBack">
                 <Button type="button" variant="ghost">
                     <template #leading><ArrowLeft /></template>
                     Back

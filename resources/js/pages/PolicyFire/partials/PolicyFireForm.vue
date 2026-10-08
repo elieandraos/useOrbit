@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Form, Link } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { computed, ref, toRefs, watch } from 'vue';
 import Button from '@/components/ui/button/Button.vue';
 import DateInput from '@/components/ui/date-input/DateInput.vue';
 import FormField from '@/components/ui/form-field/FormField.vue';
@@ -11,8 +11,15 @@ import Select from '@/components/ui/select/Select.vue';
 import { Typeahead } from '@/components/ui/typeahead';
 import type { TypeaheadOption } from '@/components/ui/typeahead';
 import { usePolicyCurrency } from '@/composables/usePolicyCurrency';
+import {
+    initialPolicyCommonEntries,
+    usePolicyFormEntries,
+} from '@/composables/usePolicyFormEntries';
 import { useStateOptions } from '@/composables/useWorldLocations';
-import { endPolicyCreateFlow } from '@/lib/policyCreateFlow';
+import {
+    endPolicyCreateFlow,
+    forgetPolicyCreateFlow,
+} from '@/lib/policyCreateFlow';
 import { policyDateEndYear } from '@/lib/policyDateEndYear';
 import PolicyEntrySummary from '@/pages/Policies/partials/PolicyEntrySummary.vue';
 import PolicyFinancialsSection from '@/pages/Policies/partials/PolicyFinancialsSection.vue';
@@ -82,48 +89,66 @@ const props = defineProps<{
     submitLabel: string;
 }>();
 
-const { currencyId, currencyCode } = usePolicyCurrency(
-    () => props.currencies,
-    props.policy?.currency_id,
-    props.defaultCurrencyId,
-);
-
-const policyNumber = ref(props.policy?.policy_number ?? '');
-const subclass = ref(props.policy?.subclass ?? props.subclasses[0] ?? '');
 const type = ref(
     props.policy?.type ??
         props.entry?.type.value ??
         props.types[0]?.value ??
         'single',
 );
-const effectiveDate = ref(props.policy?.effective_date ?? '');
-const expiryDate = ref(props.policy?.expiry_date ?? '');
 const source = ref(props.policy?.source ?? '');
 
-const propertyType = ref(props.policy?.details.property_type ?? '');
-const floorArea = ref(
-    props.policy?.details.floor_area
-        ? `${props.policy.details.floor_area}`
-        : '',
-);
+const { entries, carriedWork } = usePolicyFormEntries({
+    policyClass: 'fire',
+    entry: props.entry,
+    common: initialPolicyCommonEntries(props.policy, props.defaultCurrencyId),
+    details: () => ({
+        subclass: props.policy?.subclass ?? props.subclasses[0] ?? '',
+        property_type: props.policy?.details.property_type ?? '',
+        floor_area: props.policy?.details.floor_area
+            ? `${props.policy.details.floor_area}`
+            : '',
+        year_built: props.policy?.details.year_built
+            ? `${props.policy.details.year_built}`
+            : '',
+        street: props.policy?.details.street ?? '',
+        building_floor: props.policy?.details.building_floor ?? '',
+        city: props.policy?.details.city ?? '',
+        // An edited policy keeps its stored country; only a new policy gets the organization default.
+        country_id: (props.policy
+            ? props.policy.details.country_id
+            : (props.defaultCountryId ?? null)) as number | null,
+        state_id: (props.policy?.details.state_id ?? null) as number | null,
+        sum_insured: props.policy?.details.sum_insured ?? '',
+    }),
+});
+
+const {
+    policy_number: policyNumber,
+    carrier_branch_id: carrierBranchId,
+    effective_date: effectiveDate,
+    expiry_date: expiryDate,
+    currency_id: currencyId,
+    premium_amount: premiumAmount,
+    discount_amount: discountAmount,
+} = toRefs(entries.common);
+
+const {
+    subclass,
+    property_type: propertyType,
+    floor_area: floorArea,
+    year_built: yearBuilt,
+    street,
+    building_floor: buildingFloor,
+    city,
+    country_id: countryId,
+    state_id: stateId,
+    sum_insured: sumInsured,
+} = toRefs(entries.details);
+
+const { currencyCode } = usePolicyCurrency(() => props.currencies, currencyId);
+
 // Mirrors the server's `fire.year_built` maximum of the current year.
 const maxYearBuilt = new Date().getFullYear();
-const yearBuilt = ref(
-    props.policy?.details.year_built
-        ? `${props.policy.details.year_built}`
-        : '',
-);
-const street = ref(props.policy?.details.street ?? '');
-const buildingFloor = ref(props.policy?.details.building_floor ?? '');
-const city = ref(props.policy?.details.city ?? '');
-// An edited policy keeps its stored country; only a new policy gets the organization default.
-const countryId = ref<number | null>(
-    props.policy
-        ? props.policy.details.country_id
-        : (props.defaultCountryId ?? null),
-);
-const stateId = ref<number | null>(props.policy?.details.state_id ?? null);
-const sumInsured = ref(props.policy?.details.sum_insured ?? '');
 
 const countryOptions = computed<TypeaheadOption[]>(() =>
     props.countries.map((country) => ({
@@ -146,17 +171,32 @@ function cancel(): void {
         endPolicyCreateFlow();
     }
 }
+
+/**
+ * Creating the policy ends the Create flow: the server clears its history, and its work is forgotten here.
+ */
+function forgetCreatedFlow(): void {
+    if (props.entry) {
+        forgetPolicyCreateFlow();
+    }
+}
 </script>
 
 <template>
     <Form
         v-bind="route"
+        :on-success="forgetCreatedFlow"
         v-slot="{ errors, processing }"
         class="mx-auto flex w-full max-w-[1100px] flex-col gap-4"
     >
         <input type="hidden" name="class" value="fire" />
 
-        <PolicyEntrySummary v-if="entry" :entry="entry" :errors="errors" />
+        <PolicyEntrySummary
+            v-if="entry"
+            :entry="entry"
+            :errors="errors"
+            :carried-work="carriedWork"
+        />
 
         <FormSection
             title="Coverage"
@@ -332,6 +372,7 @@ function cancel(): void {
             <PolicyPartiesSection
                 :carriers="carriers"
                 :agents="agents"
+                v-model:carrier-branch-id="carrierBranchId"
                 :policy="policy"
                 :entry="entry"
                 :errors="errors"
@@ -396,9 +437,10 @@ function cancel(): void {
 
         <PolicyFinancialsSection
             v-model:currency-id="currencyId"
+            v-model:premium-amount="premiumAmount"
+            v-model:discount-amount="discountAmount"
             :currencies="currencies"
             :currency-code="currencyCode"
-            :policy="policy"
             :errors="errors"
         />
 

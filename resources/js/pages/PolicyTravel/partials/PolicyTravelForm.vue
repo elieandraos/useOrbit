@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Form, Link } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, toRefs } from 'vue';
 import Button from '@/components/ui/button/Button.vue';
 import DateInput from '@/components/ui/date-input/DateInput.vue';
 import FormField from '@/components/ui/form-field/FormField.vue';
@@ -9,7 +9,14 @@ import Input from '@/components/ui/input/Input.vue';
 import RadioChips from '@/components/ui/radio-chips/RadioChips.vue';
 import Select from '@/components/ui/select/Select.vue';
 import { usePolicyCurrency } from '@/composables/usePolicyCurrency';
-import { endPolicyCreateFlow } from '@/lib/policyCreateFlow';
+import {
+    initialPolicyCommonEntries,
+    usePolicyFormEntries,
+} from '@/composables/usePolicyFormEntries';
+import {
+    endPolicyCreateFlow,
+    forgetPolicyCreateFlow,
+} from '@/lib/policyCreateFlow';
 import { policyDateEndYear } from '@/lib/policyDateEndYear';
 import PolicyEntrySummary from '@/pages/Policies/partials/PolicyEntrySummary.vue';
 import PolicyFinancialsSection from '@/pages/Policies/partials/PolicyFinancialsSection.vue';
@@ -68,31 +75,51 @@ const props = defineProps<{
     submitLabel: string;
 }>();
 
-const { currencyId, currencyCode } = usePolicyCurrency(
-    () => props.currencies,
-    props.policy?.currency_id,
-    props.defaultCurrencyId,
-);
-
-const policyNumber = ref(props.policy?.policy_number ?? '');
-const subclass = ref(props.policy?.subclass ?? props.subclasses[0] ?? '');
 const type = ref(
     props.policy?.type ??
         props.entry?.type.value ??
         props.types[0]?.value ??
         'single',
 );
-const effectiveDate = ref(props.policy?.effective_date ?? '');
-const expiryDate = ref(props.policy?.expiry_date ?? '');
 const source = ref(props.policy?.source ?? '');
 
-const destination = ref(props.policy?.details.destination ?? '');
-const tripStartDate = ref(props.policy?.details.trip_start_date ?? '');
-const tripEndDate = ref(props.policy?.details.trip_end_date ?? '');
-const travelers = ref(props.policy?.details.travelers ?? '');
-const coverageTier = ref(
-    props.policy?.details.coverage_tier ?? props.coverageTiers[0]?.value ?? '',
-);
+const { entries, carriedWork } = usePolicyFormEntries({
+    policyClass: 'travel',
+    entry: props.entry,
+    common: initialPolicyCommonEntries(props.policy, props.defaultCurrencyId),
+    details: () => ({
+        subclass: props.policy?.subclass ?? props.subclasses[0] ?? '',
+        destination: props.policy?.details.destination ?? '',
+        trip_start_date: props.policy?.details.trip_start_date ?? '',
+        trip_end_date: props.policy?.details.trip_end_date ?? '',
+        travelers: props.policy?.details.travelers ?? '',
+        coverage_tier:
+            props.policy?.details.coverage_tier ??
+            props.coverageTiers[0]?.value ??
+            '',
+    }),
+});
+
+const {
+    policy_number: policyNumber,
+    carrier_branch_id: carrierBranchId,
+    effective_date: effectiveDate,
+    expiry_date: expiryDate,
+    currency_id: currencyId,
+    premium_amount: premiumAmount,
+    discount_amount: discountAmount,
+} = toRefs(entries.common);
+
+const {
+    subclass,
+    destination,
+    trip_start_date: tripStartDate,
+    trip_end_date: tripEndDate,
+    travelers,
+    coverage_tier: coverageTier,
+} = toRefs(entries.details);
+
+const { currencyCode } = usePolicyCurrency(() => props.currencies, currencyId);
 
 /**
  * Cancelling a new policy ends the Create flow; cancelling an edit leaves history alone.
@@ -102,17 +129,32 @@ function cancel(): void {
         endPolicyCreateFlow();
     }
 }
+
+/**
+ * Creating the policy ends the Create flow: the server clears its history, and its work is forgotten here.
+ */
+function forgetCreatedFlow(): void {
+    if (props.entry) {
+        forgetPolicyCreateFlow();
+    }
+}
 </script>
 
 <template>
     <Form
         v-bind="route"
+        :on-success="forgetCreatedFlow"
         v-slot="{ errors, processing }"
         class="mx-auto flex w-full max-w-[1100px] flex-col gap-4"
     >
         <input type="hidden" name="class" value="travel" />
 
-        <PolicyEntrySummary v-if="entry" :entry="entry" :errors="errors" />
+        <PolicyEntrySummary
+            v-if="entry"
+            :entry="entry"
+            :errors="errors"
+            :carried-work="carriedWork"
+        />
 
         <FormSection
             title="Coverage"
@@ -220,6 +262,7 @@ function cancel(): void {
             <PolicyPartiesSection
                 :carriers="carriers"
                 :agents="agents"
+                v-model:carrier-branch-id="carrierBranchId"
                 :policy="policy"
                 :entry="entry"
                 :errors="errors"
@@ -284,9 +327,10 @@ function cancel(): void {
 
         <PolicyFinancialsSection
             v-model:currency-id="currencyId"
+            v-model:premium-amount="premiumAmount"
+            v-model:discount-amount="discountAmount"
             :currencies="currencies"
             :currency-code="currencyCode"
-            :policy="policy"
             :errors="errors"
         />
 
