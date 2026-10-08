@@ -6,14 +6,12 @@ namespace App\Support\Policies;
 
 use App\Enums\AgentStatus;
 use App\Enums\CarrierStatus;
-use App\Enums\ClientStatus;
 use App\Enums\PolicySource;
 use App\Enums\PolicyType;
 use App\Http\Resources\CurrencyResource;
 use App\Models\Agent;
 use App\Models\Carrier;
 use App\Models\CarrierBranch;
-use App\Models\Client;
 use App\Models\Currency;
 use App\Models\Organization;
 use App\Models\Policy;
@@ -33,12 +31,12 @@ final readonly class PolicyFormOptions
      *
      * Each party option carries only its id and the displayed name its select renders, and each carrier
      * also lists its branches by id and label for the issuing branch select. Only active
-     * parties are offered, except that an edited policy keeps its currently assigned client, carrier
-     * and agent among the options even after they have been archived. A new policy also gets the
-     * organization's default currency to pre-select; an edited policy keeps its own.
+     * parties are offered, except that an edited policy keeps its currently assigned carrier and agent
+     * among the options even after they have been archived. Clients aren't listed: the client field
+     * searches them instead. A new policy also gets the organization's default currency to pre-select;
+     * an edited policy keeps its own.
      *
      * @return array{
-     *     clients: Collection<int, array{id: int, full_name: string}>,
      *     carriers: Collection<int, array{id: int, name: string, branches: Collection<int, array{id: int, label: string}>}>,
      *     agents: Collection<int, array{id: int, full_name: string}>,
      *     types: Collection<int, array{label: string, value: string}>,
@@ -50,7 +48,6 @@ final readonly class PolicyFormOptions
     public function shared(?Policy $policy = null): array
     {
         return [
-            'clients' => $this->clients($policy?->client_id)->map(fn (Client $client): array => ['id' => $client->id, 'full_name' => $client->full_name]),
             'carriers' => $this->carriers($policy?->carrier_id)->map(fn (Carrier $carrier): array => [
                 'id' => $carrier->id,
                 'name' => $carrier->name,
@@ -73,21 +70,6 @@ final readonly class PolicyFormOptions
         $currencyId = Organization::query()->whereKey($this->organizationContext->id())->value('default_currency_id');
 
         return $currencyId;
-    }
-
-    /**
-     * Active clients, plus the kept one, ordered by their displayed name: the company name for a company, otherwise first then last name.
-     *
-     * @return EloquentCollection<int, Client>
-     */
-    private function clients(?int $keptClientId): EloquentCollection
-    {
-        return Client::query()
-            ->where(fn (Builder $query): Builder => $this->activeOrKept($query, ClientStatus::Active->value, $keptClientId))
-            ->orderByRaw("CASE WHEN client_type = 'company' THEN company_name ELSE first_name END")
-            ->orderByRaw("CASE WHEN client_type = 'company' THEN company_name ELSE last_name END")
-            ->orderBy('id')
-            ->get();
     }
 
     /**

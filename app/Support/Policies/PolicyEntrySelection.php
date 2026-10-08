@@ -34,21 +34,19 @@ final readonly class PolicyEntrySelection
     private const array FIELDS = ['class', 'type', 'client_id', 'carrier_id', 'agent_id', 'source'];
 
     /**
-     * The carried-over choices that are still valid, by the first step's field names.
+     * The carried-over choices that are still valid, by the first step's field names, with the selected client's
+     * displayed name so the first step can show it without listing every client.
      *
-     * @return array{class: string|null, type: string|null, client_id: int|null, carrier_id: int|null, agent_id: int|null, source: string|null}
+     * @return array{class: string|null, type: string|null, client_id: int|null, carrier_id: int|null, agent_id: int|null, source: string|null, client: array{id: int, full_name: string}|null}
      */
     public function selected(Request $request): array
     {
         $resolved = $this->resolve($request);
+        $client = $resolved['client'];
 
         return [
-            'class' => $this->enumValue($request, 'class', PolicyClass::class)?->value,
-            'type' => $resolved['type']?->value,
-            'client_id' => $resolved['client']?->id,
-            'carrier_id' => $resolved['carrier']?->id,
-            'agent_id' => $resolved['agent']?->id,
-            'source' => $resolved['source']?->value,
+            ...$this->fieldValues($request, $resolved),
+            'client' => $client === null ? null : ['id' => $client->id, 'full_name' => $client->full_name],
         ];
     }
 
@@ -87,9 +85,27 @@ final readonly class PolicyEntrySelection
     public function backToEntryQuery(Request $request, PolicyClass $policyClass): array
     {
         return array_filter(
-            [...$this->selected($request), 'class' => $policyClass->value],
+            [...$this->fieldValues($request, $this->resolve($request)), 'class' => $policyClass->value],
             fn (int|string|null $value): bool => $value !== null,
         );
+    }
+
+    /**
+     * The still-valid choices as the first step's field values.
+     *
+     * @param  array{type: PolicyType|null, client: Client|null, carrier: Carrier|null, agent: Agent|null, source: PolicySource|null}  $resolved
+     * @return array{class: string|null, type: string|null, client_id: int|null, carrier_id: int|null, agent_id: int|null, source: string|null}
+     */
+    private function fieldValues(Request $request, array $resolved): array
+    {
+        return [
+            'class' => $this->enumValue($request, 'class', PolicyClass::class)?->value,
+            'type' => $resolved['type']?->value,
+            'client_id' => $resolved['client']?->id,
+            'carrier_id' => $resolved['carrier']?->id,
+            'agent_id' => $resolved['agent']?->id,
+            'source' => $resolved['source']?->value,
+        ];
     }
 
     /**

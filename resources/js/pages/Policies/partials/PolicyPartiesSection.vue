@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue';
 import FormField from '@/components/ui/form-field/FormField.vue';
 import FormSection from '@/components/ui/form-section/FormSection.vue';
 import Select from '@/components/ui/select/Select.vue';
+import PolicyClientTypeahead from '@/pages/Policies/partials/PolicyClientTypeahead.vue';
 import type {
     PolicyEntry,
     PolicyParties,
@@ -10,7 +11,6 @@ import type {
 } from '@/types/policy';
 
 const props = defineProps<{
-    clients: PolicyPartyOption[];
     carriers: PolicyPartyOption[];
     agents: PolicyPartyOption[];
     policy?: PolicyParties;
@@ -19,7 +19,8 @@ const props = defineProps<{
     errors: Record<string, string | undefined>;
 }>();
 
-const clientId = ref(props.policy ? `${props.policy.client.id}` : '');
+const clientId = ref<number | string | null>(props.policy?.client.id ?? null);
+const clientName = ref<string | null>(props.policy?.client.full_name ?? null);
 const carrierId = ref(
     props.policy
         ? `${props.policy.carrier.id}`
@@ -57,20 +58,12 @@ const agentId = ref(props.policy ? `${props.policy.agent?.id ?? ''}` : '');
             required
             :error="errors.client_id"
         >
-            <Select
+            <PolicyClientTypeahead
                 id="client_id"
                 v-model="clientId"
+                v-model:label="clientName"
                 name="client_id"
-                placeholder="Select client"
-            >
-                <option
-                    v-for="client in clients"
-                    :key="client.id"
-                    :value="`${client.id}`"
-                >
-                    {{ client.full_name }}
-                </option>
-            </Select>
+            />
         </FormField>
         <FormField
             v-if="!entry"

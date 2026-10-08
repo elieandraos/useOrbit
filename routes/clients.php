@@ -6,6 +6,7 @@ use App\Http\Controllers\Clients\ClientsArchiveController;
 use App\Http\Controllers\Clients\ClientsController;
 use App\Http\Controllers\Clients\ClientsExcelExportController;
 use App\Http\Controllers\Clients\ClientsPdfExportController;
+use App\Http\Controllers\Clients\ClientsSearchController;
 use App\Http\Controllers\Clients\ClientsUnarchiveController;
 use App\Http\Controllers\Notifications\NotifyClientController;
 use Illuminate\Support\Facades\Route;
@@ -15,6 +16,7 @@ Route::middleware(['auth', 'organization'])->group(function () {
     Route::get('clients/create', [ClientsController::class, 'create'])->name('clients.create');
     Route::post('clients', [ClientsController::class, 'store'])->name('clients.store');
     Route::get('clients/export', ClientsExcelExportController::class)->name('clients.export');
+    Route::get('clients/search', ClientsSearchController::class)->name('clients.search');
     Route::get('clients/{client:slug}', [ClientsController::class, 'show'])->name('clients.show');
     Route::get('clients/{client:slug}/edit', [ClientsController::class, 'edit'])->name('clients.edit');
     Route::patch('clients/{client:slug}', [ClientsController::class, 'update'])->name('clients.update');
