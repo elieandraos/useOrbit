@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\ClientStatus;
 use App\Models\Agent;
 use App\Models\Carrier;
 use App\Models\Client;
@@ -155,3 +156,25 @@ test('the create page sends the user back to the first step, keeping the valid c
     'unknown type' => ['unknown type', 'type'],
     'array source' => ['array source', 'source'],
 ]);
+
+test('a client archived since the first step stays in the summary with its error after the save rejects it', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $createUrl = route('policies.life.create', PolicyPayload::entryQuery($client, $carrier));
+
+    $client->update(['status' => ClientStatus::Archived]);
+
+    $this->actingAs($user)
+        ->from($createUrl)
+        ->post(route('policies.life.store'), PolicyPayload::life($client, $carrier))
+        ->assertRedirect($createUrl);
+
+    $this->get($createUrl)
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('PolicyLife/Create')
+            ->where('entry.client.id', $client->id)
+            ->has('errors.client_id')
+        );
+});

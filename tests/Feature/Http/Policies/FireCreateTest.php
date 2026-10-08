@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
+use App\Enums\ClientStatus;
 use App\Models\Agent;
 use App\Models\Carrier;
 use App\Models\Client;
 use App\Models\Country;
 use App\Models\Organization;
+use App\Models\State;
 use App\Models\User;
 use Illuminate\Support\Arr;
 use Tests\Support\PolicyPayload;
@@ -184,3 +186,26 @@ test('the create page sends the user back to the first step, keeping the valid c
     'unknown type' => ['unknown type', 'type'],
     'array source' => ['array source', 'source'],
 ]);
+
+test('a client archived since the first step stays in the summary with its error after the save rejects it', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $state = State::factory()->lebanon()->create();
+    $createUrl = route('policies.fire.create', PolicyPayload::entryQuery($client, $carrier));
+
+    $client->update(['status' => ClientStatus::Archived]);
+
+    $this->actingAs($user)
+        ->from($createUrl)
+        ->post(route('policies.fire.store'), PolicyPayload::fire($client, $carrier, $state))
+        ->assertRedirect($createUrl);
+
+    $this->get($createUrl)
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('PolicyFire/Create')
+            ->where('entry.client.id', $client->id)
+            ->has('errors.client_id')
+        );
+});

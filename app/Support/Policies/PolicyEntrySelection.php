@@ -14,7 +14,9 @@ use App\Models\Agent;
 use App\Models\Carrier;
 use App\Models\Client;
 use BackedEnum;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\ViewErrorBag;
 
 /**
  * Resolves the choices made on the first step of a new policy — class, type, client, carrier, agent and lead
@@ -26,6 +28,11 @@ use Illuminate\Http\Request;
  */
 final readonly class PolicyEntrySelection
 {
+    /**
+     * The first step's fields, which a class's details step only submits as hidden inputs.
+     */
+    private const array FIELDS = ['class', 'type', 'client_id', 'carrier_id', 'agent_id', 'source'];
+
     /**
      * The carried-over choices that are still valid, by the first step's field names.
      *
@@ -49,11 +56,14 @@ final readonly class PolicyEntrySelection
      * The choices a class's details step summarizes, with their displayed labels, or null when a required one
      * is missing or no longer valid.
      *
+     * After a save that rejected one of these choices, a party archived since the first step is still
+     * summarized, so the error can show next to it instead of sending the user back to the first step.
+     *
      * @return array{class: array{value: string, label: string}, type: array{value: string, label: string}, client: array{id: int, full_name: string}, carrier: array{id: int, name: string}, agent: array{id: int, full_name: string}|null, source: array{value: string, label: string}}|null
      */
     public function summary(Request $request, PolicyClass $policyClass): ?array
     {
-        ['type' => $type, 'client' => $client, 'carrier' => $carrier, 'agent' => $agent, 'source' => $source] = $this->resolve($request);
+        ['type' => $type, 'client' => $client, 'carrier' => $carrier, 'agent' => $agent, 'source' => $source] = $this->resolve($request, includeArchived: $this->rejectedOnSave($request));
 
         if ($type === null || $client === null || $carrier === null || $source === null) {
             return null;
@@ -83,9 +93,19 @@ final readonly class PolicyEntrySelection
     }
 
     /**
+     * Whether the save this request returns from rejected one of the first step's choices.
+     */
+    private function rejectedOnSave(Request $request): bool
+    {
+        $errors = $request->hasSession() ? $request->session()->get('errors') : null;
+
+        return $errors instanceof ViewErrorBag && $errors->hasAny(self::FIELDS);
+    }
+
+    /**
      * @return array{type: PolicyType|null, client: Client|null, carrier: Carrier|null, agent: Agent|null, source: PolicySource|null}
      */
-    private function resolve(Request $request): array
+    private function resolve(Request $request, bool $includeArchived = false): array
     {
         /** @var PolicyType|null $type */
         $type = $this->enumValue($request, 'type', PolicyType::class);
@@ -95,9 +115,9 @@ final readonly class PolicyEntrySelection
 
         return [
             'type' => $type,
-            'client' => Client::query()->where('status', ClientStatus::Active)->find($this->id($request, 'client_id')),
-            'carrier' => Carrier::query()->where('status', CarrierStatus::Active)->find($this->id($request, 'carrier_id')),
-            'agent' => Agent::query()->where('status', AgentStatus::Active)->find($this->id($request, 'agent_id')),
+            'client' => Client::query()->when(! $includeArchived, fn (Builder $query): Builder => $query->where('status', ClientStatus::Active))->find($this->id($request, 'client_id')),
+            'carrier' => Carrier::query()->when(! $includeArchived, fn (Builder $query): Builder => $query->where('status', CarrierStatus::Active))->find($this->id($request, 'carrier_id')),
+            'agent' => Agent::query()->when(! $includeArchived, fn (Builder $query): Builder => $query->where('status', AgentStatus::Active))->find($this->id($request, 'agent_id')),
             'source' => $source,
         ];
     }

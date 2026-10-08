@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\ClientStatus;
 use App\Enums\TravelCoverageTier;
 use App\Models\Agent;
 use App\Models\Carrier;
@@ -167,3 +168,25 @@ test('the create page sends the user back to the first step, keeping the valid c
     'unknown type' => ['unknown type', 'type'],
     'array source' => ['array source', 'source'],
 ]);
+
+test('a client archived since the first step stays in the summary with its error after the save rejects it', function () {
+    $user = User::factory()->withOrganization()->create();
+    $client = Client::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $carrier = Carrier::factory()->forOrganization($user)->create(['created_by' => $user->id]);
+    $createUrl = route('policies.travel.create', PolicyPayload::entryQuery($client, $carrier));
+
+    $client->update(['status' => ClientStatus::Archived]);
+
+    $this->actingAs($user)
+        ->from($createUrl)
+        ->post(route('policies.travel.store'), PolicyPayload::travel($client, $carrier))
+        ->assertRedirect($createUrl);
+
+    $this->get($createUrl)
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('PolicyTravel/Create')
+            ->where('entry.client.id', $client->id)
+            ->has('errors.client_id')
+        );
+});
