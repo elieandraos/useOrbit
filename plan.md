@@ -1,709 +1,306 @@
-# Policy forms & show page — UX revision (APPROVED plan)
+# Policy forms: single-page Create wizard
 
-> **Status: approved by the owner on 2026-10-06.** This plan is the source of truth for the
-> `plan-it` pass. Implementation details still need verifying against the codebase when individual
-> issues are built.
->
-> Re-synthesized from the 2026-10-03 `lab-it` investigation and the owner's locked decisions of
-> 2026-10-05 (three rounds; the third settles form preservation on Inertia's remember mechanism and
-> the migration approach) and 2026-10-06 (approves the form-preservation resolutions B1, B2 and
-> B3, corrects the class/carrier reset rules, and approves the plan). Verified against `main` @
-> `6d0acbd` and the installed Inertia (`@inertiajs/vue3` / `core` 3.7.0, `inertiajs/inertia-laravel`
-> ^3.0). Claims are labelled **[Fact]** (verified current state), **[Locked]** (owner-approved),
-> **[Derived]** (follows from facts + locked decisions; premises stated), **[Open]**
-> (implementation choice; every option preserves the locked outcomes) and **[Assumption]** (relied
-> on by the design, must be confirmed in a real browser). §10 records the approved
-> form-preservation resolutions.
+> **Source of truth for the next `plan-it` pass.** This section records the verified current state and the
+> decisions the owner approved on 2026-10-10. Implementation details still need verifying against the codebase
+> when each issue is built.
 
-## What we're doing
+## Summary
 
-**Creating a policy** takes two steps.
+New policies are created in a **single-page wizard** with a horizontal stepper and Back / Next in a sticky footer:
 
-- **Step 1** asks who and what: the class (Medical unless the link says otherwise), type, client,
-  carrier, agent and lead source.
-- **Step 2** asks for everything else. At the top it shows a short read-only summary of the step-1
-  choices, with a Back link to change them. If one of those choices has a problem (for example,
-  the client was archived in the meantime), the error shows next to the summary.
-- **Back keeps your work.** Go back to step 1, change something, continue, and step 2 is filled in
-  again:
-  - same class: everything comes back;
-  - a different class: the shared fields (policy number, dates, premium, discount…) come back,
-    and the fields that belong only to the old class are thrown away;
-  - a different carrier: the issuing branch is thrown away, since branches belong to a carrier;
-  - thrown-away fields stay gone. Switching back to the old class or carrier, or using the
-    browser's Back and Forward buttons to reach an older page, doesn't bring them back.
-  - Medical Single and Group keep both sets of entries while you switch, but only the chosen one
-    is saved.
-- **Cancel or a successful save ends the flow.** The browser's Back button then can't bring the
-  old entries back, and the next "New policy" starts empty.
-- **Refreshing the page loses unfinished entries.** The step-1 choices survive (they're in the
-  link), but anything typed and not yet saved is gone. Nothing is saved as a draft.
+1. **Policy details**
+   - **Policy** card: type, class, subclass, policy number.
+   - **Parties** card, in a 2×2 grid: client and agent, then insurance company and issuing branch.
+   - **Term & financials** card: effective and expiry dates, currency, premium, discount.
+2. **Coverage**: the class's coverage details, plus lead source in its own **Origin** section.
+3. **People**, named per class: Insured / Members (Medical), Insured person (Expat), Beneficiaries (Life), Travelers
+   (Travel). Automotive and Fire skip this step and have 3 steps.
+4. **Review**: read-only, with an Edit link per section. Errors from the final save send the user to the step that
+   holds the field.
 
-**Editing a policy** shows every field except status.
+Each Next checks that step against the same server rules as the final save, using Laravel Precognition, which is
+built into Inertia 3's `<Form>` (no new dependency). Every step is a browser history entry, so browser Back/Forward
+moves between steps. Every step shows the **current** values: an older history entry never brings back a value
+that a class or carrier change discarded. Within the page that holds because the wizard keeps one copy of the
+entries. A page the browser restores from its cache (bfcache) holds its own copy, so it first checks that it
+belongs to the tab's current, active flow, and starts empty if not. The #417 hand-over and discard counters go only
+after this is verified in Chrome and Safari. Cancel and a successful create end the flow, as today. A full refresh
+starts over at step 1.
 
-**Status.** Nobody picks a status in a form any more. New policies are saved as Active, and editing
-never changes the saved status. What people see everywhere (lists, policy pages, a client's
-policies, the Excel export and all six PDFs, plus the list filter) is a status worked out from the
-dates: **Upcoming**, **In force** or **Expired**, or **Cancelled** / **Frozen** when the policy has
-been cancelled or frozen. The buttons to cancel or freeze a policy come later, in separate work.
+**Edit** stays a single page per class. It has the same cards in the same order, with the stepper as anchor links
+instead of a gated sequence.
 
-**Organization timezone.** Organization Settings gets an optional timezone, picked from a
-searchable list. If none is set, UTC is used. "Today" for the status, the filter, exports, PDFs and
-the agent page's "renewing soon" list follows that timezone. Policy dates are calendar dates and
-never shift when the timezone changes.
+Precognition sends the form's data to the server **only to validate it**. The controller never runs, so nothing is
+saved and no draft exists, and the usual login, organization and permission checks still apply. A failed check must
+answer 422 JSON. Today it would redirect and flash the errors to the session, so that's fixed as part of the work.
+Changing a value on a step un-completes that step and every later step; going Back without changing anything keeps
+them completed. A validation answer that arrives after the values changed is ignored completely: it neither advances
+nor shows errors. Only the selected class, and for Medical the selected type, submits its own fields.
 
-**Finding a client.** The client field becomes a search box: type at least 2 letters and up to 10
-matching active clients appear. The chosen client shows with their avatar and name and a button to
-clear it. The forms no longer load every client up front. Carrier and agent stay as dropdowns.
-
-**Policy pages.** On all six policy types, the money figures move to the top as a compact strip
-without a heading, followed by the detail card with a bordered heading. The sidebar stays as it
-is. The carrier page's stats card also loses its heading.
-
-**Small fixes.** The discount rule (no more than the premium; a net premium of 0 is allowed)
-gets its missing test for editing. The covered-member "relationship" field stays free text and
-gets the hint "e.g. Employee, Spouse, Child".
-
-**Not in this work:** the Cancel and Freeze buttons, a fixed list of relationships, search boxes
-for carriers and agents, saved drafts, new scheduled jobs, and wider changes to how times are
-shown.
+**Unchanged:** the stored data, the six store/update actions and their validation rules (the store routes only gain
+Precognition support, with failed checks answering JSON), history encryption, the Edit form's Medical type-change confirmation, and what Show pages
+display.
 
 ---
 
-## 1. Create flow
+## Current state (verified)
 
-### Current state — forms and navigation
-- [Fact] `resources/js/pages/Policies/Create.vue` (step 1) starts with `class: props.selected.class ?? ''`,
-  collects type, class, client, carrier, agent, **status** and source, and continues with
-  `router.visit(classCreateRoute.url({ query }))`. That's a **forward visit**.
-- [Fact] Step 2 (`PolicyMedical/Create.vue` and its five siblings) reads its defaults from
-  `window.location.search` in the browser. The class controllers' `create()` take no request and
-  resolve nothing (`PoliciesMedicalController::create`). Each `Policy*Form.vue` is shared by Create
-  and Edit. It renders type, parties (`PolicyPartiesSection`), status and source as editable fields,
-  and holds each field in its own `ref` inside an uncontrolled Inertia `<Form>`.
-- [Fact] The in-page Back (`Policies/partials/BackToPolicyEntryButton.vue`) reads the step-1 keys from
-  the step-2 `<form>` and calls `router.visit(policies.create.url({ query }))`, another **forward
-  visit**. `PoliciesController::create` re-resolves the query safely: enum values via `tryFrom`,
-  scalar-only ids, and active, organization-scoped parties. `CreateTest` covers it.
-- [Fact] Step 1 already uses `useRemember(reactive({...}), 'Policies/Create')`. Step 2 remembers
-  nothing, so anything typed there is lost on Back.
-- [Fact] Every class form has the same common fields:
-  - policy number;
-  - issuing branch;
-  - effective and expiry dates;
-  - currency, premium and discount (`PolicyFinancialsSection`).
+| Area | Fact | Evidence |
+| --- | --- | --- |
+| Flow shape | Create is two separate Inertia pages. Step 1 (class, type, client, carrier, agent, source) is `Policies/Create`, served by `PoliciesController@create`. Continue visits the class's own create route with the choices in the query string. | `resources/js/pages/Policies/Create.vue` (`continueToClass`); `routes/policies.php` (`policies.{class}.create`) |
+| Step-2 gate | Each class's `create` action re-resolves the step-1 choices on the server through `PolicyEntrySelection::summary()`. If any are missing or no longer valid, it redirects to step 1 with a warning toast (`backToEntryQuery`). | `app/Support/Policies/PolicyEntrySelection.php`; `PoliciesMedicalController::create` (same in the other five) |
+| Step-2 page | The `Policy{Class}/Create` pages render the shared class form (`Policy{Class}Form.vue`) with an `entry` prop. `PolicyEntrySummary` shows the step-1 choices read-only, with a Back / correction link. | `resources/js/pages/Policy*/Create.vue`; `resources/js/pages/Policies/partials/PolicyEntrySummary.vue` |
+| Field placement | Step 2 holds policy number, subclass, issuing branch, dates, currency, premium, discount and the class sections. Lead source is on step 1. | `Policy*Form.vue` sections "Coverage", "{Class} coverage", "Coverage period"; `PolicyPartiesSection.vue`; `PolicyFinancialsSection.vue` |
+| Person / beneficiary fields | Medical: insured profile (`medical.insured_*`) or `insureds[]` members for Group. Expat: `expat.full_name`, `date_of_birth`, `gender`, `nationality`, `phone`, `visa_expiry_date`. Life: `life.beneficiaries` (text) and `life.smoker`. Travel: `travel.travelers` (text). Automotive and Fire: none. | `app/Http/Requests/Policies/StorePolicy*Request.php` |
+| Typed-work preservation (#417) | Each page remembers its entries in its own history entry (`useRemember`). A module-level hand-over carries them across flow navigations. A flow record with `classDiscards` / `branchDiscards` counters is stamped on every snapshot so that a restored older entry drops values discarded since. | `resources/js/lib/policyCreateFlow.ts`; `resources/js/composables/usePolicyFormEntries.ts`; issue #417 |
+| Ending the flow | The create GET routes use the `inertia.encrypt` middleware. Cancel calls `endPolicyCreateFlow()` (forgets memory, `router.clearHistory()`). The six store actions call `Inertia::clearHistory()`. | `routes/policies.php`; `policyCreateFlow.ts`; `Policies*Controller::store` |
+| Validation | One `StorePolicy{Class}Request` / `UpdatePolicy{Class}Request` per class, built on `PolicyValidationRules::policyRules()`. `class` is pinned to the controller's class (`Rule::in([$policyClass->value])`), so a submission must go to the selected class's store route. | `app/Concerns/PolicyValidationRules.php` |
+| Form options | `PolicyFormOptions::shared()` supplies carriers (with branches), agents, types, sources, currencies and the default currency. Each class controller adds its own small enum options (`subclasses`, e.g. `coverageScopes`, `classTiers`, `genders`). | `app/Support/Policies/PolicyFormOptions.php`; `Policies{Class}Controller::formOptions` |
+| Entry points | Client pages link to `policies.create?client_id=…`. | `Clients/partials/ClientPoliciesCard.vue`; `ClientPolicies/Index.vue` |
+| Precognition | `@inertiajs/vue3` 3.7.0 depends on `laravel-precognition`. Its `<Form>` exposes `validate({ only, onSuccess, onValidationError })`, which the Inertia docs present for wizard steps. Laravel ships the server side (`HandlePrecognitiveRequests`). The app doesn't use it yet. | `node_modules/@inertiajs/vue3/package.json`; Inertia v3 docs "Forms → Precognition" |
+| Precognition on the server | `#[Authorize]` is controller middleware, so it runs before dispatch, along with the route's `auth` and `organization` middleware. A precognitive request then goes through `PrecognitionControllerDispatcher::dispatch()`. That resolves the method's parameters, which runs the form request's `authorize()` and `rules()`, then aborts with `204 Precognition-Success`. **The controller method body never runs**, so no action `handle()`, flash or `clearHistory`. The `Create*Action` is constructed but never called. | `vendor/laravel/framework/src/Illuminate/Routing/Attributes/Controllers/Authorize.php`; `…/Foundation/Routing/PrecognitionControllerDispatcher.php` |
+| Precognition on the client | `laravel-precognition` aborts an in-flight validation only when a new one with the **same fingerprint** (method + URL) starts. A value change without a new request, or a request to a different store URL after a class change, doesn't cancel the earlier one. | `node_modules/laravel-precognition/dist/client.js` (`abortMatchingRequests`) |
+| Tenant scoping in rules | `policy_number` is unique within `organization_id`, and parties are checked through `assignablePartyRule(…, $organizationId, …)`. Validation only reads from the database. | `app/Concerns/PolicyValidationRules.php` |
+| Rules across steps | Some later-step rules read step-1 fields. Travel trip dates use `effective_date` / `expiry_date`. Automotive valuation fields use `subclass`. Medical insured fields and `insureds` use `type`. | `StorePolicyTravelRequest`, `StorePolicyAutomotiveRequest`, `StorePolicyMedicalRequest` |
+| Precognition `only` with members | Checked against the real `policies.medical.store` route in a throwaway test, with `HandlePrecognitiveRequests` added and the test then deleted. Laravel filters rules **after** expanding wildcards (`FormRequest` → `getRulesWithoutPlaceholders()` → `filterPrecognitiveRules`), so wildcard keys work.<br>- `only` = `insureds,insureds.*.full_name,…` with an invalid second member and step-1 errors in the payload: only `insureds.1.full_name` and `insureds.1.date_of_birth` came back; step-1 errors were filtered out.<br>- Expanded indexes (`insureds.1.full_name`) behave the same.<br>- An empty `insureds` array needs `insureds` itself in `only` to report "Add at least one covered member".<br>- A valid step answered `204 Precognition-Success: true`, with no policy created and no session errors.<br>- A user from another organization got `client_id` / `carrier_id` errors. | `vendor/laravel/framework/src/Illuminate/Http/Concerns/CanBePrecognitive.php`; `…/Foundation/Http/FormRequest.php` |
+| Precognition failures on web routes | `bootstrap/app.php` renders JSON only for `api/*` (`shouldRenderJsonWhen`). In the same check, every **failed** precognitive request answered **302 with the errors flashed to the session**, not the 422 JSON the client expects. Making precognitive requests render JSON (`$request->isAttemptingPrecognition()`) turned them into 422 JSON with no session errors. Recorded in `.ai/rules/controllers.md`. | `bootstrap/app.php` (`withExceptions`); `.ai/rules/controllers.md` |
+| History encryption | Inertia stores the page object (URL, props, remembered state) in `history.state`, encrypted with a key and IV kept in the tab's **sessionStorage** (`historyKey`, `historyIv`). `clearHistory()` drops them, so older entries can't be decrypted and are re-fetched. On a bfcache restore (`pageshow` with `persisted`), Inertia re-decrypts and reloads if that fails. | `node_modules/@inertiajs/core/dist/index.js` (`handlePageshowEvent`, `clearHistory`) |
+| Refresh | A full reload loses the remembered step-2 entries. The step-1 choices come back from the query string. A remembered snapshot is only restored while the in-memory flow record exists (`checkPolicyCreateSnapshot` returns null without it), so after a reload the history copies are already ignored today. | #417 "Accepted limitation"; `policyCreateFlow.ts` |
+| Tests | `CreateTest` covers step-1 preselection, encryption and options. The `{Class}CreateTest` files cover the step-2 summary, the redirect to step 1 and the archived-party summary. Store/update tests cover validation. | `tests/Feature/Http/Policies/*CreateTest.php` |
 
-  Class-specific fields are the subclass plus each class's own sections. Medical switches insured
-  profile vs covered members with `isGroup` (`v-if`), so the hidden section isn't submitted.
-  Medical step 2 holds health data (`medical.insured_medical_history`,
-  `insureds[i][medical_notes]`).
-- [Fact] The issuing branch's options come from the selected carrier in the `carriers` prop, and it
-  resets when the carrier changes.
-- [Fact] Cancel on step 2 is a `<Link>` to the policies index. A successful store redirects to the
-  class Show page.
+## Locked decisions (approved by the owner)
 
-### Current state — installed Inertia remember and history behaviour (3.7.0, verified in `node_modules/@inertiajs/core/dist/index.js` and `vue3/dist/index.js`)
-- [Fact] **Remembered state belongs to one browser history entry.**
-  - `useRemember(data, key)` restores via `router.restore(key)` at component setup, then writes every
-    change with `router.remember()` → `history.replaceState` into the **current** entry
-    (`rememberedState[key]`).
-  - Every forward visit pushes a **new** entry with `rememberedState ??= {}`, i.e. empty.
-- [Fact] **When remembered state comes back:**
-  1. **Browser Back/Forward** (`popstate` → `page.setQuietly(data, { preserveState: false })`): the
-     page remounts from that entry's stored state, remembered values included.
-  2. **Same-component responses with `preserveState`** (`setRememberedState`: only when
-     `pageResponse.component === page.get().component`): the `router.post/put/patch` defaults use
-     `preserveState: true`. That's why a step-2 validation error, which redirects back to the same
-     component, keeps the user's entries today.
-- [Fact] **When it doesn't:**
-  - across a forward visit to a different component, or to a fresh entry (the existing Back
-    button and Continue are both forward visits);
-  - after a page reload (`InitialVisit.clearRememberedStateOnReload` deletes it).
-- [Fact] The `<Form>` component has no `remember` prop (props: `action`, `method`, … `resetOnError`,
-  `resetOnSuccess`, …). Remembering a `<Form>` page means wrapping its field state in
-  `useRemember`.
-- [Fact] **History entries are stored in plain text and stay revivable.**
-  - `config/inertia.php` `history.encrypt` defaults to `false` (`INERTIA_ENCRYPT_HISTORY`), and no
-    route uses the `inertia.encrypt` middleware.
-  - After Cancel or a successful create, browser Back re-renders the old step-2 entry with its
-    remembered entries, so the user could resubmit.
-- [Fact] **Inertia's built-in invalidation needs encrypted entries.**
-  - With history encryption, entries are AES-GCM encrypted with a key held in `sessionStorage`.
-  - `Inertia::clearHistory()` (server) or `router.clearHistory()` (client) removes that key.
-  - Afterwards, `popstate`, or a `pageshow` from the bfcache, fails to decrypt →
-    `onMissingHistoryItem` → `page.clear()` + `router.visit(location, { replace: true })`. That's a
-    fresh server render, with no remembered state carried over, because `page.clear()` empties the
-    component the carry-over check compares against.
-  - It needs `crypto.subtle`, i.e. a secure context. Without one it warns and stores plain text.
-    The local `APP_URL` is `https://useorbit.test`.
+1. **Stepper layout.** The create form opens with a horizontal stepper:
+   - step 1 **Policy details**: Policy card (type, class, subclass, policy number), Parties card (client and agent on
+     row 1, insurance company and issuing branch on row 2), **Term & financials** card (effective and expiry dates,
+     currency, premium, discount);
+   - step 2 **Coverage**: class coverage details, plus lead source in a separate **Origin** section;
+   - step 3: the people step;
+   - step 4 **Review**.
+2. **Step 3 per class.** Medical: **Insured** (Single) or **Members** (Group). Expat: **Insured person** (the
+   covered-person fields move out of coverage). Life: **Beneficiaries** (`life.smoker` stays in Coverage). Travel:
+   **Travelers**. Automotive and Fire skip step 3 and have 3 steps. The stepper adapts as soon as the class is
+   chosen.
+3. **Review step.** Read-only, with no inputs. Each section has an Edit link that jumps to its step.
+4. **Navigation.**
+   - The footer is sticky: Cancel on the left, "Step x of n" in the middle, Back / Next on the right. On the last
+     step Next becomes **Create policy**.
+   - Completed steps are clickable; future steps aren't. A step with errors is marked.
+   - The step-1 summary and Back link on step 2 go away.
+5. **Single page.** The wizard is one page. Steps switch on the client.
+6. **Per-step validation** uses Laravel Precognition through `<Form>`'s `validate({ only: [step fields] })` on each
+   Next, against the same server rules as the final save.
+7. **Final-save errors** mark the step that holds each field, and the user is taken to the first such step. This
+   replaces the summary's correction link and the step-2 → step-1 redirect.
+8. **Browser history.** Each step is a browser history entry, so Back/Forward moves between steps. **Every entry
+   shows the flow's current values.** Back shows the latest values, not a copy from when that step was last shown.
+   This deliberately changes #417 scenario 9 ("common fields as each page had them").
+9. **Behaviour kept from #417**, implementation free to change:
+   - typed work survives moving between steps and browser Back/Forward;
+   - a class change drops the class-specific entries;
+   - a carrier change drops the issuing branch;
+   - discarded values never come back, whether by switching back, by Back/Forward, or by a bfcache restore;
+   - Medical Single ↔ Group keeps both sets of entries while switching, and only the selected type's are
+     submitted;
+   - a validation error keeps the entries;
+   - Cancel and a successful create end the flow, and browser history then shows nothing that was entered;
+   - a fresh "New policy" starts empty;
+   - nothing reaches the server as a draft;
+   - Edit is never pre-filled from create work.
+10. **Refresh** mid-flow starts over at step 1. The only prefill is the one from the entry link (e.g. `client_id`
+    from a client page). Nothing is persisted to browser storage, because of the Medical health data.
+11. **Edit** stays a single page per class, with the same cards in the same order. The stepper appears as anchor
+    links that scroll to each section, not a gated wizard. There is one Save.
 
-### Locked decisions
-- [Locked] Step 1 keeps class, type, client, carrier, agent and lead source.
-- [Locked] Class defaults to Medical unless the URL supplies another class.
-- [Locked] Step 2 contains the remaining policy details and does not repeat step-1 fields.
-- [Locked] Edit keeps all relevant fields available except status.
-- [Locked] **Step-2 summary:**
-  - a compact read-only summary of the step-1 choices, with a Back link to change them;
-  - validation errors for those hidden fields shown alongside the summary;
-  - entered work preserved while correcting those errors.
-- [Locked] **Form preservation:**
-  - **Mechanism:** Inertia's existing remember mechanism (`useRemember`) for both Create steps,
-    alongside a small in-memory hand-over between the steps (§10 B1). No separate browser storage,
-    no database draft.
-  - **Scope:** all form entries, including Medical history and members' notes.
-  - **Back and error correction:** both restore the current flow's entries.
-  - **Class change:** keeps the common fields and **discards** the class-specific entries.
-  - **Carrier change:** **discards** the issuing branch.
-  - **No resurrection:** switching back to the earlier class or carrier doesn't bring discarded
-    values back, including when an older page of the flow is restored through browser
-    Back/Forward (§10 B3).
-  - **Medical Single ↔ Group:** preserves both sets of entries, but submits only the selected
-    type's.
-  - **Ending:** Cancel or a successful create ends and clears the flow. A fresh "New policy" starts
-    empty.
-  - **History:** the policy Create flow's history is encrypted and invalidated on Cancel or a
-    successful create, so returning through browser history can't revive an ended flow (§10 B2).
-  - **Accepted limitation:** a full browser refresh loses unfinished entries.
+### Refinements approved on 2026-10-10
 
-### Derived constraints
-- [Derived] **Step 2 Create submits the step-1 values as hidden inputs**, and the forms get a Create
-  mode (summary + hidden inputs) and an Edit mode (visible fields), driven by the `policy` prop's
-  presence. *Premise:* Store validates `type`, `client_id`, `carrier_id`, `agent_id` and `source`.
-- [Derived] **The step-1 values are resolved on the server for step 2.** The class `create()`
-  actions resolve the query the way `PoliciesController::create` does (shared, not duplicated).
-  - That gives the summary trusted labels and detects missing or invalid values.
-  - When a required step-1 value can't be resolved, the user goes back to step 1 with the valid
-    values kept, and the work is carried under the same rules as Back.
-  - Store-time validation stays the authority for hidden inputs.
-- [Derived] **Hidden-field errors render on the summary.** The keys are `type`, `client_id`,
-  `carrier_id`, `agent_id`, `source` and `class`. The summary's Back link is the correction path, so
-  it carries the step-2 entries exactly like Back.
-- [Derived] **Each step's field state lives in `useRemember`.** Step 1 already does this. Step 2
-  holds all fields, including both Medical type sections and the members rows, in one remembered,
-  reactive object per class form, under a key that includes the class.
-  - That alone delivers: browser Back/Forward within an unfinished flow, and step-2 validation
-    errors (same component + `preserveState`).
-  - Back → Continue, the summary's correction path and the invalid-entry redirect are forward
-    visits that create fresh, empty entries. The in-memory hand-over (§10 B1) carries the work
-    across them.
-- [Derived] **The carried work is the step-2 entries plus the class and carrier they belong to.**
-  Step 1 seeds its own remembered state with the carried work it receives, so browser Back/Forward
-  to step 1 keeps it, and hands it on at Continue.
-- [Derived] **Class-change and carrier-change rules discard, they don't hide.** The discarded values
-  are removed from the carried work itself, so nothing later can restore them:
-  - when the class selected on step 1 differs from the carried work's class, the class-specific
-    entries (including both Medical type sections and the members rows) are dropped and only the
-    common fields remain, now belonging to the new class;
-  - when the carrier selected on step 1 differs from the carried work's carrier, the issuing branch
-    is dropped and the work now belongs to the new carrier;
-  - the rules apply as soon as the step-1 selection changes, and again when step 2 seeds its
-    remembered object (a guard for any path that skips step 1's change handling);
-  - they also apply when an older page of the flow is restored from browser history (§10 B3).
+12. **No resurrection, verified before removal.** Browser Back/Forward and bfcache restores must never bring back
+    entries discarded by a class or carrier change. The #417 discard machinery (`policyCreateFlow.ts`'s hand-over
+    and counters, `usePolicyFormEntries.ts`) is removed only after the replacement has been verified to preserve
+    this.
+13. **Completion follows the current selections.**
+    - Changing the class resets the completion and errors of the affected steps.
+    - A Medical Single ↔ Group change also changes which steps need validating (Insured vs Members).
+    - A step shown as completed must be valid for the current selections and values.
+14. **No stale advance, no side effects.**
+    - A Precognition response must not advance the wizard if the selections or values it validated have changed
+      since the request was sent.
+    - Validation keeps authorization and tenant isolation.
+    - Validation saves no draft and has no other side effects.
+15. **Only the selected class and Medical type submit class-specific fields**, in both step validation and the final
+    save. The selected class's hidden steps can stay mounted. Inactive classes' fields are never submitted.
 
-  Switching back (e.g. Medical → Fire → Medical, or carrier A → B → A) therefore starts the
-  class-specific fields, or the branch, empty.
-- [Derived] **Comparing the restored entry's class or carrier with the current one can't enforce
-  this.** After Medical → Fire → Medical, an old Medical entry matches the current class but still
-  holds the discarded Medical entries. Restoration has to know whether a discard happened *since*
-  the entry was written, not what the current selection is (§10 B3).
-- [Derived] **Common fields survive any number of class changes**, and the carrier rule only ever
-  touches the issuing branch. Medical Single ↔ Group is a step-2 toggle within one class, so it
-  discards nothing; both type sections stay in the remembered object, and the `v-if` keeps the
-  hidden one from being submitted.
-- [Derived] **Ending the flow (Cancel, successful create) empties the hand-over and clears the
-  encrypted history** (§10 B2). A fresh "New policy" is a forward visit to step 1 with no carried
-  work, so it starts empty without further measures.
-- [Derived] A **full page reload** of step 1 or step 2 drops remembered entries (Inertia behaviour)
-  and the in-memory hand-over. The step-1 choices still come back from the URL query. This is the
-  owner-accepted limitation, not a requirement to work around.
+### Review corrections approved on 2026-10-10
 
-### Open details
-- [Open] How the shared step-1 resolution is extracted, and whether invalid step-2 entry redirects or
-  renders step 1 directly.
-- [Open] Remember key shapes; where the hand-over module lives and its API. Whether the summary's
-  Back link replaces or reuses `BackToPolicyEntryButton`. Copy for step 1's former "Status &
-  origin" section.
+16. **Completion rule:** changing a value on a step un-completes that step and every later step, and clears their
+    errors. Going Back without changing anything keeps completion. Class and Medical type live on step 1, so
+    changing either un-completes every step. This replaces a per-field dependency map; a little repeated validation
+    is accepted.
+17. **Stale responses change nothing.** A validation response that no longer matches the current state is
+    discarded entirely: no advance, no error update, no completion update. For example, an old Medical failure
+    arriving after a switch to Life shows no errors.
+18. **Explicit check when a cached page returns.** A page restored from bfcache must check that it belongs to the
+    current, still-active flow before showing any entries. If it doesn't, it starts empty. Clearing the history key
+    isn't relied on as proof. Verified manually after Cancel, after a successful create, and after starting another
+    policy (including in another document of the same tab).
+19. **Members validation** uses wildcard `only` keys (`insureds`, `insureds.*.{field}`), as verified above.
+20. **Failed precognitive checks: the narrower handler.** `shouldRenderJsonWhen` in `bootstrap/app.php` adds
+    `$request->isAttemptingPrecognition() && $e instanceof ValidationException`, so only validation failures of
+    quiet checks become 422 JSON. Every other response, including the `204 Precognition-Success`, is unchanged.
+    Laravel passes the exception as the callback's second argument (`Foundation/Exceptions/Handler.php`).
+21. **Stale responses: a fingerprint.** Next records a fingerprint of the class, the Medical type, the step, and the
+    values of that step and every step before it. A response is applied only if the fingerprint taken when it
+    arrives matches. `<Form>` writes returned errors itself, so the wizard also has to stop a stale failure's errors
+    from showing: either it shows errors from its own list, or it clears what `<Form>` wrote. Which of the two is
+    open.
 
+## Derived constraints
 
-## 2. Policy status
+| Constraint | Premises |
+| --- | --- |
+| Create becomes **one generic page** (`Policies/Create`) that renders every class's sections. The per-class create GET routes and pages (`policies.{class}.create`, `Policy{Class}/Create.vue`) are removed. | Decision 5 + the class is chosen on step 1 alongside fields that depend on it (decision 1). |
+| The server-side step-2 gate is removed: `PolicyEntrySelection::summary()` / `backToEntryQuery()` and `PolicyEntrySummary`. `selected()` (entry-link prefill) stays, reduced to what decision 10 still needs. | Decisions 5, 7, 10 + current-state "Step-2 gate". |
+| The create page carries **every class's own options**: subclasses, plus each class's coverage enums. | Single generic page + `formOptions` lives per class controller today. |
+| The form's submit action **follows the selected class** (that class's store route), and so does the Precognition target. | `policyRules()` pins `class` to the controller's class. |
+| **Only the selected class's sections are rendered** (`v-if` on the class). Within that class, the steps stay mounted (`v-show`) so `<Form>` serializes them. The Medical Single/Group sections keep a `v-if` on the type. Inactive classes and the unselected Medical type therefore never reach the DOM, so they're never submitted or validated. Their entries live only in memory. | `<Form>` serializes the inputs present in the DOM + decisions 9, 15. |
+| The flow holds **one live copy of its entries**, in memory, and **no entries in history state**. Discards remove values from that copy. With no older copy anywhere, nothing can be resurrected, so the #417 hand-over and counters become unnecessary. They're removed only once that's verified (decision 12). See "Where state lives". | Decisions 8, 9, 12 + #417's counters existed only because each history entry held its own snapshot + current-state "Refresh" (history copies are already ignored without memory). |
+| The live entries live **outside the page component instance** (module scope, or an equivalent that survives a remount). A history restore within the app may remount the page component, and the entries must survive that. | Decisions 8, 9 + Inertia restores pages from history state, and whether it remounts on a same-component pop isn't something to rely on. |
+| **The decision-16 rule covers the rules that cross steps.** Every cross-step rule found reads a step-1 field (`type`, `subclass`, `effective_date`, `expiry_date`), so "a change on step k un-completes k and every later step" already invalidates every dependent step. Steps that aren't completed can't be clicked in the stepper. | Decisions 4, 13, 16 + current-state "Rules across steps". |
+| **Every step validation is checked against what it sent.** Each Next records the step and the values it sent. A response is applied only if it still matches the current state: same class (so same store URL), same Medical type, same step values. Applying it means advancing, setting errors and marking completion. A stale response does none of these, so `<Form>`'s built-in error handling can't be left to write a stale failure's errors directly. The client library's same-URL abort isn't relied on. | Decisions 14, 17 + current-state "Precognition on the client". |
+| **Step validation goes to the selected class's store route** with `HandlePrecognitiveRequests` added. The `auth`, `organization` and `#[Authorize('create', Policy::class)]` checks and the form request's `authorize()` all still run, and the rules keep their organization scoping. Precognition **sends the form's data to the server only to validate it**. The controller body never runs, so nothing is saved, no draft is kept, and there's no flash and no history change. **Failed precognitive requests must render as 422 JSON.** Today they would 302 and flash the errors to the session. | Decisions 6, 14 + current-state "Precognition failures on web routes",  current-state "Precognition on the server", "Tenant scoping in rules". |
+| **Final-save errors map to steps** through each class's field → step mapping. The same mapping gives each step's `only` list. | Decisions 6, 7. |
+| Class and carrier discards happen within the visible step-1 cards. Subclass resets when the class changes and branch resets when the carrier changes, in front of the user. | Decision 1 (class/subclass and carrier/branch on the same step). |
+| History encryption (`inertia.encrypt`) and `clearHistory` on Cancel / successful store still apply to the single create route and the six store actions. | Decision 9 (ended flows leave nothing in history) + current "Ending the flow". |
+| Create and Edit **share the card components**. Edit composes them on one page, without the wizard state or history entries. | Decision 11 + `Policy{Class}Form.vue` is shared by Create and Edit today. |
+| Feature tests for the removed step-2 pages (summary, redirect to step 1, archived-party summary) are replaced. The store/update validation tests stay as they are. New tests cover:<br>- the per-class options on the single create page;<br>- Precognition step validation with per-step `only` subsets;<br>- an unauthorized user being refused;<br>- another organization's party or policy number failing validation;<br>- a successful validation creating no policy and no flash;<br>- a failed validation answering 422 JSON with no session errors;<br>- Members validation with wildcard `only`. | Removed routes + decisions 6, 14. Approval is needed before deleting tests, per project rules. |
+| **A cross-document flow marker is needed for decision 18.** A bfcache-restored document has its own memory and doesn't know that another document of the same tab started or ended a flow. Only sessionStorage, which is shared per tab, can tell it. The marker holds an **opaque flow id, never entries**. Decision 10's "nothing persisted to browser storage" is about entries. Starting a flow sets the marker, ending one clears it, and a restored page whose flow id doesn't match starts empty. | Decision 18 + bfcache restores a whole document as it was + current-state "History encryption" (sessionStorage is per tab). |
+| **Removing the old machinery is gated on manual verification.** The #417 scenario list, adapted to one page, is checked in Chrome and Safari before the removal lands. It covers discards across browser Back/Forward and bfcache, ended flows, refresh, and the decision-18 returns after Cancel, after a successful create, and after starting another policy. These are browser behaviours that feature tests don't cover. | Decision 12 + #417 "Tests" (manual). |
 
-### Current state
-- [Fact] `App\Enums\PolicyStatus` (Active / Cancelled / Frozen) is a stored column, cast on `Policy`.
-  It has no relationship to `effective_date` or `expiry_date`, which are both `date` columns.
-- [Fact] Every Store **and Update** request sets `'status' => $this->input('status') ?? Active` in
-  `prepareForValidation()` (e.g. `UpdatePolicyMedicalRequest`), and `UpdatePolicyAction` writes
-  `$attributes['status']`. **Removing the field from Edit without changing this would silently reset
-  a Cancelled or Frozen policy to Active.**
-- [Fact] `effective_date` is `required|date`, and `expiry_date` is
-  `required|date|after_or_equal:effective_date`. A single-day term is valid.
-- [Fact] **Every user-facing occurrence of the policy status** (audit by grepping `status_label`,
-  `policyStatusTone`, `->status->label()` and the `statuses` prop):
+## Open implementation details
 
-  | Surface | Where |
-  | --- | --- |
-  | List column | `Policies/partials/PoliciesTable.vue` |
-  | List, card layout | `Policies/partials/PolicyCard.vue` |
-  | Show header (mobile and desktop badges, shared by Show, Members, Documents and Notes via `PolicyDetailShell`) | `Policies/partials/PolicyShowHeader.vue` |
-  | Related-policy badges | `Clients/partials/ClientPoliciesCard.vue` |
-  | Status filter | `FiltersDrawer.vue` ← `statuses` prop from `PoliciesController::index`; `IndexPolicyRequest` (`Enum(PolicyStatus)`); `PolicyFilter::status()` |
-  | Excel export (filter + "Status" column) | `ExportPoliciesToExcelAction` (shares `IndexPolicyRequest`/`PolicyFilter`); `Exports/PoliciesExport.php` |
-  | PDFs | `resources/views/exports/policy-{medical,automotive,expat,fire,life,travel}-profile.blade.php` (`$policy->status->label()`) |
-  | Forms (removed in this scope) | step 1 `Create.vue`; the six `Policy*Form.vue` |
-  | TS types | `types/policy.ts` and the six `Policy*/partials/policy.ts` (`status`, `status_label`) |
+These are left to `plan-it` / implementation. Every option preserves the decisions above.
 
-  Not affected:
-  - `Agents/partials/PoliciesRenewalCard.vue` shows a fixed "Renewing" badge, not the status;
-  - client, agent and carrier PDFs show those entities' own statuses;
-  - `design-foundation/card` uses hard-coded mock data.
-- [Fact] Tests asserting today's behaviour that will change:
-  - `IndexTest`, *"a status filter narrows … exact matching status"* and *"an invalid status is
-    rejected"*;
-  - `CreateTest`, the status preselection cases;
-  - Store and Update tests posting `status`;
-  - `ExcelExportTest` and the six `*PdfExportTest` files, where they assert the status.
+- **How steps become history entries**: e.g. `router.push` client-side visits with a `?step=` query, or another
+  mechanism. If someone lands on a later step with no flow in memory (refresh, a stale entry), they go back to
+  step 1.
+- **How the Review step renders**: reuse the Show page cards (`PolicyPartiesCard`, `PolicyFinancialsCard`,
+  `PolicyTermCard`, `{Class}DetailCard`) fed from the live entries, or a dedicated read-only layout.
+- **What an older history entry from an earlier, abandoned flow shows** within the same document: empty, or the
+  current flow. It must never show discarded values or an ended flow's data. A bfcache return is covered by
+  decision 18.
+- **How class-specific options are delivered**: all up front, or a partial reload on class change.
+- **Whether the new `Stepper` gets a design-foundation docs page** (no stepper exists in `resources/js/components/ui`
+  today).
+- **How Edit's anchors are built** (scroll-spy or plain links).
 
-### Locked decisions
-- [Locked] No status control in either Create step or any Edit form.
-- [Locked] Create always stores Active. Update preserves the existing stored status.
-- [Locked] Cancel and Freeze actions are out of scope (separate UI later).
-- [Locked] One computed `display_status` with five values: Upcoming / In force / Expired / Cancelled /
-  Frozen.
-  - A stored Cancelled or Frozen takes precedence.
-  - For a stored Active:
-    - Upcoming when today < `effective_date`;
-    - In force when `effective_date` ≤ today ≤ `expiry_date`;
-    - Expired when today > `expiry_date`.
-  - Both dates are inclusive. The date-derived value is never stored.
-- [Locked] **The stored status is internal.** The display status is used everywhere users see or
-  filter a policy status: lists, Show pages, related-policy badges, Excel exports and all six PDFs.
-  No user-facing surface still presents the internal "Active".
-- [Locked] "Today" comes from the organization's effective timezone (§3).
+## Where state lives
 
-### Derived constraints
-- [Derived] **Create ignores any submitted `status`** and stores Active, so a crafted POST can't set
-  it. **Update neither validates, defaults nor writes `status`**, because the Update
-  `prepareForValidation` default plus the action's write would overwrite Cancelled or Frozen.
-- [Derived] **One rule, two paths, one "today".** The PHP computation (resource, PDFs, Excel rows) and
-  the SQL filter use identical boundaries from the same organization-local date (§3):
-  - Cancelled: `status = cancelled`;
-  - Frozen: `status = frozen`;
-  - Upcoming: `status = active AND effective_date > today`;
-  - In force: `status = active AND effective_date <= today AND expiry_date >= today`;
-  - Expired: `status = active AND expiry_date < today`.
+| State | Where it lives | Refresh | Cancel or successful create |
+| --- | --- | --- | --- |
+| **Live entries**: every field typed in the wizard, both Medical type sets, which steps are completed, the current step | **JavaScript memory only**, outside the page component. Never in history state, never in session/local storage, **never saved as a draft**. They reach the server only when sent for validation or the final save. | Lost. The page starts over at step 1 with only the entry-link prefill. | Emptied in memory. |
+| **History entries**: one per step | `history.state` holds Inertia's page object (URL with the step, page props). It's **encrypted** (`inertia.encrypt` on the create route), with the key and IV in the tab's sessionStorage. It holds **no typed entries**. | The key survives, so the entries still decrypt. They hold only props and the step, and a step past 1 with no flow in memory goes back to step 1. | `clearHistory()` (on Cancel, client side; on a successful store, `Inertia::clearHistory()`) removes the key. Older entries can't be decrypted and are re-fetched fresh. |
+| **bfcache snapshot** | The browser keeps the whole document, memory included, as it was when you left: that document's latest entries, after any discard it made. **This is a second copy.** It can be stale if another document of the tab has since started or ended a flow. | n/a | On `pageshow` with `persisted`, the page checks the sessionStorage flow marker (decision 18). A missing or different marker means it starts empty. Inertia's own decryption failure after `clearHistory` is a second line of defence, not the guarantee. |
+| **Flow marker** | sessionStorage, per tab: an opaque id for the active flow, **no entries**. | Survives, but entries don't. The page starts a new flow. | Cleared. |
+| **Precognition request** | The form's current data is sent to the selected class's store route **only to be validated**. The server answers 204 or 422 JSON and keeps nothing: no draft, no session errors. | n/a | n/a |
 
-  Because `after_or_equal` guarantees effective ≤ expiry, these five are exhaustive and disjoint.
-- [Derived] **The filter accepts only display values.** `IndexPolicyRequest` validates against the
-  display set, and the index passes display options instead of `PolicyStatus::all()`. The Excel export
-  shares the request and filter, so it filters identically to the index.
-- [Derived] **Every surface in the audit table switches together.** The user-facing `status` /
-  `status_label` pair is replaced or shadowed by the display value. Keeping the raw value in the
-  resource is acceptable only if no surface renders it. The Excel column and PDFs read the same PHP
-  computation as the resource.
-- [Derived] `PolicyStatus` stays the stored enum. The forms no longer need `statuses` from
-  `PolicyFormOptions::shared()`.
+**Within one document**, nothing can be resurrected: the only copy is the live one, and discards remove values from
+it. **Across documents**, a bfcache-restored page holds its own copy, and the flow marker check (decision 18)
+decides whether it may be shown. Both are checked in Chrome and Safari before the old machinery is removed
+(decision 12).
 
-### Open details
-- [Open] Where the rule lives: for example, a `PolicyDisplayStatus` enum with a resolver plus a
-  matching query scope or filter method. Resource key names. Whether the raw `status` stays in the
-  resource for internal use.
-- [Open] Badge tones for the five values (extend `policyStatusTone` or add a sibling map).
+## Proposed component shape (for review)
 
-## 3. Organization timezone (added scope)
+Legend: **[new]** is a proposed component, **[existing]** keeps its name and role, **[existing, reshaped]** keeps
+its name with changed contents, and **shared** means Create and the six Edit pages both use it.
 
-### Current state
-- [Fact] `config/app.php` `timezone` is `UTC`. There's no timezone on organizations or users
-  anywhere (no column, no config, no UI).
-- [Fact] **Storage:** `organizations` has `name`, `two_factor_required`, `default_country_id` and
-  `default_currency_id` (`Organization` `#[Fillable]`).
-  - The organization defaults were added by **editing the create migration**
-    (`0000_01_01_000003_create_organizations_table.php`, commit `eb19f14`).
-  - `create_policies_table` was likewise edited three times. No `Schema::table` alter migration
-    exists in the repo.
-- [Fact] **Settings:** `routes/settings.php` has `settings/organization` (`OrganizationController@edit`,
-  which also renders `defaultCountryId`, `defaultCurrencyId`, `countries` and `currencies`).
-  - The details form posts to `PATCH settings/organization/details` →
-    `OrganizationDetailsController` → `OrganizationDetailsUpdateRequest` (`name` required; defaults
-    `present|nullable|…`) → `UpdateOrganizationDetailsAction` (`$organization->update($attributes)`).
-  - Authorization: `#[Authorize('update', Organization::class)]`. Only the Owner can view it
-    (`tests/Feature/Http/Settings/OrganizationTest.php`).
-- [Fact] **Picker convention:** `settings/Organization.vue` picks the default country with the static
-  `Typeahead`, with a leading `{ value: '', label: 'No default' }` option, an `optional` `FormField`
-  and a helper text ("Changing it never changes existing records").
-- [Fact] **Provisioning and defaults:** `ProvisionOrganizationAction` creates an organization with
-  only `name`. `OrganizationFactory` sets only `name`. Both would leave a new column null.
-- [Fact] **Organization context:** the `organization` middleware (`EnsureOrganizationContext`)
-  stores only the organization **id** in the scoped `OrganizationContext`. Jobs and scheduled
-  commands get no context: `routes/console.php` schedules only `model:prune`, and
-  `StoreDocumentJob` is the only job. Excel and PDF exports run synchronously in the request.
-- [Fact] **Date calculations relative to "today":**
-  - agent "renewing soon" (`AgentsController::show`: stored Active and `expiry_date` within
-    [`now()->toDateString()`, +30 days]), tested in `tests/Feature/Http/Agents/ShowTest.php`,
-    including both window edges;
-  - otherwise only non-policy uses: the `ClientFilter` age filters, the automotive/fire year
-    bounds, and browser-side `new Date()` in `DateInput`/`policyDateEndYear`.
-- [Fact] Tests use `$this->freezeTime()` (e.g. `MedicalStoreTest`).
+`resources/js/pages/Policies/Create.vue`, the single create page:
 
-### Locked decisions
-- [Locked] Organization Settings gets an **optional** timezone setting. Values are valid IANA
-  identifiers, chosen with a searchable picker following existing UI conventions.
-- [Locked] An unset organization timezone falls back to UTC.
-- [Locked] "Today" for `display_status` comes from that effective timezone. The same
-  organization-local date is used for status filters, exports, PDFs and existing related-policy date
-  calculations, including "renewing soon".
-- [Locked] Policy `effective_date` and `expiry_date` remain calendar dates. Changing the timezone
-  never converts stored dates.
-- [Locked] A small shared way to resolve the organization's timezone and date, reusable by future
-  scheduled jobs.
-- [Locked] No new cron jobs, no scheduling framework, no broad timestamp-display changes.
-- [Locked] **Migration:** the project is still pre-production and databases can be rebuilt, so the
-  optional column goes into the original `0000_01_01_000003_create_organizations_table.php`,
-  following the existing approach.
+```vue
+<template>
+    <Head title="New policy" />
 
-### Derived constraints
-- [Derived] **Storage:** a nullable `timezone` string column on `organizations` (null = UTC), added to
-  `#[Fillable]` and the model's `@property` docblock. It's added to the create migration (locked
-  above). Local and test databases need a `migrate:fresh`.
-- [Derived] **Validation:** `OrganizationDetailsUpdateRequest` adds
-  `timezone => ['present', 'nullable', 'timezone:all']`, matching the existing `present|nullable`
-  defaults. The picker's options come from the same identifier list the rule accepts
-  (`DateTimeZone::listIdentifiers(DateTimeZone::ALL)`), so every offered value validates and nothing
-  else does. Authorization is unchanged (Owner only via `update`). The action's array-shape docblock
-  gains `timezone`.
-- [Derived] **Picker:** the details form uses the static `Typeahead`, like the default country, with a
-  leading "UTC (default)"-style empty option, `optional`, and a helper saying stored policy dates
-  aren't converted. The controller passes the current value and the identifier list.
-- [Derived] **Provisioning and factory need no change:** null is the UTC fallback. Tests create
-  organizations with a timezone explicitly when they need one.
-- [Derived] **One shared resolver**, e.g. in `App\Support\Tenancy`:
-  - it resolves an organization's effective timezone (stored or UTC) and its local date
-    (`today`);
-  - it takes the organization explicitly, so a future job can call it without request context;
-  - it also has a request-path convenience over `OrganizationContext`;
-  - it's used by the display-status computation, `PolicyFilter`, the Excel export, the PDFs and
-    `AgentsController` renewing soon.
+    <div class="flex flex-1 flex-col">
+        <PageHeader title="New policy" />                        <!-- [existing] -->
 
-  `config('app.timezone')` and stored timestamps stay UTC; only the derived calendar "today"
-  changes.
-- [Derived] **Renewing soon** keeps its semantics (stored Active, expiry within [today, today+30]) with
-  the organization-local today. Its stored-Active check is internal, not user-facing, so it stays.
-- [Derived] **Per-policy "today" follows the policy's own organization.** In a request that's the
-  current organization. A future job would resolve each policy's `organization_id` through the
-  resolver.
+        <Stepper :steps :current="step" :completed :errored      <!-- [new] components/ui/stepper, generic -->
+                 @select="goToStep" />
 
-### Open details
-- [Open] Resolver class and method names; per-request memoization of the organization lookup.
-- [Open] Picker labels (bare identifier, or with the current UTC offset or a city name), as long as
-  the submitted value is the identifier.
+        <Form :action="storeRoute" #default="{ validate, errors }">    <!-- action follows the selected class -->
 
-## 4. Client typeahead
+            <!-- Step 1 · Policy details -->
+            <div v-show="step === 'details'">
+                <PolicyDetailsSection />      <!-- [new, shared] type, class, subclass, policy number -->
+                <PolicyPartiesSection />      <!-- [existing, reshaped, shared] 2×2, now holds PolicyClientTypeahead -->
+                <PolicyFinancialsSection />   <!-- [existing, reshaped, shared] "Term & financials": + effective/expiry -->
+            </div>
 
-### Current state
-- [Fact] `resources/js/components/ui/typeahead/Typeahead.vue` is generic (`TypeaheadOption { value, label }`).
-  - It has static `options` or async `search(query)` (debounced, with stale responses discarded via
-    `requestId`), plus `initialLabel`, `loading`, `name` (hidden input), `size` and `disabled`.
-  - Gaps: async mode searches on focus even with an empty query, and there's no minimum length.
-    There's no selected-state presentation and no clear action. Rows render `label` only. And the
-    consumer isn't told the chosen option's label.
-- [Fact] Async mode is used only in `design-foundation/typeahead` (`snippets/async.md`), against an
-  in-memory stand-in. The JSON lookup pattern is `World\StatesController` (`{data:[{id,name}]}`,
-  FormRequest, `auth` + `organization`), consumed with `fetch` and a Wayfinder URL
-  (`composables/useWorldLocations.ts`).
-- [Fact] `PolicyFormOptions::shared()` sends every active client (plus the kept one on Edit) to step 1,
-  all six class Create pages and all six Edit pages. Clients render in native `Select`s in `Create.vue`
-  and `PolicyPartiesSection.vue`.
-- [Fact] `ClientFilter::search()` matches `LIKE %term%` on first, middle and last name, company name,
-  phone and email. `Client::full_name` is the company name for companies, otherwise first + last.
-  `Client` is organization-scoped (`BelongsToCurrentOrganization`). `ClientPolicy::viewAny` requires
-  an organization. `PolicyFormOptions::clients()` orders by displayed name.
-- [Fact] `PolicyValidationRules::assignablePartyRule` accepts a client in the user's organization
-  that's either active or the edited policy's current client (the kept-party rule).
-- [Fact] Entry from a client page is `ClientPoliciesCard` → `policies.create?client_id=`.
-  `PoliciesController::create` returns only the id.
-- [Fact] `PolicyResource` exposes `client {id, slug, full_name}`. `Avatar` renders initials from a
-  `name`.
-- [Fact] `routes/clients.php` has `clients/{client:slug}`. Design-foundation routes (`routes/dev.php`)
-  are local-only and sit outside the `auth`/`organization` group.
+            <!-- Steps 2–3 · only the selected class is rendered; a class change unmounts the old one -->
+            <component :is="classSections[entries.class]" :step="step" />
 
-### Locked decisions
-- [Locked] Reuse and extend the generic `Typeahead`. Client rendering stays in the consumer, through
-  generic slots.
-- [Locked] Server-side, organization-scoped search over active clients. No results before 2
-  characters. Searches are debounced while the user types. At most 10 results, capped in SQL. Reuse
-  the existing client search semantics where appropriate.
-- [Locked] Stop sending full client lists to policy forms.
-- [Locked] The selected client shows as avatar/initials + name with a clear button.
-- [Locked] Preserve the selected client's identity and label through step transitions, Back,
-  validation errors, client-page entry and Edit.
-- [Locked] Keep the kept-party rule for an archived client already on an edited policy.
-- [Locked] Carriers and agents remain selects.
-- [Locked] Add an endpoint-backed Typeahead example to the design docs. Clients are its first real
-  use case.
+            <!-- Last step · Review, read-only -->
+            <PolicyReviewStep v-show="step === 'review'" @edit="goToStep" />   <!-- [new] Create only -->
 
-### Derived constraints
-- [Derived] **New JSON endpoint**, following the `StatesController` shape:
-  - FormRequest-validated `search` with the 2-character minimum enforced server-side too, authorized
-    as `viewAny` on `Client`, under `auth` + `organization`;
-  - active clients only, `ClientFilter::search` semantics, `limit(10)` in the query, ordered by
-    displayed name;
-  - returns `{data:[{id, full_name}]}`.
+            <!-- Sticky footer, inline: Cancel · Step x of n · Back / Next | Create policy -->
+            <footer class="sticky bottom-0 …">…</footer>
+        </Form>
+    </div>
+</template>
+```
 
-  `RanksSearchResults::rankAndCap()` is not reused (it caps in PHP). A route under `clients/…` must
-  be registered before `clients/{client:slug}`.
-- [Derived] **Typeahead primitive additions, all generic:**
-  - a minimum query length below which there's no request and no results;
-  - a selected-state slot plus a clear action that sets `null`;
-  - an option-row slot;
-  - a way for the consumer to learn the chosen option's label.
+`classSections` maps a class to one **[new, shared]** `Policy{Class}Sections` component per class, which holds that
+class's coverage and people steps. Taking Medical as an example:
 
-  Static-mode consumers (countries, states, and the new timezone picker) keep working unchanged.
-- [Derived] **The label always comes from the server, never from the URL.**
-  - Step 1 (`PoliciesController::create`) returns `selected.client` as `{id, full_name}`, which
-    covers client-page entry and Back.
-  - Step 2's server resolution (§1) supplies it for the summary.
-  - Edit uses `policy.client`.
-  - Step 1's `useRemember` state holds the label alongside the id.
-- [Derived] With `clients` removed from `PolicyFormOptions::shared()`, its consumers drop the prop:
-  step 1, the six Create and six Edit pages, and `PolicyPartiesSection`. The `CreateTest` client
-  ordering and active-only tests move to the endpoint's tests.
-- [Derived] Edit with an archived kept client: it displays from `policy.client` and validates under
-  the kept-party rule. Once cleared, search can't find it again (active-only).
-- [Derived] The design-foundation pages are outside the auth group, while the client endpoint
-  requires `auth` + `organization`. The design-docs example must work under that constraint.
+```vue
+<!-- PolicyMedical/partials/PolicyMedicalSections.vue -->
+<template>
+    <div>
+        <div id="coverage" v-show="step === 'coverage' || step === 'all'">
+            <FormSection title="Medical coverage">…</FormSection>   <!-- [existing] ui -->
+            <PolicyOriginSection />                                 <!-- [new, shared] lead source -->
+        </div>
 
-### Open details
-- [Open] Endpoint URL and controller name, and the prop and slot names on `Typeahead`.
-- [Open] How the design-docs example reaches an endpoint: the real client search (works when logged
-  in locally), or a dev-only demo endpoint next to the design-foundation routes.
-- [Open] Whether prefix matches rank before contains matches within the 10.
+        <div id="people" v-show="step === 'people' || step === 'all'">
+            <FormSection v-if="type === 'single'" title="Insured">…</FormSection>
+            <FormSection v-else title="Members">…</FormSection>     <!-- v-if: only the selected type submits -->
+        </div>
+    </div>
+</template>
+```
 
-## 5. Discount
+Automotive and Fire have only the coverage group. Expat's people group is the insured person, Life's is
+beneficiaries and Travel's is travelers.
 
-- [Fact] `'discount_amount' => ['nullable', ...policyAmountRules(), 'lte:premium_amount']` is in the
-  shared `PolicyValidationRules` (every class, store and update). The discount input has
-  `min="0"` and no `max`.
-- [Fact] `MedicalStoreTest` covers *"a discount greater than the premium is rejected"* and *"a
-  discount up to the premium is accepted"*, where equality gives a net of 0. **Confirmed: no Update
-  test asserts the rule.**
-- [Locked] Server-side validation only. Discount ≤ premium; equality and a net of 0 are allowed. No
-  new browser validation. Add the missing Update regression test.
-- [Derived] One Update test (any class) covers the shared rule. It mirrors the Store pair.
+`PolicyMedical/Edit.vue` (the other five follow the same pattern), one page with no gating:
 
-## 6. Show layouts
+```vue
+<template>
+    <PageHeader />                                               <!-- [existing] -->
+    <Stepper :steps mode="anchors" />                            <!-- [new] same component, scroll links -->
 
-- [Fact] All six `Policy*/Show.vue` pages: the main column is `<ClassDetailCard>` then
-  `PolicyFinancialsCard`; the sidebar is `PolicyPartiesCard` then `PolicyTermCard`.
-  - `PolicyFinancialsCard` has `CardHeader bordered` ("Financials") and three `StatCell`s.
-  - The six `*DetailCard`s use plain `CardHeader`.
-  - `Agents/partials/QuickStatsCard.vue` is headerless. `Carriers/partials/QuickStatsCard.vue` has a
-    bordered header.
-- [Locked] In all six classes:
-  - Financials moves above the detail card, with its header removed (a compact stat strip);
-  - the main detail cards get bordered headers;
-  - sidebar headers stay unchanged;
-  - the Carrier stats card loses its header.
-- Nothing open.
+    <Form :action="update">
+        <PolicyDetailsSection :class-locked="true" />            <!-- shared -->
+        <PolicyPartiesSection />                                 <!-- shared -->
+        <PolicyFinancialsSection />                              <!-- shared -->
+        <PolicyMedicalSections step="all" />                     <!-- shared: coverage, origin, people -->
+        <footer>Cancel · Save</footer>
+        <DiscardTypeDataModal />                                 <!-- [existing] Edit-only type-change confirmation -->
+    </Form>
+</template>
+```
 
-## 7. Covered-member relationship
+Why each new component exists:
 
-- [Fact] A free-text `Input` in `PolicyMedicalForm.vue` (`insureds[i][relationship]`) with no
-  placeholder, validated `string|max:20`.
-- [Locked] Keep it free text. Add the placeholder "e.g. Employee, Spouse, Child". No enum in this
-  scope.
+- **`Stepper`**: one generic UI component, used by Create (gated) and by the six Edit pages (anchors).
+- **`PolicyDetailsSection`**: the new step-1 Policy card. Create and six Edit pages use it.
+- **`Policy{Class}Sections`** (6): replaces the class-specific part of today's `Policy{Class}Form.vue`. Create shows one
+  step at a time; Edit shows them all.
+- **`PolicyOriginSection`**: one field, but used inside all six class sections. Its placement (end of Coverage) keeps
+  Edit in the same order as Create.
+- **`PolicyReviewStep`**: Create only. Whether it reuses the Show cards is open.
+- **Not separate components**: the sticky footer (a few buttons, Create only, inline) and the step wrappers (plain
+  `div v-show`). The state lives in a **[new]** `usePolicyWizard` composable, not a component.
 
----
+**Removed:** `Policy{Class}/Create.vue` (6), `PolicyEntrySummary.vue`, the hand-over and counter parts of
+`policyCreateFlow.ts` (the `clearHistory` on Cancel stays), and `usePolicyFormEntries.ts` (gated on decision 12).
+`Policy{Class}Form.vue` (6) is split into the shared sections composed by each Edit page.
 
-## 8. What must remain true
-
-- Store-time validation stays the authority for every step-1 value, hidden or not: organization
-  scoping, active-or-kept parties, and enum membership.
-- A stored Cancelled or Frozen status never changes through Create or Edit.
-- The display status is never persisted. The PHP and SQL paths agree on every boundary day, for
-  every organization timezone.
-- Stored policy dates are never converted when the timezone changes. `app.timezone` and stored
-  timestamps stay UTC.
-- No user-facing surface presents the internal "Active".
-- Preserved Create work lives only in Inertia's remembered state for the current flow and, briefly,
-  in the in-memory hand-over between steps. It never reaches the server as a draft, never pre-fills
-  an Edit form or a fresh "New policy", and can't be revived from history after Cancel or a
-  successful create.
-- Values discarded by a class or carrier change are never restored, neither by switching back nor
-  by browser Back/Forward to an older page of the flow.
-- Step-2 validation errors keep the entries, as they do today (same component + `preserveState`).
-- Static-mode `Typeahead` consumers behave exactly as today.
-- Carrier and agent selects, the carrier → branch dependency, and the Edit type-change discard
-  confirmation are unchanged.
-- Net premium semantics (premium − discount, computed when read) are unchanged.
-
-## 9. Dependencies between the changes
-
-These are technical dependencies only. Issue decomposition and sequencing belong to `plan-it`.
-
-- **Organization timezone** (column, settings field, validation, picker, shared resolver) →
-  **display status rule** (backend). The rule needs the resolver's local "today".
-- **Display status rule** → every surface in the §2 audit table (list column, `PolicyCard`, Show
-  header, `ClientPoliciesCard`, filter UI and request, Excel, PDFs).
-- **Resolver** → the "renewing soon" switch to the organization-local date. That switch is
-  independent of the display status work.
-- **Status removal from forms** is independent of the display status, but shares the Store and
-  Update requests, actions and `Policy*Form.vue` files with the Create-flow restructure. Do it
-  before, or together with, that restructure.
-- **Typeahead primitive** and **client search endpoint** are independent of each other. Both precede
-  the **client typeahead wiring** and the **design-docs example**.
-- **Server-side step-1 resolution** (labels + validity) precedes the **step-2 summary**, and the
-  client typeahead wiring depends on it for the client label. **Dropping `clients` from
-  `PolicyFormOptions`** comes last.
-- **Create-flow restructure** (Medical default, step 2 Create mode with summary and hidden inputs,
-  Back) shares `Create.vue`, `PolicyPartiesSection`, the six `Policy*Form.vue` files and
-  `BackToPolicyEntryButton` with the typeahead wiring. Coordinate them to avoid parallel edits.
-- **Form preservation** depends on:
-  - the Create-mode restructure (which fields exist on step 2);
-  - the common/class-specific field split;
-  - the in-memory hand-over (§10 B1), the Create-flow history encryption (§10 B2) and the
-    history-restore discard check (§10 B3, built with B1 since it extends the same module). B2 is
-    independent of the rest and can land first.
-
-  Moving each class form's refs into one remembered object touches the same six form files as the
-  status removal and the typeahead wiring.
-- **Discount test**, **Show layouts** and **relationship placeholder** are independent.
-
-## 10. Approved form-preservation resolutions
-
-All three close limits of the installed Inertia 3.7 behaviour in §1: remember works per history
-entry, so it covers browser Back/Forward and validation errors, but it can neither move work
-between steps, expire entries, nor apply later discards to entries written earlier. The owner
-approved all three on 2026-10-06, including that a full browser refresh loses unfinished
-entries.
-
-- [Locked] **B1 — in-memory hand-over between steps.** A module-level variable, not browser
-  storage, used alongside `useRemember` on **both** steps:
-  1. Immediately before a flow navigation (Continue, the in-page Back, the summary's correction
-     link, the invalid-entry redirect), the leaving page puts the carried work there.
-  2. The arriving page consumes it once at setup, applies the class/carrier discard rules (§1), and
-     seeds its `useRemember` object, so the work then lives in that entry's remembered state.
-  3. Cancel and a successful create empty it. A fresh "New policy" finds nothing.
-
-  *Why:* every flow navigation is a forward visit with empty remembered state, and
-  `history.back()` can't replace them (Continue after a step-1 change needs a new step-2 URL).
-  *Limitation (accepted):* a full browser refresh loses the unfinished entries.
-- [Locked] **B2 — encrypted, invalidated Create-flow history.** Inertia's built-in history
-  encryption on the policy Create flow routes only (the `inertia.encrypt` middleware on
-  `policies.create` and the six class `create` routes), invalidated when the flow ends:
-  - `Inertia::clearHistory()` on the successful store response;
-  - `router.clearHistory()` on Cancel.
-
-  Ended-flow entries then fail to decrypt, and Inertia re-fetches those URLs fresh, with no
-  remembered work. Encrypted entries also keep health data off disk in plain text.
-- [Derived] **B2 consequences, documented:**
-  - **Clearing history invalidates every encrypted entry in the tab**, not just the ended flow's:
-    `clearHistory` removes the tab's single `sessionStorage` key. Today only the Create-flow pages
-    are encrypted, so the effect is limited to them (e.g. an earlier, abandoned Create flow in the
-    same tab is also re-fetched empty). Any route encrypted later is affected the same way, and
-    must be checked against this.
-  - A re-fetched step-2 URL still shows the summary for the step-1 choices in its query, but with
-    empty fields.
-  - It requires a secure context (HTTPS; local is `https://useorbit.test`). Without one Inertia
-    warns and stores plain text.
-- [Locked] **B3 — discard rules enforced when history is restored.** Older history entries of
-  an unfinished flow keep their own remembered state, so without this, browser Back to a step-1 or
-  step-2 page from before a class or carrier change would bring discarded values back.
-- [Derived] **Smallest mechanism: two discard counters in the B1 module, stamped on every entry.**
-  - The hand-over module also holds the current flow's record: a flow id plus a **class-discard
-    count** and a **branch-discard count**. Each count only ever increases, by one per discard
-    (class change, carrier change).
-  - Every remembered snapshot on both steps carries the flow id and the two counts it was
-    written under.
-  - When a page restores a snapshot (browser Back/Forward, a bfcache restore):
-    - different flow id, or no record in memory → the snapshot's carried work is not restored
-      (the page starts as a fresh visit would);
-    - snapshot's class count < current → drop its class-specific entries;
-    - snapshot's branch count < current → drop its issuing branch;
-    - then re-stamp it with the current counts and write it back, so the check runs once per
-      entry.
-  - Common fields, the step-1 choices in the entry and anything not discarded since restore as
-    written.
-
-  Medical → Fire → Medical makes the class count 2. A Medical entry written at 0 loses its
-  Medical entries, although its class matches the current one. Carrier A → B → A works the same
-  way for the branch.
-- [Derived] **Why counters, not alternatives:**
-  - comparing current class/carrier fails the switch-back sequences (§1);
-  - calling `clearHistory` on each discard would also wipe the older entries' common fields and
-    the current flow's Back/Forward, which the locked rules keep.
-- [Derived] **Edges:**
-  - After a full refresh the module is empty, so older entries of that flow restore without their
-    carried work. This extends the accepted refresh limitation; it can't resurrect anything.
-  - Starting a new flow (fresh "New policy", client-page entry) replaces the record, so entries of
-    an earlier, abandoned flow in the tab restore without their carried work.
-  - [Assumption] A bfcache restore brings back the JavaScript memory together with the page, so
-    the record and the entry stay consistent. This must be confirmed in real browsers (at least
-    Chrome and Safari) during implementation; if it doesn't hold, the restored page must run the
-    same check as a Back/Forward restore.
-  - Medical Single ↔ Group discards nothing and leaves the counts unchanged.
-
-## 11. Verification
-
-- **Organization timezone:**
-  - settings accept a valid IANA id, accept null (clears it), and reject an invalid id or a
-    non-identifier offset;
-  - only the Owner can change it;
-  - the page receives the current value and the identifier list;
-  - a provisioned organization has no timezone and resolves to UTC.
-- **Resolver:** an unset timezone gives the UTC date. An override gives the local date. At a frozen
-  instant just after local midnight but before UTC midnight (e.g. 22:30 UTC with `Asia/Beirut`),
-  "today" is the local next day; the reverse applies west of UTC. Stored policy dates are unchanged
-  after a timezone change.
-- **Display status:** with frozen time, test the boundary days (effective = today, expiry = today,
-  effective = tomorrow, expiry = yesterday, a single-day term) for the resource value **and** each
-  filter value, under both UTC and an override. Include the local-midnight instant, where UTC and
-  local dates differ and both paths must flip together. Stored Cancelled/Frozen win. Invalid filter
-  values are rejected.
-- **Display status surfaces:** the index, Show, client policies card, Excel (column and filter
-  matching the index) and all six PDFs render the display label. No surface renders "Active".
-- **Renewing soon:** the existing edge tests pass under an organization timezone, plus a
-  local-midnight edge case.
-- **Status preservation:** Store ignores a posted `status` and stores Active. Update on a Cancelled or
-  Frozen policy keeps it, including when `status` is posted.
-- **Store response:** a successful class store response carries Inertia's `clearHistory` flag. The
-  `policies.create` and class `create` responses are history-encrypted; other routes aren't.
-- **Create flow (server):**
-  - the class Create page resolves the carried-over values and labels;
-  - it ignores tampered, other-organization or archived values;
-  - it sends the user back to step 1 when a required one is missing;
-  - step 1 defaults the class to Medical;
-  - `CreateTest` is updated.
-- **Client search:** organization scoping, active only, nothing under 2 characters, at most 10
-  results, `ClientFilter` fields matched, guests and authorization rejected. Edit keeps an archived
-  assigned client valid.
-- **Discount:** the new Update regression test (above the premium rejected, equal accepted).
-- **Frontend (manual, by the owner):**
-  - step 1 → step 2 → Back → Continue with the same class (all entries back, Medical health
-    fields included) and with a different class (common fields back, class-specific discarded);
-  - switching back (Medical → Fire → Medical) keeps the common fields but leaves the Medical
-    fields empty;
-  - a carrier change discards the branch, and switching back to the first carrier leaves it empty;
-  - Medical Single ↔ Group keeps both sections, and only the selected one is submitted;
-  - a step-2 validation error keeps the entries;
-  - a hidden-field error (e.g. archive the client between steps) shows on the summary, and the
-    correction keeps the work;
-  - browser Back/Forward within an unfinished flow, with no class or carrier change, restores
-    every entry;
-  - Medical → Fire → Medical, then browser Back through the older Medical step-2 and step-1
-    pages and Forward again: the Medical-specific entries stay empty on every page, and the common
-    fields are as each page had them;
-  - carrier A → B → A, then browser Back/Forward through the older pages: the issuing branch stays
-    empty, and every other entry is kept;
-  - a class change alone keeps an older page's branch; a carrier change alone keeps its
-    class-specific entries;
-  - after Cancel, and after a successful create, browser Back (including a bfcache restore) shows
-    no previous entries;
-  - a bfcache restore (e.g. leave the flow for another site, then press Back) mid-flow after a
-    class or carrier change shows no discarded values, in Chrome and Safari (§10 B3 assumption);
-  - a full refresh mid-flow keeps the step-1 choices (URL) but loses unfinished entries;
-  - entry from a client page;
-  - Edit with an archived client, and clearing the client;
-  - the typeahead's 2-character gate, debounce and clear button;
-  - the design-docs example;
-  - the timezone picker;
-  - Show layouts for all six classes and the Carrier stats card;
-  - the relationship placeholder.
-- Run `vendor/bin/pint --dirty`, the affected Pest files, then the full suite.
